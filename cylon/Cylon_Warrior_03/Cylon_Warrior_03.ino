@@ -2,7 +2,7 @@
   Cylon Warrier
   Cycles through 6 LEDs going back and forth like the original BattleStar Galactica cylon warrier helmet.
   Pot controls the speed of the LEDs scanning.
-  Built on a makershield using BLUE LEDs.
+  Built on a makershield using BLUE LEDs. 
  */
 
 ///////////////////////////////////////////////////////////////////////////
