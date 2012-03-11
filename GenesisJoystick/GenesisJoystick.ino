@@ -1,6 +1,6 @@
 /*
  GenesisJoystick
- Reads Sega Genesis Joystick and return the valies as serial port.
+ Reads Sega Genesis Joystick and return the values as serial port.
  */
 
 void setup() {
