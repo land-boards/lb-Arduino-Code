@@ -1,0 +1,3 @@
+== Screwduino README ==
+
+The Screwduino is an Arduino compatible microcontroller board. It is based on the Arduino UNO but with some improvements. The Screwduino adds screw terminals for outputs and an I2C jack for displays. It has greatly improved mounting holes.
