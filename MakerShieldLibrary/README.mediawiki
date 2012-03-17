@@ -1,4 +1,4 @@
-== MakerShieldLibrarh README ==
+== MakerShieldLibrary README ==
 
 === Hardware ===
 * This library is for a MakerShield Protoboard.
