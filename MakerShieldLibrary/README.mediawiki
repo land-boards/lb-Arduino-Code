@@ -1,0 +1,6 @@
+== MakerShieldLibrarh README ==
+
+=== Hardware ===
+* This library is for a MakerShield Protoboard.
+* Board has pot, two LEDs and a button.
+
