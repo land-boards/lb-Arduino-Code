@@ -1,6 +1,6 @@
 == MakerShieldLibrary README ==
 
-* These are my [[http://arduino.cc Arduino]] files.
+* These are my [http://arduino.cc Arduino] files.
 ** Most of these files were created to exercise new Arduino related hardware.
 
 === Ownership ===
