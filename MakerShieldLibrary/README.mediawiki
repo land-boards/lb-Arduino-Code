@@ -4,5 +4,5 @@
 * This library is for a MakerShield Protoboard.
 * Board has pot, two LEDs and a button.
 
-[[http://myarduino.pbworks.com/w/file/fetch/51538105/IMG_2866croppedhires-640h.JPG]]
+[http://myarduino.pbworks.com/w/file/fetch/51538105/IMG_2866croppedhires-640h.JPG]
 
