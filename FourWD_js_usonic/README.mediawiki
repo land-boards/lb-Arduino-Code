@@ -6,7 +6,6 @@
 * Ultrasonic sensor HC-SR04. I got mine for cheap from China (about 3.50 USD).
 
 === Operation ===
-* Joystick has 7 positions, forward left, forward, forward right, back left, back, 
-back right and stop. To stop let the joystick return to center.
+* Joystick has 7 positions, forward left, forward, forward right, back left, back, back right and stop. To stop let the joystick return to center.
 * Ultrasonic sensor should stop the robot within 12 inches of the obstacle.
 
