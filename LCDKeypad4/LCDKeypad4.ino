@@ -4,6 +4,7 @@
 
 #include <LiquidCrystal.h> 	// "Generic" LCD library
 #include <LCDKeypad.h>		// DFRobot LCD Keypad shield library
+#include <EEPROM.h>             // EEPROM
 
 ///////////////////////////////////////////////////////////////////////
 // globals
@@ -11,8 +12,8 @@
 
 LCDKeypad lcd;
 
-int menuStateVal;
-int lcdBrightness;
+signed char menuStateVal;
+unsigned char lcdBrightness;
 
 ///////////////////////////////////////////////////////////////////////
 // enums
@@ -33,11 +34,11 @@ enum MENU_STATE
 
 void setup()
 {
-  int brightness;
+  unsigned char brightness;
 
   lcd.begin(16, 2);
   lcd.clear();
-  lcdBrightness = 150;
+  lcdBrightness = EEPROM.read(0);
   setLCDBrightness(lcdBrightness);
   clearLCDLine(0);
   // Display the banner
@@ -56,7 +57,7 @@ void setup()
 
 void loop()
 {
-  int myButtonVal;
+  unsigned char myButtonVal;
   switch (menuStateVal)
   {
     case MENU0:
@@ -109,8 +110,13 @@ void loop()
         lcdBrightness+=5;
       else if (myButtonVal == KEYPAD_DOWN)
         lcdBrightness-=5;
-      else if ((myButtonVal == KEYPAD_LEFT) || (myButtonVal == KEYPAD_SELECT))
+      else if (myButtonVal == KEYPAD_LEFT)
         menuStateVal = MENU3;
+      else if (myButtonVal == KEYPAD_SELECT)
+      { 
+        EEPROM.write(0,lcdBrightness);
+        menuStateVal = MENU3;
+      }
       setLCDBrightness(lcdBrightness);
       break;
   }

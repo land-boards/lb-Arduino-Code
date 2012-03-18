@@ -50,7 +50,7 @@ boolean checkIfKeyIsPressed(void)
 //  the cost that the algorithm sticks around until the key is released.
 ///////////////////////////////////////////////////////////////////////
 
-int getDebouncedKeypad(void)
+signed char getDebouncedKeypad(void)
 {
   int buttonPressed; 
   while((buttonPressed=lcd.button())==KEYPAD_NONE)
