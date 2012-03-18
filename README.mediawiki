@@ -1,7 +1,7 @@
-== MakerShieldLibrary README ==
+== Dougs Arduino Files README ==
 
 * These are my [http://arduino.cc Arduino] files.
-** Most of these files were created to exercise new Arduino related hardware.
+** Most of these files were created to exercise my Arduino related hardware.
 
 === Ownership ===
 

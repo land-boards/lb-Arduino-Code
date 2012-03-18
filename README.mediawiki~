@@ -1,8 +1,17 @@
 == MakerShieldLibrary README ==
 
-=== Hardware ===
-* This library is for a MakerShield Protoboard.
-* Board has pot, two LEDs and a button.
+* These are my [http://arduino.cc Arduino] files.
+** Most of these files were created to exercise new Arduino related hardware.
 
-[[File:http://myarduino.pbworks.com/w/file/fetch/51538105/IMG_2866croppedhires-640h.JPG]]
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of them were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
 
