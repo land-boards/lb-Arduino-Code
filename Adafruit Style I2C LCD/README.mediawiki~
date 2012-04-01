@@ -1,7 +1,6 @@
-== Dougs Arduino Files README ==
+== LCD Display Examples using Adafruit style I2C Backpack ==
 
-* These are my [http://arduino.cc Arduino] files.
-** Most of these files were created to exercise my Arduino related hardware.
+* The Adafruit style backpack can be distinguished from the other I2C displays by the five pin (I2C/SPI) connector.
 
 === Ownership ===
 
