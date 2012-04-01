@@ -1,6 +1,6 @@
-== LCD Display Examples using Adafruit style I2C Backpack ==
+== LCD Display Examples using DFRobot style Shield ==
 
-* The Adafruit style backpack can be distinguished from the other I2C displays by the five pin (I2C/SPI) connector.
+* The DFRobot style shield can be distinguished from other LCD shields by the misspelling of RIGTH.
 
 === Ownership ===
 

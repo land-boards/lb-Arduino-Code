@@ -3,6 +3,7 @@
 [[File:http://myarduino.pbworks.com/w/file/fetch/52370009/2012-03-16_221712.jpg]]
 
 * The Adafruit style backpack can be distinguished from the other I2C displays by the five pin (I2C/SPI) connector.
+* Another complication is that the pinout doesn't match standard Sensor Shields.
 
 === Ownership ===
 

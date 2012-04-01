@@ -1,5 +1,7 @@
 == LCD Display Examples using DFRobot style Shield ==
 
+[[File:http://myarduino.pbworks.com/w/file/fetch/51076045/lcd-key-1620r640-2wpins.JPG]]
+
 * The DFRobot style shield can be distinguished from other LCD shields by the misspelling of RIGTH.
 
 === Ownership ===
