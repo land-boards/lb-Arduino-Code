@@ -16,13 +16,11 @@
 
 #include <Adafruit_GPS.h>
 #include "Wire.h"
-//#include "LiquidCrystal.h"
 #include <inttypes.h>
-
 #include <LCDi2cNHD.h>                    
-
-// these are for Arduino 1.0
 #include <SoftwareSerial.h>
+#include <Time.h>  
+
 SoftwareSerial mySerial(3, 2);
 
 // if using Arduino v23 or earlier, uncomment these
@@ -77,7 +75,7 @@ void setup()
   useInterrupt(true);
   lcd.init();
   lcd.setCursor(0,0);
-  lcd.print("*Doug's GPS*");
+  lcd.print("** Doug's GPS v01 **");
 
   delay(1000);
 }
@@ -158,12 +156,15 @@ void loop()                     // run over and over again
     lcd.print(GPS.hour, DEC);
     lcd.print(":");
     lcd.print(GPS.minute, DEC);
+    lcd.print(":");
+    lcd.print(GPS.seconds, DEC); 
     lcd.print(" ");
     lcd.print(GPS.month, DEC);
     lcd.print("/");
     lcd.print(GPS.day, DEC);
-    lcd.print("/");
+    lcd.print("/20");
     lcd.print(GPS.year, DEC);
+    lcd.print("   ");
 
 #ifdef SERIAL_OUT
     Serial.print("Fix: "); 
@@ -202,7 +203,7 @@ void loop()                     // run over and over again
     }
     else
     {
-      lcd.setCursor(2,0);
+      lcd.setCursor(1,0);
       lcd.print("Acquiring a fix");
     }
   }

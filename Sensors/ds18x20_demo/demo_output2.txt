@@ -1,0 +1,115 @@
+DS18X20 1-Wire-Reader Demo by Martin Thomas
+-------------------------------------------
+Scanning Bus for DS18X20
+1 DS18X20 Sensor(s) available:
+# in Bus :1 : FC:28 (18B)SN: F9 E1 6B 00 00 00 CRC:E9  CRC O.K. 
+Sensor# 1 is a DS18B20 which is parasite powered
+
+DS18x20 EEPROM support test for fist sensor
+TH/TL from EEPROM sensor 1 : 155 / 150
+TH+1 and TL+1 written to scratchpad
+scratchpad copied to DS18x20 EEPROM
+DS18x20 EEPROM copied back to scratchpad
+TH and TL verified
+TH/TL from EEPROM sensor 1 now : 156 / 151
+
+There is only one sensor -> Demo of "DS18X20_read_decicelsius_single":
+232 deci°C, +23.2 °C
+
+Convert_T and Read Sensor by Sensor (reverse order)
+Sensor# 1 = 232 deci°C, +23.2 °C
+
+Convert_T for all Sensors and Read Sensor by Sensor
+Sensor# 1 = 232 deci°C, +23.2 °C
+Sensor# 1 = 231875 °Ce-4, +23.1875 °C
+
+Verbose output
+FC:28 (18B)SN: F9 E1 6B 00 00 00 CRC:E9  CRC O.K. 
+SP:74 01 9C 97 7F FF 0C 10 CRC:87  CRC O.K. 
+ T_raw=0174 B20/12 +23.2500°C conv: 233 deci°C  fmt: +23.3 °C 
+
+
+
+
+
+DS18X20 1-Wire-Reader Demo by Martin Thomas
+-------------------------------------------
+Scanning Bus for DS18X20
+2 DS18X20 Sensor(s) available:
+# in Bus :1 : FC:28 (18B)SN: F9 E1 6B 00 00 00 CRC:E9  CRC O.K. 
+# in Bus :2 : FC:10 (18S)SN: 7E 26 88 00 08 00 CRC:A7  CRC O.K. 
+Sensor# 1 is a DS18B20 which is parasite powered
+Sensor# 2 is a DS18S20/DS1820 which is parasite powered
+
+DS18x20 EEPROM support test for first sensor
+TH/TL in scratchpad of sensor 1 now : 41 / 41
+TH+1 and TL+1 written to scratchpad
+TH/TL in scratchpad of sensor 1 now : 42 / 42
+scratchpad copied to DS18x20 EEPROM
+TH and TL in scratchpad set to 0
+TH/TL in scratchpad of sensor 1 now : 0 / 0
+DS18x20 EEPROM copied back to scratchpad
+TH and TL verified
+TH/TL in scratchpad of sensor 1 now : 42 / 42
+
+Convert_T and Read Sensor by Sensor (reverse order)
+Sensor# 2 = 244 deci°C, +24.4 °C
+Sensor# 1 = 243 deci°C, +24.3 °C
+
+Convert_T for all Sensors and Read Sensor by Sensor
+Sensor# 1 = 243 deci°C, +24.3 °C
+Sensor# 2 = 244 deci°C, +24.4 °C
+Sensor# 1 = 243125 °Ce-4, +24.3125 °C
+Sensor# 2 = 244375 °Ce-4, +24.4375 °C
+
+Verbose output
+FC:28 (18B)SN: F9 E1 6B 00 00 00 CRC:E9  CRC O.K. 
+SP:85 01 2A 2A 7F FF 0B 10 CRC:9B  CRC O.K. 
+ T_raw=0185 B20/12 +24.3125°C conv: 243 deci°C  fmt: +24.3 °C 
+FC:10 (18S)SN: 7E 26 88 00 08 00 CRC:A7  CRC O.K. 
+SP:31 00 67 62 FF FF 05 10 CRC:30  CRC O.K. 
+ T_raw=0031 S20/09 +24.4375°C conv: 244 deci°C  fmt: +24.4 °C 
+
+
+
+Test with AVR internal pull-up resistor instead of external:
+
+DS18X20 1-Wire-Reader Demo by Martin Thomas
+-------------------------------------------
+Scanning Bus for DS18X20
+2 DS18X20 Sensor(s) available:
+# in Bus :1 : FC:28 (18B)SN: F9 E1 6B 00 00 00 CRC:E9  CRC O.K. 
+# in Bus :2 : FC:10 (18S)SN: 7E 26 88 00 08 00 CRC:A7  CRC O.K. 
+Sensor# 1 is a DS18B20 which is parasite powered
+Sensor# 2 is a DS18S20/DS1820 which is parasite powered
+
+DS18x20 EEPROM support test for first sensor
+TH/TL in scratchpad of sensor 1 now : 50 / 50
+TH+1 and TL+1 written to scratchpad
+TH/TL in scratchpad of sensor 1 now : 51 / 51
+scratchpad copied to DS18x20 EEPROM
+TH and TL in scratchpad set to 0
+TH/TL in scratchpad of sensor 1 now : 0 / 0
+DS18x20 EEPROM copied back to scratchpad
+TH and TL verified
+TH/TL in scratchpad of sensor 1 now : 51 / 51
+
+Convert_T and Read Sensor by Sensor (reverse order)
+Sensor# 2 = 247 deci°C, +24.7 °C
+Sensor# 1 = 242 deci°C, +24.2 °C
+
+Convert_T for all Sensors and Read Sensor by Sensor
+Sensor# 1 = 242 deci°C, +24.2 °C
+Sensor# 2 = 248 deci°C, +24.8 °C
+Sensor# 1 = 241875 °Ce-4, +24.1875 °C
+Sensor# 2 = 247500 °Ce-4, +24.7500 °C
+
+Verbose output
+FC:28 (18B)SN: F9 E1 6B 00 00 00 CRC:E9  CRC O.K. 
+SP:83 01 33 33 7F FF 0D 10 CRC:E0  CRC O.K. 
+ T_raw=0183 B20/12 +24.1875°C conv: 242 deci°C  fmt: +24.2 °C 
+FC:10 (18S)SN: 7E 26 88 00 08 00 CRC:A7  CRC O.K. 
+SP:32 00 6A 65 FF FF 10 10 CRC:FD  CRC O.K. 
+ T_raw=0032 S20/09 +24.7500°C conv: 248 deci°C  fmt: +24.8 °C 
+
+

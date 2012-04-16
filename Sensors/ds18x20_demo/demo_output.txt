@@ -1,0 +1,24 @@
+DS18X20 1-Wire-Reader Demo
+--------------------------
+Scanning Bus for DS18X20
+2 DS18X20 Sensors available:
+# in Bus :1 : FC:28 (18B)SN: 67 C6 6B 00 00 00 CRC:E2  CRC O.K. 
+# in Bus :2 : FC:28 (18B)SN: 44 D7 6B 00 00 00 CRC:BC  CRC O.K. 
+Sensor# 1 is a DS18B20 which is parasite powered
+Sensor# 2 is a DS18B20 which is externally powered
+
+Convert_T and Read for every Sensor (reverse order)
+Sensor# 2 = +20.9375°C [+20.9°C]
+Sensor# 1 = +20.8750°C [+20.9°C]
+
+Convert_T for all Sensors and Read for single Sensor
+Sensor# 1 = +20.8750°C [+20.9°C]
+Sensor# 2 = +20.9375°C [+20.9°C]
+
+Verbose output
+FC:28 (18B)SN: 67 C6 6B 00 00 00 CRC:E2  CRC O.K. 
+SP:4E 01 4B 46 7F FF 02 10 CRC:D9  CRC O.K. 
+ T_raw=014E B20/12 +20.8750°C
+FC:28 (18B)SN: 44 D7 6B 00 00 00 CRC:BC  CRC O.K. 
+SP:4F 01 4B 46 7F FF 01 10 CRC:CF  CRC O.K. 
+ T_raw=014F B20/12 +20.9375°C
