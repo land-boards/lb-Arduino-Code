@@ -42,36 +42,11 @@
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
+#include <IRKeypad.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
 //////////////////////////////////////////////////////////////////////////////
-
-enum IR_VALUES
-{
-  NOKEY = 0,
-  CHMINUS,
-  CH,
-  CHPLUS,
-  LEFT,
-  RIGHT,
-  PAUSE,
-  MINUS,
-  PLUS,
-  EQ,
-  ZEROKEY,
-  V100PLUS,
-  V200PLUS,
-  ONEKEY,
-  TWOKEY,
-  THREEKEY,
-  FOURKEY,
-  FIVEKEY,
-  SIXKEY,
-  SEVENKEY,
-  EIGHTKEY,
-  NINEKEY,
-};
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
@@ -105,6 +80,12 @@ int menuState;
 
 char currentWayPoint;
 
+IRKeypad myIR;
+
+#define RXCOUNTMAX 100
+int rxCount;
+char rxBuffer[RXCOUNTMAX];
+
 enum MENUITEMS
 {
   MENU0,
@@ -132,10 +113,10 @@ void setup()
 {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
   // also spit it out
-#ifdef SERIAL_OUT
-  Serial.begin(115200);
+  //#ifdef SERIAL_OUT
+  Serial.begin(9600);
   Serial.println("Adafruit GPS library basic test!");
-#endif
+  //#endif
 
   GPSInit();
 
@@ -152,7 +133,7 @@ void setup()
 
 void loop()                     // run over and over again
 {
-  int pressedKey = checkIR();
+  int pressedKey = myIR.checkIR();
   switch (menuState)
   {
   case MENU0:
@@ -228,8 +209,12 @@ void loop()                     // run over and over again
     {
       if (pressedKey == PAUSE)
       {
+        rxCount = 0;
         clearLine(2);
         clearLine(3);
+        lcd.setCursor(1,0);
+        lcd.print("Downloading WAYPNTS ");
+        Serial.println("DL");    // signals host that it's time to load waypoints
         menuState = MENU2C;
       }
       else if (pressedKey == LEFT)
@@ -239,10 +224,29 @@ void loop()                     // run over and over again
     }
     break;
   case MENU2C:
-    if (pressedKey != NOKEY)
-      menuState = MENU2;
-    lcd.setCursor(1,0);
-    lcd.print("Downloading WAYPNTS ");
+    {
+      if (Serial.available())
+      {
+        rxBuffer[rxCount++] = Serial.read();
+        if (rxCount == RXCOUNTMAX-1)
+        {          
+          Serial.println(rxBuffer);
+          Serial.println("/SERIN");    // signals host that it's time to load waypoints
+          lcd.setCursor(2,0);
+          lcd.print("Download Completed  ");
+          delay(2000);  // 2 second message
+          menuState = MENU2;
+        }
+      }
+      if (pressedKey == LEFT)
+      {
+        Serial.write("/DL");    // signals host that it's time to load waypoints
+        lcd.setCursor(2,0);
+        lcd.print("Download Terminated ");
+        delay(2000);  // 2 second message
+        menuState = MENU2;
+      }
+    }
     break;
   case MENU3:
     lcd.setCursor(1,0);
@@ -292,8 +296,8 @@ void loop()                     // run over and over again
         lcd.print("Select WayPoint     ");
         clearLine(2);
         clearLine(3);
-      lcd.setCursor(2,0);
-      lcd.print(currentWayPoint, DEC);
+        lcd.setCursor(2,0);
+        lcd.print(currentWayPoint, DEC);
         menuState = MENU4C;
       }
       else if (pressedKey == LEFT)
@@ -315,7 +319,7 @@ void loop()                     // run over and over again
           break;
         case MINUS:
           if (currentWayPoint > 0)
-          currentWayPoint--;
+            currentWayPoint--;
           break;
         case ZEROKEY:
           currentWayPoint = 0;
@@ -348,9 +352,9 @@ void loop()                     // run over and over again
           currentWayPoint = 9;
           break;
         }
-      clearLine(2);
-      lcd.setCursor(2,0);
-      lcd.print(currentWayPoint, DEC);
+        clearLine(2);
+        lcd.setCursor(2,0);
+        lcd.print(currentWayPoint, DEC);
       }
     }
   }
@@ -365,6 +369,8 @@ void clearLine(int lineToClear)
   lcd.setCursor(lineToClear,0);
   lcd.print("                    ");
 }
+
+
 
 
 

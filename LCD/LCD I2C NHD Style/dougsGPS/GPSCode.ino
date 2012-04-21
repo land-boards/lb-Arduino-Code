@@ -109,8 +109,12 @@ void readGPS(void)
     lcd.setCursor(1,0);
     lcd.print(GPS.hour, DEC);
     lcd.print(":");
+    if (GPS.seconds<10)
+      lcd.print("0");
     lcd.print(GPS.minute, DEC);
     lcd.print(":");
+    if (GPS.seconds<10)
+      lcd.print("0");
     lcd.print(GPS.seconds, DEC); 
     lcd.print(" ");
     lcd.print(GPS.month, DEC);
@@ -195,13 +199,16 @@ void GPSClock(void)
   }
 
   // approximately every 1 seconds or so, print out the current stats
-  if (millis() - timer >= 1000) { 
+  if (millis() - timer >= 1000) 
+  { 
     timer = millis(); // reset the timer
     lcd.setCursor(1,0);
     lcd.print(GPS.hour, DEC);
     lcd.print(":");
     lcd.print(GPS.minute, DEC);
     lcd.print(":");
+    if (GPS.seconds<10)
+      lcd.print("0");
     lcd.print(GPS.seconds, DEC); 
     lcd.print(" ");
     lcd.print(GPS.month, DEC);
