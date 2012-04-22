@@ -26,12 +26,6 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-//#define SERIAL_OUT
-//////////////////////////////////////////////////////////////////////////////
-
-#undef SERIAL_OUT
-
-//////////////////////////////////////////////////////////////////////////////
 // Includes follow
 //////////////////////////////////////////////////////////////////////////////
 
@@ -42,49 +36,42 @@
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
-#include <IRKeypad.h>
+
+//////////////////////////////////////////////////////////////////////////////
+//#define SERIAL_OUT
+//////////////////////////////////////////////////////////////////////////////
+
+#undef SERIAL_OUT
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
 //////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////
-// defines follow
-//////////////////////////////////////////////////////////////////////////////
-
-// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
-// Set to 'true' if you want to debug and listen to the raw GPS sentences
-#define GPSECHO  false
-
-//////////////////////////////////////////////////////////////////////////////
-// Global variables follow
-//////////////////////////////////////////////////////////////////////////////
-
-SoftwareSerial mySerial(3, 2);
-
-Adafruit_GPS GPS(&mySerial);
-
-// this keeps track of whether we're using the interrupt
-// off by default!
-boolean usingInterrupt = false;
-
-LCDi2cNHD lcd = LCDi2cNHD(4,20,0x50>>1,0);
-
-int RECV_PIN = 11;
-IRrecv irrecv(RECV_PIN);
-decode_results results;
-
-unsigned long timer = millis();
-
-int menuState;
-
-char currentWayPoint;
-
-IRKeypad myIR;
-
-#define RXCOUNTMAX 100
-int rxCount;
-char rxBuffer[RXCOUNTMAX];
+enum IR_VALUES
+{
+  NOKEY = 0,
+  CHMINUS,
+  CH,
+  CHPLUS,
+  LEFT,
+  RIGHT,
+  PAUSE,
+  MINUS,
+  PLUS,
+  EQ,
+  ZEROKEY,
+  V100PLUS,
+  V200PLUS,
+  ONEKEY,
+  TWOKEY,
+  THREEKEY,
+  FOURKEY,
+  FIVEKEY,
+  SIXKEY,
+  SEVENKEY,
+  EIGHTKEY,
+  NINEKEY,
+};
 
 enum MENUITEMS
 {
@@ -106,6 +93,43 @@ enum MENUITEMS
 };
 
 //////////////////////////////////////////////////////////////////////////////
+// defines follow
+//////////////////////////////////////////////////////////////////////////////
+
+// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
+// Set to 'true' if you want to debug and listen to the raw GPS sentences
+#define GPSECHO  false
+#define RXCOUNTMAX 32
+
+//////////////////////////////////////////////////////////////////////////////
+// Global variables follow
+//////////////////////////////////////////////////////////////////////////////
+
+SoftwareSerial mySerial(3, 2);
+Adafruit_GPS GPS(&mySerial);
+
+// this keeps track of whether we're using the interrupt
+// off by default!
+boolean usingInterrupt = false;
+
+LCDi2cNHD lcd = LCDi2cNHD(4,20,0x50>>1,0);
+
+unsigned long timer = millis();
+
+int menuState;
+
+char currentWayPoint;
+int rxCount;
+char rxBuffer[RXCOUNTMAX];
+
+int RECV_PIN = 11;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+float latArray[20];
+float longArray[20];
+
+//////////////////////////////////////////////////////////////////////////////
 // setup()
 //////////////////////////////////////////////////////////////////////////////
 
@@ -120,11 +144,19 @@ void setup()
 
   GPSInit();
 
-  irrecv.enableIRIn(); // Start the receiver
   menuState = MENU0;
   currentWayPoint = 0;
 
   lcd.init();
+
+  irrecv.enableIRIn(); // Start the receiver
+
+  for (int i=0; i < 20; i++)
+  {
+    latArray[i] = 99.99999;
+    longArray[i] = 99.99999;
+  }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -133,7 +165,7 @@ void setup()
 
 void loop()                     // run over and over again
 {
-  int pressedKey = myIR.checkIR();
+  int pressedKey = checkIR();
   switch (menuState)
   {
   case MENU0:
@@ -205,42 +237,72 @@ void loop()                     // run over and over again
     menuState = MENU2B;
     break;
   case MENU2B:
-    if (pressedKey != NOKEY)
     {
-      if (pressedKey == PAUSE)
+      int charIn;
+      while (Serial.available())    // flush the serial read port
+        charIn = Serial.read();
+      if (pressedKey != NOKEY)
       {
-        rxCount = 0;
-        clearLine(2);
-        clearLine(3);
-        lcd.setCursor(1,0);
-        lcd.print("Downloading WAYPNTS ");
-        Serial.println("DL");    // signals host that it's time to load waypoints
-        menuState = MENU2C;
+        if (pressedKey == PAUSE)
+        {
+          rxCount = 0;
+          clearLine(2);
+          clearLine(3);
+          lcd.setCursor(1,0);
+          lcd.print("Downloading WAYPNTS ");
+          lcd.setCursor(2,0);
+          menuState = MENU2C;
+          Serial.println("<DL>");    // signals host that it's time to load waypoints
+        }
+        else if (pressedKey == LEFT)
+          menuState = MENU1;
+        else if (pressedKey == RIGHT)
+          menuState = MENU3;
       }
-      else if (pressedKey == LEFT)
-        menuState = MENU1;
-      else if (pressedKey == RIGHT)
-        menuState = MENU3;
     }
     break;
   case MENU2C:
     {
+      int charIn;
+      int errorCode;
       if (Serial.available())
       {
-        rxBuffer[rxCount++] = Serial.read();
-        if (rxCount == RXCOUNTMAX-1)
-        {          
-          Serial.println(rxBuffer);
-          Serial.println("/SERIN");    // signals host that it's time to load waypoints
-          lcd.setCursor(2,0);
-          lcd.print("Download Completed  ");
-          delay(2000);  // 2 second message
-          menuState = MENU2;
+        charIn = Serial.read();
+        if (charIn == '\n')
+        {
+          lcd.print(".");
+          rxBuffer[rxCount] = 0;
+          errorCode = parseRxBuffer();
+          if (errorCode == -1)
+          {
+            lcd.setCursor(2,0);
+            lcd.print("Error: Missing equal");
+          }
+          else if (errorCode == -2)
+          {
+            lcd.setCursor(2,0);
+            lcd.print("Error: Bad waypt num");
+          } 
+          rxCount = 0;
+          Serial.write('A');
+          if ((rxBuffer[0] == '1') && (rxBuffer[1]=='9'))
+          {
+            lcd.setCursor(3,0);
+            lcd.print("Download Completed  ");
+            dumpFArray();
+            Serial.println("</SERIN>");    // signals host that it's time to load waypoints
+            delay(2000);  // 2 second message
+            menuState = MENU2;
+          }
+        }
+        else
+        {
+          rxBuffer[rxCount++] = charIn;
         }
       }
       if (pressedKey == LEFT)
       {
-        Serial.write("/DL");    // signals host that it's time to load waypoints
+        Serial.println("</DL>");    // signals host that it's time to load waypoints
         lcd.setCursor(2,0);
         lcd.print("Download Terminated ");
         delay(2000);  // 2 second message
@@ -370,8 +432,82 @@ void clearLine(int lineToClear)
   lcd.print("                    ");
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// parseRxBuffer - save waypoints - rxBuffer[]
+// Order is ww=aa.aaaa,ooo.ooo
+// ww is the way point number
+// aa.aaaa is the latitude
+// 000.000 is the longitude
+//////////////////////////////////////////////////////////////////////////////
 
+int parseRxBuffer(void)
+{
+  int lineOffset;
+  int floatStringOffset;
+  char floatBuff[10];
+  int wayPointNum;
+  float latF, longF;
+  if (rxBuffer[1] == '=')  //waypoints from 0-9
+  {
+    wayPointNum = rxBuffer[0] - '0';
+    lineOffset = 2;
+  }
+  else if (rxBuffer[2] == '=')  // waypoints from 10-19
+  {
+    wayPointNum = ((rxBuffer[0] - '0') * 10);
+    wayPointNum += (rxBuffer[1] - '0');
+    lineOffset = 3;
+  }
+  else
+    return(-1);
+  floatStringOffset = 0;
+  while (rxBuffer[lineOffset] != ',')
+  {
+    floatBuff[floatStringOffset++] = rxBuffer[lineOffset++];
+  }
+  floatBuff[floatStringOffset] = 0;
+  latF=atof(floatBuff);
+  lineOffset++;
+  floatStringOffset = 0;
+  while (rxBuffer[lineOffset] != 0)
+  {
+    floatBuff[floatStringOffset++] = rxBuffer[lineOffset++];
+  }
+  floatBuff[floatStringOffset] = 0;
+  longF=atof(floatBuff);
+  if ((wayPointNum >= 0) && (wayPointNum <= 19)) 
+    setFArray(wayPointNum,latF,longF);
+  else
+    return(-2);
+  return(0);
+}
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////
+
+void setFArray(int wayPointNum, float latF, float longF)
+{
+  latArray[wayPointNum] = latF;
+  longArray[wayPointNum] = longF;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////
+
+void dumpFArray(void)
+{
+  int wayPtNum;
+  for (wayPtNum = 0; wayPtNum < 20; wayPtNum++)
+  {
+    Serial.print(wayPtNum);
+    Serial.print("=");
+    Serial.print(latArray[wayPtNum],6);
+    Serial.print(",");
+    Serial.println(longArray[wayPtNum],6);
+  }
+}
 
 
 
