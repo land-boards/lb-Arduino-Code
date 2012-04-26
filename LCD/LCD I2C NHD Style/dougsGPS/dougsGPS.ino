@@ -36,11 +36,14 @@
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
+#include <eepromanything.h>
+#include <EEPROM.h>
 
 //////////////////////////////////////////////////////////////////////////////
 //#define SERIAL_OUT
 //////////////////////////////////////////////////////////////////////////////
 
+//#define SERIAL_OUT
 #undef SERIAL_OUT
 
 //////////////////////////////////////////////////////////////////////////////
@@ -87,6 +90,7 @@ enum MENUITEMS
   MENU3,
   MENU3B,
   MENU3C,
+  MENU3D,
   MENU4,
   MENU4B,
   MENU4C,
@@ -126,8 +130,15 @@ int RECV_PIN = 11;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
-float latArray[20];
-float longArray[20];
+float fLat2, fLon2;
+
+struct storeVals
+{
+  unsigned char myCurrentWayPoint;
+  float lats[20], lons[20];
+} 
+myStoreVals;
+
 
 //////////////////////////////////////////////////////////////////////////////
 // setup()
@@ -135,27 +146,18 @@ float longArray[20];
 
 void setup()  
 {
-  // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
-  // also spit it out
-  //#ifdef SERIAL_OUT
   Serial.begin(9600);
-  Serial.println("Adafruit GPS library basic test!");
-  //#endif
 
   GPSInit();
 
   menuState = MENU0;
-  currentWayPoint = 0;
 
   lcd.init();
 
   irrecv.enableIRIn(); // Start the receiver
 
-  for (int i=0; i < 20; i++)
-  {
-    latArray[i] = 99.99999;
-    longArray[i] = 99.99999;
-  }
+  EEPROM_readAnything(0,myStoreVals);
+  currentWayPoint = myStoreVals.myCurrentWayPoint;
 
 }
 
@@ -165,261 +167,7 @@ void setup()
 
 void loop()                     // run over and over again
 {
-  int pressedKey = checkIR();
-  switch (menuState)
-  {
-  case MENU0:
-    lcd.setCursor(0,0);
-    lcd.print("** Doug's GPS v01 **");
-    delay(200);
-    lcd.setCursor(1,0);
-    lcd.print("> Monitor GPS Loc'n ");
-    lcd.setCursor(2,0);
-    lcd.print("Monitor Clock       ");
-    lcd.setCursor(3,0);
-    lcd.print("Download  Waypoints ");
-    menuState = MENU0B;
-    break;
-  case MENU0B:
-    if (pressedKey != NOKEY)
-    {
-      if (pressedKey == PAUSE)
-      {
-        clearLine(2);
-        clearLine(3);
-        menuState = MENU0C;
-      }
-      else if (pressedKey == RIGHT)
-        menuState = MENU1;
-    }
-    break;
-  case MENU0C:
-    if (pressedKey != NOKEY)
-      menuState = MENU0;
-    readGPS();
-    break;
-  case MENU1:
-    lcd.setCursor(1,0);
-    lcd.print("> Monitor Clock     ");
-    lcd.setCursor(2,0);
-    lcd.print("Download  Waypoints ");
-    lcd.setCursor(3,0);
-    lcd.print("Go to Waypoint      ");
-    menuState = MENU1B;
-    break;
-  case MENU1B:
-    if (pressedKey != NOKEY)
-    {
-      if (pressedKey == PAUSE)
-      {
-        clearLine(2);
-        clearLine(3);
-        menuState = MENU1C;
-      }
-      else if (pressedKey == LEFT)
-        menuState = MENU0;
-      else if (pressedKey == RIGHT)
-        menuState = MENU2;
-    }
-    break;
-  case MENU1C:
-    if (pressedKey != NOKEY)
-      menuState = MENU1;
-    GPSClock();
-    break;
-  case MENU2:
-    lcd.setCursor(1,0);
-    lcd.print("Monitor Clock       ");
-    lcd.setCursor(2,0);
-    lcd.print("> Download Waypoints");
-    lcd.setCursor(3,0);
-    lcd.print("Go to Waypoint      ");
-    menuState = MENU2B;
-    break;
-  case MENU2B:
-    {
-      int charIn;
-      while (Serial.available())    // flush the serial read port
-        charIn = Serial.read();
-      if (pressedKey != NOKEY)
-      {
-        if (pressedKey == PAUSE)
-        {
-          rxCount = 0;
-          clearLine(2);
-          clearLine(3);
-          lcd.setCursor(1,0);
-          lcd.print("Downloading WAYPNTS ");
-          lcd.setCursor(2,0);
-          menuState = MENU2C;
-          Serial.println("<DL>");    // signals host that it's time to load waypoints
-        }
-        else if (pressedKey == LEFT)
-          menuState = MENU1;
-        else if (pressedKey == RIGHT)
-          menuState = MENU3;
-      }
-    }
-    break;
-  case MENU2C:
-    {
-      int charIn;
-      int errorCode;
-      if (Serial.available())
-      {
-        charIn = Serial.read();
-        if (charIn == '\n')
-        {
-          lcd.print(".");
-          rxBuffer[rxCount] = 0;
-          errorCode = parseRxBuffer();
-          if (errorCode == -1)
-          {
-            lcd.setCursor(2,0);
-            lcd.print("Error: Missing equal");
-          }
-          else if (errorCode == -2)
-          {
-            lcd.setCursor(2,0);
-            lcd.print("Error: Bad waypt num");
-          } 
-          rxCount = 0;
-          Serial.write('A');
-          if ((rxBuffer[0] == '1') && (rxBuffer[1]=='9'))
-          {
-            lcd.setCursor(3,0);
-            lcd.print("Download Completed  ");
-            dumpFArray();
-            Serial.println("</SERIN>");    // signals host that it's time to load waypoints
-            delay(2000);  // 2 second message
-            menuState = MENU2;
-          }
-        }
-        else
-        {
-          rxBuffer[rxCount++] = charIn;
-        }
-      }
-      if (pressedKey == LEFT)
-      {
-        Serial.println("</DL>");    // signals host that it's time to load waypoints
-        lcd.setCursor(2,0);
-        lcd.print("Download Terminated ");
-        delay(2000);  // 2 second message
-        menuState = MENU2;
-      }
-    }
-    break;
-  case MENU3:
-    lcd.setCursor(1,0);
-    lcd.print("Monitor Clock       ");
-    lcd.setCursor(2,0);
-    lcd.print("Download  Waypoints ");
-    lcd.setCursor(3,0);
-    lcd.print("> Go to Waypoint    ");
-    menuState = MENU3B;
-    break;
-  case MENU3B:
-    if (pressedKey != NOKEY)
-    {
-      if (pressedKey == PAUSE)
-      {
-        lcd.setCursor(1,0);
-        lcd.print("Going to Waypoint   ");
-        clearLine(2);
-        clearLine(3);
-        menuState = MENU3C;
-      }
-      else if (pressedKey == LEFT)
-        menuState = MENU2;
-      else if (pressedKey == RIGHT)
-        menuState = MENU4;
-    }
-    break;
-  case MENU3C:
-    if (pressedKey != NOKEY)
-      menuState = MENU3;
-    break;
-  case MENU4:
-    lcd.setCursor(1,0);
-    lcd.print("Download  Waypoints ");
-    lcd.setCursor(2,0);
-    lcd.print("Go to Waypoint      ");
-    lcd.setCursor(3,0);
-    lcd.print("> Set Active Waypnt ");
-    menuState = MENU4B;
-    break;
-  case MENU4B:
-    if (pressedKey != NOKEY)
-    {
-      if (pressedKey == PAUSE)
-      {
-        lcd.setCursor(1,0);
-        lcd.print("Select WayPoint     ");
-        clearLine(2);
-        clearLine(3);
-        lcd.setCursor(2,0);
-        lcd.print(currentWayPoint, DEC);
-        menuState = MENU4C;
-      }
-      else if (pressedKey == LEFT)
-        menuState = MENU3;
-    }
-    break;
-  case MENU4C:
-    {
-      if (pressedKey != NOKEY)
-      {
-        switch(pressedKey)
-        {
-        case LEFT:
-          menuState = MENU4;
-          break;
-        case PLUS:
-          if (currentWayPoint < 9)
-            currentWayPoint++;
-          break;
-        case MINUS:
-          if (currentWayPoint > 0)
-            currentWayPoint--;
-          break;
-        case ZEROKEY:
-          currentWayPoint = 0;
-          break;
-        case ONEKEY:
-          currentWayPoint = 1;
-          break;
-        case TWOKEY:
-          currentWayPoint = 2;
-          break;
-        case THREEKEY:
-          currentWayPoint = 3;
-          break;
-        case FOURKEY:
-          currentWayPoint = 4;
-          break;
-        case FIVEKEY:
-          currentWayPoint = 5;
-          break;
-        case SIXKEY:
-          currentWayPoint = 6;
-          break;
-        case SEVENKEY:
-          currentWayPoint = 7;
-          break;
-        case EIGHTKEY:
-          currentWayPoint = 8;
-          break;
-        case NINEKEY:
-          currentWayPoint = 9;
-          break;
-        }
-        clearLine(2);
-        lcd.setCursor(2,0);
-        lcd.print(currentWayPoint, DEC);
-      }
-    }
-  }
+  geocacheMenu();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -430,6 +178,7 @@ void clearLine(int lineToClear)
 {
   lcd.setCursor(lineToClear,0);
   lcd.print("                    ");
+  lcd.setCursor(lineToClear,0);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -488,8 +237,8 @@ int parseRxBuffer(void)
 
 void setFArray(int wayPointNum, float latF, float longF)
 {
-  latArray[wayPointNum] = latF;
-  longArray[wayPointNum] = longF;
+  myStoreVals.lats[wayPointNum] = latF;
+  myStoreVals.lons[wayPointNum] = longF;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -498,15 +247,57 @@ void setFArray(int wayPointNum, float latF, float longF)
 
 void dumpFArray(void)
 {
-  int wayPtNum;
-  for (wayPtNum = 0; wayPtNum < 20; wayPtNum++)
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// bearing and distance calculations from gerard's coobro geo code base
+//////////////////////////////////////////////////////////////////////////////////////
+
+int calc_bearing(float flat1, float flon1, float flat2, float flon2)
+{
+  float calc;
+  float bear_calc; 
+
+  float x = 69.1 * (flat2 - flat1);
+  float y = 69.1 * (flon2 - flon1) * cos(flat1/57.3);
+
+  calc=atan2(y,x);
+  bear_calc= degrees(calc);
+
+  if(bear_calc<=1)
   {
-    Serial.print(wayPtNum);
-    Serial.print("=");
-    Serial.print(latArray[wayPtNum],6);
-    Serial.print(",");
-    Serial.println(longArray[wayPtNum],6);
+    bear_calc=360+bear_calc;
   }
+  return bear_calc;
+} 
+
+//////////////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////////////
+
+unsigned long calc_dist(float flat1, float flon1, float flat2, float flon2)
+{
+  float dist_calc=0;
+  float dist_calc2=0;
+  float diflat=0;
+  float diflon=0;
+
+  diflat=radians(flat2-flat1);
+  flat1=radians(flat1);
+  flat2=radians(flat2);
+  diflon=radians((flon2)-(flon1));
+
+  dist_calc = (sin(diflat/2.0)*sin(diflat/2.0));
+  dist_calc2= cos(flat1);
+  dist_calc2*=cos(flat2);
+  dist_calc2*=sin(diflon/2.0);
+  dist_calc2*=sin(diflon/2.0);
+  dist_calc +=dist_calc2;
+
+  dist_calc=(2*atan2(sqrt(dist_calc),sqrt(1.0-dist_calc)));
+
+  dist_calc*=6371000.0; //Converting to meters
+  return dist_calc;
 }
 
 

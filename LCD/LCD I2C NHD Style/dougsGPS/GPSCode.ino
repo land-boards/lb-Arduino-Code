@@ -216,7 +216,7 @@ void GPSClock(void)
     lcd.print(GPS.day, DEC);
     lcd.print("/20");
     lcd.print(GPS.year, DEC);
-    lcd.print("   ");
+    lcd.print("  ");
 
     if (GPS.fix) 
     {
@@ -230,5 +230,48 @@ void GPSClock(void)
     }
   }
 
+}
+
+
+void quietReadGPS(void)
+{
+ int intLat, intLon;
+    // in case you are not using the interrupt above, you'll
+  // need to 'hand query' the GPS, not suggested :(
+  if (! usingInterrupt) {
+    // read data from the GPS in the 'main loop'
+    char c = GPS.read();
+    // if you want to debug, this is a good time to do it!
+    if (GPSECHO)
+      if (c) UDR0 = c;
+    // writing direct to UDR0 is much much faster than Serial.print 
+    // but only one character can be written at a time. 
+  }
+
+  // if a sentence is received, we can check the checksum, parse it...
+  if (GPS.newNMEAreceived()) {
+    // a tricky thing here is if we print the NMEA sentence, or data
+    // we end up not listening and catching other sentences! 
+    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
+    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+
+    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
+      return;  // we can fail to parse a sentence in which case we should just wait for another
+  }
+
+  // approximately every 2 seconds or so, print out the current stats
+  if (millis() - timer > 2000) { 
+    timer = millis(); // reset the timer
+  }
+       fLat2 = GPS.latitude/100.0;
+        intLat = (int) fLat2;
+        fLat2 = fLat2 - (float) intLat;
+        fLat2 *= 10.0/6.0;
+        fLat2 += (float) intLat;
+        fLon2 = -GPS.longitude/100.0;
+        intLon = (int) fLon2;
+        fLon2 = fLon2 - (float) intLon;
+        fLon2 *= 10.0/6.0;
+        fLon2 += (float) intLon;
 }
 
