@@ -9,10 +9,8 @@
 //    ------> http://myarduino.pbworks.com/w/page/51198530/Screwduino
 // GPS hardware is Adafruit's Ultimate GPS module using MTK3339 driver
 //    ------> http://www.adafruit.com/products/746
-// LCD is Newhaven Displays NHD-0420D3Z-NSW-BBW available from Digikey
-//    ------> http://parts.digikey.com/1/parts/2399832-lcd-serial-4x20-side-wht-bklt-nhd-0420d3z-nsw-bbw.html
-// LCD is also available from Mouser:
-//    ------> http://www.mouser.com/ProductDetail/Newhaven-Display/NHD-0420D3Z-NSW-BBW/?qs=sGAEpiMZZMt7dcPGmvnkBqgJ77dQR2sz%252bTAd1I
+//  This sketch works with the library for the Adafruit 
+//  1.8" TFT Breakout w/SD card.
 // Using IR Sensor for display control
 //
 // Wiring/connections
@@ -21,7 +19,8 @@
 //   Connect the GPS TX (transmit) pin to Digital 3
 //   Connect the GPS RX (receive) pin to Digital 2
 //   Connect the IR receiver to Digital 11
-//   Connect the LCD to A4/A5 (I2C interface)
+//  This display uses SPI to communicate, 5 pins are used to
+//  interface with the display and I do use the RESET line.
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -32,12 +31,14 @@
 #include <Adafruit_GPS.h>
 #include "Wire.h"
 #include <inttypes.h>
-#include <LCDi2cNHD.h>                    
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
 #include <eepromanything.h>
 #include <EEPROM.h>
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library
+#include <SPI.h>
 
 //////////////////////////////////////////////////////////////////////////////
 //#define SERIAL_OUT
@@ -94,6 +95,9 @@ enum MENUITEMS
   MENU4,
   MENU4B,
   MENU4C,
+  MENU5,
+  MENU5B,
+  MENU5C,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -104,6 +108,9 @@ enum MENUITEMS
 // Set to 'true' if you want to debug and listen to the raw GPS sentences
 #define GPSECHO  false
 #define RXCOUNTMAX 32
+#define cs   10
+#define dc   9
+#define rst  8
 
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
@@ -111,12 +118,11 @@ enum MENUITEMS
 
 SoftwareSerial mySerial(3, 2);
 Adafruit_GPS GPS(&mySerial);
+Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
 
 // this keeps track of whether we're using the interrupt
 // off by default!
 boolean usingInterrupt = false;
-
-LCDi2cNHD lcd = LCDi2cNHD(4,20,0x50>>1,0);
 
 unsigned long timer = millis();
 
@@ -126,7 +132,7 @@ char currentWayPoint;
 int rxCount;
 char rxBuffer[RXCOUNTMAX];
 
-int RECV_PIN = 14;
+int RECV_PIN = 4;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
@@ -152,13 +158,17 @@ void setup()
 
   menuState = MENU0;
 
-  lcd.init();
+  tft.initR(INITR_REDTAB);
 
   irrecv.enableIRIn(); // Start the receiver
 
   EEPROM_readAnything(0,myStoreVals);
   currentWayPoint = myStoreVals.myCurrentWayPoint;
 
+  tft.setTextSize(1);
+  tft.fillScreen(ST7735_BLACK);
+  tft.setCursor(0, 0);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -176,9 +186,9 @@ void loop()                     // run over and over again
 
 void clearLine(int lineToClear)
 {
-  lcd.setCursor(lineToClear,0);
-  lcd.print("                    ");
-  lcd.setCursor(lineToClear,0);
+  setCursorTFT(lineToClear,0);
+  tft.print("                    ");
+  setCursorTFT(lineToClear,0);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -300,5 +310,8 @@ unsigned long calc_dist(float flat1, float flon1, float flat2, float flon2)
   return dist_calc;
 }
 
-
+void setCursorTFT(int row, int col)
+{
+  tft.setCursor(col*5, row*10);
+}
 
