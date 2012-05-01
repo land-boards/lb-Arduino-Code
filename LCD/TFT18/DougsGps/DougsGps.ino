@@ -18,9 +18,17 @@
 //   Connect the GPS Ground pin to ground
 //   Connect the GPS TX (transmit) pin to Digital 3
 //   Connect the GPS RX (receive) pin to Digital 2
-//   Connect the IR receiver to Digital 11
-//  This display uses SPI to communicate, 5 pins are used to
-//  interface with the display and I do use the RESET line.
+//   Connect the IR receiver to Digital 4
+//   Connect the Display GND (Power Ground) to Ground
+//   Connect the DisplaySD_CS (Chipselect for TF Card, active low) to pin TBD
+//   Connect the DisplayLCD_CS (Chipselect for LCD, active low) to pin 10
+//   Connect the DisplaySCLK (SPI Clock) to Digital pin 13
+//   Connect the DisplayMOSI (SPI Master out Slave in) to Digital pin 11
+//   Connect the DisplayMISO (SPI Master in Slave out) to Digital pin N/C (could be pin 12)
+//   Connect the DisplayRS (Command/Data Selection) to Digital pin 9
+//   Connect the DisplayRESET (LCD controller reset, active low) to Digital pin 8 
+//   Connect the DisplayBKL (LCD back light, active low) to power pin Ground
+//   Connect the Display VCC (5V power input) to power pin +5V
 //
 //////////////////////////////////////////////////////////////////////////////
 
@@ -29,15 +37,14 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <Adafruit_GPS.h>
-#include "Wire.h"
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library
 #include <inttypes.h>
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
-#include <eepromanything.h>
-#include <EEPROM.h>
-#include <Adafruit_GFX.h>    // Core graphics library
-#include <Adafruit_ST7735.h> // Hardware-specific library
+#include <eepromanything.h>    // http://arduino.cc/playground/Code/EEPROMWriteAnything
+#include <EEPROM.h> 
 #include <SPI.h>
 
 //////////////////////////////////////////////////////////////////////////////
@@ -102,23 +109,21 @@ enum MENUITEMS
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
-//////////////////////////////////////////////////////////////////////////////
-
 // Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
 // Set to 'true' if you want to debug and listen to the raw GPS sentences
+//////////////////////////////////////////////////////////////////////////////
+
 #define GPSECHO  false
 #define RXCOUNTMAX 32
 #define cs   10
 #define dc   9
 #define rst  8
+//int RECV_PIN = 4;
+#define RECV_PIN 4
 
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
 //////////////////////////////////////////////////////////////////////////////
-
-SoftwareSerial mySerial(3, 2);
-Adafruit_GPS GPS(&mySerial);
-Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
 
 // this keeps track of whether we're using the interrupt
 // off by default!
@@ -132,19 +137,26 @@ char currentWayPoint;
 int rxCount;
 char rxBuffer[RXCOUNTMAX];
 
-int RECV_PIN = 4;
-IRrecv irrecv(RECV_PIN);
 decode_results results;
 
 float fLat2, fLon2;
+float lastLat, lastLon;
+float bearing;
 
 struct storeVals
 {
   unsigned char myCurrentWayPoint;
   float lats[20], lons[20];
-} 
-myStoreVals;
+} myStoreVals;
 
+//////////////////////////////////////////////////////////////////////////////
+// class initializers
+//////////////////////////////////////////////////////////////////////////////
+
+SoftwareSerial mySerial(3, 2);
+Adafruit_GPS GPS(&mySerial);
+Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
+IRrecv irrecv(RECV_PIN);
 
 //////////////////////////////////////////////////////////////////////////////
 // setup()
@@ -178,17 +190,6 @@ void setup()
 void loop()                     // run over and over again
 {
   geocacheMenu();
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// loop()
-//////////////////////////////////////////////////////////////////////////////
-
-void clearLine(int lineToClear)
-{
-  setCursorTFT(lineToClear,0);
-  tft.print("                    ");
-  setCursorTFT(lineToClear,0);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -252,66 +253,22 @@ void setFArray(int wayPointNum, float latF, float longF)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-//
+// clearLine(int lineToClear)
 //////////////////////////////////////////////////////////////////////////////
 
-void dumpFArray(void)
+void clearLine(int lineToClear)
 {
+  setCursorTFT(lineToClear,0);
+  tft.print("                     ");
+  setCursorTFT(lineToClear,0);
 }
-
-//////////////////////////////////////////////////////////////////////////////////////
-// bearing and distance calculations from gerard's coobro geo code base
-//////////////////////////////////////////////////////////////////////////////////////
-
-int calc_bearing(float flat1, float flon1, float flat2, float flon2)
-{
-  float calc;
-  float bear_calc; 
-
-  float x = 69.1 * (flat2 - flat1);
-  float y = 69.1 * (flon2 - flon1) * cos(flat1/57.3);
-
-  calc=atan2(y,x);
-  bear_calc= degrees(calc);
-
-  if(bear_calc<=1)
-  {
-    bear_calc=360+bear_calc;
-  }
-  return bear_calc;
-} 
 
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////////////////////////////
-
-unsigned long calc_dist(float flat1, float flon1, float flat2, float flon2)
-{
-  float dist_calc=0;
-  float dist_calc2=0;
-  float diflat=0;
-  float diflon=0;
-
-  diflat=radians(flat2-flat1);
-  flat1=radians(flat1);
-  flat2=radians(flat2);
-  diflon=radians((flon2)-(flon1));
-
-  dist_calc = (sin(diflat/2.0)*sin(diflat/2.0));
-  dist_calc2= cos(flat1);
-  dist_calc2*=cos(flat2);
-  dist_calc2*=sin(diflon/2.0);
-  dist_calc2*=sin(diflon/2.0);
-  dist_calc +=dist_calc2;
-
-  dist_calc=(2*atan2(sqrt(dist_calc),sqrt(1.0-dist_calc)));
-
-  dist_calc*=6371000.0; //Converting to meters
-  return dist_calc;
-}
 
 void setCursorTFT(int row, int col)
 {
-  tft.setCursor(col*5, row*10);
+  tft.setCursor(col*6, row*10);
 }
 
