@@ -8,6 +8,7 @@ import sys
  
 # Configure the serial port to talk to the Arduino
 connection = serial.Serial('/dev/ttyACM1', 9600)
+time.sleep(2)
 
 connection.flushInput()
 
