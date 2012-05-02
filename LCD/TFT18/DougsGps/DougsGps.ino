@@ -142,6 +142,9 @@ decode_results results;
 float fLat2, fLon2;
 float lastLat, lastLon;
 float bearing;
+float lastAngle;
+float lastBearing;
+int lastSats;
 
 struct storeVals
 {

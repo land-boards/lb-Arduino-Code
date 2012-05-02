@@ -247,6 +247,10 @@ void geocacheMenu(void)
     tft.print("Bearing =");
     setCursorTFT(3,0);
     tft.print("Distance =");
+    setCursorTFT(4,0);
+    tft.print("Direction =");
+    setCursorTFT(5,0);
+    tft.print("Satellites =");
     quietReadGPS();
     setCursorTFT(2,10);
     tft.print("         ");
@@ -259,34 +263,57 @@ void geocacheMenu(void)
     setCursorTFT(3,11);
     tft.print(calc_dist(fLat2,fLon2,myStoreVals.lats[currentWayPoint],myStoreVals.lons[currentWayPoint]));
     lastLon = fLon2;
-    setCursorTFT(4,0);
-    tft.print("Direction");
+    setCursorTFT(4,12);
+    tft.print(GPS.angle-bearing);
+    lastAngle = GPS.angle;
+    lastBearing = bearing;
+
+    setCursorTFT(5,13);
+    tft.print(GPS.satellites);
+    lastSats = GPS.satellites;
     menuState = MENU3D;
     break;
   case MENU3D:
-    quietReadGPS();
-    if (fLat2 != lastLat)
     {
-      setCursorTFT(2,10);
-      tft.print("         ");
-      setCursorTFT(2,10);
+      if (pressedKey != NOKEY)
+      {
+        menuState = MENU3;
+        break;
+      }
+      if (quietReadGPS() != 0)
+      {
+        break;
+      }
+      float distCalc = calc_dist(fLat2,fLon2,myStoreVals.lats[currentWayPoint],myStoreVals.lons[currentWayPoint]);
       bearing = calc_bearing(fLat2,fLon2,myStoreVals.lats[currentWayPoint],myStoreVals.lons[currentWayPoint]);
-      tft.print(bearing);
-      lastLat = fLat2;
+      if ((fLat2 != lastLat) || (fLon2 != lastLon))
+      {
+        setCursorTFT(2,10);
+        tft.print("           ");
+        setCursorTFT(2,10);
+        tft.print(bearing);
+        setCursorTFT(3,11);
+        tft.print("          ");
+        setCursorTFT(3,11);
+        tft.print(distCalc);
+        lastLat = fLat2;
+        lastLon = fLon2;
+      }
+      if ((GPS.angle != lastAngle) || (bearing != lastBearing))
+      {
+        setCursorTFT(4,12);
+        tft.print("         ");
+        setCursorTFT(4,12);
+        tft.print(GPS.angle-bearing);
+        lastAngle = GPS.angle;
+        lastBearing = bearing;
+      }
+      if (lastSats != GPS.satellites)
+      {
+        setCursorTFT(5,13);
+        tft.print(GPS.satellites);
+      }
     }
-    if (fLon2 != lastLon)
-    {
-      setCursorTFT(3,11);
-      tft.print("        ");
-      setCursorTFT(3,11);
-      tft.print(calc_dist(fLat2,fLon2,myStoreVals.lats[currentWayPoint],myStoreVals.lons[currentWayPoint]));
-      lastLon = fLon2;
-    }
-    setCursorTFT(4,11);
-    tft.print(GPS.angle-bearing);
-    if (pressedKey != NOKEY)
-      menuState = MENU3;
-//    delay(10);
     break;
   case MENU4:
     tft.fillScreen(ST7735_BLACK);
@@ -447,4 +474,5 @@ void geocacheMenu(void)
     }
   }
 }
+
 

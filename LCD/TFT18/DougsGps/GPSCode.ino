@@ -64,7 +64,7 @@ void GPSInit(void)
 
 void readGPS(void)
 {
-    // in case you are not using the interrupt above, you'll
+  // in case you are not using the interrupt above, you'll
   // need to 'hand query' the GPS, not suggested :(
   if (! usingInterrupt) {
     // read data from the GPS in the 'main loop'
@@ -192,7 +192,7 @@ void readGPS(void)
 
 void GPSClock(void)
 {
-      // in case you are not using the interrupt above, you'll
+  // in case you are not using the interrupt above, you'll
   // need to 'hand query' the GPS, not suggested :(
   if (! usingInterrupt) {
     // read data from the GPS in the 'main loop'
@@ -260,10 +260,10 @@ void GPSClock(void)
 // 
 //////////////////////////////////////////////////////////////////////////////
 
-void quietReadGPS(void)
+int quietReadGPS(void)
 {
- int intLat, intLon;
-    // in case you are not using the interrupt above, you'll
+  int intLat, intLon;
+  // in case you are not using the interrupt above, you'll
   // need to 'hand query' the GPS, not suggested :(
   if (! usingInterrupt) {
     // read data from the GPS in the 'main loop'
@@ -283,23 +283,22 @@ void quietReadGPS(void)
     //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
 
     if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
-      return;  // we can fail to parse a sentence in which case we should just wait for another
+      return -1;  // we can fail to parse a sentence in which case we should just wait for another
   }
+  else
+    return -2;
 
-  // approximately every 2 seconds or so, print out the current stats
-  if (millis() - timer > 2000) { 
-    timer = millis(); // reset the timer
-  }
-       fLat2 = GPS.latitude/100.0;
-        intLat = (int) fLat2;
-        fLat2 = fLat2 - (float) intLat;
-        fLat2 *= 10.0/6.0;
-        fLat2 += (float) intLat;
-        fLon2 = -GPS.longitude/100.0;
-        intLon = (int) fLon2;
-        fLon2 = fLon2 - (float) intLon;
-        fLon2 *= 10.0/6.0;
-        fLon2 += (float) intLon;
+  fLat2 = GPS.latitude/100.0;
+  intLat = (int) fLat2;
+  fLat2 = fLat2 - (float) intLat;
+  fLat2 *= 10.0/6.0;
+  fLat2 += (float) intLat;
+  fLon2 = -GPS.longitude/100.0;
+  intLon = (int) fLon2;
+  fLon2 = fLon2 - (float) intLon;
+  fLon2 *= 10.0/6.0;
+  fLon2 += (float) intLon;
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -352,4 +351,5 @@ unsigned long calc_dist(float flat1, float flon1, float flat2, float flon2)
   dist_calc*=6371000.0; //Converting to meters
   return dist_calc;
 }
+
 
