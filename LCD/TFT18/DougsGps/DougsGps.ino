@@ -20,14 +20,14 @@
 //   Connect the GPS RX (receive) pin to Digital 2
 //   Connect the IR receiver to Digital 4
 //   Connect the Display GND (Power Ground) to Ground
-//   Connect the DisplaySD_CS (Chipselect for TF Card, active low) to pin TBD
-//   Connect the DisplayLCD_CS (Chipselect for LCD, active low) to pin 10
-//   Connect the DisplaySCLK (SPI Clock) to Digital pin 13
-//   Connect the DisplayMOSI (SPI Master out Slave in) to Digital pin 11
-//   Connect the DisplayMISO (SPI Master in Slave out) to Digital pin N/C (could be pin 12)
-//   Connect the DisplayRS (Command/Data Selection) to Digital pin 9
-//   Connect the DisplayRESET (LCD controller reset, active low) to Digital pin 8 
-//   Connect the DisplayBKL (LCD back light, active low) to power pin Ground
+//   Connect the Display SD_CS (Chipselect for TF Card, active low) to pin 7
+//   Connect the Display LCD_CS (Chipselect for LCD, active low) to pin 10
+//   Connect the Display SCLK (SPI Clock) to Digital pin 13
+//   Connect the Display MOSI (SPI Master out Slave in) to Digital pin 11
+//   Connect the Display MISO (SPI Master in Slave out) to Digital pin N/C (could be pin 12)
+//   Connect the Display RS (Command/Data Selection) to Digital pin 9
+//   Connect the Display RESET (LCD controller reset, active low) to Digital pin 8 
+//   Connect the Display BKL (LCD back light, active low) to power pin Ground
 //   Connect the Display VCC (5V power input) to power pin +5V
 //
 //////////////////////////////////////////////////////////////////////////////

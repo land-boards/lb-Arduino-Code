@@ -312,6 +312,7 @@ void geocacheMenu(void)
       {
         setCursorTFT(5,13);
         tft.print(GPS.satellites);
+        tft.print("  ");
       }
     }
     break;
