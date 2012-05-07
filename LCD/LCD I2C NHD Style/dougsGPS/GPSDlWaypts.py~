@@ -7,11 +7,12 @@ import string
 import sys
  
 # Configure the serial port to talk to the Arduino
-connection = serial.Serial('/dev/ttyACM0', 9600)
+connection = serial.Serial('/dev/ttyACM1', 9600)
 
 connection.flushInput()
 
 # read from the Arduino until receiving <DL> string
+print "Waiting for start from Arduino"
 data = connection.readline().strip('\n\r')
 while data != "<DL>":
 	data = connection.readline().strip('\n\r')
