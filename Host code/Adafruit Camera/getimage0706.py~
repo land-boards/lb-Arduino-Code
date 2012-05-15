@@ -7,7 +7,7 @@ import time
 
 BAUD = 38400
 PORT = "/dev/ttyACM0"
-TIMEOUT = 0.2
+TIMEOUT = 0.3
 
 SERIALNUM = 0    # start with 0
 
@@ -31,12 +31,12 @@ takephotocommand = [COMMANDSEND, SERIALNUM, CMD_TAKEPHOTO, 0x01, FBUF_STOPCURREN
 getbufflencommand = [COMMANDSEND, SERIALNUM, CMD_GETBUFFLEN, 0x01, FBUF_CURRENTFRAME]
 
 def checkreply(r, b):
+#    print 'checkreply: reached function'
     r = map (ord, r)
-    #print 'checkreply: completed  map, len=', len(r)
-    #print 'r =', r
+#    print 'checkreply: completed  map'
+#    print 'r =', r
     if (r[0] == 0x76 and r[1] == SERIALNUM and r[2] == b and r[3] == 0x00):
         return True
-    print 'checkReply() failed'
     return False
 
 def reset():
@@ -45,8 +45,9 @@ def reset():
     reply = s.read(100)
     r = list(reply)
     if checkreply(r, CMD_RESET):
+    	print 'reset(): success'
         return True
-    print 'reset(): failure'
+        print 'reset(): failure'
     return False
         
 def getversion():
@@ -55,6 +56,7 @@ def getversion():
     reply =  s.read(16)
     r = list(reply);
     if checkreply(r, CMD_GETVERSION):
+        print r
         return True
     return False
 
@@ -95,7 +97,7 @@ def readbuffer(bytes):
         command = readphotocommand + [(addr >> 24) & 0xFF, (addr >> 16) & 0xFF,
                                       (addr >> 8) & 0xFF, addr & 0xFF]
         command +=  [0, 0, 0, 32]   # 32 bytes at a time
-        command +=  [2,0]         # delay of 20ms (was 10 ms)
+        command +=  [1,0]         # delay of 10ms
         #print map(hex, command)
         cmd = ''.join(map (chr, command))
         s.write(cmd)
@@ -103,7 +105,7 @@ def readbuffer(bytes):
         r = list(reply)
         if (len(r) != 37):
             continue
-        #print r
+#        print r
         if (not checkreply(r, CMD_READBUFF)):
             print "ERROR READING PHOTO"
             return
@@ -134,6 +136,7 @@ print bytes2read, "bytes to read"
 photo = readbuffer(bytes2read)
 
 f = open("photo.jpg", 'w')
+print photo
 photodata = ''.join(photo)
 f.write(photodata)
 f.close()
