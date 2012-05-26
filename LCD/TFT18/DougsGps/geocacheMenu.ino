@@ -2,7 +2,7 @@
 // geocacheMenu() - 
 ////////////////////////////////////////////////////////////
 
-const char * menuHeader = "** Doug's GPS v002 **";
+const char * menuHeader = "** Doug's GPS v003 **";
 const char * monGPSLocn = "Monitor GPS Loc'n";
 const char * monGPSClk  = "Monitor Clock";
 const char * downldWays = "Download Waypoints";
