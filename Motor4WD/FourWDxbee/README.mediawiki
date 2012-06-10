@@ -6,7 +6,6 @@
 * [http://www.makershed.com/product_p/mkseeed8.htm Four Wheel Drive (4WD) car by DFRobot] (I think at least. I got it at Makershed.)
 * [http://arduino.cc/en/Main/ArduinoBoardUno Arduino UNO]
 * [http://www.makershed.com/product_p/mkad7.htm Motor Shield]
-* 2-Axis Joystick. I am using the [http://www.parallax.com/tabid/768/ProductID/581/Default.aspx Parallax part sold by Radio Shack.]
 * [http://letsmakerobots.com/node/30209 Ultrasonic sensor HC-SR04]. I got mine for cheap from China (about 3.50 USD).
 
 === Operation ===
