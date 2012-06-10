@@ -42,12 +42,13 @@ def checkreply(r, b):
 
 def reset():
     cmd = ''.join (map (chr, resetcommand))
-    print 'reset() command ', 
-    print list(cmd)
-    print 'len command', len(cmd)
+    # print 'reset() command ', 
+    # print list(cmd)
+    # print 'len command', len(cmd)
     s.flushInput()
     s.write(cmd)
     s.flush()
+    reply = ''
     reply = s.read(100)
     r = list(reply)
     if checkreply(r, CMD_RESET):
@@ -90,38 +91,34 @@ def getbufferlength():
         return l
     return 0
 
+READSIZE = 4096
+
 def readbuffer(bytes):
     addr = 0
     photo = []
-    linez = 0
-    while (addr < bytes + 32):
+    
+    while (addr < bytes + READSIZE):
         command = readphotocommand + [(addr >> 24) & 0xFF, (addr >> 16) & 0xFF,
                                       (addr >> 8) & 0xFF, addr & 0xFF]
-        command +=  [0, 0, 0, 32]   # 32 bytes at a time
-        command +=  [2,6]         # delay of 20ms (was 10 ms)
-        #print map(hex, command)
+        command +=  [(READSIZE>>24) & 0xFF, (READSIZE>>16) & 0xFF, (READSIZE>>8) & 0xFF, READSIZE & 0xFF]
+        command +=  [0x10,0]        # delay of 40.96 ms (was 10 ms)
+#        print 'cmd=', map(hex, command)
         cmd = ''.join(map (chr, command))
         s.write(cmd)
-        s.flush()
-        # while s.inWaiting() < 37:
-        	# continue
-        reply = s.read(32+5)
+        reply = s.read(READSIZE + 5)
         r = list(reply)
-        # if (len(r) != 37):
+#        print r
+        if (len(r) != READSIZE + 5):
             # print 'Receive count error'
             # print 'Command sent was: ', cmd
             # print 'r is:', r
-            # continue
+            continue
         if (not checkreply(r, CMD_READBUFF)):
             print "ERROR READING PHOTO"
             exit()
         photo += r[5:]
-        addr += 32
-        linez += 1
-        if linez > 16:
-        	print '.',
-        	linez = 0
-    print ''
+        addr += READSIZE
+    print 'photo len=', len(photo)
     return photo
     
 ######## main

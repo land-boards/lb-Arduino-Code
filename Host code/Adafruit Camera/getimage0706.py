@@ -100,7 +100,7 @@ def readbuffer(bytes):
     while (addr < bytes + READSIZE):
         command = readphotocommand + [(addr >> 24) & 0xFF, (addr >> 16) & 0xFF,
                                       (addr >> 8) & 0xFF, addr & 0xFF]
-        command +=  [(READSIZE>>24) & 0xFF, (READSIZE>>16) & 0xFF, (READSIZE>>8) & 0xFF, READSIZE & 0xFF]   	# 256 bytes at a time
+        command +=  [(READSIZE>>24) & 0xFF, (READSIZE>>16) & 0xFF, (READSIZE>>8) & 0xFF, READSIZE & 0xFF]
         command +=  [0x10,0]        # delay of 40.96 ms (was 10 ms)
 #        print 'cmd=', map(hex, command)
         cmd = ''.join(map (chr, command))
