@@ -9,4 +9,4 @@
 
 * The files in this folder are the ExpressPCB schematic and layout files. 
 ** The board is layed out to work with the miniboard option and has two Screwduinos per board for a total of 6 board at around $85 or around $14 a board.
-
+** OSHPark is less expensive at about $25 for three boards.
