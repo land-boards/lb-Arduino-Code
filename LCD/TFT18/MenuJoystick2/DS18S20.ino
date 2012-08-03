@@ -10,7 +10,8 @@
 
 OneWire  ds(6);  // on pin 
 
-void read1Wire(void) {
+void read1Wire(void) 
+{
   byte i;
   byte present = 0;
   byte type_s;
@@ -18,44 +19,45 @@ void read1Wire(void) {
   byte addr[8];
   float celsius, fahrenheit;
 
-  setCursorTFT(1,0);
+  //  setCursorTFT(1,0);
   if ( !ds.search(addr)) {
-    tft.println("No more addresses.");
+    //    tft.println("No more addresses.");
     ds.reset_search();
     delay(250);
+    sensNum = 0;
     return;
   }
 
-  setCursorTFT(2,0);
-  tft.print("ROM =");
-  for( i = 0; i < 8; i++) {
-    Serial.write(' ');
-    tft.print(addr[i], HEX);
-  }
+  //  setCursorTFT(2,0);
+  //  tft.print("ROM =");
+  //  for( i = 0; i < 8; i++) {
+  //    Serial.write(' ');
+  //    tft.print(addr[i], HEX);
+  //  }
 
   if (OneWire::crc8(addr, 7) != addr[7]) {
-    tft.println("CRC is not valid!");
+    //    tft.println("CRC is not valid!");
     return;
   }
-  tft.println();
+  //  tft.println();
 
-  setCursorTFT(3,0);
+  setCursorTFT(sensNum*3+1,0);
   // the first ROM byte indicates which chip
   switch (addr[0]) {
   case 0x10:
-    tft.println("  Chip = DS18S20");  // or old DS1820
+    tft.println("Chip = DS18S20");  // or old DS1820
     type_s = 1;
     break;
   case 0x28:
-    tft.println("  Chip = DS18B20");
+    tft.println("Chip = DS18B20");
     type_s = 0;
     break;
   case 0x22:
-    tft.println("  Chip = DS1822");
+    tft.println("Chip = DS1822");
     type_s = 0;
     break;
   default:
-    tft.println("Device is not a DS18x20 family device.");
+    //    tft.println("Device is not a DS18x20 family device.");
     return;
   } 
 
@@ -70,19 +72,19 @@ void read1Wire(void) {
   ds.select(addr);    
   ds.write(0xBE);         // Read Scratchpad
 
-  setCursorTFT(4,0);
-  tft.print("  Data = ");
-  tft.print(present,HEX);
-  tft.print(" ");
+  //  setCursorTFT(4,0);
+  //  tft.print("  Data = ");
+  //  tft.print(present,HEX);
+  //  tft.print(" ");
   for ( i = 0; i < 9; i++) {           // we need 9 bytes
     data[i] = ds.read();
-    tft.print(data[i], HEX);
-    tft.print(" ");
+    //    tft.print(data[i], HEX);
+    //    tft.print(" ");
   }
-  setCursorTFT(5,0);
-  tft.print(" CRC=");
-  tft.print(OneWire::crc8(data, 8), HEX);
-  tft.println();
+  //  setCursorTFT(5,0);
+  //  tft.print(" CRC=");
+  //  tft.print(OneWire::crc8(data, 8), HEX);
+  //  tft.println();
 
   // convert the data to actual temperature
 
@@ -106,14 +108,15 @@ void read1Wire(void) {
   }
   celsius = (float)raw / 16.0;
   fahrenheit = celsius * 1.8 + 32.0;
-  setCursorTFT(6,0);
-  tft.print("  Temperature = ");
+  setCursorTFT(sensNum*3+2,0);
+  tft.print("Temp = ");
   tft.print(celsius);
-  setCursorTFT(7,0);
-  tft.print(" Celsius, ");
+  tft.print("C");
+  setCursorTFT(sensNum*3+3,0);
   tft.print(fahrenheit);
-  setCursorTFT(8,0);
-  tft.println(" Fahrenheit");
+  tft.println(" F");
+  sensNum++;
 }
+
 
 

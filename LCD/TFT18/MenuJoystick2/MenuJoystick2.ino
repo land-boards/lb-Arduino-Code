@@ -40,6 +40,8 @@ enum MENUITEMS
   MENU5,
   MENU6,
   MENU7,
+  MENU8,
+  MENU9,
   MENU10,
   MENU11,
   MENU20,
@@ -48,6 +50,8 @@ enum MENUITEMS
   MENU31,
   MENU40,
   MENU41,
+  MENU50,
+  MENU51,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -61,6 +65,8 @@ enum MENUITEMS
 int menuState;
 
 MiniDuino myMiniDuino;
+
+int sensNum;
 
 //////////////////////////////////////////////////////////////////////////////
 // class initializers
@@ -84,6 +90,7 @@ void setup()
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  sensNum = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
