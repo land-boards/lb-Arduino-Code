@@ -1,0 +1,4 @@
+ The pitch of the instrument is controlled by the proximity of the player's hand 
+ to an antenna (mounted vertically in the original design). A second antenna 
+ (traditionally mounted horizontally) senses the proximity of the player's other 
+ hand and controls the volume of the tone. 

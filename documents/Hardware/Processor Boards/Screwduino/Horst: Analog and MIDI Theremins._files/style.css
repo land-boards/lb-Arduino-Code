@@ -1,0 +1,48 @@
+body {
+	background-image:url(images/bgnd.jpg);
+	background-repeat:no-repeat;
+	background-attachment:fixed;
+	background-position: center top;
+	background-color:=#000000;
+	color:#000000;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	margin: 0px 0px;
+	padding: 0px;
+}
+
+hr {color:navy} 
+
+a:link {color:#FF8000} 
+a:visited {color:#FF8000} 
+a:hover {color:yellow;}
+a:active {color:#008000} 
+
+a {text-decoration:none}
+
+
+h1 {	
+      color:#FFFFFF;
+	font-size: 20px;
+	}
+
+h2 {	
+      font-weight:bold;
+      color:#FFFFFF;
+	font-size: 20px;
+	}
+
+h3 {	
+      color:#FFFFFF;
+	font-size: 16px;
+	}
+
+p {	
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+      margin:0px 0px 0px;
+      color:#FFFFFF;
+	font-size: 13px;
+      text-align:justify;
+	}
+
+	
