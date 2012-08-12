@@ -51,9 +51,9 @@ enum KEY_PRESSES
 
 #define GPSRX       2
 #define GPSTX       3
-#define DIGIO4      4
-#define DIGIO5      5
-#define DIGIO6      6
+#define DIGIN4      4
+#define DIGIN5      5
+#define DIGIN6      6
 #define SD_CD       7
 #define LCD_RST     8
 #define LCD_DC      9 
@@ -82,4 +82,3 @@ class MiniDuino
 };
 
 #endif
-
