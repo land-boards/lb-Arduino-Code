@@ -2,12 +2,13 @@
 // testMenu() - 
 ////////////////////////////////////////////////////////////
 
-const char * menuHeader = "** Test Menu **";
-const char * menuTestKeypad = "Test Keypad";
-const char * menuTest1Wire = "Test 1-Wire Sensor";
-const char * menuTestTMP36 = "Test TMP36 sensor";
-const char * menuTestLDR = "Test LDR sensor";
-const char * menuTestLED = "Test LED on GVS";
+const char * menuHeader     = "** Test Menu **";
+const char * menuTestKeypad = "Test Keypad ------A0";
+const char * menuTest1Wire  = "Test 1-Wire Sens -D6";
+const char * menuTestTMP36  = "Test TMP36 sensor A1";
+const char * menuTestLDR    = "Test LDR sensor --A1";
+const char * menuTestLED    = "Test GVS LED -----D6";
+const char * menuTestRelay  = "Test 2 ch relay D2.3";
 
 void testMenu(void)
 {
@@ -24,6 +25,7 @@ void testMenu(void)
     displayMenuLine(3,ST7735_WHITE,ST7735_BLACK,(char *) menuTestTMP36,0);
     displayMenuLine(4,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLDR,0);
     displayMenuLine(5,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLED,0);
+    displayMenuLine(6,ST7735_WHITE,ST7735_BLACK,(char *) menuTestRelay,0);
     menuState = MENU1;
     break;
   case MENU1:
@@ -49,6 +51,7 @@ void testMenu(void)
     displayMenuLine(3,ST7735_WHITE,ST7735_BLACK,(char *) menuTestTMP36,0);
     displayMenuLine(4,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLDR,0);
     displayMenuLine(5,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLED,0);
+    displayMenuLine(6,ST7735_WHITE,ST7735_BLACK,(char *) menuTestRelay,0);
     menuState = MENU3;
     break;
   case MENU3:
@@ -77,6 +80,7 @@ void testMenu(void)
     displayMenuLine(3,ST7735_WHITE,ST7735_BLUE,(char *) menuTestTMP36,0);
     displayMenuLine(4,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLDR,0);
     displayMenuLine(5,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLED,0);
+    displayMenuLine(6,ST7735_WHITE,ST7735_BLACK,(char *) menuTestRelay,0);
     menuState = MENU5;
     break;
   case MENU5:
@@ -105,6 +109,7 @@ void testMenu(void)
     displayMenuLine(3,ST7735_WHITE,ST7735_BLACK,(char *) menuTestTMP36,0);
     displayMenuLine(4,ST7735_WHITE,ST7735_BLUE,(char *) menuTestLDR,0);
     displayMenuLine(5,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLED,0);
+    displayMenuLine(6,ST7735_WHITE,ST7735_BLACK,(char *) menuTestRelay,0);
     menuState = MENU7;
     break;
   case MENU7:
@@ -133,6 +138,7 @@ void testMenu(void)
     displayMenuLine(3,ST7735_WHITE,ST7735_BLACK,(char *) menuTestTMP36,0);
     displayMenuLine(4,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLDR,0);
     displayMenuLine(5,ST7735_WHITE,ST7735_BLUE,(char *) menuTestLED,0);
+    displayMenuLine(6,ST7735_WHITE,ST7735_BLACK,(char *) menuTestRelay,0);
     menuState = MENU9;
     break;
   case MENU9:
@@ -143,6 +149,9 @@ void testMenu(void)
       case SELECT:
       case RIGHT:
         menuState = MENU50;
+        break;
+      case DOWN:
+        menuState = MENU12;
         break;
       case UP:
         menuState = MENU6;
@@ -203,6 +212,45 @@ void testMenu(void)
       menuState = MENU0;
     }
     break;
+
+  case MENU12:
+    tft.fillScreen(ST7735_BLACK);
+    displayMenuLine(0,ST7735_WHITE,ST7735_BLACK,(char *) menuHeader,0);
+    displayMenuLine(1,ST7735_WHITE,ST7735_BLACK,(char *) menuTestKeypad,1);
+    displayMenuLine(2,ST7735_WHITE,ST7735_BLACK,(char *) menuTest1Wire,0);
+    displayMenuLine(3,ST7735_WHITE,ST7735_BLACK,(char *) menuTestTMP36,0);
+    displayMenuLine(4,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLDR,0);
+    displayMenuLine(5,ST7735_WHITE,ST7735_BLACK,(char *) menuTestLED,0);
+    displayMenuLine(6,ST7735_WHITE,ST7735_BLUE,(char *) menuTestRelay,0);
+    menuState = MENU13;
+    break;
+  case MENU13:
+    if (pressedKey != NONE)
+    {
+      switch (pressedKey)
+      {
+      case SELECT:
+      case RIGHT:
+        menuState = MENU60;
+        break;
+      case UP:
+        menuState = MENU6;
+        break;
+      }
+    } 
+    break;
+  case MENU14:
+    tft.fillScreen(ST7735_BLACK);
+    setCursorTFT(0,0);
+    tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+    tft.print("Testing Keypad");
+    setCursorTFT(1,0);
+    tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+    tft.print("Hold SELECT to exit");
+    menuState = MENU11;
+    break;
+
+
   case MENU20:
     tft.fillScreen(ST7735_BLACK);
     setCursorTFT(0,0);
@@ -270,6 +318,37 @@ void testMenu(void)
         menuState = MENU8;               // wait for a second
       if (menuState == MENU8)
         digitalWrite(DIGIO6, HIGH);
+      break;
+    }
+  case MENU60:
+    tft.fillScreen(ST7735_BLACK);
+    setCursorTFT(0,0);
+    tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+    tft.print("Testing Relays");
+    menuState = MENU61;
+    pinMode(2, OUTPUT);
+    pinMode(3, OUTPUT);
+    break;
+  case MENU61:
+    {
+      setCursorTFT(1,0);
+      digitalWrite(2, LOW);    // turn the LED on
+      if (myMiniDuino.delayAvailable(1000) != 0)
+        menuState = MENU12;               // wait for a second
+      digitalWrite(2, HIGH);   // turn the LED off
+      if (myMiniDuino.delayAvailable(1000) != 0)
+        menuState = MENU12;               // wait for a second
+      digitalWrite(3, LOW);    // turn the LED on
+      if (myMiniDuino.delayAvailable(1000) != 0)
+        menuState = MENU12;               // wait for a second
+      digitalWrite(3, HIGH);   // turn the LED off
+      if (myMiniDuino.delayAvailable(1000) != 0)
+        menuState = MENU12;               // wait for a second
+      if (menuState == MENU12)
+      {
+        digitalWrite(2, HIGH);
+        digitalWrite(3, HIGH);
+      }
       break;
     }
   }

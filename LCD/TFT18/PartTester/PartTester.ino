@@ -44,6 +44,9 @@ enum MENUITEMS
   MENU9,
   MENU10,
   MENU11,
+  MENU12,
+  MENU13,
+  MENU14,
   MENU20,
   MENU21,
   MENU30,
@@ -52,6 +55,8 @@ enum MENUITEMS
   MENU41,
   MENU50,
   MENU51,
+  MENU60,
+  MENU61,
 };
 
 //////////////////////////////////////////////////////////////////////////////
