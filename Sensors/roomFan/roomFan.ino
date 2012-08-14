@@ -6,8 +6,10 @@
 
 #define DEBUG
 
-#define RELAY_PIN 8
+#define RELAY_PIN 2
 #define DARK_THR 500
+
+extern float fahrenheit;
 
 enum FAN_VALS
 {
@@ -39,13 +41,13 @@ void setFan(int fanVal)
 // the loop routine runs over and over again forever:
 void loop() {
   // read the input on analog pin 0:
-  int sensorValue = analogRead(A0);
+  int sensorValue = analogRead(A1);
   // print out the value you read:
 #ifdef DEBUG
   Serial.println(sensorValue);
 #endif
 
-  if ((fanState == FAN_OFF) && (sensorValue > DARK_THR+20))
+  if ((fanState == FAN_OFF) && (sensorValue > DARK_THR+20) && (fahrenheit > 62.0))
   {
     fanState = FAN_ON;
 #ifdef DEBUG
@@ -61,6 +63,7 @@ void loop() {
 #endif
     setFan(FAN_OFF);
   }
-  delay(2500);        // delay in between reads for stability
+  delay(1500);        // delay in between reads for stability
+  read1Wire();
 }
 
