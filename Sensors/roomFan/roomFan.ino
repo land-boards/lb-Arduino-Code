@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////
 // roomFan - Control an inlet fan.
 // Hardware Inputs:
-//   Analog 0 - LDR.
+//   Analog 1 - LDR.
 //   Digital 6 - 1-wire temp sensor.
 // Hardware Outputs:
-//   Digital 3 - Relay output.
+//   Digital 2 - Relay output.
 /////////////////////////////////////////////////////////////////////
 
 #include <Time.h>
@@ -106,7 +106,7 @@ void loop()
 #endif
     setFan(FAN_ON);
   }
-  else if ((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST))
+  else if (((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST)) || (fahrenheit < LOW_TEMP))
   {
     fanState = FAN_OFF;
 #ifdef DEBUG
