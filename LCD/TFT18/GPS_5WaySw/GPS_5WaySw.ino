@@ -48,39 +48,33 @@
 #include <SPI.h>
 
 //////////////////////////////////////////////////////////////////////////////
-//#define SERIAL_OUT
+//#defines
 //////////////////////////////////////////////////////////////////////////////
 
-//#define SERIAL_OUT
-#undef SERIAL_OUT
+//#define SERIAL_DEBUG
+#undef SERIAL_DEBUG
 
-#define DBG_TFT 1  
+//#define DBG_TFT 1
+#undef DBG_TFT
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
 //////////////////////////////////////////////////////////////////////////////
 
-enum MENUITEMS
+enum MENU_STATE_VALUES
 {
-  MENU0,
-  MENU0B,
-  MENU0C,
-  MENU1,
-  MENU1B,
-  MENU1C,
-  MENU2,
-  MENU2B,
-  MENU2C,
-  MENU3,
-  MENU3B,
-  MENU3C,
-  MENU3D,
-  MENU4,
-  MENU4B,
-  MENU4C,
-  MENU5,
-  MENU5B,
-  MENU5C,
+  MONGPSLOCN_MENU,
+  MONGPSCLK_MENU,
+  MANWAYPTS_MENU,
+  LOGGING_MENU,
+  GOTOWAYPTS_MENU,
+  DOWNLDWAYS_MENU,
+  SETACTWAYS_MENU,
+  SHOWWAYPTS_MENU,
+  STARTLOGGING_MENU,
+  STOPLOGGING_MENU,
+  DUMPLOGFILE_MENU,
+  CLRLOGFILE_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -125,7 +119,8 @@ struct storeVals
 {
   unsigned char myCurrentWayPoint;
   float lats[20], lons[20];
-} myStoreVals;
+} 
+myStoreVals;
 
 struct lastGPSVal
 {
@@ -135,15 +130,17 @@ struct lastGPSVal
   uint8_t satellites;
   float speed, angle, magvariation, HDOP;
   boolean fix;
-} myGPSStore;
+} 
+myGPSStore;
 
 //////////////////////////////////////////////////////////////////////////////
 // class initializers
 //////////////////////////////////////////////////////////////////////////////
 
+Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
+
 SoftwareSerial mySerial(3, 2);
 Adafruit_GPS GPS(&mySerial);
-Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
 switch5Way mySwitch;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -153,11 +150,9 @@ switch5Way mySwitch;
 void setup()  
 {
 
-#ifdef SERIAL_OUT
-  Serial.begin(9600);
-#endif
+  Serial.begin(57600);
 
-  menuState = MENU0;
+  menuState = MONGPSLOCN_MENU;
 
   tft.initR(INITR_REDTAB);
 
@@ -168,6 +163,7 @@ void setup()
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  tft.print(F("** Doug's GPS v0.8 **"));
 
   GPSInit();
 
@@ -179,7 +175,8 @@ void setup()
 
 void loop()                     // run over and over again
 {
-  geocacheMenu();
+  menuRefresh();
+  menuNav();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -188,68 +185,10 @@ void loop()                     // run over and over again
 
 void debugMsg(char * debugMessage)
 {
-    clearLine(15);
-    tft.print(debugMessage);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// parseRxBuffer - save waypoints - rxBuffer[]
-// Order is ww=aa.aaaa,ooo.ooo
-// ww is the way point number
-// aa.aaaa is the latitude
-// 000.000 is the longitude
-//////////////////////////////////////////////////////////////////////////////
-
-int parseRxBuffer(void)
-{
-  int lineOffset;
-  int floatStringOffset;
-  char floatBuff[10];
-  int wayPointNum;
-  float latF, longF;
-  if (rxBuffer[1] == '=')  //waypoints from 0-9
-  {
-    wayPointNum = rxBuffer[0] - '0';
-    lineOffset = 2;
-  }
-  else if (rxBuffer[2] == '=')  // waypoints from 10-19
-  {
-    wayPointNum = ((rxBuffer[0] - '0') * 10);
-    wayPointNum += (rxBuffer[1] - '0');
-    lineOffset = 3;
-  }
-  else
-    return(-1);
-  floatStringOffset = 0;
-  while (rxBuffer[lineOffset] != ',')
-  {
-    floatBuff[floatStringOffset++] = rxBuffer[lineOffset++];
-  }
-  floatBuff[floatStringOffset] = 0;
-  latF=atof(floatBuff);
-  lineOffset++;
-  floatStringOffset = 0;
-  while (rxBuffer[lineOffset] != 0)
-  {
-    floatBuff[floatStringOffset++] = rxBuffer[lineOffset++];
-  }
-  floatBuff[floatStringOffset] = 0;
-  longF=atof(floatBuff);
-  if ((wayPointNum >= 0) && (wayPointNum <= 19)) 
-    setFArray(wayPointNum,latF,longF);
-  else
-    return(-2);
-  return(0);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Set the lat long values in the buffer to the Geocache values
-//////////////////////////////////////////////////////////////////////////////
-
-void setFArray(int wayPointNum, float latF, float longF)
-{
-  myStoreVals.lats[wayPointNum] = latF;
-  myStoreVals.lons[wayPointNum] = longF;
+#ifdef DBG_TFT
+  clearLine(15);
+  tft.print(debugMessage);
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -258,8 +197,7 @@ void setFArray(int wayPointNum, float latF, float longF)
 
 void clearLine(int lineToClear)
 {
-  setCursorTFT(lineToClear,0);
-  tft.print("                     ");
+  tft.fillRect(0,lineToClear*10,128,10,ST7735_BLACK);
   setCursorTFT(lineToClear,0);
 }
 
@@ -279,11 +217,12 @@ void setCursorTFT(int row, int col)
 void drawVector(float angle)
 {
   float angleRad = (angle * 3.141592654 / 180.0);
-  float endX = 64 + (43 * sin(angleRad));
+  float endX = 64 - (43 * sin(angleRad));
   float endY = 110 + (43 * -(cos(angleRad)));
   tft.drawLine(64,110,lastX,lastY,ST7735_BLACK);
   tft.drawLine(64,110,endX,endY,ST7735_WHITE);
   lastX = endX;
   lastY  = endY;
 }
+
 
