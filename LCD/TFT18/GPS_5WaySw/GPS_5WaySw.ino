@@ -150,7 +150,7 @@ switch5Way mySwitch;
 void setup()  
 {
 
-  Serial.begin(57600);
+  Serial.begin(115200);
 
   menuState = MONGPSLOCN_MENU;
 
@@ -163,7 +163,7 @@ void setup()
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  tft.print(F("** Doug's GPS v0.8 **"));
+  tft.print(F("** Doug's GPS v0.9 **"));
 
   GPSInit();
 

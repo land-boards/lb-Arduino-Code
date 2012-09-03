@@ -112,6 +112,20 @@ void storeGPSVals(void)
 void readGPS(void)
 {
   int keyState;
+  myGPSStore.hour = 0;
+  myGPSStore.minute = 0;
+  myGPSStore.seconds = 0;
+  myGPSStore.year = 0;
+  myGPSStore.month = 0;
+  myGPSStore.day = 0;
+  myGPSStore.latitude = 0.0;
+  myGPSStore.longitude = 0.0;
+  myGPSStore.geoidheight = 0;
+  myGPSStore.altitude = 0.0;
+  myGPSStore.satellites = 0;
+  myGPSStore.speed = 0.0;
+  myGPSStore.angle = 0.0;
+  
   do
   {
 #ifdef DBG_TFT
@@ -133,14 +147,9 @@ void readGPS(void)
     }
 
     // if a sentence is received, we can check the checksum, parse it...
-    if (GPS.newNMEAreceived()) {
-      // a tricky thing here is if we print the NMEA sentence, or data
-      // we end up not listening and catching other sentences! 
-      // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
-      //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
-
-      if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
-        return;  // we can fail to parse a sentence in which case we should just wait for another
+    if (GPS.newNMEAreceived()) 
+    {
+      GPS.parse(GPS.lastNMEA());
     }
 
     // approximately every second or so, print out the current stats
@@ -149,7 +158,7 @@ void readGPS(void)
     if ((GPS.fix) && (millis() - timer > 900))
     {
       timer = millis(); // reset the timer
-      setCursorTFT(1,0);
+      setCursorTFT(2,0);
       if (myGPSStore.hour != GPS.hour)
       {
         if (GPS.hour<10)
@@ -158,7 +167,7 @@ void readGPS(void)
       }
       if (myGPSStore.minute != GPS.minute)
       {
-        setCursorTFT(1,2);
+        setCursorTFT(2,2);
         tft.print(F(":"));
         if (GPS.minute<10)
           tft.print(F("0"));
@@ -166,7 +175,7 @@ void readGPS(void)
       }
       if (myGPSStore.seconds != GPS.seconds)
       {
-        setCursorTFT(1,5);
+        setCursorTFT(2,5);
         tft.print(F(":"));
         if (GPS.seconds<10)
           tft.print(F("0"));
@@ -175,7 +184,7 @@ void readGPS(void)
       }
       if (myGPSStore.month != GPS.month)
       {
-        setCursorTFT(1,9);
+        setCursorTFT(2,9);
         if (GPS.month<10)
           tft.print(F("0"));
         tft.print(GPS.month, DEC);
@@ -183,14 +192,14 @@ void readGPS(void)
       }
       if (myGPSStore.day != GPS.day)
       {
-        setCursorTFT(1,12);
+        setCursorTFT(2,12);
         if (GPS.day<10)
           tft.print("0");
         tft.print(GPS.day, DEC);
       }
       if (myGPSStore.year != GPS.year)
       {
-        setCursorTFT(1,14);
+        setCursorTFT(2,14);
         tft.print(F("/20"));
         if (GPS.year<10)
           tft.print("0");
@@ -199,39 +208,39 @@ void readGPS(void)
 
       if (myGPSStore.latitude != GPS.latitude)
       {
-        setCursorTFT(2,0);
+        setCursorTFT(3,0);
         tft.print(F("Lat "));
         tft.print(GPS.latitude, 4);
         tft.print(GPS.lat);
       }
       if (myGPSStore.longitude != GPS.longitude)
       {
-        setCursorTFT(3,0);
+        setCursorTFT(4,0);
         tft.print(F("Lon "));
         tft.print(GPS.longitude, 4);
         tft.print(GPS.lon);
       }
       if (myGPSStore.speed != GPS.speed)
       {
-        setCursorTFT(4,0);
+        setCursorTFT(5,0);
         tft.print(F("Speed (knots): "));
         tft.print(GPS.speed);
       }
       if (myGPSStore.angle != GPS.angle)
       {
-        setCursorTFT(5,0);
+        setCursorTFT(6,0);
         tft.print(F("Angle: ")); 
         tft.println(GPS.angle);
       }
       if (myGPSStore.altitude != GPS.altitude)
       {
-        setCursorTFT(6,0);
+        setCursorTFT(7,0);
         tft.print(F("Altitude: "));
         tft.print(GPS.altitude);
       }
       if (myGPSStore.satellites != GPS.satellites)
       {
-        setCursorTFT(7,0);
+        setCursorTFT(8,0);
         tft.print(F("Satellites: "));
         tft.print(GPS.satellites);
       }
@@ -250,6 +259,7 @@ void readGPS(void)
       clearLine(5);
       clearLine(6);
       clearLine(7);
+      clearLine(8);
     }
     keyState = mySwitch.checkKeypad();
   }
@@ -353,25 +363,14 @@ void GPSClock(void)
 int quietReadGPS(void)
 {
   int intLat, intLon;
-  // in case you are not using the interrupt above, you'll
-  // need to 'hand query' the GPS, not suggested :(
   if (! usingInterrupt) {
-    // read data from the GPS in the 'main loop'
     char c = GPS.read();
-    // if you want to debug, this is a good time to do it!
     if (GPSECHO)
       if (c) UDR0 = c;
-    // writing direct to UDR0 is much much faster than Serial.print 
-    // but only one character can be written at a time. 
   }
 
-  // if a sentence is received, we can check the checksum, parse it...
-  if (GPS.newNMEAreceived()) {
-    // a tricky thing here is if we print the NMEA sentence, or data
-    // we end up not listening and catching other sentences! 
-    // so be very wary if using OUTPUT_ALLDATA and trytng to print out data
-    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
-
+  if (GPS.newNMEAreceived()) 
+  {
     if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
       return -1;  // we can fail to parse a sentence in which case we should just wait for another
   }

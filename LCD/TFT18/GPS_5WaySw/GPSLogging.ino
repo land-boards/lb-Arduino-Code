@@ -1,3 +1,15 @@
+/////////////////////////////////////////////////////////////////////////////
+// GPS logging functions include
+// startLog()
+// stopLog()
+// clrLog()
+// dumpLog()
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// startLog() - Start logging
+/////////////////////////////////////////////////////////////////////////////
+
 void startLog(void)
 {
   tft.fillRect(0,10,128,70,ST7735_BLACK);
@@ -8,8 +20,14 @@ void startLog(void)
     tft.println("Logging STARTED!");
   else
     tft.println("!No response!");
+  setCursorTFT(3,0);
+  tft.print(F("Any key to continue"));
   while(mySwitch.checkKeypad() == NOKEY);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// stopLog() - Stop logging
+/////////////////////////////////////////////////////////////////////////////
 
 void stopLog(void)
 {
@@ -24,11 +42,17 @@ void stopLog(void)
 
   setCursorTFT(2,0);
   tft.print(F("Stopped Logging"));
-  delay(1000);
+  setCursorTFT(3,0);
+  tft.print(F("Any key to continue"));
+  while(mySwitch.checkKeypad() == NOKEY);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// clrLog() - Clearing the log
 // clear log = $PMKT184,1*22
 // returns  $PMKT184,1*22
+/////////////////////////////////////////////////////////////////////////////
+
 void clrLog(void)
 {
   tft.fillRect(0,10,128,70,ST7735_BLACK);
@@ -40,8 +64,14 @@ void clrLog(void)
     mySerial.read();
   setCursorTFT(2,0);
   tft.print(F("Cleared Log"));
-  delay(1000);
+  setCursorTFT(3,0);
+  tft.print(F("Any key to continue"));
+  while(mySwitch.checkKeypad() == NOKEY);
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// dumpLog() - Dump the log
+/////////////////////////////////////////////////////////////////////////////
 
 void dumpLog(void)
 {
@@ -56,7 +86,7 @@ void dumpLog(void)
   while (mySerial.available())
     mySerial.read();
 
-  Serial.println(F("--- Log ---"));
+  Serial.println(F("--- Log Start ---"));
   useInterrupt(false);
   delay(1000);
   GPS.sendCommand("$PMTK622,1*29");
@@ -69,6 +99,11 @@ void dumpLog(void)
     }
   }
   while(mySwitch.checkKeypad() == NOKEY);
+  Serial.println(F("--- Log End ---"));
+  setCursorTFT(3,0);
+  tft.print(F("Any key to continue"));
+  while(mySwitch.checkKeypad() == NOKEY);
   useInterrupt(true);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
 }
 

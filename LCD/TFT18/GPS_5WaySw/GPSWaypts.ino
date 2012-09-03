@@ -1,3 +1,39 @@
+//////////////////////////////////////////////////////////////////////////////////
+// GPSWaypts - manage the waypoint functions
+//////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////////////////////////////////
+
+void shWays(void)
+{
+  tft.fillRect(0,10,128,70,ST7735_BLACK);
+  tft.fillScreen(ST7735_BLACK);
+  setCursorTFT(0,0);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+  tft.print(F("Showing waypoints"));
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  for (int row = 0; row < 15; row++)
+  {
+    setCursorTFT(row+1,0);
+    tft.print(row);
+    tft.print(F(","));
+    tft.print(myStoreVals.lats[row],4);
+    tft.print(F(","));
+    tft.print(myStoreVals.lons[row],4);
+  }
+  while(mySwitch.checkKeypad() == NOKEY)
+    delay(50);
+  while(mySwitch.checkKeypad() != NOKEY)
+    delay(50);
+
+  tft.fillRect(0,10,128,150,ST7735_BLACK);
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////////
 
 void goWays(void)
 {
@@ -78,15 +114,88 @@ void goWays(void)
   tft.fillRect(0,10,128,150,ST7735_BLACK);
   while (mySwitch.checkKeypad() != NOKEY);
 }
+
 //////////////////////////////////////////////////////////////////////////////
-// parseRxBuffer - save waypoints - rxBuffer[]
+// Set the lat long values in the buffer to the Geocache values
+//////////////////////////////////////////////////////////////////////////////
+
+void setFArray(int wayPointNum, float latF, float longF)
+{
+  myStoreVals.lats[wayPointNum] = latF;
+  myStoreVals.lons[wayPointNum] = longF;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// dlWays(void) - Download waypoints
+//////////////////////////////////////////////////////////////////////////////
+
+void dlWays(void)
+{
+  int rxCount = 0;
+  int charIn;
+  int errorCode;
+  int done = 0;
+  while (mySwitch.checkKeypad() != NOKEY)
+    delay(50);
+  useInterrupt(false);
+  tft.fillRect(0,10,128,80,ST7735_BLACK);
+  while (Serial.available())     // flush the serial read port
+    charIn = Serial.read();
+  Serial.println("<DL>");    // signals host that it's time to load waypoints
+  do
+  {
+    if (Serial.available())
+    {
+      charIn = Serial.read();
+      if (charIn != '\n')
+        rxBuffer[rxCount++] = charIn;
+      else
+      {
+        tft.print(".");
+        rxBuffer[rxCount] = 0;
+        errorCode = parseWayPts();
+        if (errorCode == -1)
+        {
+          clearLine(2);
+          tft.print("Error: Missing equal");
+        }
+        else if (errorCode == -2)
+        {
+          clearLine(2);
+          tft.print("Error: Bad waypt num");
+        } 
+        rxCount = 0;
+        Serial.write('A');
+        if ((rxBuffer[0] == '1') && (rxBuffer[1]=='9'))
+        {
+          clearLine(3);
+          tft.print("Download Completed  ");
+          EEPROM_writeAnything(0, myStoreVals);
+          Serial.println("</SERIN>");    // signals host that it's done loading waypoints
+          done = 1;
+        }
+      }
+    }
+  }
+  while ((done == 0) && (mySwitch.checkKeypad() == NOKEY));
+
+  Serial.println("</DL>");    // signals host that it's done loading waypoints
+  clearLine(2);
+  if (done == 0)
+    tft.print("Download terminated");
+  useInterrupt(true);
+  delay(2000);  // 2 second message
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// parseWayPts - save waypoints - rxBuffer[]
 // Order is ww=aa.aaaa,ooo.ooo
 // ww is the way point number
 // aa.aaaa is the latitude
 // 000.000 is the longitude
 //////////////////////////////////////////////////////////////////////////////
 
-int parseRxBuffer(void)
+int parseWayPts(void)
 {
   int lineOffset;
   int floatStringOffset;
@@ -126,69 +235,6 @@ int parseRxBuffer(void)
   else
     return(-2);
   return(0);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Set the lat long values in the buffer to the Geocache values
-//////////////////////////////////////////////////////////////////////////////
-
-void setFArray(int wayPointNum, float latF, float longF)
-{
-  myStoreVals.lats[wayPointNum] = latF;
-  myStoreVals.lons[wayPointNum] = longF;
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// 
-//////////////////////////////////////////////////////////////////////////////
-
-void dlWays(void)
-{
-  int rxCount = 0;
-  int charIn;
-  int errorCode;
-  while (Serial.available())   
-    // flush the serial read port
-    charIn = Serial.read();
-  Serial.println("<DL>");    // signals host that it's time to load waypoints
-  if (Serial.available())
-  {
-    charIn = Serial.read();
-    if (charIn == '\n')
-    {
-      tft.print(".");
-      rxBuffer[rxCount] = 0;
-      errorCode = parseRxBuffer();
-      if (errorCode == -1)
-      {
-        clearLine(2);
-        tft.print("Error: Missing equal");
-      }
-      else if (errorCode == -2)
-      {
-        clearLine(2);
-        tft.print("Error: Bad waypt num");
-      } 
-      rxCount = 0;
-      Serial.write('A');
-      if ((rxBuffer[0] == '1') && (rxBuffer[1]=='9'))
-      {
-        clearLine(3);
-        tft.print("Download Completed  ");
-        EEPROM_writeAnything(0, myStoreVals);
-        Serial.println("</SERIN>");    // signals host that it's time to load waypoints
-        delay(2000);  // 2 second message
-      }
-    }
-    else
-    {
-      rxBuffer[rxCount++] = charIn;
-    }
-  }
-  Serial.println("</DL>");    // signals host that it's time to load waypoints
-  clearLine(2);
-  tft.print("Download Terminated ");
-  delay(2000);  // 2 second message
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -248,33 +294,5 @@ void setWay(void)
   delay(2000);
 }
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-//////////////////////////////////////////////////////////////////////////////
-
-void shWays(void)
-{
-  tft.fillRect(0,10,128,70,ST7735_BLACK);
-  tft.fillScreen(ST7735_BLACK);
-  setCursorTFT(0,0);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
-  tft.print(F("Showing waypoints"));
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  for (int row = 0; row < 15; row++)
-  {
-    setCursorTFT(row+1,0);
-    tft.print(row);
-    tft.print(",");
-    tft.print(myStoreVals.lats[row],4);
-    tft.print(",");
-    tft.print(myStoreVals.lons[row],4);
-  }
-  while(mySwitch.checkKeypad() == NOKEY)
-    delay(50);
-  while(mySwitch.checkKeypad() != NOKEY)
-    delay(50);
-
-  tft.fillRect(0,10,128,150,ST7735_BLACK);
-}
 
 
