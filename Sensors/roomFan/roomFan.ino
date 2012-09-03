@@ -13,8 +13,8 @@
 // defines
 /////////////////////////////////////////////////////////////////////
 
-//#define DEBUG 1
-#undef DEBUG
+#define DEBUG 1
+//#undef DEBUG
 
 #define RELAY_PIN 2
 #define DARK_THR 500

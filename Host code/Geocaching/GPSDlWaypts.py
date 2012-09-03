@@ -7,7 +7,7 @@ import string
 import sys
  
 # Configure the serial port to talk to the Arduino
-connection = serial.Serial('/dev/ttyUSB0', 9600)
+connection = serial.Serial('/dev/ttyUSB1', 115200)
 time.sleep(2)
 
 connection.flushInput()

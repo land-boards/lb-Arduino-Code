@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+  <kml xmlns="http://www.opengis.net/kml/2.2"> 
+   <Document> 
+     <name>GPS Path</name> 
+     <description>Path parsed from GPS data.</description> 
+     <Style id="yellowLineGreenPoly"> 
+       <LineStyle> 
+         <color>7f00ffff</color> 
+         <width>4</width> 
+       </LineStyle> 
+       <PolyStyle> 
+         <color>7f00ff00</color> 
+       </PolyStyle> 
+     </Style> 
+     <Placemark> 
+       <name>Begin</name> 
+       <description>Start GPD Data</description> 
+       <styleUrl>#yellowLineGreenPoly</styleUrl> 
+       <LineString> 
+         <extrude>1</extrude> 
+         <tessellate>1</tessellate> 
+         <altitudeMode>absolute</altitudeMode> 
+         <coordinates>-79.58897585737418,40.00709629143432,284
+-79.58890719281521,40.00708484734116,285
+-79.5889224516061,40.006917000641465,286
+-79.5889224516061,40.00677204212809,288
+-79.58888430462889,40.00659275133523,289
+-79.58888430462889,40.006611824823835,293
+-79.58885378704713,40.00675296863949,302
+-79.58883852825625,40.00693225943235,309
+-79.5888308988608,40.00706958855028,313
+
+ </coordinates>
+       </LineString>
+     </Placemark>
+   </Document>
+ </kml>
+
