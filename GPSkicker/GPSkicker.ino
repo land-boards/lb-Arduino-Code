@@ -8,16 +8,18 @@ boolean usingInterrupt = false;
 
 void setup()  
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  delay(1000);
+  Serial.println("serial init");
   GPS.begin(9600);
+  delay(1000);
+  Serial.println("gps init");
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  // uncomment this line to turn on only the "minimum recommended" data
-  //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-  // For parsing data, we don't suggest using anything but either RMC only or RMC+GGA since
-  // the parser doesn't care about other sentences at this time
-
-  // Set the update rate
+  delay(1000);
+  Serial.println("rmc command set");
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);  // 1 Hz update rate
+  delay(100);
+  Serial.println("1 hz command set");
   useInterrupt(true);
   if (GPS.LOCUS_StartLogger())
     Serial.println("Logging STARTED!");
