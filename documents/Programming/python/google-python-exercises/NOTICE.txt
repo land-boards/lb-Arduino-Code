@@ -1,5 +1,0 @@
-Code for Google's Python Class
-Copyright 2010 Google Inc.
-
-This code developed by Nick Parlante
-at Google Inc.

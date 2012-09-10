@@ -1,5 +1,7 @@
+//////////////////////////////////////////////////////////////////////
+// kick start the GPS
+
 #include <Adafruit_GPS.h>
-#include <inttypes.h>
 #include <SoftwareSerial.h>
 
 SoftwareSerial mySerial(3, 2);
@@ -9,23 +11,24 @@ boolean usingInterrupt = false;
 void setup()  
 {
   Serial.begin(9600);
-  delay(1000);
-  Serial.println("serial init");
   GPS.begin(9600);
-  delay(1000);
-  Serial.println("gps init");
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  delay(1000);
-  Serial.println("rmc command set");
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);  // 1 Hz update rate
-  delay(100);
-  Serial.println("1 hz command set");
-  useInterrupt(true);
-  if (GPS.LOCUS_StartLogger())
+//  Serial.println("1 hz command set");
+//  delay(1000);
+//  Serial.println("Turning on interrupt");
+//  delay(1000);
+//  useInterrupt(true);
+//  Serial.println("Turned on interrupt");
+  delay(1000);
+  Serial.println("Starting datalogger");
+  delay(1000);
+  GPS.sendCommand(PMTK_LOCUS_STARTLOG);
+//  if (GPS.LOCUS_StartLogger())
     Serial.println("Logging STARTED!");
-  else
-    Serial.println("!No response!");
-  useInterrupt(false);
+//  else
+//    Serial.println("!No response!");
+//  useInterrupt(false);
 }
 
 void useInterrupt(boolean v) {
