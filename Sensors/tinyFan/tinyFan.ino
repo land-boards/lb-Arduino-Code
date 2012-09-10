@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////
-// roomFan - Control an inlet fan using an ATtiny85.
+// tinyFan - Control an inlet fan using an ATtiny85.
 // Hardware Inputs:
-//   "Pin" 2 - LDR.
+//   "Pin" 1 - LDR.
 //   "Pin" 4 - 1-wire temp sensor.
 // Hardware Outputs:
 //   "Pin" 3 - Relay output.
@@ -14,7 +14,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #define RELAY_PIN 3
-#define LDR_PIN 2
+#define LDR_PIN 1
 #define DARK_THR 500
 #define LOW_TEMP 62.0
 #define DARK_HYST 20
@@ -87,7 +87,7 @@ void loop()
     fanState = FAN_ON;
     setFan(FAN_ON);
   }
-  else if ((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST))
+  else if (((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST)) || (fahrenheit < LOW_TEMP))
   {
     fanState = FAN_OFF;
     setFan(FAN_OFF);
