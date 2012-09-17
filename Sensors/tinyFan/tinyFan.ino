@@ -34,6 +34,7 @@ enum FAN_VALS
 /////////////////////////////////////////////////////////////////////
 
 extern float fahrenheit;
+float tempHysteresis;
 
 int fanState;
 int yesterdaysLDRHigh;
@@ -55,6 +56,7 @@ void setup()
   useLDR = DARK_THR;
   todaysLDRHigh = analogRead(LDR_PIN);
   todaysLDRLow = todaysLDRHigh;
+  tempHysteresis = 1.0;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -82,12 +84,12 @@ void loop()
   else if (sensorValue < todaysLDRLow)
     todaysLDRLow = sensorValue;
 
-  if ((fanState == FAN_OFF) && (sensorValue > useLDR + DARK_HYST) && (fahrenheit > LOW_TEMP))
+  if ((fanState == FAN_OFF) && (sensorValue > useLDR + DARK_HYST) && (fahrenheit > (LOW_TEMP+tempHysteresis)))
   {
     fanState = FAN_ON;
     setFan(FAN_ON);
   }
-  else if (((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST)) || (fahrenheit < LOW_TEMP))
+  else if (((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST)) || (fahrenheit < (LOW_TEMP+tempHysteresis)))
   {
     fanState = FAN_OFF;
     setFan(FAN_OFF);

@@ -3,11 +3,18 @@
 // PartTester - Test Menu and Joystick using a MiniDuino
 //
 // Hardware -
-// Microprocessor Board is a MiniDuino
-//    ------> http://dougspcbdesigns.pbworks.com/w/page/55223153/MiniDuino
-// 
-//  This sketch works with the library for the Adafruit 1.8" TFT Breakout
+//  Microprocessor Board is a MiniDuino
+//   ------> http://dougspcbdesigns.pbworks.com/w/page/55223153/MiniDuino
+//  Keypad is a 5-way switch
+//   ------> http://dougspcbdesigns.pbworks.com/w/page/55033879/Sw5Way
+//  LDR is a Light dependent resistor
+//   ------> http://dougspcbdesigns.pbworks.com/w/page/55048594/LDRSensor
+//  DS18S20 is a 1-wire thermometer
+//   ------> http://dougspcbdesigns.pbworks.com/w/page/55033825/DS18S20
+//   is a 
+//   ------> 
 //  
+//  This sketch works with the library for the Adafruit 1.8" TFT Breakout
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -32,31 +39,12 @@
 
 enum MENUITEMS
 {
-  MENU0,
-  MENU1,
-  MENU2,
-  MENU3,
-  MENU4,
-  MENU5,
-  MENU6,
-  MENU7,
-  MENU8,
-  MENU9,
-  MENU10,
-  MENU11,
-  MENU12,
-  MENU13,
-  MENU14,
-  MENU20,
-  MENU21,
-  MENU30,
-  MENU31,
-  MENU40,
-  MENU41,
-  MENU50,
-  MENU51,
-  MENU60,
-  MENU61,
+  TESTKEYPAD_MENU,
+  TESTONEWIRE_MENU,
+  TESTTMP36_MENU,
+  TESTLDR_MENU,
+  TESTLED_MENU,
+  TESTRELAY_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -87,7 +75,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  menuState = MENU0;
+  menuState = TESTKEYPAD_MENU;
 
   tft.initR(INITR_REDTAB);
 
@@ -104,7 +92,8 @@ void setup()
 
 void loop()                     // run over and over again
 {
-  testMenu();
+  menuRefresh();
+  menuNav();
 }
 
 //////////////////////////////////////////////////////////////////////////////
