@@ -1,9 +1,13 @@
 /////////////////////////////////////////////////////////////////////
 // tinyFan - Control an inlet fan using an ATtiny85.
-// Hardware Inputs:
+// Hardware
+//  TinyDuino85 - http://dougspcbdesigns.pbworks.com/w/page/57711962/TinyDuino85
+//  LDR - http://dougspcbdesigns.pbworks.com/w/page/55048594/LDRSensor
+//  DS18B20 Temp Sensor - http://dougspcbdesigns.pbworks.com/w/page/55033825/DS18S20
+// Inputs:
 //   "Pin" 1 - LDR.
 //   "Pin" 4 - 1-wire temp sensor.
-// Hardware Outputs:
+// Outputs:
 //   "Pin" 3 - Relay output.
 /////////////////////////////////////////////////////////////////////
 
@@ -66,9 +70,15 @@ void setup()
 void setFan(int fanVal)
 {
   if (fanVal == FAN_OFF)
+  {
     digitalWrite(RELAY_PIN, HIGH);
+    fanState = FAN_OFF;
+  }
   else
+  {
     digitalWrite(RELAY_PIN, LOW);
+    fanState = FAN_ON;
+  }
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -86,12 +96,10 @@ void loop()
 
   if ((fanState == FAN_OFF) && (sensorValue > useLDR + DARK_HYST) && (fahrenheit > (LOW_TEMP+tempHysteresis)))
   {
-    fanState = FAN_ON;
     setFan(FAN_ON);
   }
   else if (((fanState == FAN_ON) && (sensorValue < useLDR - DARK_HYST)) || (fahrenheit < (LOW_TEMP+tempHysteresis)))
   {
-    fanState = FAN_OFF;
     setFan(FAN_OFF);
   }
   delay(1500);        // delay in between reads for stability
