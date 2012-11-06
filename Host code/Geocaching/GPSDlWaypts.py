@@ -22,15 +22,15 @@ print "Received start from Arduino"
 waypointNum = 0;
 
 # open the file for reading
-fo = open("geocaching.loc", "r") 
+infile = open("geocaching.loc", "r") 
 
 # if the line starts with <coord then pull out the numbers
 # example: <coord lat="40.005717" lon="-79.598867"/>
 # send the numbers to the arduino
 
-line = fo.readline().strip('\n\r')
+line = infile.readline().strip('\n\r')
 while line:
-	line = fo.readline().strip('\n\r')
+	line = infile.readline().strip('\n\r')
 	if line[0:7] == "<coord ":
 		startPos = string.find(line, '\"') + 1
 		endPos = string.find(line, '\"', startPos+1)
@@ -46,7 +46,7 @@ while line:
 			print "Ack missing?"
 
 # Close opened file 
-fo.close()
+infile.close()
 
 line = connection.readline()
 print line,
@@ -55,4 +55,3 @@ while line[0:8] != "</SERIN>":
 	print line,
 
 print "Transfer completed"
-
