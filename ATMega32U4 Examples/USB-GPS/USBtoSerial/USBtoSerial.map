@@ -436,7 +436,7 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000     0x1120
+.text           0x00000000     0x1138
  *(.vectors)
  .vectors       0x00000000       0xac c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
                 0x00000000                __vectors
@@ -574,90 +574,90 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .text.SetupHardware
                 0x00000334       0x34 USBtoSerial.o
                 0x00000334                SetupHardware
- .text.main     0x00000368      0x160 USBtoSerial.o
+ .text.main     0x00000368      0x178 USBtoSerial.o
                 0x00000368                main
  .text.CALLBACK_USB_GetDescriptor
-                0x000004c8       0x5c Descriptors.o
-                0x000004c8                CALLBACK_USB_GetDescriptor
+                0x000004e0       0x5c Descriptors.o
+                0x000004e0                CALLBACK_USB_GetDescriptor
  .text.Endpoint_ConfigureEndpoint_Prv
-                0x00000524       0x70 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
-                0x00000524                Endpoint_ConfigureEndpoint_Prv
+                0x0000053c       0x70 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+                0x0000053c                Endpoint_ConfigureEndpoint_Prv
  .text.Endpoint_ConfigureEndpointTable
-                0x00000594       0x78 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
-                0x00000594                Endpoint_ConfigureEndpointTable
+                0x000005ac       0x78 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+                0x000005ac                Endpoint_ConfigureEndpointTable
  .text.Endpoint_ClearStatusStage
-                0x0000060c       0x3e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
-                0x0000060c                Endpoint_ClearStatusStage
+                0x00000624       0x3e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+                0x00000624                Endpoint_ClearStatusStage
  .text.Endpoint_WaitUntilReady
-                0x0000064a       0x62 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
-                0x0000064a                Endpoint_WaitUntilReady
+                0x00000662       0x62 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+                0x00000662                Endpoint_WaitUntilReady
  .text.USB_ResetInterface
-                0x000006ac       0x86 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
-                0x000006ac                USB_ResetInterface
+                0x000006c4       0x86 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
+                0x000006c4                USB_ResetInterface
  .text.USB_Init
-                0x00000732       0x16 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
-                0x00000732                USB_Init
+                0x0000074a       0x16 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
+                0x0000074a                USB_Init
  .text.USB_INT_DisableAllInterrupts
-                0x00000748       0x10 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
-                0x00000748                USB_INT_DisableAllInterrupts
+                0x00000760       0x10 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+                0x00000760                USB_INT_DisableAllInterrupts
  .text.USB_INT_ClearAllInterrupts
-                0x00000758        0xa C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
-                0x00000758                USB_INT_ClearAllInterrupts
+                0x00000770        0xa C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+                0x00000770                USB_INT_ClearAllInterrupts
  .text.__vector_11
-                0x00000762       0x76 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
-                0x00000762                __vector_11
+                0x0000077a       0x76 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+                0x0000077a                __vector_11
  .text.__vector_10
-                0x000007d8      0x184 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
-                0x000007d8                __vector_10
+                0x000007f0      0x184 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+                0x000007f0                __vector_10
  .text.Endpoint_Write_Control_Stream_LE
-                0x0000095c       0xc8 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
-                0x0000095c                Endpoint_Write_Control_Stream_LE
+                0x00000974       0xc8 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+                0x00000974                Endpoint_Write_Control_Stream_LE
  .text.Endpoint_Write_Control_PStream_LE
-                0x00000a24       0xcc C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
-                0x00000a24                Endpoint_Write_Control_PStream_LE
+                0x00000a3c       0xcc C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+                0x00000a3c                Endpoint_Write_Control_PStream_LE
  .text.USB_Device_ProcessControlRequest
-                0x00000af0      0x2d2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
-                0x00000af0                USB_Device_ProcessControlRequest
+                0x00000b08      0x2d2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
+                0x00000b08                USB_Device_ProcessControlRequest
  .text.USB_Event_Stub
-                0x00000dc2        0x2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
-                0x00000dc2                EVENT_USB_Device_WakeUp
-                0x00000dc2                USB_Event_Stub
-                0x00000dc2                EVENT_USB_Device_Suspend
-                0x00000dc2                EVENT_USB_Device_StartOfFrame
-                0x00000dc2                EVENT_USB_Device_Reset
+                0x00000dda        0x2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
+                0x00000dda                EVENT_USB_Device_WakeUp
+                0x00000dda                USB_Event_Stub
+                0x00000dda                EVENT_USB_Device_Suspend
+                0x00000dda                EVENT_USB_Device_StartOfFrame
+                0x00000dda                EVENT_USB_Device_Reset
  .text.USB_USBTask
-                0x00000dc4       0x28 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
-                0x00000dc4                USB_USBTask
+                0x00000ddc       0x28 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
+                0x00000ddc                USB_USBTask
  .text.CDC_Device_ReceiveByte
-                0x00000dec       0x76 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000dec                CDC_Device_ReceiveByte
+                0x00000e04       0x76 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000e04                CDC_Device_ReceiveByte
  .text.CDC_Device_Event_Stub
-                0x00000e62        0x2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000e62                EVENT_CDC_Device_ControLineStateChanged
-                0x00000e62                EVENT_CDC_Device_BreakSent
-                0x00000e62                CDC_Device_Event_Stub
+                0x00000e7a        0x2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000e7a                EVENT_CDC_Device_ControLineStateChanged
+                0x00000e7a                EVENT_CDC_Device_BreakSent
+                0x00000e7a                CDC_Device_Event_Stub
  .text.CDC_Device_Flush
-                0x00000e64       0x66 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000e64                CDC_Device_Flush
+                0x00000e7c       0x66 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000e7c                CDC_Device_Flush
  .text.CDC_Device_USBTask
-                0x00000eca       0x1e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000eca                CDC_Device_USBTask
+                0x00000ee2       0x1e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000ee2                CDC_Device_USBTask
  .text.CDC_Device_SendByte
-                0x00000ee8       0x4a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000ee8                CDC_Device_SendByte
+                0x00000f00       0x4a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000f00                CDC_Device_SendByte
  .text.CDC_Device_ConfigureEndpoints
-                0x00000f32       0x4e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000f32                CDC_Device_ConfigureEndpoints
+                0x00000f4a       0x4e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000f4a                CDC_Device_ConfigureEndpoints
  .text.CDC_Device_ProcessControlRequest
-                0x00000f80      0x158 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
-                0x00000f80                CDC_Device_ProcessControlRequest
- .text.libgcc   0x000010d8       0x44 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_udivmodsi4.o)
-                0x000010d8                __udivmodsi4
-                0x0000111c                . = ALIGN (0x2)
+                0x00000f98      0x158 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+                0x00000f98                CDC_Device_ProcessControlRequest
+ .text.libgcc   0x000010f0       0x44 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_udivmodsi4.o)
+                0x000010f0                __udivmodsi4
+                0x00001134                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x0000111c        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x0000111c                exit
-                0x0000111c                _exit
+ .fini9         0x00001134        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x00001134                exit
+                0x00001134                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -676,11 +676,11 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x0000111c        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .fini0         0x00001134        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  *(.fini0)
-                0x00001120                _etext = .
+                0x00001138                _etext = .
 
-.data           0x00800100       0x2a load address 0x00001120
+.data           0x00800100       0x2a load address 0x00001138
                 0x00800100                PROVIDE (__data_start, .)
  *(.data)
  .data          0x00800100       0x2a USBtoSerial.o
@@ -707,8 +707,8 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x00800245                USB_IsInitialized
                 0x00800246                USB_ControlRequest
                 0x0080024e                PROVIDE (__bss_end, .)
-                0x00001120                __data_load_start = LOADADDR (.data)
-                0x0000114a                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00001138                __data_load_start = LOADADDR (.data)
+                0x00001162                __data_load_end = (__data_load_start + SIZEOF (.data))
 
 .noinit         0x0080024e        0x0
                 0x0080024e                PROVIDE (__noinit_start, .)
@@ -845,108 +845,108 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .debug_pubnames
                 0x00000c12       0xd0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
 
-.debug_info     0x00000000     0x81a7
+.debug_info     0x00000000     0x8231
  *(.debug_info)
- .debug_info    0x00000000      0xa5a USBtoSerial.o
- .debug_info    0x00000a5a      0x67f Descriptors.o
- .debug_info    0x000010d9       0xc8 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
- .debug_info    0x000011a1      0x5e4 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
- .debug_info    0x00001785       0x65 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
- .debug_info    0x000017ea       0x65 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
- .debug_info    0x0000184f      0x48e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
- .debug_info    0x00001cdd      0x699 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
- .debug_info    0x00002376     0x156c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
- .debug_info    0x000038e2       0x65 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
- .debug_info    0x00003947      0x34f C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
- .debug_info    0x00003c96      0x9df C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
- .debug_info    0x00004675       0x7d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
- .debug_info    0x000046f2        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/HostStandardReq.o
- .debug_info    0x000046f2      0x258 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
- .debug_info    0x0000494a      0x6f0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
- .debug_info    0x0000503a      0x550 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
- .debug_info    0x0000558a      0xbac C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
- .debug_info    0x00006136      0x606 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
- .debug_info    0x0000673c      0x7bc C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
- .debug_info    0x00006ef8      0x46e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
- .debug_info    0x00007366      0xe41 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AndroidAccessoryClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AudioClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/CDCClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/HIDClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MassStorageClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MIDIClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/PrinterClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/RNDISClassHost.o
- .debug_info    0x000081a7        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/StillImageClassHost.o
+ .debug_info    0x00000000      0xae4 USBtoSerial.o
+ .debug_info    0x00000ae4      0x67f Descriptors.o
+ .debug_info    0x00001163       0xc8 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
+ .debug_info    0x0000122b      0x5e4 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+ .debug_info    0x0000180f       0x65 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
+ .debug_info    0x00001874       0x65 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
+ .debug_info    0x000018d9      0x48e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
+ .debug_info    0x00001d67      0x699 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+ .debug_info    0x00002400     0x156c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+ .debug_info    0x0000396c       0x65 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
+ .debug_info    0x000039d1      0x34f C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
+ .debug_info    0x00003d20      0x9df C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
+ .debug_info    0x000046ff       0x7d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
+ .debug_info    0x0000477c        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/HostStandardReq.o
+ .debug_info    0x0000477c      0x258 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
+ .debug_info    0x000049d4      0x6f0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
+ .debug_info    0x000050c4      0x550 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
+ .debug_info    0x00005614      0xbac C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+ .debug_info    0x000061c0      0x606 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
+ .debug_info    0x000067c6      0x7bc C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
+ .debug_info    0x00006f82      0x46e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
+ .debug_info    0x000073f0      0xe41 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AndroidAccessoryClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AudioClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/CDCClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/HIDClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MassStorageClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MIDIClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/PrinterClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/RNDISClassHost.o
+ .debug_info    0x00008231        0x0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/StillImageClassHost.o
  *(.gnu.linkonce.wi.*)
 
-.debug_abbrev   0x00000000     0x1fd7
+.debug_abbrev   0x00000000     0x1fc8
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x306 USBtoSerial.o
- .debug_abbrev  0x00000306      0x13e Descriptors.o
- .debug_abbrev  0x00000444       0x7b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
- .debug_abbrev  0x000004bf      0x1f6 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
- .debug_abbrev  0x000006b5       0x35 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
- .debug_abbrev  0x000006ea       0x35 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
- .debug_abbrev  0x0000071f      0x145 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
- .debug_abbrev  0x00000864      0x1e3 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
- .debug_abbrev  0x00000a47      0x1b6 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
- .debug_abbrev  0x00000bfd       0x35 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
- .debug_abbrev  0x00000c32      0x15e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
- .debug_abbrev  0x00000d90      0x228 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
- .debug_abbrev  0x00000fb8       0x4c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
- .debug_abbrev  0x00001004        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/HostStandardReq.o
- .debug_abbrev  0x00001005      0x176 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
- .debug_abbrev  0x0000117b      0x1e9 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
- .debug_abbrev  0x00001364      0x16b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
- .debug_abbrev  0x000014cf      0x2fd C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
- .debug_abbrev  0x000017cc      0x1b3 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
- .debug_abbrev  0x0000197f      0x211 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
- .debug_abbrev  0x00001b90      0x18c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
- .debug_abbrev  0x00001d1c      0x2b2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
- .debug_abbrev  0x00001fce        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AndroidAccessoryClassHost.o
- .debug_abbrev  0x00001fcf        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AudioClassHost.o
- .debug_abbrev  0x00001fd0        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/CDCClassHost.o
- .debug_abbrev  0x00001fd1        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/HIDClassHost.o
- .debug_abbrev  0x00001fd2        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MassStorageClassHost.o
- .debug_abbrev  0x00001fd3        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MIDIClassHost.o
- .debug_abbrev  0x00001fd4        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/PrinterClassHost.o
- .debug_abbrev  0x00001fd5        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/RNDISClassHost.o
- .debug_abbrev  0x00001fd6        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/StillImageClassHost.o
+ .debug_abbrev  0x00000000      0x2f7 USBtoSerial.o
+ .debug_abbrev  0x000002f7      0x13e Descriptors.o
+ .debug_abbrev  0x00000435       0x7b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
+ .debug_abbrev  0x000004b0      0x1f6 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+ .debug_abbrev  0x000006a6       0x35 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
+ .debug_abbrev  0x000006db       0x35 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
+ .debug_abbrev  0x00000710      0x145 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
+ .debug_abbrev  0x00000855      0x1e3 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+ .debug_abbrev  0x00000a38      0x1b6 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+ .debug_abbrev  0x00000bee       0x35 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
+ .debug_abbrev  0x00000c23      0x15e C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
+ .debug_abbrev  0x00000d81      0x228 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
+ .debug_abbrev  0x00000fa9       0x4c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
+ .debug_abbrev  0x00000ff5        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/HostStandardReq.o
+ .debug_abbrev  0x00000ff6      0x176 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
+ .debug_abbrev  0x0000116c      0x1e9 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
+ .debug_abbrev  0x00001355      0x16b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
+ .debug_abbrev  0x000014c0      0x2fd C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+ .debug_abbrev  0x000017bd      0x1b3 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
+ .debug_abbrev  0x00001970      0x211 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
+ .debug_abbrev  0x00001b81      0x18c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
+ .debug_abbrev  0x00001d0d      0x2b2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
+ .debug_abbrev  0x00001fbf        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AndroidAccessoryClassHost.o
+ .debug_abbrev  0x00001fc0        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AudioClassHost.o
+ .debug_abbrev  0x00001fc1        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/CDCClassHost.o
+ .debug_abbrev  0x00001fc2        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/HIDClassHost.o
+ .debug_abbrev  0x00001fc3        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MassStorageClassHost.o
+ .debug_abbrev  0x00001fc4        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MIDIClassHost.o
+ .debug_abbrev  0x00001fc5        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/PrinterClassHost.o
+ .debug_abbrev  0x00001fc6        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/RNDISClassHost.o
+ .debug_abbrev  0x00001fc7        0x1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/StillImageClassHost.o
 
-.debug_line     0x00000000    0x12079
+.debug_line     0x00000000    0x120a2
  *(.debug_line)
- .debug_line    0x00000000     0x1753 USBtoSerial.o
- .debug_line    0x00001753      0xdde Descriptors.o
- .debug_line    0x00002531      0x9da C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
- .debug_line    0x00002f0b      0xc5c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
- .debug_line    0x00003b67      0x3f1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
- .debug_line    0x00003f58      0x3f1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
- .debug_line    0x00004349      0x96b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
- .debug_line    0x00004cb4      0xcfa C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
- .debug_line    0x000059ae     0x1e21 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
- .debug_line    0x000077cf      0x3f7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
- .debug_line    0x00007bc6      0x90f C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
- .debug_line    0x000084d5      0xba2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
- .debug_line    0x00009077      0x3c7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
- .debug_line    0x0000943e       0x7b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/HostStandardReq.o
- .debug_line    0x000094b9      0x834 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
- .debug_line    0x00009ced      0x9ac C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
- .debug_line    0x0000a699     0x115d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
- .debug_line    0x0000b7f6     0x1560 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
- .debug_line    0x0000cd56     0x12cd C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
- .debug_line    0x0000e023     0x12f4 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
- .debug_line    0x0000f317     0x115d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
- .debug_line    0x00010474     0x1499 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
- .debug_line    0x0001190d       0xdc C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AndroidAccessoryClassHost.o
- .debug_line    0x000119e9       0xd1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AudioClassHost.o
- .debug_line    0x00011aba       0xcf C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/CDCClassHost.o
- .debug_line    0x00011b89       0xcf C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/HIDClassHost.o
- .debug_line    0x00011c58       0xd7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MassStorageClassHost.o
- .debug_line    0x00011d2f       0xd0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MIDIClassHost.o
- .debug_line    0x00011dff       0xd3 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/PrinterClassHost.o
- .debug_line    0x00011ed2       0xd1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/RNDISClassHost.o
- .debug_line    0x00011fa3       0xd6 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/StillImageClassHost.o
+ .debug_line    0x00000000     0x177c USBtoSerial.o
+ .debug_line    0x0000177c      0xdde Descriptors.o
+ .debug_line    0x0000255a      0x9da C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
+ .debug_line    0x00002f34      0xc5c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+ .debug_line    0x00003b90      0x3f1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
+ .debug_line    0x00003f81      0x3f1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
+ .debug_line    0x00004372      0x96b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
+ .debug_line    0x00004cdd      0xcfa C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+ .debug_line    0x000059d7     0x1e21 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+ .debug_line    0x000077f8      0x3f7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
+ .debug_line    0x00007bef      0x90f C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
+ .debug_line    0x000084fe      0xba2 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
+ .debug_line    0x000090a0      0x3c7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
+ .debug_line    0x00009467       0x7b C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/HostStandardReq.o
+ .debug_line    0x000094e2      0x834 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
+ .debug_line    0x00009d16      0x9ac C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
+ .debug_line    0x0000a6c2     0x115d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
+ .debug_line    0x0000b81f     0x1560 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+ .debug_line    0x0000cd7f     0x12cd C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
+ .debug_line    0x0000e04c     0x12f4 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
+ .debug_line    0x0000f340     0x115d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
+ .debug_line    0x0001049d     0x1499 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
+ .debug_line    0x00011936       0xdc C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AndroidAccessoryClassHost.o
+ .debug_line    0x00011a12       0xd1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/AudioClassHost.o
+ .debug_line    0x00011ae3       0xcf C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/CDCClassHost.o
+ .debug_line    0x00011bb2       0xcf C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/HIDClassHost.o
+ .debug_line    0x00011c81       0xd7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MassStorageClassHost.o
+ .debug_line    0x00011d58       0xd0 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/MIDIClassHost.o
+ .debug_line    0x00011e28       0xd3 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/PrinterClassHost.o
+ .debug_line    0x00011efb       0xd1 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/RNDISClassHost.o
+ .debug_line    0x00011fcc       0xd6 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Host/StillImageClassHost.o
 
 .debug_frame    0x00000000      0x720
  *(.debug_frame)
@@ -969,66 +969,66 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .debug_frame   0x00000650       0x60 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
  .debug_frame   0x000006b0       0x70 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
 
-.debug_str      0x00000000     0x36b4
+.debug_str      0x00000000     0x36ee
  *(.debug_str)
- .debug_str     0x00000000      0x74b USBtoSerial.o
-                                0x7d8 (size before relaxing)
- .debug_str     0x0000074b      0x531 Descriptors.o
+ .debug_str     0x00000000      0x785 USBtoSerial.o
+                                0x812 (size before relaxing)
+ .debug_str     0x00000785      0x531 Descriptors.o
                                 0x695 (size before relaxing)
- .debug_str     0x00000c7c       0x90 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
+ .debug_str     0x00000cb6       0x90 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Device_AVR8.o
                                 0x172 (size before relaxing)
- .debug_str     0x00000d0c      0x2eb C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+ .debug_str     0x00000d46      0x2eb C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
                                 0x58c (size before relaxing)
- .debug_str     0x00000ff7       0x46 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
+ .debug_str     0x00001031       0x46 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Host_AVR8.o
                                 0x122 (size before relaxing)
- .debug_str     0x0000103d       0x46 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
+ .debug_str     0x00001077       0x46 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Pipe_AVR8.o
                                 0x122 (size before relaxing)
- .debug_str     0x00001083      0x266 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
+ .debug_str     0x000010bd      0x266 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBController_AVR8.o
                                 0x474 (size before relaxing)
- .debug_str     0x000012e9      0x155 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
+ .debug_str     0x00001323      0x155 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/USBInterrupt_AVR8.o
                                 0x46f (size before relaxing)
- .debug_str     0x0000143e      0x516 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+ .debug_str     0x00001478      0x516 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
                                 0x790 (size before relaxing)
- .debug_str     0x00001954       0x4c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
+ .debug_str     0x0000198e       0x4c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/PipeStream_AVR8.o
                                 0x128 (size before relaxing)
- .debug_str     0x000019a0      0x236 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
+ .debug_str     0x000019da      0x236 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
                                 0x340 (size before relaxing)
- .debug_str     0x00001bd6      0x39d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
+ .debug_str     0x00001c10      0x39d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
                                 0x857 (size before relaxing)
- .debug_str     0x00001f73       0x4d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
+ .debug_str     0x00001fad       0x4d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/Events.o
                                 0x129 (size before relaxing)
- .debug_str     0x00001fc0       0x67 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
+ .debug_str     0x00001ffa       0x67 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/USBTask.o
                                 0x2d0 (size before relaxing)
- .debug_str     0x00002027      0x49a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
+ .debug_str     0x00002061      0x49a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
                                 0x617 (size before relaxing)
- .debug_str     0x000024c1      0x252 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
+ .debug_str     0x000024fb      0x252 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
                                 0x550 (size before relaxing)
- .debug_str     0x00002713      0x313 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+ .debug_str     0x0000274d      0x313 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
                                 0x904 (size before relaxing)
- .debug_str     0x00002a26      0x206 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
+ .debug_str     0x00002a60      0x206 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
                                 0x57f (size before relaxing)
- .debug_str     0x00002c2c      0x256 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
+ .debug_str     0x00002c66      0x256 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
                                 0x6e0 (size before relaxing)
- .debug_str     0x00002e82      0x131 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
+ .debug_str     0x00002ebc      0x131 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
                                 0x554 (size before relaxing)
- .debug_str     0x00002fb3      0x701 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
+ .debug_str     0x00002fed      0x701 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
                                 0xc18 (size before relaxing)
 
-.debug_loc      0x00000000     0x35dd
+.debug_loc      0x00000000     0x360d
  *(.debug_loc)
- .debug_loc     0x00000000      0x23c USBtoSerial.o
- .debug_loc     0x0000023c      0x160 Descriptors.o
- .debug_loc     0x0000039c      0x11c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
- .debug_loc     0x000004b8     0x1886 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
- .debug_loc     0x00001d3e      0x2c7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
- .debug_loc     0x00002005      0x25a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
- .debug_loc     0x0000225f      0x538 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
- .debug_loc     0x00002797      0x25d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
- .debug_loc     0x000029f4      0x42c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
- .debug_loc     0x00002e20      0x141 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
- .debug_loc     0x00002f61       0x96 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
- .debug_loc     0x00002ff7      0x19a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
- .debug_loc     0x00003191      0x44c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
+ .debug_loc     0x00000000      0x26c USBtoSerial.o
+ .debug_loc     0x0000026c      0x160 Descriptors.o
+ .debug_loc     0x000003cc      0x11c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/Endpoint_AVR8.o
+ .debug_loc     0x000004e8     0x1886 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/AVR8/EndpointStream_AVR8.o
+ .debug_loc     0x00001d6e      0x2c7 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/ConfigDescriptors.o
+ .debug_loc     0x00002035      0x25a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Core/DeviceStandardReq.o
+ .debug_loc     0x0000228f      0x538 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Common/HIDParser.o
+ .debug_loc     0x000027c7      0x25d C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/AudioClassDevice.o
+ .debug_loc     0x00002a24      0x42c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/CDCClassDevice.o
+ .debug_loc     0x00002e50      0x141 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/HIDClassDevice.o
+ .debug_loc     0x00002f91       0x96 C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MassStorageClassDevice.o
+ .debug_loc     0x00003027      0x19a C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/MIDIClassDevice.o
+ .debug_loc     0x000031c1      0x44c C:/WinAVR-20100110/LUFA-120730/LUFA/Drivers/USB/Class/Device/RNDISClassDevice.o
 
 .debug_macinfo  0x00000000   0x15f047
  *(.debug_macinfo)

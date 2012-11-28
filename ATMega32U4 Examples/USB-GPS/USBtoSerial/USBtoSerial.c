@@ -1,3 +1,13 @@
+/* USBtoSerial.c
+
+	USB to Serial function.
+	
+	Modifications to the USBtoSerial program found in the LUFA library.
+	
+	Modified by Doug Gilliland
+	https://github.com/douggilliland/Dougs-Arduino-Stuff/tree/master/ATMega32U4%20Examples/USB-GPS/USBtoSerial
+*/
+
 /*
              LUFA Library
      Copyright (C) Dean Camera, 2012.
@@ -33,6 +43,8 @@
  *  Main source file for the USBtoSerial project. This file contains the main tasks of
  *  the project and is responsible for the initial application hardware configuration.
  */
+
+#include <util/delay.h>
 
 #include "USBtoSerial.h"
 
@@ -93,7 +105,9 @@ int main(void)
 	RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data, sizeof(USBtoUSART_Buffer_Data));
 	RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data, sizeof(USARTtoUSB_Buffer_Data));
 
-	LEDs_SetAllLEDs(0);
+	LEDs_SetAllLEDs(1);
+
+	_delay_ms(1000);
 
 	// Hard set the baud rate to 9600 since that's the rate that the USART runs at
 	setBaudRate9600();
@@ -104,18 +118,20 @@ int main(void)
 	
 	while (kickLoggerString[outBuffPtr] != 0)
 	{
-		while ((UCSR1A & TXC1) == 0);		// hang around until transmitter is empty
+		while (!( UCSR1A & (1<<UDRE1)) );		// hang around until transmitter is empty
 		UDR1 = kickLoggerString[outBuffPtr];
 		outBuffPtr++;
 	}
 	while ((UCSR1A & TXC1) == 0);		// hang around until the entire packet is transmitted out
+
+	LEDs_SetAllLEDs(0);
 
 	sei();
 
 	for (;;)
 	{
 		if ((PINB & 0x40) == 0x40)
-			LEDs_SetAllLEDs(1);
+			LEDs_SetAllLEDs(2);
 		else
 			LEDs_SetAllLEDs(0);
 		/* Only try to read in bytes from the CDC interface if the (outbound) transmit buffer is not full */
@@ -266,10 +282,6 @@ void EVENT_CDC_Device_LineEncodingChanged(USB_ClassInfo_CDC_Device_t* const CDCI
 
 void setBaudRate9600(void)
 {
-	uint8_t ConfigMask = 0;
-
-	ConfigMask |= ((1 << UCSZ11) | (1 << UCSZ10));
-
 	/* Must turn off USART before reconfiguring it, otherwise incorrect operation may occur */
 	UCSR1B = 0;
 	UCSR1A = 0;
@@ -279,7 +291,12 @@ void setBaudRate9600(void)
 	UBRR1  = 103;
 
 	/* Reconfigure the USART in double speed mode for a wider baud rate range at the expense of accuracy */
-	UCSR1C = ConfigMask;
+	// UCSR1C[7:6] = 00 - Async USART
+	// UCSR1C[5:4] = 00 - No Parity
+	// UCSR1C[3]   = 0  - 1 Stop Bit
+	// UCSR1C[2:1] = 11 - 8 Data Bits
+	// UCSR1C[0]   = 0  - Clock Polarity (8 for Async)
+	UCSR1C = 0x6;
 	UCSR1A = (1 << U2X1);
 	UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
 }
