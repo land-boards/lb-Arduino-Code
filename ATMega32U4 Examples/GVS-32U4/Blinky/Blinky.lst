@@ -1,0 +1,134 @@
+   1               		.file	"Blinky.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               	.global	setup
+  18               	setup:
+  19               	.LFB7:
+  20               	.LM1:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	.LM2:
+  24 0000 E1E6      		ldi r30,lo8(97)
+  25 0002 F0E0      		ldi r31,hi8(97)
+  26 0004 80E8      		ldi r24,lo8(-128)
+  27 0006 8083      		st Z,r24
+  28               	.LM3:
+  29 0008 1082      		st Z,__zero_reg__
+  30               	.LM4:
+  31 000a 84E0      		ldi r24,lo8(4)
+  32 000c 84B9      		out 36-32,r24
+  33               	/* epilogue start */
+  34               	.LM5:
+  35 000e 0895      		ret
+  36               	.LFE7:
+  38               	.global	loop
+  40               	loop:
+  41               	.LFB8:
+  42               	.LM6:
+  43               	/* prologue: function */
+  44               	/* frame size = 0 */
+  45               	.LM7:
+  46 0010 84E0      		ldi r24,lo8(4)
+  47 0012 85B9      		out 37-32,r24
+  48 0014 80E1      		ldi r24,lo8(10000)
+  49 0016 97E2      		ldi r25,hi8(10000)
+  50               	.LVL0:
+  51               	.LBB20:
+  52               	.LBB21:
+  53               	.LBB22:
+  54               	.LBB23:
+  55               	.LM8:
+  56 0018 20E9      		ldi r18,lo8(400)
+  57 001a 31E0      		ldi r19,hi8(400)
+  58               	.L4:
+  59 001c F901      		movw r30,r18
+  60               	.LVL1:
+  61               	/* #APP */
+  62               	 ;  105 "c:/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h" 1
+  63 001e 3197      		1: sbiw r30,1
+  64 0020 01F4      		brne 1b
+  65               	 ;  0 "" 2
+  66               	/* #NOAPP */
+  67               	.LBE23:
+  68               	.LBE22:
+  69               	.LM9:
+  70 0022 0197      		sbiw r24,1
+  71               	.LM10:
+  72 0024 01F4      		brne .L4
+  73               	.LBE21:
+  74               	.LBE20:
+  75               	.LM11:
+  76 0026 15B8      		out 37-32,__zero_reg__
+  77 0028 80E1      		ldi r24,lo8(10000)
+  78 002a 97E2      		ldi r25,hi8(10000)
+  79               	.LVL2:
+  80               	.LBB24:
+  81               	.LBB25:
+  82               	.LBB26:
+  83               	.LBB27:
+  84               	.LM12:
+  85 002c 20E9      		ldi r18,lo8(400)
+  86 002e 31E0      		ldi r19,hi8(400)
+  87               	.L5:
+  88 0030 F901      		movw r30,r18
+  89               	.LVL3:
+  90               	/* #APP */
+  91               	 ;  105 "c:/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h" 1
+  92 0032 3197      		1: sbiw r30,1
+  93 0034 01F4      		brne 1b
+  94               	 ;  0 "" 2
+  95               	/* #NOAPP */
+  96               	.LBE27:
+  97               	.LBE26:
+  98               	.LM13:
+  99 0036 0197      		sbiw r24,1
+ 100               	.LM14:
+ 101 0038 01F4      		brne .L5
+ 102               	/* epilogue start */
+ 103               	.LBE25:
+ 104               	.LBE24:
+ 105               	.LM15:
+ 106 003a 0895      		ret
+ 107               	.LFE8:
+ 109               	.global	main
+ 111               	main:
+ 112               	.LFB6:
+ 113               	.LM16:
+ 114               	/* prologue: function */
+ 115               	/* frame size = 0 */
+ 116               	.LBB28:
+ 117               	.LBB29:
+ 118               	.LM17:
+ 119 003c 80E8      		ldi r24,lo8(-128)
+ 120 003e 8093 6100 		sts 97,r24
+ 121               	.LM18:
+ 122 0042 1092 6100 		sts 97,__zero_reg__
+ 123               	.LM19:
+ 124 0046 84E0      		ldi r24,lo8(4)
+ 125 0048 84B9      		out 36-32,r24
+ 126               	.L10:
+ 127               	.LBE29:
+ 128               	.LBE28:
+ 129               	.LM20:
+ 130 004a 0E94 0000 		call loop
+ 131 004e 00C0      		rjmp .L10
+ 132               	.LFE6:
+ 174               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 Blinky.c
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:2      *ABS*:0000003f __SREG__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:3      *ABS*:0000003e __SP_H__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:4      *ABS*:0000003d __SP_L__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:5      *ABS*:00000034 __CCP__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:6      *ABS*:00000000 __tmp_reg__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:7      *ABS*:00000001 __zero_reg__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:18     .text:00000000 setup
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:40     .text:00000010 loop
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccRXFroH.s:111    .text:0000003c main
+
+NO UNDEFINED SYMBOLS
