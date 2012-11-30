@@ -154,25 +154,11 @@ int main(void)
 	}
 }
 
-void outStringToGPS(char * stringPtr)
-{
-	int16_t outBuffPtr = 0;
-	while (stringPtr[outBuffPtr] != 0)
-	{
-		while (!( UCSR1A & (1<<UDRE1)) );		// hang around until transmitter is empty
-		UDR1 = stringPtr[outBuffPtr];
-		outBuffPtr++;
-	}
-	while ((UCSR1A & TXC1) == 0);		// hang around until the entire packet is transmitted out
-	return;
-}
-
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
 void SetupHardware(void)
 {
-	char stopMostSentencesString[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
 	char kickLoggerString[] = "$PMTK185,0*22\r\n";
-	char nmea10sec[] = "$PMTK220,10000*2F\r\n";
+	int16_t outBuffPtr = 0;
 	
 	/* Disable watchdog if enabled by bootloader/fuses */
 	MCUSR &= ~(1 << WDRF);
@@ -186,31 +172,26 @@ void SetupHardware(void)
 
 	LEDs_SetAllLEDs(1);
 
-	_delay_ms(100);
+	_delay_ms(500);
 
 	// Hard set the baud rate to 9600 since that's the rate that the USART runs at
 	setBaudRate9600();
 
 	_delay_ms(100);
 
-	// Set NMEA sentence output frequencies
-	// PMTK_API_SET_NMEA_OUTPUT
-	// $PMTK314,... is the command
-	
-	outStringToGPS(stopMostSentencesString);
-	_delay_ms(100);
-
-	// Set the NMEA port update rate to 10 seconds
-
-	outStringToGPS(nmea10sec);
-	_delay_ms(100);
-
 	// Kick the GPS LOCUS to start logging data
 	// PMTK_LOCUS_STARTLOG
 	// $PMTK185,0*22 is the command
 	
-	outStringToGPS(kickLoggerString);
-	_delay_ms(100);
+	while (kickLoggerString[outBuffPtr] != 0)
+	{
+		while (!( UCSR1A & (1<<UDRE1)) );		// hang around until transmitter is empty
+		UDR1 = kickLoggerString[outBuffPtr];
+		outBuffPtr++;
+	}
+	while ((UCSR1A & TXC1) == 0);		// hang around until the entire packet is transmitted out
+
+	_delay_ms(500);
 
 	USB_Init();
 
