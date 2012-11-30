@@ -98,31 +98,10 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 
 int main(void)
 {
-	char kickLoggerString[] = "$PMTK185,0*22\n";
-	int16_t outBuffPtr = 0;
 	SetupHardware();
 
 	RingBuffer_InitBuffer(&USBtoUSART_Buffer, USBtoUSART_Buffer_Data, sizeof(USBtoUSART_Buffer_Data));
 	RingBuffer_InitBuffer(&USARTtoUSB_Buffer, USARTtoUSB_Buffer_Data, sizeof(USARTtoUSB_Buffer_Data));
-
-	LEDs_SetAllLEDs(1);
-
-	_delay_ms(1000);
-
-	// Hard set the baud rate to 9600 since that's the rate that the USART runs at
-	setBaudRate9600();
-
-	// Kick the GPS LOCUS to start logging data
-	// PMTK_LOCUS_STARTLOG
-	// $PMTK185,0*22 is the command
-	
-	while (kickLoggerString[outBuffPtr] != 0)
-	{
-		while (!( UCSR1A & (1<<UDRE1)) );		// hang around until transmitter is empty
-		UDR1 = kickLoggerString[outBuffPtr];
-		outBuffPtr++;
-	}
-	while ((UCSR1A & TXC1) == 0);		// hang around until the entire packet is transmitted out
 
 	LEDs_SetAllLEDs(0);
 
@@ -178,6 +157,9 @@ int main(void)
 /** Configures the board hardware and chip peripherals for the demo's functionality. */
 void SetupHardware(void)
 {
+	char kickLoggerString[] = "$PMTK185,0*22\r\n";
+	int16_t outBuffPtr = 0;
+	
 	/* Disable watchdog if enabled by bootloader/fuses */
 	MCUSR &= ~(1 << WDRF);
 	wdt_disable();
@@ -187,6 +169,30 @@ void SetupHardware(void)
 
 	/* Hardware Initialization */
 	LEDs_Init();
+
+	LEDs_SetAllLEDs(1);
+
+	_delay_ms(500);
+
+	// Hard set the baud rate to 9600 since that's the rate that the USART runs at
+	setBaudRate9600();
+
+	_delay_ms(100);
+
+	// Kick the GPS LOCUS to start logging data
+	// PMTK_LOCUS_STARTLOG
+	// $PMTK185,0*22 is the command
+	
+	while (kickLoggerString[outBuffPtr] != 0)
+	{
+		while (!( UCSR1A & (1<<UDRE1)) );		// hang around until transmitter is empty
+		UDR1 = kickLoggerString[outBuffPtr];
+		outBuffPtr++;
+	}
+	while ((UCSR1A & TXC1) == 0);		// hang around until the entire packet is transmitted out
+
+	_delay_ms(500);
+
 	USB_Init();
 
 	/* Start the flush timer so that overflows occur rapidly to push received bytes to the USB interface */
@@ -298,6 +304,6 @@ void setBaudRate9600(void)
 	// UCSR1C[0]   = 0  - Clock Polarity (8 for Async)
 	UCSR1C = 0x6;
 	UCSR1A = (1 << U2X1);
-	UCSR1B = ((1 << RXCIE1) | (1 << TXEN1) | (1 << RXEN1));
+	UCSR1B = 0x08;
 }
 
