@@ -16,11 +16,11 @@ F_CPU        = 8000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 TARGET       = USBtoSerial
+LD_LIBRARY_PATH = /home/doug/Programming/avr/gcc-4.7.0/mpc-1.0.1/src/.libs/
 SRC          = $(TARGET).c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
-LUFA_PATH    = C:/WinAVR-20100110/LUFA-120730/LUFA
-CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/
+LUFA_PATH    = ../../LUFA/LUFA
+CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/ -I.
 LD_FLAGS     =
-
 # Default target
 all:
 
