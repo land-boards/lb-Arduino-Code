@@ -1,28 +1,28 @@
 Archive member included because of file (symbol)
 
-c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                              c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o (exit)
+/usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
+                              /usr/lib/avr/lib/avr5/crtm32u4.o (exit)
 
 Memory Configuration
 
 Name             Origin             Length             Attributes
-text             0x00000000         0x00020000         xr
-data             0x00800060         0x0000ffa0         rw !x
-eeprom           0x00810000         0x00010000         rw !x
-fuse             0x00820000         0x00000400         rw !x
-lock             0x00830000         0x00000400         rw !x
-signature        0x00840000         0x00000400         rw !x
-*default*        0x00000000         0xffffffff
+text             0x0000000000000000 0x0000000000020000 xr
+data             0x0000000000800060 0x000000000000ffa0 rw !x
+eeprom           0x0000000000810000 0x0000000000010000 rw !x
+fuse             0x0000000000820000 0x0000000000000400 rw !x
+lock             0x0000000000830000 0x0000000000000400 rw !x
+signature        0x0000000000840000 0x0000000000000400 rw !x
+*default*        0x0000000000000000 0xffffffffffffffff
 
 Linker script and memory map
 
 Address of section .data set to 0x800100
-LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
+LOAD /usr/lib/avr/lib/avr5/crtm32u4.o
 LOAD Blinky.o
-LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5\libm.a
-LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
-LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5\libc.a
-LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
+LOAD /usr/lib/avr/lib/avr5/libm.a
+LOAD /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a
+LOAD /usr/lib/avr/lib/avr5/libc.a
+LOAD /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a
 
 .hash
  *(.hash)
@@ -114,40 +114,40 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x118
+.text           0x0000000000000000      0x10e
  *(.vectors)
- .vectors       0x00000000       0xac c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-                0x00000000                __vectors
-                0x00000000                __vector_default
+ .vectors       0x0000000000000000       0xac /usr/lib/avr/lib/avr5/crtm32u4.o
+                0x0000000000000000                __vectors
+                0x0000000000000000                __vector_default
  *(.vectors)
  *(.progmem.gcc*)
  *(.progmem*)
-                0x000000ac                . = ALIGN (0x2)
-                0x000000ac                __trampolines_start = .
+                0x00000000000000ac                . = ALIGN (0x2)
+                0x00000000000000ac                __trampolines_start = .
  *(.trampolines)
- .trampolines   0x000000ac        0x0 linker stubs
+ .trampolines   0x00000000000000ac        0x0 linker stubs
  *(.trampolines*)
-                0x000000ac                __trampolines_end = .
+                0x00000000000000ac                __trampolines_end = .
  *(.jumptables)
  *(.jumptables*)
  *(.lowtext)
  *(.lowtext*)
-                0x000000ac                __ctors_start = .
+                0x00000000000000ac                __ctors_start = .
  *(.ctors)
-                0x000000ac                __ctors_end = .
-                0x000000ac                __dtors_start = .
+                0x00000000000000ac                __ctors_end = .
+                0x00000000000000ac                __dtors_start = .
  *(.dtors)
-                0x000000ac                __dtors_end = .
+                0x00000000000000ac                __dtors_end = .
  SORT(*)(.ctors)
  SORT(*)(.dtors)
  *(.init0)
- .init0         0x000000ac        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-                0x000000ac                __init
+ .init0         0x00000000000000ac        0x0 /usr/lib/avr/lib/avr5/crtm32u4.o
+                0x00000000000000ac                __init
  *(.init0)
  *(.init1)
  *(.init1)
  *(.init2)
- .init2         0x000000ac        0xc c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
+ .init2         0x00000000000000ac        0xc /usr/lib/avr/lib/avr5/crtm32u4.o
  *(.init2)
  *(.init3)
  *(.init3)
@@ -162,66 +162,67 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.init8)
  *(.init8)
  *(.init9)
- .init9         0x000000b8        0x8 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
+ .init9         0x00000000000000b8        0x8 /usr/lib/avr/lib/avr5/crtm32u4.o
  *(.init9)
  *(.text)
- .text          0x000000c0        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-                0x000000c0                __vector_38
-                0x000000c0                __vector_22
-                0x000000c0                __vector_28
-                0x000000c0                __vector_1
-                0x000000c0                __vector_32
-                0x000000c0                __vector_34
-                0x000000c0                __vector_24
-                0x000000c0                __vector_12
-                0x000000c0                __bad_interrupt
-                0x000000c0                __vector_6
-                0x000000c0                __vector_31
-                0x000000c0                __vector_35
-                0x000000c0                __vector_39
-                0x000000c0                __vector_3
-                0x000000c0                __vector_23
-                0x000000c0                __vector_30
-                0x000000c0                __vector_25
-                0x000000c0                __vector_11
-                0x000000c0                __vector_13
-                0x000000c0                __vector_17
-                0x000000c0                __vector_19
-                0x000000c0                __vector_7
-                0x000000c0                __vector_41
-                0x000000c0                __vector_27
-                0x000000c0                __vector_5
-                0x000000c0                __vector_33
-                0x000000c0                __vector_37
-                0x000000c0                __vector_4
-                0x000000c0                __vector_9
-                0x000000c0                __vector_2
-                0x000000c0                __vector_21
-                0x000000c0                __vector_15
-                0x000000c0                __vector_36
-                0x000000c0                __vector_29
-                0x000000c0                __vector_40
-                0x000000c0                __vector_8
-                0x000000c0                __vector_26
-                0x000000c0                __vector_14
-                0x000000c0                __vector_10
-                0x000000c0                __vector_16
-                0x000000c0                __vector_18
-                0x000000c0                __vector_20
-                0x000000c0                __vector_42
- .text          0x000000c4       0x50 Blinky.o
-                0x000000d4                loop
-                0x00000100                main
-                0x000000c4                setup
- .text          0x00000114        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000114                . = ALIGN (0x2)
+ .text          0x00000000000000c0        0x4 /usr/lib/avr/lib/avr5/crtm32u4.o
+                0x00000000000000c0                __vector_38
+                0x00000000000000c0                __vector_22
+                0x00000000000000c0                __vector_28
+                0x00000000000000c0                __vector_1
+                0x00000000000000c0                __vector_32
+                0x00000000000000c0                __vector_34
+                0x00000000000000c0                __vector_24
+                0x00000000000000c0                __vector_12
+                0x00000000000000c0                __bad_interrupt
+                0x00000000000000c0                __vector_6
+                0x00000000000000c0                __vector_31
+                0x00000000000000c0                __vector_35
+                0x00000000000000c0                __vector_39
+                0x00000000000000c0                __vector_3
+                0x00000000000000c0                __vector_23
+                0x00000000000000c0                __vector_30
+                0x00000000000000c0                __vector_25
+                0x00000000000000c0                __vector_11
+                0x00000000000000c0                __vector_13
+                0x00000000000000c0                __vector_17
+                0x00000000000000c0                __vector_19
+                0x00000000000000c0                __vector_7
+                0x00000000000000c0                __vector_41
+                0x00000000000000c0                __vector_27
+                0x00000000000000c0                __vector_5
+                0x00000000000000c0                __vector_33
+                0x00000000000000c0                __vector_37
+                0x00000000000000c0                __vector_4
+                0x00000000000000c0                __vector_9
+                0x00000000000000c0                __vector_2
+                0x00000000000000c0                __vector_21
+                0x00000000000000c0                __vector_15
+                0x00000000000000c0                __vector_36
+                0x00000000000000c0                __vector_29
+                0x00000000000000c0                __vector_40
+                0x00000000000000c0                __vector_8
+                0x00000000000000c0                __vector_26
+                0x00000000000000c0                __vector_14
+                0x00000000000000c0                __vector_10
+                0x00000000000000c0                __vector_16
+                0x00000000000000c0                __vector_18
+                0x00000000000000c0                __vector_20
+                0x00000000000000c0                __vector_42
+ .text          0x00000000000000c4       0x3c Blinky.o
+                0x00000000000000c4                setup
+                0x00000000000000d4                loop
+ .text          0x0000000000000100        0x0 /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
+                0x0000000000000100                . = ALIGN (0x2)
  *(.text.*)
- .text.libgcc   0x00000114        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000114                . = ALIGN (0x2)
+ .text.startup  0x0000000000000100        0xa Blinky.o
+                0x0000000000000100                main
+ .text.libgcc   0x000000000000010a        0x0 /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
+                0x000000000000010a                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000114        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000114                exit
-                0x00000114                _exit
+ .fini9         0x000000000000010a        0x0 /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
+                0x000000000000010a                exit
+                0x000000000000010a                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -240,46 +241,46 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000114        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .fini0         0x000000000000010a        0x4 /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
  *(.fini0)
-                0x00000118                _etext = .
+                0x000000000000010e                _etext = .
 
-.data           0x00800100        0x0 load address 0x00000118
-                0x00800100                PROVIDE (__data_start, .)
+.data           0x0000000000800100        0x0 load address 0x000000000000010e
+                0x0000000000800100                PROVIDE (__data_start, .)
  *(.data)
- .data          0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
- .data          0x00800100        0x0 Blinky.o
- .data          0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .data          0x0000000000800100        0x0 /usr/lib/avr/lib/avr5/crtm32u4.o
+ .data          0x0000000000800100        0x0 Blinky.o
+ .data          0x0000000000800100        0x0 /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
  *(.data*)
  *(.rodata)
  *(.rodata*)
  *(.gnu.linkonce.d*)
-                0x00800100                . = ALIGN (0x2)
-                0x00800100                _edata = .
-                0x00800100                PROVIDE (__data_end, .)
+                0x0000000000800100                . = ALIGN (0x2)
+                0x0000000000800100                _edata = .
+                0x0000000000800100                PROVIDE (__data_end, .)
 
-.bss            0x00800100        0x0
-                0x00800100                PROVIDE (__bss_start, .)
+.bss            0x0000000000800100        0x0
+                0x0000000000800100                PROVIDE (__bss_start, .)
  *(.bss)
- .bss           0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
- .bss           0x00800100        0x0 Blinky.o
- .bss           0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .bss           0x0000000000800100        0x0 /usr/lib/avr/lib/avr5/crtm32u4.o
+ .bss           0x0000000000800100        0x0 Blinky.o
+ .bss           0x0000000000800100        0x0 /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
  *(.bss*)
  *(COMMON)
-                0x00800100                PROVIDE (__bss_end, .)
-                0x00000118                __data_load_start = LOADADDR (.data)
-                0x00000118                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x0000000000800100                PROVIDE (__bss_end, .)
+                0x000000000000010e                __data_load_start = LOADADDR (.data)
+                0x000000000000010e                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00800100        0x0
-                0x00800100                PROVIDE (__noinit_start, .)
+.noinit         0x0000000000800100        0x0
+                0x0000000000800100                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x00800100                PROVIDE (__noinit_end, .)
-                0x00800100                _end = .
-                0x00800100                PROVIDE (__heap_start, .)
+                0x0000000000800100                PROVIDE (__noinit_end, .)
+                0x0000000000800100                _end = .
+                0x0000000000800100                PROVIDE (__heap_start, .)
 
-.eeprom         0x00810000        0x0
+.eeprom         0x0000000000810000        0x0
  *(.eeprom*)
-                0x00810000                __eeprom_end = .
+                0x0000000000810000                __eeprom_end = .
 
 .fuse
  *(.fuse)
@@ -293,11 +294,13 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .signature
  *(.signature*)
 
-.stab
+.stab           0x0000000000000000      0x6cc
  *(.stab)
+ .stab          0x0000000000000000      0x6cc /usr/lib/avr/lib/avr5/crtm32u4.o
 
-.stabstr
+.stabstr        0x0000000000000000       0x54
  *(.stabstr)
+ .stabstr       0x0000000000000000       0x54 /usr/lib/avr/lib/avr5/crtm32u4.o
 
 .stab.excl
  *(.stab.excl)
@@ -311,8 +314,10 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .stab.indexstr
  *(.stab.indexstr)
 
-.comment
+.comment        0x0000000000000000       0x11
  *(.comment)
+ .comment       0x0000000000000000       0x11 Blinky.o
+                                         0x12 (size before relaxing)
 
 .debug
  *(.debug)
@@ -326,103 +331,109 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000       0x20
+.debug_aranges  0x0000000000000000       0x28
  *(.debug_aranges)
  .debug_aranges
-                0x00000000       0x20 Blinky.o
+                0x0000000000000000       0x28 Blinky.o
 
 .debug_pubnames
-                0x00000000       0x2e
  *(.debug_pubnames)
- .debug_pubnames
-                0x00000000       0x2e Blinky.o
 
-.debug_info     0x00000000      0x1ab
+.debug_info     0x0000000000000000      0x1ae
  *(.debug_info)
- .debug_info    0x00000000      0x1ab Blinky.o
+ .debug_info    0x0000000000000000      0x1ae Blinky.o
  *(.gnu.linkonce.wi.*)
 
-.debug_abbrev   0x00000000      0x11d
+.debug_abbrev   0x0000000000000000      0x11e
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x11d Blinky.o
+ .debug_abbrev  0x0000000000000000      0x11e Blinky.o
 
-.debug_line     0x00000000      0x18f
+.debug_line     0x0000000000000000       0xaa
  *(.debug_line)
- .debug_line    0x00000000      0x18f Blinky.o
+ .debug_line    0x0000000000000000       0xaa Blinky.o
 
-.debug_frame    0x00000000       0x40
+.debug_frame    0x0000000000000000       0x44
  *(.debug_frame)
- .debug_frame   0x00000000       0x40 Blinky.o
+ .debug_frame   0x0000000000000000       0x44 Blinky.o
 
-.debug_str      0x00000000      0x100
+.debug_str      0x0000000000000000      0x10b
  *(.debug_str)
- .debug_str     0x00000000      0x100 Blinky.o
-                                0x134 (size before relaxing)
+ .debug_str     0x0000000000000000      0x10b Blinky.o
+                                        0x13f (size before relaxing)
 
-.debug_loc      0x00000000       0x30
+.debug_loc
  *(.debug_loc)
- .debug_loc     0x00000000       0x30 Blinky.o
 
 .debug_macinfo
  *(.debug_macinfo)
+
+.debug_pubtypes
+ *(.debug_pubtypes)
+
+.debug_ranges   0x0000000000000000       0x18
+ *(.debug_ranges)
+ .debug_ranges  0x0000000000000000       0x18 Blinky.o
+
+.debug_macro
+ *(.debug_macro)
 OUTPUT(Blinky.elf elf32-avr)
 LOAD linker stubs
 
 Cross Reference Table
 
 Symbol                                            File
-__bad_interrupt                                   c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__heap_end                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__init                                            c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__stack                                           c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_1                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_10                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_11                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_12                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_13                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_14                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_15                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_16                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_17                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_18                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_19                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_2                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_20                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_21                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_22                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_23                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_24                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_25                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_26                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_27                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_28                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_29                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_3                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_30                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_31                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_32                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_33                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_34                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_35                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_36                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_37                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_38                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_39                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_4                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_40                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_41                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_42                                       c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_5                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_6                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_7                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_8                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_9                                        c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vector_default                                  c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-__vectors                                         c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-_exit                                             c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-exit                                              c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                                                  c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
+__bad_interrupt                                   /usr/lib/avr/lib/avr5/crtm32u4.o
+__heap_end                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__init                                            /usr/lib/avr/lib/avr5/crtm32u4.o
+__stack                                           /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_1                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_10                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_11                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_12                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_13                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_14                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_15                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_16                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_17                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_18                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_19                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_2                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_20                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_21                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_22                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_23                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_24                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_25                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_26                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_27                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_28                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_29                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_3                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_30                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_31                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_32                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_33                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_34                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_35                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_36                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_37                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_38                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_39                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_4                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_40                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_41                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_42                                       /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_5                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_6                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_7                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_8                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_9                                        /usr/lib/avr/lib/avr5/crtm32u4.o
+__vector_default                                  /usr/lib/avr/lib/avr5/crtm32u4.o
+__vectors                                         /usr/lib/avr/lib/avr5/crtm32u4.o
+_exit                                             /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
+exit                                              /usr/share/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2//libgcc.a(_exit.o)
+                                                  /usr/lib/avr/lib/avr5/crtm32u4.o
 loop                                              Blinky.o
 main                                              Blinky.o
-                                                  c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
+                                                  /usr/lib/avr/lib/avr5/crtm32u4.o
 setup                                             Blinky.o
