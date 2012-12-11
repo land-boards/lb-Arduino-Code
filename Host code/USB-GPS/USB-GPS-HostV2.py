@@ -7,24 +7,16 @@ from time import sleep
 
 BAUD = 9600
 PORT = "/dev/ttyACM0"
-TIMEOUT = 10
+TIMEOUT = 1
 
 ######## main
 
-#ser = serial.Serial(0)
-#print ser.portstr
-#ser.close()
+import time
+import serial
 
-ser = serial.Serial(PORT, baudrate=BAUD, timeout=TIMEOUT)
+ser = serial.Serial(PORT, baudrate=BAUD)
 
-BufLength = 0
-
-while BufLength < 10000:
-	data = ser.readline()
-	BufLength += len(data)
-	if len(data) > 0:
-		print data,
-
-
-ser.close()
-
+while 1:
+  data = ser.readline().strip('\n\r')
+  print data
+#  time.sleep(0.1)
