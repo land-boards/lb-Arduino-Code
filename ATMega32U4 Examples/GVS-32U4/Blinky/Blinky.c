@@ -2,9 +2,11 @@
 #include <util/delay.h>
 #include <inttypes.h>
 
+// Blinks LED connected between PB2 and VCC
+// PB2 on GVS-32U4 board is near the reset switch wiring
+
 void setup(void);
 void loop(void);
-
 
 int main (void)
 {
