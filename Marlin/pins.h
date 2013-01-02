@@ -300,8 +300,13 @@
 #define HEATER_1_PIN       9    // EXTRUDER 2 (FAN On Sprinter)
 #endif
 #define HEATER_2_PIN       -1   
-#define TEMP_0_PIN         13   // ANALOG NUMBERING
-#define TEMP_1_PIN         15   // ANALOG NUMBERING
+// following 2 are the original lines
+//#define TEMP_0_PIN         13   // ANALOG NUMBERING
+//#define TEMP_1_PIN         15   // ANALOG NUMBERING
+// following 2 are the new lines
+#define TEMP_0_PIN         15   // ANALOG NUMBERING
+#define TEMP_1_PIN         13   // ANALOG NUMBERING
+//end
 #define TEMP_2_PIN         -1   // ANALOG NUMBERING
 #define HEATER_BED_PIN     8    // BED
 #define TEMP_BED_PIN       14   // ANALOG NUMBERING
