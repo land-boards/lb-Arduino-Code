@@ -28,12 +28,10 @@ const char * menuHeader     = "** Test Menu **";
 
 menuStruc menus[] = 
 {
-  TESTKEYPAD_MENU,  "Test Keypad ------A0", 2, TESTKEYPAD_MENU,  TESTONEWIRE_MENU, TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
-  TESTONEWIRE_MENU, "Test 1-Wire Sens -D6", 3, TESTKEYPAD_MENU,  TESTTMP36_MENU,   TESTONEWIRE_MENU, TESTKEYPAD_MENU, &test1Wire,  TESTONEWIRE_MENU,
-  TESTTMP36_MENU,   "Test TMP36 sensor A1", 4, TESTONEWIRE_MENU, TESTLDR_MENU,     TESTTMP36_MENU,   TESTTMP36_MENU,  &testTmp36,  TESTTMP36_MENU,
-  TESTLDR_MENU,     "Test LDR sensor --A1", 5, TESTTMP36_MENU,   TESTLED_MENU,     TESTLDR_MENU,     TESTLDR_MENU,    &testLDR,    TESTLDR_MENU,
-  TESTLED_MENU,     "Test GVS LED -----D6", 6, TESTLDR_MENU,     TESTRELAY_MENU,   TESTLED_MENU,     TESTLED_MENU,    &testLED,    TESTLED_MENU,
-  TESTRELAY_MENU,   "Test 2 ch relay D2.3", 7, TESTLED_MENU,     TESTRELAY_MENU,   TESTRELAY_MENU,   TESTRELAY_MENU,  &testRelay,  TESTRELAY_MENU,        
+  TESTKEYPAD_MENU,  "Test Keypad",      2, TESTKEYPAD_MENU,  TESTIR_MENU,   TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
+  TESTIR_MENU,      "Test IR distance", 3, TESTKEYPAD_MENU,  SETVOL_MENU,   TESTIR_MENU,      TESTIR_MENU,     &testIR,     TESTIR_MENU,
+  SETVOL_MENU,      "Set Volume",       4, TESTIR_MENU,      SETFRQ_MENU,   SETVOL_MENU,      SETVOL_MENU,     &setVol,     SETVOL_MENU,
+  SETFRQ_MENU,      "Set Frequency",    5, SETVOL_MENU,      SETFRQ_MENU,   SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +130,6 @@ int menuNav(void)
   }
   while (keyState != NONE);
 }
-
 
 ////////////////////////////////////////////////////////////
 // displayMenuLine
