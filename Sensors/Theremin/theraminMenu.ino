@@ -31,7 +31,8 @@ menuStruc menus[] =
   TESTKEYPAD_MENU,  "Test Keypad",      2, TESTKEYPAD_MENU,  TESTIR_MENU,   TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
   TESTIR_MENU,      "Test IR distance", 3, TESTKEYPAD_MENU,  SETVOL_MENU,   TESTIR_MENU,      TESTIR_MENU,     &testIR,     TESTIR_MENU,
   SETVOL_MENU,      "Set Volume",       4, TESTIR_MENU,      SETFRQ_MENU,   SETVOL_MENU,      SETVOL_MENU,     &setVol,     SETVOL_MENU,
-  SETFRQ_MENU,      "Set Frequency",    5, SETVOL_MENU,      SETFRQ_MENU,   SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
+  SETFRQ_MENU,      "Set Frequency",    5, SETVOL_MENU,      CALIBR_MENU,   SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
+  CALIBR_MENU,      "Calibrate IR",     6, SETFRQ_MENU,      CALIBR_MENU,   CALIBR_MENU,      CALIBR_MENU,     &calibIR,    CALIBR_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
