@@ -10,6 +10,7 @@
 void setHVPots(void)
 {
   int bit;
+  
   // set CS0 low
   digitalWrite(CS0, LOW);
   // set CLK high edge
@@ -19,11 +20,11 @@ void setHVPots(void)
   // set pot data bits and cycle clock
   for (bit = 0x40; bit != 0; bit >>= 1)
   {
-    if ((volumeValue & bit) == 0)
+    if ((vol128 & bit) == 0)
       digitalWrite(VOLDAT, LOW);
     else 
       digitalWrite(VOLDAT, HIGH);
-    if ((freqValue & bit) == 0)
+    if ((freq128 & bit) == 0)
       digitalWrite(FREQDAT, LOW);
     else 
       digitalWrite(FREQDAT, HIGH);

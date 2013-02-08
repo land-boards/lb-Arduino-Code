@@ -2,6 +2,7 @@
 // menuOps - Menu Operations
 //////////////////////////////////////////////////////////////////////////////
 
+
 //////////////////////////////////////////////////////////////////////////////
 // testKeyPad() - Verify keypad works
 //////////////////////////////////////////////////////////////////////////////
@@ -121,8 +122,8 @@ void setVol(void)
     }
     tft.print(loopCount);
     tft.print("  ");
-    volumeValue = loopCount;
-    freqValue = 63;
+    vol128 = loopCount;
+    freq128 = 63;
     setHVPots();
     delay(200);
   }
@@ -139,7 +140,6 @@ void setVol(void)
 
 void setFreq(void)
 {
-
   tft.fillScreen(ST7735_BLACK);
   setCursorTFT(0,0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
@@ -172,8 +172,8 @@ void setFreq(void)
     }
     tft.print(loopCount);
     tft.print("  ");
-    freqValue = loopCount;
-    volumeValue = 63;
+    freq128 = loopCount;
+    vol128 = 63;
     setHVPots();
     delay(200);
   }
@@ -191,6 +191,7 @@ void setFreq(void)
 void calibIR(void)
 {
   int volLo, volHi, freqLo, freqHi;
+  int keyVal;
   tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
   setCursorTFT(0,0);
@@ -213,14 +214,77 @@ void calibIR(void)
   setCursorTFT(4,0);
   tft.print("Hover freq hi - ");
   delay(3000);
-  freqLo = analogRead(ANALOGIN2);
-  tft.print(freqLo);
+  freqHi = analogRead(ANALOGIN2);
+  tft.print(freqHi);
   setCursorTFT(6,0);
   tft.print("Calibration Complete");
   setCursorTFT(7,0);
-  tft.print("Select to continue");
+  tft.print("Right to Save");
+  setCursorTFT(8,0);
+  tft.print("Other to exit");
   
-  while (myMiniDuino.pollKeypad() == NONE);
+  keyVal = myMiniDuino.pollKeypad();
+  while (keyVal == NONE)
+    keyVal = myMiniDuino.pollKeypad();
+  if (keyVal == RIGHT)
+  {
+    IRConfigs.freqLoEE = freqLo;
+    IRConfigs.freqHiEE = freqHi;
+    IRConfigs.volLoEE = volLo;
+    IRConfigs.volHiEE = volHi;
+    setCursorTFT(9,0);
+    tft.print("Saving...");
+    EEPROM_writeAnything(0, IRConfigs);
+  }
+  setCursorTFT(7,0);
+  tft.print("                ");
+  setCursorTFT(8,0);
+  tft.print("                ");
+  setCursorTFT(9,0);
+  tft.print("                ");
+  
+}
 
+void theremin(void)
+{
+  tft.fillScreen(ST7735_BLACK);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  setCursorTFT(0,0);
+  tft.print("Theremin");
+  while (myMiniDuino.pollKeypad() != NONE);
+  int keyVal = myMiniDuino.pollKeypad();
+  while (keyVal == NONE)
+  {
+    getSetVolFreq();
+    setCursorTFT(1,0);
+    tft.print(vol128);
+    tft.print("  ");
+    tft.print(freq128);    
+    tft.print("  ");
+    keyVal = myMiniDuino.pollKeypad();
+  }
+}
+
+void viewCal(void)
+{
+  tft.fillScreen(ST7735_BLACK);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  setCursorTFT(0,0);
+  tft.print("IR Calibration");
+  setCursorTFT(1,0);
+  tft.print("Hover vol Lo - ");
+  tft.print(IRConfigs.volLoEE);
+  setCursorTFT(2,0);
+  tft.print("Hover vol Hi - ");
+  tft.print(IRConfigs.volHiEE);
+  setCursorTFT(3,0);
+  tft.print("Hover freq Lo - ");
+  tft.print(IRConfigs.freqLoEE);
+  setCursorTFT(4,0);
+  tft.print("Hover freq Hi - ");
+  tft.print(IRConfigs.freqHiEE);
+  setCursorTFT(5,0);
+  tft.print("Select to exit");
+  while (myMiniDuino.pollKeypad() == NONE);
 }
 

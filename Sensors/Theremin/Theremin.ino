@@ -25,6 +25,8 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library
 #include <SPI.h>
+#include <EEPROMAnything.h>
+#include <EEPROM.h>
 
 #define VOLDAT	2
 #define FREQDAT	3
@@ -49,6 +51,8 @@ enum MENUITEMS
   SETVOL_MENU,
   SETFRQ_MENU,
   CALIBR_MENU,
+  VIEWCAL_MENU,
+  THEREMIN_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -61,8 +65,22 @@ enum MENUITEMS
 
 int menuState;
 
-unsigned char volumeValue;
-unsigned char freqValue;
+unsigned char lastVol;
+unsigned char lastFreq;
+int freq128;
+int vol128;
+
+//////////////////////////////////////////////////////////////////////////////
+// IR Configuration stored in EEPROM
+//////////////////////////////////////////////////////////////////////////////
+
+struct IR_Cfgs_t
+{
+  int freqLoEE;
+  int freqHiEE;
+  int volLoEE;
+  int volHiEE;
+} IRConfigs;
 
 //////////////////////////////////////////////////////////////////////////////
 // class initializers
@@ -89,8 +107,8 @@ void setup()
   digitalWrite(FREQDAT, LOW);
   digitalWrite(CLK, LOW);
   digitalWrite(CS0, HIGH);
-  volumeValue = 0;
-  freqValue = 0;
+  lastVol = 0;
+  lastFreq = 0;
   setHVPots();
 
   menuState = TESTKEYPAD_MENU;
@@ -101,6 +119,8 @@ void setup()
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  
+  EEPROM_readAnything(0, IRConfigs);
   
   menuRefresh();
 
