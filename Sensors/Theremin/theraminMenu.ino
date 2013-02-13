@@ -24,17 +24,18 @@ const char * menuHeader     = "** Test Menu **";
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - used to generate the navigation menus. Format is
 // CURR_MENU,MENU_STRING,DISPLAY_ROW,UP_MENU,DOWN_MENU,LEFT_MENU,RIGHT_MENU,select-execute-fcn-name,RETURN_MENU
+// CURR_MENU needs to be ordered in the enums to match the order on the screen
 ////////////////////////////////////////////////////////////////////////////////////
 
 menuStruc menus[] = 
 {
-  TESTKEYPAD_MENU,  "Test Keypad",      2, TESTKEYPAD_MENU,  TESTIR_MENU,   TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
-  TESTIR_MENU,      "Test IR distance", 3, TESTKEYPAD_MENU,  SETVOL_MENU,   TESTIR_MENU,      TESTIR_MENU,     &testIR,     TESTIR_MENU,
-  SETVOL_MENU,      "Set Volume",       4, TESTIR_MENU,      SETFRQ_MENU,   SETVOL_MENU,      SETVOL_MENU,     &setVol,     SETVOL_MENU,
-  SETFRQ_MENU,      "Set Frequency",    5, SETVOL_MENU,      CALIBR_MENU,   SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
-  CALIBR_MENU,      "Calibrate IR",     6, SETFRQ_MENU,      VIEWCAL_MENU,  CALIBR_MENU,      CALIBR_MENU,     &calibIR,    CALIBR_MENU,
-  VIEWCAL_MENU,     "View Calibr",      7, CALIBR_MENU,      THEREMIN_MENU, VIEWCAL_MENU,     VIEWCAL_MENU,    *viewCal,    VIEWCAL_MENU,
-  THEREMIN_MENU,    "Run Theremin",     8, VIEWCAL_MENU,     THEREMIN_MENU, THEREMIN_MENU,    THEREMIN_MENU,   &theremin,   THEREMIN_MENU,
+  THEREMIN_MENU,    "Run Theremin",     2, THEREMIN_MENU,    CALIBR_MENU,     THEREMIN_MENU,    THEREMIN_MENU,   &theremin,   THEREMIN_MENU,
+  CALIBR_MENU,      "Calibrate IR",     3, THEREMIN_MENU,    VIEWCAL_MENU,    CALIBR_MENU,      CALIBR_MENU,     &calibIR,    CALIBR_MENU,
+  VIEWCAL_MENU,     "View Calibr",      4, CALIBR_MENU,      TESTKEYPAD_MENU, VIEWCAL_MENU,     VIEWCAL_MENU,    &viewCal,    VIEWCAL_MENU,
+  TESTKEYPAD_MENU,  "Test Keypad",      5, VIEWCAL_MENU,     TESTIR_MENU,     TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
+  TESTIR_MENU,      "Test IR distance", 6, TESTKEYPAD_MENU,  SETVOL_MENU,     TESTIR_MENU,      TESTIR_MENU,     &testIR,     TESTIR_MENU,
+  SETVOL_MENU,      "Set Volume",       7, TESTIR_MENU,      SETFRQ_MENU,     SETVOL_MENU,      SETVOL_MENU,     &setVol,     SETVOL_MENU,
+  SETFRQ_MENU,      "Set Frequency",    8, SETVOL_MENU,      SETFRQ_MENU,     SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

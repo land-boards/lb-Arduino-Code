@@ -2,9 +2,10 @@
 // menuOps - Menu Operations
 //////////////////////////////////////////////////////////////////////////////
 
-
 //////////////////////////////////////////////////////////////////////////////
-// testKeyPad() - Verify keypad works
+// testKeyPad() - Verify keypad works.
+// All directions plus select display the direction.
+// Holding select for longer than a few seconds will exit this test
 //////////////////////////////////////////////////////////////////////////////
 
 void testKeyPad(void)
@@ -58,6 +59,7 @@ void testKeyPad(void)
 
 //////////////////////////////////////////////////////////////////////////////
 // testIR() - Test the IR
+// Display the A/D value for the Volume and Frequency IR sensors
 //////////////////////////////////////////////////////////////////////////////
 
 void testIR(void)
@@ -85,11 +87,15 @@ void testIR(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// setVol() - Set the volume
+// setVol() - Manually sets the volume from 0 to 127 by using the 5-way switch
 //////////////////////////////////////////////////////////////////////////////
 
 void setVol(void)
 {
+  int key;
+  int loopCount = vol128;
+  freq128 = 63;
+  setHVPots();
   tft.fillScreen(ST7735_BLACK);
   setCursorTFT(0,0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
@@ -97,8 +103,6 @@ void setVol(void)
   setCursorTFT(1,0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
   tft.print("Up/Down");
-  long loopCount = 0;
-  int key;
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
   setCursorTFT(2,0);
   tft.print(loopCount);
@@ -111,20 +115,23 @@ void setVol(void)
     case UP:
       if (loopCount < 127)
         loopCount++;
+      tft.print(loopCount);
+      tft.print("  ");
+      vol128 = loopCount;
+      setHVPots();
       break;
     case DOWN:
       if (loopCount > 0)
         loopCount--;
+      tft.print(loopCount);
+      tft.print("  ");
+      vol128 = loopCount;
+      setHVPots();
       break;
     case SELECT:
       tft.print("SELECT");
       break;
     }
-    tft.print(loopCount);
-    tft.print("  ");
-    vol128 = loopCount;
-    freq128 = 63;
-    setHVPots();
     delay(200);
   }
   while (key != SELECT);
@@ -135,7 +142,7 @@ void setVol(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// setFreq() - Set the frequency
+// setFreq() - Manually sets the frequency from 0-127 by using the 5-way switch
 //////////////////////////////////////////////////////////////////////////////
 
 void setFreq(void)
@@ -173,7 +180,6 @@ void setFreq(void)
     tft.print(loopCount);
     tft.print("  ");
     freq128 = loopCount;
-    vol128 = 63;
     setHVPots();
     delay(200);
   }
@@ -185,7 +191,9 @@ void setFreq(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// calibIR() - Calibrate the IR sensors
+// calibIR() - Calibrate the IR sensors.
+// Screen prompts to hover low and high for the volume and frequency sensors.
+// Takes measurements at the end of three seconds.
 //////////////////////////////////////////////////////////////////////////////
 
 void calibIR(void)
@@ -245,6 +253,10 @@ void calibIR(void)
   
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// theremin() - Run the Theremin code
+//////////////////////////////////////////////////////////////////////////////
+
 void theremin(void)
 {
   tft.fillScreen(ST7735_BLACK);
@@ -264,6 +276,10 @@ void theremin(void)
     keyVal = myMiniDuino.pollKeypad();
   }
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// viewCal() - View the results of the calibration tables
+//////////////////////////////////////////////////////////////////////////////
 
 void viewCal(void)
 {

@@ -1,11 +1,9 @@
-#include <Ultrasonic.h>
-
-//#include "HVPot2Channel.h"
-
-// VOLDAT
-// FREQDAT
-// CLK
-// CS0
+////////////////////////////////////////////////////////////////////////////////
+// setHVPots() - Set the high voltage pots to the desired frequency and volume
+// Uses globals: 
+//  vol128 - 7-bit volume control
+//  freq128
+////////////////////////////////////////////////////////////////////////////////
 
 void setHVPots(void)
 {
