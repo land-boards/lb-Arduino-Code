@@ -115,8 +115,10 @@ void setup()
   pinMode(SYNC0, OUTPUT);
   digitalWrite(VOLDAT, LOW);
   digitalWrite(FREQDAT, LOW);
-  digitalWrite(CLK, HIGH);
   digitalWrite(SYNC0, HIGH);
+  digitalWrite(CLK, HIGH);
+  delay(1);
+  enableRDAC();
   // Turn down the volume initially
   vol1024 = 0;
   freq1024 = 0;

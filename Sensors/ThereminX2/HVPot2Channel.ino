@@ -8,10 +8,10 @@
 
 void setHVPots(void)
 {
-  long bit;
-  long vol;
-  long freq;
-  long cmdReg;
+  unsigned int vol;
+  unsigned int freq;
+  unsigned int bit = 0x8000;
+  unsigned int cmdReg;
   
   cmdReg = 0x1 << 10;    // 0x1 is a write value command
   freq = cmdReg | freq1024;
@@ -19,22 +19,59 @@ void setHVPots(void)
   
   digitalWrite(CLK, LOW);
   digitalWrite(SYNC0, LOW);
-  digitalWrite(CLK, HIGH);
   // set pot data bits and cycle clock
-  for (bit = 0x8000; bit != 0; bit >>= 1)
+  while (bit)
   {
-    if ((vol & bit) == 0)
-      digitalWrite(VOLDAT, LOW);
-    else 
-      digitalWrite(VOLDAT, HIGH);
-    if ((freq & bit) == 0)
-      digitalWrite(FREQDAT, LOW);
-    else 
-      digitalWrite(FREQDAT, HIGH);
-    digitalWrite(CLK, LOW);
     digitalWrite(CLK, HIGH);
+    if (vol & bit)
+      digitalWrite(VOLDAT, HIGH);
+    else 
+      digitalWrite(VOLDAT, LOW);
+    if (freq & bit)
+      digitalWrite(FREQDAT, HIGH);
+    else 
+      digitalWrite(FREQDAT, LOW);
+    digitalWrite(CLK, LOW);
+    bit >>= 1;
   }
   digitalWrite(SYNC0, HIGH);
+  digitalWrite(CLK, HIGH);
   digitalWrite(CLK, LOW);
   digitalWrite(CLK, HIGH);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// enableRDAC() - Enable the Resistor D/A Converter
+////////////////////////////////////////////////////////////////////////////////
+
+void enableRDAC(void)
+{
+  unsigned int vol  = 0x1806;
+  unsigned int freq = 0x1806;
+  unsigned int bit = 0x8000;
+
+  digitalWrite(CLK, LOW);
+  digitalWrite(SYNC0, LOW);
+  // set pot data bits and cycle clock
+  do
+  {
+    digitalWrite(CLK, HIGH);
+    if (vol & bit)
+      digitalWrite(VOLDAT, HIGH);
+    else 
+      digitalWrite(VOLDAT, LOW);
+    if (freq & bit)
+      digitalWrite(FREQDAT, HIGH);
+    else
+      digitalWrite(FREQDAT, LOW);
+    digitalWrite(CLK, LOW);
+    bit >>= 1;
+  }
+  while (bit);
+  digitalWrite(SYNC0, HIGH);
+  digitalWrite(CLK, HIGH);
+  digitalWrite(CLK, LOW);
+  digitalWrite(CLK, HIGH);
+  delay(2);
+}
+
