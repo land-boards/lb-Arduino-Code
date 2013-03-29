@@ -1,0 +1,13 @@
+<mm_project serial_port="COM3" board="Arduino Uno" programmer="" includePaths="" libPaths="" libs="" default="yes" useCodeAutomation="yes" linkPrintfVersion="1" serialPortSpeed="" >
+  <files>
+    <file name="parttester_main.h" open="no" />
+    <file name="DS18S20.cpp" open="no" />
+    <file name="PartTester.cpp" open="yes" />
+    <file name="partTests.cpp" open="no" />
+    <file name="testMenu.cpp" open="no" />
+  </files>
+  <extras>
+  </extras>
+  <externals>
+  </externals>
+</mm_project>
