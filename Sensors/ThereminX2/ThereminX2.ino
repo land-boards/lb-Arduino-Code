@@ -3,22 +3,14 @@
 // Theremin - Theremin software
 //
 // Hardware -
-//  Microprocessor Board is a MiniDuino
-//   ------> http://dougspcbdesigns.pbworks.com/w/page/55223153/MiniDuino
+//  Microprocessor Board is a Integrated Theremin
+//   ------> http://dougspcbdesigns.pbworks.com/IntegTheremin
 //  Keypad is a 5-way switch
 //   ------> http://dougspcbdesigns.pbworks.com/w/page/55033879/Sw5Way
 //  IR Sensor is a 
 //   ------> http://dougspcbdesigns.pbworks.com/IR%20Sensor
-//  HV Pot is a 
-//   ------> http://dougspcbdesigns.pbworks.com/w/page/55033832/HVDigitalPot
 //  Display is a 
 //   ------> http://myarduino.pbworks.com/w/page/53173808/TFT_Display1p8in
-//  Audio Amplifier is a
-//   ------> http://dougspcbdesigns.pbworks.com/AudioAmp384
-//  Alternate Audio Amplifier is a
-//   ------> http://dougspcbdesigns.pbworks.com/AudioAmp386
-//  Voltage Controlled Oscillator is a
-//   ------> http://dougspcbdesigns.pbworks.com/XR%202206
 //  This sketch works with the library for the Adafruit 1.8" TFT Breakout
 //////////////////////////////////////////////////////////////////////////////
 

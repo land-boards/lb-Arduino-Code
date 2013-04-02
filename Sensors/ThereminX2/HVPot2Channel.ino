@@ -34,6 +34,10 @@ void setHVPots(void)
     digitalWrite(CLK, LOW);
     bit >>= 1;
   }
+  if (analogRead(ANALOGIN3) > IRConfigs.levelCal)
+    while (analogRead(ANALOGIN3) > IRConfigs.levelCal);
+  else
+    while (analogRead(ANALOGIN3) < IRConfigs.levelCal);
   digitalWrite(SYNC0, HIGH);
   digitalWrite(CLK, HIGH);
   digitalWrite(CLK, LOW);
@@ -68,10 +72,6 @@ void enableRDAC(void)
     bit >>= 1;
   }
   while (bit);
-  if (analogRead(ANALOGIN3) > IRConfigs.levelCal)
-    while (analogRead(ANALOGIN3) > IRConfigs.levelCal);
-  else
-    while (analogRead(ANALOGIN3) < IRConfigs.levelCal);
   digitalWrite(SYNC0, HIGH);
   digitalWrite(CLK, HIGH);
   digitalWrite(CLK, LOW);
