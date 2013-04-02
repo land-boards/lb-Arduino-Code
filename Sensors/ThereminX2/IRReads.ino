@@ -15,7 +15,7 @@ int getSetVolFreq(void)
     lastFreq = tempFreq;
     lastVol = tempVol;
     vol1024 = mapLimit(tempVol,IRConfigs.volLoEE,IRConfigs.volHiEE,0,1023);
-    freq1024 = mapLimit(tempFreq,IRConfigs.freqLoEE,IRConfigs.freqHiEE,0,1023);
+    freq1024 = mapLimit(tempFreq,IRConfigs.freqLoEE,IRConfigs.freqHiEE,1023,0);
     setHVPots();
   }
 }

@@ -68,10 +68,14 @@ void enableRDAC(void)
     bit >>= 1;
   }
   while (bit);
+  if (analogRead(ANALOGIN3) > IRConfigs.levelCal)
+    while (analogRead(ANALOGIN3) > IRConfigs.levelCal);
+  else
+    while (analogRead(ANALOGIN3) < IRConfigs.levelCal);
   digitalWrite(SYNC0, HIGH);
   digitalWrite(CLK, HIGH);
   digitalWrite(CLK, LOW);
   digitalWrite(CLK, HIGH);
-  delay(2);
+//  delay(2);
 }
 

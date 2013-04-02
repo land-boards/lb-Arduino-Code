@@ -268,11 +268,11 @@ void theremin(void)
   while (keyVal == NONE)
   {
     getSetVolFreq();
-    setCursorTFT(1,0);
-    tft.print(vol1024);
-    tft.print("  ");
-    tft.print(freq1024);    
-    tft.print("  ");
+//    setCursorTFT(1,0);
+//    tft.print(vol1024);
+//    tft.print("  ");
+//    tft.print(freq1024);    
+//    tft.print("  ");
     keyVal = myMiniDuino.pollKeypad();
   }
 }
@@ -300,7 +300,64 @@ void viewCal(void)
   tft.print("Hover freq Hi - ");
   tft.print(IRConfigs.freqHiEE);
   setCursorTFT(5,0);
+  tft.print("Analog Level  - ");
+  tft.print(IRConfigs.levelCal);
+  setCursorTFT(6,0);
   tft.print("Select to exit");
   while (myMiniDuino.pollKeypad() == NONE);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// calibLevel(void) - 
+//////////////////////////////////////////////////////////////////////////////
+
+#define NUM_LOOPS 2500
+
+void calibLevel(void)
+{
+  int iVal;
+  int accumVal;
+  int iMax = 0;
+  int iMin = 1022;
+  tft.fillScreen(ST7735_BLACK);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  setCursorTFT(0,0);
+  tft.print("IR Calibration");
+  for (int i = 0; i< NUM_LOOPS; i++)
+  {  
+    iVal = analogRead(ANALOGIN3);
+    if (iVal > iMax)
+      iMax = iVal;
+    if (iVal < iMin)
+      iMin = iVal;
+  }
+  accumVal = (iMax+iMin) >> 1;
+  setCursorTFT(1,0);
+  tft.print("MinLevel=");
+  tft.print(iMin);
+  setCursorTFT(2,0);
+  tft.print("MaxLevel=");
+  tft.print(iMax);
+  setCursorTFT(3,0);
+  tft.print("AvgLevel=");
+  tft.print(accumVal);
+  setCursorTFT(4,0);
+  tft.print("Calibration Complete");
+  setCursorTFT(5,0);
+  tft.print("Right to Save");
+  setCursorTFT(6,0);
+  tft.print("Other to exit");
+  int keyVal = myMiniDuino.pollKeypad();
+  while (keyVal == NONE)
+    keyVal = myMiniDuino.pollKeypad();
+  if (keyVal == RIGHT)
+  {
+    IRConfigs.levelCal = accumVal;
+    setCursorTFT(7,0);
+    tft.print("Saving...");
+    EEPROM_writeAnything(0, IRConfigs);
+  }
+  while (keyVal != NONE)
+    keyVal = myMiniDuino.pollKeypad();
 }
 

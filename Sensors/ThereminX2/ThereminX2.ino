@@ -55,6 +55,7 @@ enum MENUITEMS
 {
   THEREMIN_MENU,
   CALIBR_MENU,
+  CAL_LEV_MENU,
   VIEWCAL_MENU,
   TESTKEYPAD_MENU,
   TESTIR_MENU,
@@ -90,6 +91,7 @@ struct IR_Cfgs_t
   int freqHiEE;
   int volLoEE;
   int volHiEE;
+  int levelCal;
 } IRConfigs;
 
 //////////////////////////////////////////////////////////////////////////////
