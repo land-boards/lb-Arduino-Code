@@ -1,0 +1,33 @@
+[Project ID]
+Signature=UE Proj: v.1
+[Project Information]
+Use Relative Directory=1
+Relative to Project File=1
+Project Start=D807010001000E000F0006001000000014
+Include Sub Directories=1
+Project Tagfile=
+Project Wordfile=
+Filter=
+Create Tagfile=0
+Working Time=7904
+[Files]
+0=.\INC\
+1=.\LCD Init\
+2=.\Program\
+[Folders]
+E:\工作\测试板\C51模板\Program\=1
+E:\工作\测试程序\DST1011（ILI9320）\=1
+.\LCD Init\=1
+.\Program\=1
+[Open Files]
+Active File Display Mode=3
+Active File Index=1
+Open File Line0=0
+Open File Line1=0
+Open File Pos0=782
+Open File Pos1=994
+Open File Window Pos0=0,1,-1,-1,-4,-30,110,145,1135,627
+Open File Window Pos1=2,3,-1,-1,-4,-30,132,174,1161,660
+Open File0=E:\工作\标准库\C51模板\显尚51平台V1.0\C51模板\项目文件_ILI9320\Function_Header.H
+Open File1=E:\工作\测试程序\DST1011（ILI9320）自用\Program\TP_Press.c
+Open File2=

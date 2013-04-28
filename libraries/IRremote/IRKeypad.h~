@@ -1,0 +1,45 @@
+#ifndef IRKeypad_h
+#define IRKeypad_h
+
+//////////////////////////////////////////////////////////////////////
+// IRKeypad.h
+//////////////////////////////////////////////////////////////////////
+
+enum IR_VALUES
+{
+  NOKEY = 0,
+  CHMINUS,
+  CH,
+  CHPLUS,
+  LEFT,
+  RIGHT,
+  PAUSE,
+  MINUS,
+  PLUS,
+  EQ,
+  ZEROKEY,
+  V100PLUS,
+  V200PLUS,
+  ONEKEY,
+  TWOKEY,
+  THREEKEY,
+  FOURKEY,
+  FIVEKEY,
+  SIXKEY,
+  SEVENKEY,
+  EIGHTKEY,
+  NINEKEY,
+};
+
+//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
+class IRKeypad
+{
+	public:
+//		IRKeypad(void);
+		int checkIR(void);
+};
+
+#endif
+

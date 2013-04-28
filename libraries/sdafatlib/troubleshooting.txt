@@ -1,0 +1,45 @@
+The best source of recent information is the AdaFruit forum
+
+http://forums.adafruit.com/
+
+Also search the Arduino forum
+
+http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl
+
+
+Try running the SdInfo sketch in the SdFat/examples folder to get 
+more information.
+
+
+The most common problems are:
+
+--------------------------------------------------------------------------------
+Wiring errors with card.init() failure and errorCode == 1.  This means the
+first command, CMD0 - SPI init, failed.  SdFat is not seeing the card.
+This is a basic hardware problem.  Do not reformat your SD.
+--------------------------------------------------------------------------------
+card.init() failures caused by resistor SPI level shifters. Some, mostly older,
+SD cards work with resistor level shifters but may be flaky with random errors.
+
+Many newer SD cards have edge detectors and fail with errorCode() = 1.  These
+cards will not work with resistor level shifters since SdFat does not see the
+card at low SPI clock rate.
+
+Other cards fail with an errorCode() > 1.  These cards see SD commands at low
+SPI clock rate but fail at higher SPI clock rate.  It may be possible to use
+these cards by replacing card.init() with card.init(SPI_HALF_SPEED).  
+This will slow the the SPI clock by 50%.
+
+--------------------------------------------------------------------------------
+Redefining SS_PIN to be a pin other than the Arduino/AVR hardware SS pin.
+
+Arduino/AVR SPI will only function correctly in master mode if the hardware SS
+pin is in output mode. Sd2Card::init() will enable output mode for the hardware
+SS pin even if it is not SD chip select.
+
+If you have multiple SPI devices you must insure devices other than the SD card
+have their chip select pin high when Sd2Card::init() is called.
+
+If you want to understand in more detail how AVR SPI works read this
+
+http://www.atmel.com/dyn/resources/prod_documents/doc2585.pdf. See section 2.3.
