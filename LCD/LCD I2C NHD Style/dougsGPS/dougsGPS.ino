@@ -29,6 +29,7 @@
 // Includes follow
 //////////////////////////////////////////////////////////////////////////////
 
+#include <Arduino.h>
 #include <Adafruit_GPS.h>
 #include "Wire.h"
 #include <inttypes.h>
@@ -36,7 +37,7 @@
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
-#include <eepromanything.h>
+#include <EEPROMAnything.h>
 #include <EEPROM.h>
 
 //////////////////////////////////////////////////////////////////////////////
