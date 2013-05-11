@@ -1,6 +1,6 @@
 == Screwduino README ==
 
-[[File:http://myarduino.pbworks.com/w/file/fetch/52153037/Screwduino%20Assembled%20-%202%20x640.JPG]]
+[[File:http://dougspcbdesigns.pbworks.com/f/ScrewduinoX3.png]]
 
 * The [http://myarduino.pbworks.com/w/page/51198530/Screwduino Screwduino] is an Arduino compatible microcontroller board. 
 ** It is based on the Arduino UNO but with some improvements. 
