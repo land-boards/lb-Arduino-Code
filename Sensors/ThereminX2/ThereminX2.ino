@@ -47,7 +47,6 @@ enum MENUITEMS
 {
   THEREMIN_MENU,
   CALIBR_MENU,
-  CAL_LEV_MENU,
   VIEWCAL_MENU,
   TESTKEYPAD_MENU,
   TESTIR_MENU,
@@ -112,6 +111,7 @@ void setup()
   digitalWrite(SYNC0, HIGH);
   digitalWrite(CLK, HIGH);
   delay(1);
+  calibLevel();    // Needs this before we set the HV pots
   enableRDAC();
   // Turn down the volume initially
   vol1024 = 0;
@@ -131,7 +131,6 @@ void setup()
   EEPROM_readAnything(0, IRConfigs);
   
   menuRefresh();
-
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -157,3 +156,26 @@ void setCursorTFT(int row, int col)
   tft.setCursor(col*6, row*10);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// calibLevel(void) - 
+//////////////////////////////////////////////////////////////////////////////
+
+#define NUM_LOOPS 2500
+
+void calibLevel(void)
+{
+  int iVal;
+  int accumVal;
+  int iMax = 0;
+  int iMin = 1022;
+  tft.print("IR Calibration");
+  for (int i = 0; i< NUM_LOOPS; i++)
+  {  
+    iVal = analogRead(ANALOGIN3);
+    if (iVal > iMax)
+      iMax = iVal;
+    if (iVal < iMin)
+      iMin = iVal;
+  }
+  IRConfigs.levelCal = (iMax+iMin) >> 1;
+}

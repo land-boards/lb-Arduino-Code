@@ -30,13 +30,12 @@ const char * menuHeader     = "** Test Menu **";
 menuStruc menus[] = 
 {
   THEREMIN_MENU,    "Run Theremin",     2, THEREMIN_MENU,    CALIBR_MENU,     THEREMIN_MENU,    THEREMIN_MENU,   &theremin,   THEREMIN_MENU,
-  CALIBR_MENU,      "Calibrate IR",     3, THEREMIN_MENU,    CAL_LEV_MENU,    CALIBR_MENU,      CALIBR_MENU,     &calibIR,    CALIBR_MENU,
-  CAL_LEV_MENU,     "Calibrate Level",  4, CALIBR_MENU,      VIEWCAL_MENU,    CAL_LEV_MENU,     CAL_LEV_MENU,    &calibLevel, CAL_LEV_MENU,
-  VIEWCAL_MENU,     "View Calibr",      5, CAL_LEV_MENU,     TESTKEYPAD_MENU, VIEWCAL_MENU,     VIEWCAL_MENU,    &viewCal,    VIEWCAL_MENU,
-  TESTKEYPAD_MENU,  "Test Keypad",      6, VIEWCAL_MENU,     TESTIR_MENU,     TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
-  TESTIR_MENU,      "Test IR distance", 7, TESTKEYPAD_MENU,  SETVOL_MENU,     TESTIR_MENU,      TESTIR_MENU,     &testIR,     TESTIR_MENU,
-  SETVOL_MENU,      "Set Volume",       8, TESTIR_MENU,      SETFRQ_MENU,     SETVOL_MENU,      SETVOL_MENU,     &setVol,     SETVOL_MENU,
-  SETFRQ_MENU,      "Set Frequency",    9, SETVOL_MENU,      SETFRQ_MENU,     SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
+  CALIBR_MENU,      "Calibrate IR",     3, THEREMIN_MENU,    VIEWCAL_MENU,    CALIBR_MENU,      CALIBR_MENU,     &calibIR,    CALIBR_MENU,
+  VIEWCAL_MENU,     "View Calibr",      4, CALIBR_MENU,      TESTKEYPAD_MENU, VIEWCAL_MENU,     VIEWCAL_MENU,    &viewCal,    VIEWCAL_MENU,
+  TESTKEYPAD_MENU,  "Test Keypad",      5, VIEWCAL_MENU,     TESTIR_MENU,     TESTKEYPAD_MENU,  TESTKEYPAD_MENU, &testKeyPad, TESTKEYPAD_MENU,
+  TESTIR_MENU,      "Test IR distance", 6, TESTKEYPAD_MENU,  SETVOL_MENU,     TESTIR_MENU,      TESTIR_MENU,     &testIR,     TESTIR_MENU,
+  SETVOL_MENU,      "Set Volume",       7, TESTIR_MENU,      SETFRQ_MENU,     SETVOL_MENU,      SETVOL_MENU,     &setVol,     SETVOL_MENU,
+  SETFRQ_MENU,      "Set Frequency",    8, SETVOL_MENU,      SETFRQ_MENU,     SETFRQ_MENU,      SETFRQ_MENU,     &setFreq,    SETFRQ_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
