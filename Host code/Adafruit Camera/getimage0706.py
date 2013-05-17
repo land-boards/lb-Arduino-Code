@@ -105,7 +105,8 @@ def readbuffer(bytes):
 #        print 'cmd=', map(hex, command)
         cmd = ''.join(map (chr, command))
         s.write(cmd)
-        reply = s.read(READSIZE + 5)
+        # the reply is a 5-byte header, followed by the image data
+        # followed by the 5-byte header again.        reply = s.read(5 + READSIZE + 5) # added the extra 5 to match "Gordon's code" on the adafruit site
         r = list(reply)
 #        print r
         if (len(r) != READSIZE + 5):
