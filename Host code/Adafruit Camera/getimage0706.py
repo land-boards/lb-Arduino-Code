@@ -109,7 +109,7 @@ def readbuffer(bytes):
         # followed by the 5-byte header again.        reply = s.read(5 + READSIZE + 5) # added the extra 5 to match "Gordon's code" on the adafruit site
         r = list(reply)
 #        print r
-        if (len(r) != READSIZE + 5):
+        if (len(r) != 5 + READSIZE + 5):
             # print 'Receive count error'
             # print 'Command sent was: ', cmd
             # print 'r is:', r
@@ -117,7 +117,7 @@ def readbuffer(bytes):
         if (not checkreply(r, CMD_READBUFF)):
             print "ERROR READING PHOTO"
             exit()
-        photo += r[5:]
+        photo += r[5:READSIZE+5]
         addr += READSIZE
     print 'photo len=', len(photo)
     return photo
