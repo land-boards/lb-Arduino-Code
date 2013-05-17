@@ -7,7 +7,7 @@ import time
 
 BAUD = 38400
 PORT = "/dev/ttyACM0"
-TIMEOUT = 0.1
+TIMEOUT = 0.5   # Gordan's adafruit site has this number now.
 
 SERIALNUM = 0    # start with 0
 
