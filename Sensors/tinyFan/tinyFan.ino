@@ -20,7 +20,7 @@
 #define RELAY_PIN 3
 #define LDR_PIN 1
 #define DARK_THR 500
-#define LOW_TEMP 62.0
+#define LOW_TEMP 60.0
 #define DARK_HYST 20
 
 /////////////////////////////////////////////////////////////////////
@@ -51,16 +51,22 @@ int useLDR;
 // setup()
 /////////////////////////////////////////////////////////////////////
 
-// the setup routine runs once when you press reset:
 void setup() 
 {
   pinMode(RELAY_PIN, OUTPUT);
-  fanState = FAN_OFF;
-  setFan(fanState);
+  setTime(0);
+  setFan(FAN_ON);
+  delay(5000);        // delay in between reads for stability
+  setFan(FAN_OFF);
+  delay(1000);        // delay in between reads for stability
   useLDR = DARK_THR;
   todaysLDRHigh = analogRead(LDR_PIN);
-  todaysLDRLow = todaysLDRHigh;
-  tempHysteresis = 1.0;
+  todaysLDRLow = todaysLDRHigh - DARK_HYST;
+  tempHysteresis = 2.0;
+  read1Wire();
+  delay(1000);
+  read1Wire();
+  delay(1000);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -94,6 +100,10 @@ void loop()
   else if (sensorValue < todaysLDRLow)
     todaysLDRLow = sensorValue;
 
+  read1Wire();
+  delay(1000);
+  read1Wire();
+  delay(1000);
   if ((fanState == FAN_OFF) && (sensorValue > useLDR + DARK_HYST) && (fahrenheit > (LOW_TEMP+tempHysteresis)))
   {
     setFan(FAN_ON);
@@ -102,8 +112,8 @@ void loop()
   {
     setFan(FAN_OFF);
   }
-  delay(1500);        // delay in between reads for stability
-  read1Wire();
+  for (long i=0; i<15*60; i++)
+	delay(1000);        // delay in between reads for stability
   if (day() > 1)
   {
     setTime(0);
@@ -114,4 +124,3 @@ void loop()
     useLDR = (yesterdaysLDRHigh + yesterdaysLDRLow) / 2;
   }
 }
-
