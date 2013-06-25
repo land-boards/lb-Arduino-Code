@@ -124,3 +124,4 @@ void loop()
     useLDR = (yesterdaysLDRHigh + yesterdaysLDRLow) / 2;
   }
 }
+
