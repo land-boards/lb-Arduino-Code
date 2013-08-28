@@ -1,0 +1,132 @@
+   1               		.file	"OneWireLogger.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               	.global	setup
+  18               	setup:
+  19               	.LFB7:
+  20               	.LM1:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	.LM2:
+  24 0000 E1E6      		ldi r30,lo8(97)
+  25 0002 F0E0      		ldi r31,hi8(97)
+  26 0004 80E8      		ldi r24,lo8(-128)
+  27 0006 8083      		st Z,r24
+  28               	.LM3:
+  29 0008 1082      		st Z,__zero_reg__
+  30               	.LM4:
+  31 000a 8AB9      		out 42-32,r24
+  32               	/* epilogue start */
+  33               	.LM5:
+  34 000c 0895      		ret
+  35               	.LFE7:
+  37               	.global	loop
+  39               	loop:
+  40               	.LFB8:
+  41               	.LM6:
+  42               	/* prologue: function */
+  43               	/* frame size = 0 */
+  44               	.LM7:
+  45 000e 80E8      		ldi r24,lo8(-128)
+  46 0010 8BB9      		out 43-32,r24
+  47 0012 8FEF      		ldi r24,lo8(-1)
+  48 0014 9FEF      		ldi r25,hi8(-1)
+  49               	.LVL0:
+  50               	.LBB20:
+  51               	.LBB21:
+  52               	.LBB22:
+  53               	.LBB23:
+  54               	.LM8:
+  55 0016 20E9      		ldi r18,lo8(400)
+  56 0018 31E0      		ldi r19,hi8(400)
+  57               	.L4:
+  58 001a F901      		movw r30,r18
+  59               	.LVL1:
+  60               	/* #APP */
+  61               	 ;  105 "c:/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h" 1
+  62 001c 3197      		1: sbiw r30,1
+  63 001e 01F4      		brne 1b
+  64               	 ;  0 "" 2
+  65               	/* #NOAPP */
+  66               	.LBE23:
+  67               	.LBE22:
+  68               	.LM9:
+  69 0020 0197      		sbiw r24,1
+  70               	.LM10:
+  71 0022 01F4      		brne .L4
+  72               	.LBE21:
+  73               	.LBE20:
+  74               	.LM11:
+  75 0024 1BB8      		out 43-32,__zero_reg__
+  76 0026 8FEF      		ldi r24,lo8(-1)
+  77 0028 9FEF      		ldi r25,hi8(-1)
+  78               	.LVL2:
+  79               	.LBB24:
+  80               	.LBB25:
+  81               	.LBB26:
+  82               	.LBB27:
+  83               	.LM12:
+  84 002a 20E9      		ldi r18,lo8(400)
+  85 002c 31E0      		ldi r19,hi8(400)
+  86               	.L5:
+  87 002e F901      		movw r30,r18
+  88               	.LVL3:
+  89               	/* #APP */
+  90               	 ;  105 "c:/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h" 1
+  91 0030 3197      		1: sbiw r30,1
+  92 0032 01F4      		brne 1b
+  93               	 ;  0 "" 2
+  94               	/* #NOAPP */
+  95               	.LBE27:
+  96               	.LBE26:
+  97               	.LM13:
+  98 0034 0197      		sbiw r24,1
+  99               	.LM14:
+ 100 0036 01F4      		brne .L5
+ 101               	/* epilogue start */
+ 102               	.LBE25:
+ 103               	.LBE24:
+ 104               	.LM15:
+ 105 0038 0895      		ret
+ 106               	.LFE8:
+ 108               	.global	main
+ 110               	main:
+ 111               	.LFB6:
+ 112               	.LM16:
+ 113               	/* prologue: function */
+ 114               	/* frame size = 0 */
+ 115               	.LBB28:
+ 116               	.LBB29:
+ 117               	.LM17:
+ 118 003a 80E8      		ldi r24,lo8(-128)
+ 119 003c 8093 6100 		sts 97,r24
+ 120               	.LM18:
+ 121 0040 1092 6100 		sts 97,__zero_reg__
+ 122               	.LM19:
+ 123 0044 8AB9      		out 42-32,r24
+ 124               	.L10:
+ 125               	.LBE29:
+ 126               	.LBE28:
+ 127               	.LM20:
+ 128 0046 0E94 0000 		call loop
+ 129 004a 00C0      		rjmp .L10
+ 130               	.LFE6:
+ 172               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 OneWireLogger.c
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:2      *ABS*:0000003f __SREG__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:3      *ABS*:0000003e __SP_H__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:4      *ABS*:0000003d __SP_L__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:5      *ABS*:00000034 __CCP__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:6      *ABS*:00000000 __tmp_reg__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:7      *ABS*:00000001 __zero_reg__
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:18     .text:00000000 setup
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:39     .text:0000000e loop
+C:\Users\DGILLI~1.AAC\AppData\Local\Temp/ccK7715s.s:110    .text:0000003a main
+
+NO UNDEFINED SYMBOLS

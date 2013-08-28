@@ -1,0 +1,297 @@
+<?xml version="1.0"?>
+<dataset2 xmlns="xsdbooks">
+  <Count Data="1">
+    <UTC>2013-08-15,16:44:03</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936214</Lat>
+    <Lon>-79.665306</Lon>
+    <HGT>386</HGT>
+  </Count>
+  <Count Data="2">
+    <UTC>2013-08-15,16:44:07</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936222</Lat>
+    <Lon>-79.665321</Lon>
+    <HGT>378</HGT>
+  </Count>
+  <Count Data="3">
+    <UTC>2013-08-15,16:44:11</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936207</Lat>
+    <Lon>-79.665367</Lon>
+    <HGT>369</HGT>
+  </Count>
+  <Count Data="4">
+    <UTC>2013-08-15,16:44:15</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936207</Lat>
+    <Lon>-79.665375</Lon>
+    <HGT>362</HGT>
+  </Count>
+  <Count Data="5">
+    <UTC>2013-08-15,16:44:19</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936218</Lat>
+    <Lon>-79.665375</Lon>
+    <HGT>362</HGT>
+  </Count>
+  <Count Data="6">
+    <UTC>2013-08-15,16:44:23</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936226</Lat>
+    <Lon>-79.665367</Lon>
+    <HGT>364</HGT>
+  </Count>
+  <Count Data="7">
+    <UTC>2013-08-15,16:44:27</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.93623</Lat>
+    <Lon>-79.665359</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="8">
+    <UTC>2013-08-15,16:44:31</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665359</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="9">
+    <UTC>2013-08-15,16:44:35</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665367</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="10">
+    <UTC>2013-08-15,16:44:39</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936237</Lat>
+    <Lon>-79.665375</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="11">
+    <UTC>2013-08-15,16:44:43</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936241</Lat>
+    <Lon>-79.665382</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="12">
+    <UTC>2013-08-15,16:44:47</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665382</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="13">
+    <UTC>2013-08-15,16:44:51</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936237</Lat>
+    <Lon>-79.665375</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="14">
+    <UTC>2013-08-15,16:44:55</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665375</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="15">
+    <UTC>2013-08-15,16:44:59</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.66539</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="16">
+    <UTC>2013-08-15,16:45:03</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665398</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="17">
+    <UTC>2013-08-15,16:45:07</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.66539</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="18">
+    <UTC>2013-08-15,16:45:11</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936237</Lat>
+    <Lon>-79.665398</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="19">
+    <UTC>2013-08-15,16:45:15</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936237</Lat>
+    <Lon>-79.665413</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="20">
+    <UTC>2013-08-15,16:45:19</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665436</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="21">
+    <UTC>2013-08-15,16:45:23</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936245</Lat>
+    <Lon>-79.665451</Lon>
+    <HGT>368</HGT>
+  </Count>
+  <Count Data="22">
+    <UTC>2013-08-15,16:45:27</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936245</Lat>
+    <Lon>-79.665443</Lon>
+    <HGT>368</HGT>
+  </Count>
+  <Count Data="23">
+    <UTC>2013-08-15,16:45:31</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665474</Lon>
+    <HGT>369</HGT>
+  </Count>
+  <Count Data="24">
+    <UTC>2013-08-15,16:45:35</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.93623</Lat>
+    <Lon>-79.665504</Lon>
+    <HGT>369</HGT>
+  </Count>
+  <Count Data="25">
+    <UTC>2013-08-15,16:45:39</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936241</Lat>
+    <Lon>-79.665527</Lon>
+    <HGT>369</HGT>
+  </Count>
+  <Count Data="26">
+    <UTC>2013-08-15,16:45:43</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936253</Lat>
+    <Lon>-79.665535</Lon>
+    <HGT>368</HGT>
+  </Count>
+  <Count Data="27">
+    <UTC>2013-08-15,16:45:47</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936256</Lat>
+    <Lon>-79.665527</Lon>
+    <HGT>368</HGT>
+  </Count>
+  <Count Data="28">
+    <UTC>2013-08-15,16:45:51</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936256</Lat>
+    <Lon>-79.66552</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="29">
+    <UTC>2013-08-15,16:45:55</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936256</Lat>
+    <Lon>-79.66552</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="30">
+    <UTC>2013-08-15,16:45:59</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936256</Lat>
+    <Lon>-79.665512</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="31">
+    <UTC>2013-08-15,16:46:03</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936253</Lat>
+    <Lon>-79.665504</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="32">
+    <UTC>2013-08-15,16:46:07</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936241</Lat>
+    <Lon>-79.665459</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="33">
+    <UTC>2013-08-15,16:46:11</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936234</Lat>
+    <Lon>-79.665428</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="34">
+    <UTC>2013-08-15,16:46:15</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.93623</Lat>
+    <Lon>-79.665421</Lon>
+    <HGT>367</HGT>
+  </Count>
+  <Count Data="35">
+    <UTC>2013-08-15,16:46:19</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936222</Lat>
+    <Lon>-79.66539</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="36">
+    <UTC>2013-08-15,16:46:23</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936226</Lat>
+    <Lon>-79.66539</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="37">
+    <UTC>2013-08-15,16:46:27</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936203</Lat>
+    <Lon>-79.665367</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="38">
+    <UTC>2013-08-15,16:46:31</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.93623</Lat>
+    <Lon>-79.665398</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="39">
+    <UTC>2013-08-15,16:46:35</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.93626</Lat>
+    <Lon>-79.665413</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="40">
+    <UTC>2013-08-15,16:46:39</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936291</Lat>
+    <Lon>-79.665428</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="41">
+    <UTC>2013-08-15,16:46:43</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.93631</Lat>
+    <Lon>-79.665451</Lon>
+    <HGT>366</HGT>
+  </Count>
+  <Count Data="42">
+    <UTC>2013-08-15,16:46:47</UTC>
+    <FixType>3D-fix</FixType>
+    <Lat>39.936337</Lat>
+    <Lon>-79.665466</Lon>
+    <HGT>366</HGT>
+  </Count>
+</dataset2>

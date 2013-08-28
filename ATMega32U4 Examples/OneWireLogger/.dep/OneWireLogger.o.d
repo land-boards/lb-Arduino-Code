@@ -1,0 +1,1 @@
+OneWireLogger.o: OneWireLogger.c

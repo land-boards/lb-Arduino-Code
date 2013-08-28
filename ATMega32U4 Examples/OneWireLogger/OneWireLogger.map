@@ -18,7 +18,7 @@ Linker script and memory map
 
 Address of section .data set to 0x800100
 LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-LOAD Blinky.o
+LOAD OneWireLogger.o
 LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5\libm.a
 LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5\libc.a
@@ -114,7 +114,7 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x11a
+.text           0x00000000      0x114
  *(.vectors)
  .vectors       0x00000000       0xac c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
                 0x00000000                __vectors
@@ -209,19 +209,19 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x000000c0                __vector_18
                 0x000000c0                __vector_20
                 0x000000c0                __vector_42
- .text          0x000000c4       0x52 Blinky.o
-                0x000000d4                loop
-                0x00000102                main
+ .text          0x000000c4       0x4c OneWireLogger.o
+                0x000000d2                loop
+                0x000000fe                main
                 0x000000c4                setup
- .text          0x00000116        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000116                . = ALIGN (0x2)
+ .text          0x00000110        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x00000110                . = ALIGN (0x2)
  *(.text.*)
- .text.libgcc   0x00000116        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000116                . = ALIGN (0x2)
+ .text.libgcc   0x00000110        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x00000110                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000116        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000116                exit
-                0x00000116                _exit
+ .fini9         0x00000110        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x00000110                exit
+                0x00000110                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -240,15 +240,15 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000116        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .fini0         0x00000110        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  *(.fini0)
-                0x0000011a                _etext = .
+                0x00000114                _etext = .
 
-.data           0x00800100        0x0 load address 0x0000011a
+.data           0x00800100        0x0 load address 0x00000114
                 0x00800100                PROVIDE (__data_start, .)
  *(.data)
  .data          0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
- .data          0x00800100        0x0 Blinky.o
+ .data          0x00800100        0x0 OneWireLogger.o
  .data          0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  *(.data*)
  *(.rodata)
@@ -262,13 +262,13 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x00800100                PROVIDE (__bss_start, .)
  *(.bss)
  .bss           0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
- .bss           0x00800100        0x0 Blinky.o
+ .bss           0x00800100        0x0 OneWireLogger.o
  .bss           0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  *(.bss*)
  *(COMMON)
                 0x00800100                PROVIDE (__bss_end, .)
-                0x0000011a                __data_load_start = LOADADDR (.data)
-                0x0000011a                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00000114                __data_load_start = LOADADDR (.data)
+                0x00000114                __data_load_end = (__data_load_start + SIZEOF (.data))
 
 .noinit         0x00800100        0x0
                 0x00800100                PROVIDE (__noinit_start, .)
@@ -329,43 +329,43 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .debug_aranges  0x00000000       0x20
  *(.debug_aranges)
  .debug_aranges
-                0x00000000       0x20 Blinky.o
+                0x00000000       0x20 OneWireLogger.o
 
 .debug_pubnames
                 0x00000000       0x2e
  *(.debug_pubnames)
  .debug_pubnames
-                0x00000000       0x2e Blinky.o
+                0x00000000       0x2e OneWireLogger.o
 
 .debug_info     0x00000000      0x1ab
  *(.debug_info)
- .debug_info    0x00000000      0x1ab Blinky.o
+ .debug_info    0x00000000      0x1ab OneWireLogger.o
  *(.gnu.linkonce.wi.*)
 
 .debug_abbrev   0x00000000      0x11d
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x11d Blinky.o
+ .debug_abbrev  0x00000000      0x11d OneWireLogger.o
 
-.debug_line     0x00000000      0x18f
+.debug_line     0x00000000      0x196
  *(.debug_line)
- .debug_line    0x00000000      0x18f Blinky.o
+ .debug_line    0x00000000      0x196 OneWireLogger.o
 
 .debug_frame    0x00000000       0x40
  *(.debug_frame)
- .debug_frame   0x00000000       0x40 Blinky.o
+ .debug_frame   0x00000000       0x40 OneWireLogger.o
 
-.debug_str      0x00000000      0x110
+.debug_str      0x00000000      0x115
  *(.debug_str)
- .debug_str     0x00000000      0x110 Blinky.o
-                                0x144 (size before relaxing)
+ .debug_str     0x00000000      0x115 OneWireLogger.o
+                                0x149 (size before relaxing)
 
 .debug_loc      0x00000000       0x30
  *(.debug_loc)
- .debug_loc     0x00000000       0x30 Blinky.o
+ .debug_loc     0x00000000       0x30 OneWireLogger.o
 
 .debug_macinfo
  *(.debug_macinfo)
-OUTPUT(Blinky.elf elf32-avr)
+OUTPUT(OneWireLogger.elf elf32-avr)
 LOAD linker stubs
 
 Cross Reference Table
@@ -422,7 +422,7 @@ __vectors                                         c:/winavr-20100110/bin/../lib/
 _exit                                             c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
 exit                                              c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
                                                   c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-loop                                              Blinky.o
-main                                              Blinky.o
+loop                                              OneWireLogger.o
+main                                              OneWireLogger.o
                                                   c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm32u4.o
-setup                                             Blinky.o
+setup                                             OneWireLogger.o
