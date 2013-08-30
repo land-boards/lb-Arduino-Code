@@ -47,7 +47,6 @@
 #include <util/delay.h>
 
 #include "USBtoSerial.h"
-#include "Board/LEDs.h"
 
 /** Circular buffer to hold data from the host before it is sent to the device via the serial port. */
 static RingBuffer_t USBtoUSART_Buffer;

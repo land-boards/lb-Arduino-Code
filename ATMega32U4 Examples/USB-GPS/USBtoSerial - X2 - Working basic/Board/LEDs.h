@@ -50,7 +50,7 @@ void LEDs_Init(void)
 	DDRB = 0x80;
 	PORTB &= 0x7f;
   DDRD = 0x01;
-  PORTD &= 0xfe
+  PORTD &= 0xfe;
 }
 
 

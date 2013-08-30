@@ -11,13 +11,13 @@
 
 MCU          = atmega32u4
 ARCH         = AVR8
-BOARD        = BOARD_USER
+BOARD        = USB-GPS-32U4-X2
 F_CPU        = 8000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s
 TARGET       = USBtoSerial
 SRC          = $(TARGET).c Descriptors.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
-LUFA_PATH    = C:/WinAVR-20100110/LUFA-120730/LUFA
+LUFA_PATH    = C:/WinAVR-20100110/LUFA-130303/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/
 LD_FLAGS     =
 
