@@ -12,14 +12,14 @@ void testKpd(void)
 {
   tft.fillScreen(ST7735_BLACK);
   setCursorTFT(0,0);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  tft.print("Testing Keypad");
+  textWhiteOnBlack();
+  tft.print(F("Testing Keypad"));
   setCursorTFT(1,0);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  tft.print("Hold SELECT to exit");
+  textWhiteOnBlack();
+  tft.print(F("Hold SELECT to exit"));
   long loopCount = 0;
   int key;
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
   while (loopCount < 100)
   {
     key = myOneWireLogger.pollKeypad();
@@ -27,19 +27,19 @@ void testKpd(void)
     switch (key)
     {
     case NONE:
-      tft.print("NONE  ");
+      tft.print(F("NONE  "));
       loopCount = 0;
       break;
     case LEFT:
-      tft.print("LEFT  ");
+      tft.print(F("LEFT  "));
       loopCount = 0;
       break;
     case RIGHT:
-      tft.print("RIGHT ");
+      tft.print(F("RIGHT "));
       loopCount = 0;
       break;
     case UP:
-      tft.print("UP    ");
+      tft.print(F("UP    "));
       loopCount = 0;
       break;
     case DOWN:
@@ -47,13 +47,13 @@ void testKpd(void)
       loopCount = 0;
       break;
     case SELECT:
-      tft.print("SELECT");
+      tft.print(F("SELECT"));
       loopCount++;
       break;
     }
   }
   setCursorTFT(3,0);
-  tft.print("EXITING, release Sel");
+  tft.print(F("EXITING, release Sel"));
   while (myOneWireLogger.pollKeypad() == SELECT);
 }
 
@@ -65,7 +65,7 @@ void setBLt(void)
 {
   int key;
   tft.fillScreen(ST7735_BLACK);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
   setCursorTFT(0,0);
   tft.print("Set Backlight");
   do
@@ -95,7 +95,7 @@ void loadConfig(void)
 {
   int key;
   tft.fillScreen(ST7735_BLACK);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
   setCursorTFT(0,0);
   tft.print(F("Select to load config."));
   setCursorTFT(1,0);
@@ -119,7 +119,7 @@ void storeConfig(void)
 {
   int key;
   tft.fillScreen(ST7735_BLACK);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
   setCursorTFT(0,0);
   tft.print(F("Select to store"));
   setCursorTFT(1,0);
@@ -133,4 +133,8 @@ void storeConfig(void)
   while (key == NONE);
 }
 
+void textWhiteOnBlack(void)
+{
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+}
 

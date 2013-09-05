@@ -28,11 +28,11 @@ enum MENUITEMS
 {
   LOGGER_MENU,
   LOG2SD_MENU,
-  TSTKPD_MENU,
-  BACKLITE_MENU,
   LOADSTOR_MENU,
-  MANTIME_MENU,
   SDCARD_MENU,
+  MANTIME_MENU,
+  BACKLITE_MENU,
+  TSTKPD_MENU,
   APPENDSD_MENU,
   CREATENEW_MENU,
   NEWFILE_MENU,
@@ -58,8 +58,8 @@ int menuState;  // Used to implement the menuing state machine
 
 struct IZ_Cfgs
 {
-  int bll;
-  int enableSD;
+  int bll;       // Backlight level
+  int enableSD;  // Enable the SD card
 } 
 IZConfigs;
 
@@ -84,7 +84,7 @@ void setup()
   tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
   if (IZConfigs.enableSD != 0)
   {
     if (!SD.begin(SD_CS)) 
@@ -129,5 +129,4 @@ void setCursorTFT(int row, int col)
 {
   tft.setCursor(col*6, row*10);
 }
-
 

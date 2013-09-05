@@ -20,6 +20,7 @@ struct menuStruc
 };
 
 const char * menuHeader     = "*** 1-Wire Logger ***";
+const char * menuFooter     = "";
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - used to generate the navigation menus. Format is
@@ -30,12 +31,12 @@ const char * menuHeader     = "*** 1-Wire Logger ***";
 menuStruc menus[] = 
 {
   LOGGER_MENU,      "Log to screen",       2, LOGGER_MENU,      LOG2SD_MENU,      LOGGER_MENU,      LOGGER_MENU,     &do1Wire,     LOGGER_MENU,
-  LOG2SD_MENU,      "Log to SD card > ",   3, LOGGER_MENU,      TSTKPD_MENU,      LOG2SD_MENU,      APPENDSD_MENU,   &nullFcn,     LOG2SD_MENU,
-  TSTKPD_MENU,      "Test Keypad",         4, LOG2SD_MENU,      BACKLITE_MENU,    TSTKPD_MENU,      TSTKPD_MENU,     &testKpd,     TSTKPD_MENU,
-  BACKLITE_MENU,    "Set Backlight Level", 5, TSTKPD_MENU,      LOADSTOR_MENU,    BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      BACKLITE_MENU,
-  LOADSTOR_MENU,    "Load/Store Config >", 6, BACKLITE_MENU,    MANTIME_MENU,     LOADSTOR_MENU,    LOAD_MENU,       &nullFcn,     LOAD_MENU,
-  MANTIME_MENU,     "Manage Time >",       7, LOADSTOR_MENU,    SDCARD_MENU,      MANTIME_MENU,     DISPTIME_MENU,   &nullFcn,     DISPTIME_MENU,
-  SDCARD_MENU,      "Manage SD Card >",    8, MANTIME_MENU,     SDCARD_MENU,      SDCARD_MENU,      SDERASE_MENU,    &nullFcn,     SDERASE_MENU,
+  LOG2SD_MENU,      "Log to SD card > ",   3, LOGGER_MENU,      LOADSTOR_MENU,    LOG2SD_MENU,      APPENDSD_MENU,   &nullFcn,     APPENDSD_MENU,
+  LOADSTOR_MENU,    "Load/Store Config >", 4, LOG2SD_MENU,      SDCARD_MENU,      LOADSTOR_MENU,    LOAD_MENU,       &nullFcn,     LOAD_MENU,
+  SDCARD_MENU,      "Manage SD Card >",    5, LOADSTOR_MENU,    MANTIME_MENU,     SDCARD_MENU,      SDERASE_MENU,    &nullFcn,     SDERASE_MENU,
+  MANTIME_MENU,     "Manage Time >",       6, SDCARD_MENU,      BACKLITE_MENU,    MANTIME_MENU,     DISPTIME_MENU,   &nullFcn,     DISPTIME_MENU,
+  BACKLITE_MENU,    "Set Backlight Level", 7, MANTIME_MENU,     TSTKPD_MENU,      BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      BACKLITE_MENU,
+  TSTKPD_MENU,      "Test Keypad",         8, BACKLITE_MENU,    TSTKPD_MENU,      TSTKPD_MENU,      TSTKPD_MENU,     &testKpd,     TSTKPD_MENU,
   APPENDSD_MENU,    "< Append to file",    2, APPENDSD_MENU,    CREATENEW_MENU,   LOG2SD_MENU,      APPENDSD_MENU,   &appendSD,    APPENDSD_MENU,
   CREATENEW_MENU,   "Create new file",     3, APPENDSD_MENU,    CREATENEW_MENU,   CREATENEW_MENU,   CREATENEW_MENU,  &createSD,    CREATENEW_MENU,
   NEWFILE_MENU,     "New file",            3, APPENDSD_MENU,    NEWFILE_MENU,     NEWFILE_MENU,     NEWFILE_MENU,    &newfileSD,   NEWFILE_MENU,
@@ -60,7 +61,11 @@ int menuRefresh(void)
   setCursorTFT(0,0);
   tft.setTextColor(ST7735_WHITE,ST7735_RED);
   tft.print(menuHeader);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
+  setCursorTFT(15,0);
+  tft.print(__DATE__);
+  tft.print(" ");
+  tft.print(__TIME__);
 #ifdef SERIAL_DEBUG
   Serial.print(F("menuState = "));
   Serial.print(menuState);
@@ -72,7 +77,7 @@ int menuRefresh(void)
   setCursorTFT((menus[menuState].rowNumber)-1,0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
   tft.print(menus[menuState].menuString);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  textWhiteOnBlack();
   lastLine = menuState;
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
   {
