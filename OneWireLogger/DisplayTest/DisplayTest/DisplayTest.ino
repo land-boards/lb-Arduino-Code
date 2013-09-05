@@ -8,10 +8,14 @@
 
 #include <SPI.h>
 #include <EEPROM.h>
+#include <SD.h>
+#include <Wire.h>
+#include "RTClib.h"
+RTC_DS1307 RTC;
 #include <OneWireLogger.h>
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
-#include <eepromanything.h>  
+#include <EEPROMAnything.h>    // EEPROM anything
 
 //////////////////////////////////////////////////////////////////////////////
 //#define SERIAL_OUT
@@ -23,11 +27,23 @@
 enum MENUITEMS
 {
   LOGGER_MENU,
+  LOG2SD_MENU,
   TSTKPD_MENU,
   BACKLITE_MENU,
   LOADSTOR_MENU,
+  MANTIME_MENU,
+  SDCARD_MENU,
+  APPENDSD_MENU,
+  CREATENEW_MENU,
+  NEWFILE_MENU,
   LOAD_MENU,
   STORE_MENU,
+  DISPTIME_MENU,
+  SETTIME_MENU,
+  SDERASE_MENU,
+  SDLIST_MENU,
+  SDEN_MENU,
+  DSDIS_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -43,7 +59,9 @@ int menuState;  // Used to implement the menuing state machine
 struct IZ_Cfgs
 {
   int bll;
-} IZConfigs;
+  int enableSD;
+} 
+IZConfigs;
 
 //////////////////////////////////////////////////////////////////////////////
 // class initializers
@@ -58,6 +76,8 @@ OneWireLogger myOneWireLogger;
 
 void setup() 
 {
+  EEPROM_readAnything(0, IZConfigs);
+
   menuState = LOGGER_MENU;
 
   tft.initR(INITR_REDTAB);
@@ -65,11 +85,29 @@ void setup()
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  IZConfigs.bll = 0;
-  
-//  EEPROM_readAnything(0, IZConfigs);
+  if (IZConfigs.enableSD != 0)
+  {
+    if (!SD.begin(SD_CS)) 
+    {
+      tft.print(F("SD card not present"));
+      setCursorTFT(1, 0);
+      tft.print(F("Disabling check"));
+      setCursorTFT(2, 0);
+      tft.print(F("Power cycle logger"));
+      IZConfigs.enableSD = 0;
+      EEPROM_writeAnything(0, IZConfigs);
+      delay(2000);
+    }
+  }
 
-  menuRefresh();
+  Wire.begin();
+  RTC.begin();
+  RTC.adjust(DateTime(__DATE__, __TIME__));
+  if (! RTC.isrunning() )
+  {
+    tft.print("RTC is NOT running!");
+    delay(1000);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +116,7 @@ void setup()
 
 void loop() 
 {
+
   menuRefresh();
   menuNav();
 }
@@ -90,4 +129,5 @@ void setCursorTFT(int row, int col)
 {
   tft.setCursor(col*6, row*10);
 }
+
 

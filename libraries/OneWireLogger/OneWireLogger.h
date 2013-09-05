@@ -46,6 +46,7 @@ enum KEY_PRESSES
 #define LCD_DC      8 
 #define LCD_CS      9
 #define LCD_RST     10
+#define SD_CS       11
 #define BACKLIGHT   13
 #define KEYPAD      A5
 #define PWROFF      PD5

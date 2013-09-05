@@ -58,24 +58,6 @@ void testKpd(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// do1Wire() - Run the 1 Wire Interface
-//////////////////////////////////////////////////////////////////////////////
-
-void do1Wire(void)
-{
-  int key;
-  tft.fillScreen(ST7735_BLACK);
-  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  setCursorTFT(0,0);
-  tft.print("Do 1 Wire");
-  do
-  {
-    key = myOneWireLogger.pollKeypad();
-  }
- while (key == NONE); 
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // setBLt() - Set the backlight level
 //////////////////////////////////////////////////////////////////////////////
 
@@ -100,17 +82,10 @@ void setBLt(void)
     setCursorTFT(1,0);
     tft.print(250-IZConfigs.bll);
   }
- while (key != SELECT);
-// EEPROM_writeAnything(0, IZConfigs);
+  while (key != SELECT);
+  // EEPROM_writeAnything(0, IZConfigs);
 
 }
-
-
-//////////////////////////////////////////////////////////////////////////////
-// void nullFcn(void)
-//////////////////////////////////////////////////////////////////////////////
-
-void nullFcn(void) {  }
 
 //////////////////////////////////////////////////////////////////////////////
 // void loadConfig(void)
@@ -122,13 +97,18 @@ void loadConfig(void)
   tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
   setCursorTFT(0,0);
-  tft.print("Load Config.");
+  tft.print(F("Select to load config."));
+  setCursorTFT(1,0);
+  tft.print(F("Any other key to exit"));
   do
   {
     key = myOneWireLogger.pollKeypad();
-    delay(200);
+    if (key == SELECT)
+    {
+      EEPROM_readAnything(0, IZConfigs);
+    }
   }
- while (key != SELECT);
+  while (key == NONE);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -141,12 +121,16 @@ void storeConfig(void)
   tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
   setCursorTFT(0,0);
-  tft.print("Store Config.");
+  tft.print(F("Select to store"));
+  setCursorTFT(1,0);
+  tft.print(F("Any other key to exit"));
   do
   {
     key = myOneWireLogger.pollKeypad();
-    delay(200);
+    if (key == SELECT)
+      EEPROM_writeAnything(0, IZConfigs);
   }
- while (key != SELECT);
+  while (key == NONE);
 }
+
 

@@ -19,7 +19,7 @@ struct menuStruc
   int SEL_MENU_PTR;
 };
 
-const char * menuHeader     = "** Test Menu **";
+const char * menuHeader     = "*** 1-Wire Logger ***";
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - used to generate the navigation menus. Format is
@@ -29,12 +29,24 @@ const char * menuHeader     = "** Test Menu **";
 
 menuStruc menus[] = 
 {
-  LOGGER_MENU,      "Run Logger",          2, LOGGER_MENU,      TSTKPD_MENU,      LOGGER_MENU,      LOGGER_MENU,     &do1Wire,     LOGGER_MENU,
-  TSTKPD_MENU,      "Test Keypad",         3, LOGGER_MENU,      BACKLITE_MENU,    TSTKPD_MENU,      TSTKPD_MENU,     &testKpd,     TSTKPD_MENU,
-  BACKLITE_MENU,    "Set Backlight Level", 4, TSTKPD_MENU,      LOADSTOR_MENU,    BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      BACKLITE_MENU,
-  LOADSTOR_MENU,    "Load/Store Config",   5, BACKLITE_MENU,    LOADSTOR_MENU,    LOADSTOR_MENU,    LOAD_MENU,       &nullFcn,     LOAD_MENU,
-  LOAD_MENU,        "Load Config",         2, LOAD_MENU,        STORE_MENU,       LOADSTOR_MENU,    LOAD_MENU,       &loadConfig,  LOAD_MENU,
+  LOGGER_MENU,      "Log to screen",       2, LOGGER_MENU,      LOG2SD_MENU,      LOGGER_MENU,      LOGGER_MENU,     &do1Wire,     LOGGER_MENU,
+  LOG2SD_MENU,      "Log to SD card > ",   3, LOGGER_MENU,      TSTKPD_MENU,      LOG2SD_MENU,      APPENDSD_MENU,   &nullFcn,     LOG2SD_MENU,
+  TSTKPD_MENU,      "Test Keypad",         4, LOG2SD_MENU,      BACKLITE_MENU,    TSTKPD_MENU,      TSTKPD_MENU,     &testKpd,     TSTKPD_MENU,
+  BACKLITE_MENU,    "Set Backlight Level", 5, TSTKPD_MENU,      LOADSTOR_MENU,    BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      BACKLITE_MENU,
+  LOADSTOR_MENU,    "Load/Store Config >", 6, BACKLITE_MENU,    MANTIME_MENU,     LOADSTOR_MENU,    LOAD_MENU,       &nullFcn,     LOAD_MENU,
+  MANTIME_MENU,     "Manage Time >",       7, LOADSTOR_MENU,    SDCARD_MENU,      MANTIME_MENU,     DISPTIME_MENU,   &nullFcn,     DISPTIME_MENU,
+  SDCARD_MENU,      "Manage SD Card >",    8, MANTIME_MENU,     SDCARD_MENU,      SDCARD_MENU,      SDERASE_MENU,    &nullFcn,     SDERASE_MENU,
+  APPENDSD_MENU,    "< Append to file",    2, APPENDSD_MENU,    CREATENEW_MENU,   LOG2SD_MENU,      APPENDSD_MENU,   &appendSD,    APPENDSD_MENU,
+  CREATENEW_MENU,   "Create new file",     3, APPENDSD_MENU,    CREATENEW_MENU,   CREATENEW_MENU,   CREATENEW_MENU,  &createSD,    CREATENEW_MENU,
+  NEWFILE_MENU,     "New file",            3, APPENDSD_MENU,    NEWFILE_MENU,     NEWFILE_MENU,     NEWFILE_MENU,    &newfileSD,   NEWFILE_MENU,
+  LOAD_MENU,        "< Load Config",       2, LOAD_MENU,        STORE_MENU,       LOADSTOR_MENU,    LOAD_MENU,       &loadConfig,  LOAD_MENU,
   STORE_MENU,       "Store Config",        3, LOAD_MENU,        STORE_MENU,       STORE_MENU,       STORE_MENU,      &storeConfig, STORE_MENU,
+  DISPTIME_MENU,    "< Display Time",      2, DISPTIME_MENU,    SETTIME_MENU,     MANTIME_MENU,     DISPTIME_MENU,   &displayTime, DISPTIME_MENU,
+  SETTIME_MENU,     "Set Time",            3, DISPTIME_MENU,    SETTIME_MENU,     SETTIME_MENU,     SETTIME_MENU,    &setTime,     SETTIME_MENU,
+  SDERASE_MENU,     "< Erase SD Card",     2, SDERASE_MENU,     SDLIST_MENU,      SDCARD_MENU,      SDERASE_MENU,    &sdErase,     SDERASE_MENU,
+  SDLIST_MENU,      "List SD card files",  3, SDERASE_MENU,     SDEN_MENU,        SDLIST_MENU,      SDLIST_MENU,     &sdList,      SDLIST_MENU,
+  SDEN_MENU,        "Enable SD card",      4, SDLIST_MENU,      DSDIS_MENU,       SDEN_MENU,        SDEN_MENU,       &sdEnable,    SDEN_MENU,
+  DSDIS_MENU,       "Disable SD card",     5, SDEN_MENU,        DSDIS_MENU,       DSDIS_MENU,       DSDIS_MENU,      &sdDisable,   DSDIS_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +56,11 @@ menuStruc menus[] =
 int menuRefresh(void)
 {
   int nextLine, lastLine;
-  tft.fillRect(0,0,127,70,ST7735_BLACK);
+  tft.fillRect(0,0,127,90,ST7735_BLACK);
+  setCursorTFT(0,0);
+  tft.setTextColor(ST7735_WHITE,ST7735_RED);
+  tft.print(menuHeader);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
 #ifdef SERIAL_DEBUG
   Serial.print(F("menuState = "));
   Serial.print(menuState);
@@ -136,5 +152,11 @@ void displayMenuLine(int row, int fontColor, int backgroundColor, char * menuStr
   tft.print(menuString);
   return;
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// void nullFcn(void)
+//////////////////////////////////////////////////////////////////////////////
+
+void nullFcn(void) {  }
 
 

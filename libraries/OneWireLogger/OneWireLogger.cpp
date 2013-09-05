@@ -25,8 +25,10 @@ void OneWireLogger::initPins(void)
 {
   pinMode(BACKLIGHT, OUTPUT);
   pinMode(LCD_RST, OUTPUT);
+  pinMode(SD_CS, OUTPUT);
   digitalWrite(BACKLIGHT, LOW);
   digitalWrite(LCD_RST, HIGH);
+  digitalWrite(SD_CS, HIGH);
   return;
 }
 
