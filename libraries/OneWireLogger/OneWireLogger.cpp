@@ -23,9 +23,9 @@ OneWireLogger::OneWireLogger(void)
 
 void OneWireLogger::initPins(void)
 {
-  pinMode(BACKLIGHT, OUTPUT);
-  pinMode(LCD_RST, OUTPUT);
-  pinMode(SD_CS, OUTPUT);
+  pinMode(BACKLIGHT, OUTPUT);     // LCD Backlight
+  pinMode(LCD_RST, OUTPUT);       // LCD Reset
+  pinMode(SD_CS, OUTPUT);         // SD Card Chip Select
   digitalWrite(BACKLIGHT, LOW);
   digitalWrite(LCD_RST, HIGH);
   digitalWrite(SD_CS, HIGH);
@@ -33,17 +33,14 @@ void OneWireLogger::initPins(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// pollKeypad() - Returns the value of the pressed keys
+// pollKeypad() - Returns the value of the instantenously pressed keys
 ////////////////////////////////////////////////////////////////////////////
 
 signed char OneWireLogger::pollKeypad(void)
 {
-#ifdef SERIAL_DEBUG
-  Serial.println("Reached pollKeypad()");
-#endif
   unsigned int sensorValue = analogRead(KEYPAD);
 #ifdef SERIAL_DEBUG
-  Serial.print("Switch Value = ");
+  Serial.print("pollKeypad(): Switch Value = ");
   Serial.println(sensorValue);
 #endif
   if (sensorValue > 871)    // quick if none is pressed
@@ -66,12 +63,15 @@ signed char OneWireLogger::pollKeypad(void)
 
 void OneWireLogger::waitForKeyRelease(void)
 {
-  while (analogRead(A0) <= 871)
+  while (analogRead(KEYPAD) <= 871)
     delay(5);
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// getKeyPressed()
+// getKeyPressed() - Hang around polling the keypad waiting for a key 
+//  to be pressed.
+// When the key is pressed, hang around waiting for the key to be released.
+// Returns the value of the key that was pressed.
 ////////////////////////////////////////////////////////////////////////////
 
 signed char OneWireLogger::getKeyPressed(void)

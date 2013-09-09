@@ -59,11 +59,11 @@ class OneWireLogger
   public:
     OneWireLogger(void);
     signed char pollKeypad(void);
-    signed char delayAvailable(int delayTime);
-  private:
     void waitForKeyRelease(void);
     signed char getKeyPressed(void);
     signed char waitKeyPressed(void);
+    signed char delayAvailable(int delayTime);
+  private:
     void initPins(void);
 };
 
