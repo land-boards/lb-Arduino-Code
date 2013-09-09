@@ -80,6 +80,7 @@ void setup()
 
   menuState = LOGGER_MENU;
 
+  analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);
   tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);

@@ -67,7 +67,7 @@ void setBLt(void)
   tft.fillScreen(ST7735_BLACK);
   textWhiteOnBlack();
   setCursorTFT(0,0);
-  tft.print("Set Backlight");
+  tft.print(F("Set Backlight"));
   do
   {
     key = myOneWireLogger.pollKeypad();
@@ -83,8 +83,6 @@ void setBLt(void)
     tft.print(250-IZConfigs.bll);
   }
   while (key != SELECT);
-  // EEPROM_writeAnything(0, IZConfigs);
-
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -132,6 +130,10 @@ void storeConfig(void)
   }
   while (key == NONE);
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// textWhiteOnBlack() - 
+//////////////////////////////////////////////////////////////////////////////
 
 void textWhiteOnBlack(void)
 {
