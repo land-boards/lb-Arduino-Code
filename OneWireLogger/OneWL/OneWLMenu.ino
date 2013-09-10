@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////
-// DisplayTestMenu() - Display the Test Menu.
+// OneWLMenu() - Display the Test Menu.
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -110,12 +110,15 @@ int menuRefresh(void)
 
 int menuNav(void)
 {
-  int keyState;
-  do
-  {
-    keyState = myOneWireLogger.pollKeypad();
-  }
-  while (keyState == NONE);
+  signed char keyState;
+#ifdef SERIAL_OUT
+  Serial.println("Waiting for a keypress");
+#endif
+  keyState = myOneWireLogger.waitKeyPressed();
+#ifdef SERIAL_OUT
+  Serial.print("menuNav: got");
+  Serial.println(keyState);
+#endif
   switch(keyState)
   {
   case UP:
@@ -138,12 +141,6 @@ int menuNav(void)
     menuState = menus[menuState].SEL_MENU_PTR;
     break;
   }
-  do
-  {
-    delay(10);
-    keyState = myOneWireLogger.pollKeypad();
-  }
-  while (keyState != NONE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -163,5 +160,3 @@ void displayMenuLine(int row, int fontColor, int backgroundColor, char * menuStr
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }
-
-

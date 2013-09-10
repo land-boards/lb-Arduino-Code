@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-//  DisplayTest - Test the TFT LCD Display on the One-Wire Data Logger Board.
+//  OneWL - One-Wire Data Logger.
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -15,14 +15,18 @@ RTC_DS1307 RTC;
 #include <OneWireLogger.h>
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
-#include <EEPROMAnything.h>    // EEPROM anything
+#include <eepromanything.h>    // EEPROM anything
 
 //////////////////////////////////////////////////////////////////////////////
-//#define SERIAL_OUT
+// defines follow
 //////////////////////////////////////////////////////////////////////////////
 
 //#define SERIAL_OUT
 #undef SERIAL_OUT
+
+//////////////////////////////////////////////////////////////////////////////
+// enums follow
+//////////////////////////////////////////////////////////////////////////////
 
 enum MENUITEMS
 {
@@ -52,10 +56,7 @@ enum MENUITEMS
 
 int menuState;  // Used to implement the menuing state machine
 
-//////////////////////////////////////////////////////////////////////////////
 // Board Configuration stored in EEPROM
-//////////////////////////////////////////////////////////////////////////////
-
 struct IZ_Cfgs
 {
   int bll;       // Backlight level
@@ -63,10 +64,7 @@ struct IZ_Cfgs
 } 
 IZConfigs;
 
-//////////////////////////////////////////////////////////////////////////////
 // class initializers
-//////////////////////////////////////////////////////////////////////////////
-
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
 OneWireLogger myOneWireLogger;
 
@@ -76,10 +74,18 @@ OneWireLogger myOneWireLogger;
 
 void setup() 
 {
+#ifdef SERIAL_OUT
+  Serial.begin(57600);
+  Serial.print("One Wire Logger");
+#endif
+// EEPROM access
   EEPROM_readAnything(0, IZConfigs);
 
+// Set up the init menu state
   menuState = LOGGER_MENU;
 
+// TFT init
+  analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);
   tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);
@@ -93,21 +99,21 @@ void setup()
       setCursorTFT(1, 0);
       tft.print(F("Disabling check"));
       setCursorTFT(2, 0);
-      tft.print(F("Power cycle logger"));
-      IZConfigs.enableSD = 0;
+      tft.print(F("Power cycle unit"));
+      sdDisable();
       EEPROM_writeAnything(0, IZConfigs);
       delay(2000);
     }
   }
 
-  Wire.begin();
+// RTC init
+  Wire.begin();  
   RTC.begin();
-  RTC.adjust(DateTime(__DATE__, __TIME__));
   if (! RTC.isrunning() )
   {
-    tft.print("RTC is NOT running!");
+    tft.print("RTC-Setting time!");
+    RTC.adjust(DateTime(__DATE__, __TIME__));   }
     delay(1000);
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -120,13 +126,3 @@ void loop()
   menuRefresh();
   menuNav();
 }
-
-//////////////////////////////////////////////////////////////////////////////////////
-// setCursorTFT(int row, int col)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void setCursorTFT(int row, int col)
-{
-  tft.setCursor(col*6, row*10);
-}
-

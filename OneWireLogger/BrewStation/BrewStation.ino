@@ -66,10 +66,13 @@ void setup()
   Serial.begin(57600);
   Serial.print("Brew Station");
 #endif
+// EEPROM access
   EEPROM_readAnything(0, IZConfigs);
 
+// Set up the init menu state
   menuState = BREWSTN_MENU;
 
+// TFT init
   analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);
   tft.setTextSize(1);
@@ -91,14 +94,14 @@ void setup()
     }
   }
 
-  Wire.begin();
+// RTC init
+  Wire.begin();  
   RTC.begin();
-  RTC.adjust(DateTime(__DATE__, __TIME__));
   if (! RTC.isrunning() )
   {
-    tft.print("RTC is NOT running!");
+    tft.print("RTC-Setting time!");
+    RTC.adjust(DateTime(__DATE__, __TIME__));   }
     delay(1000);
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -111,5 +114,3 @@ void loop()
   menuRefresh();
   menuNav();
 }
-
-

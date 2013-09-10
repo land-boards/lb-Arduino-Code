@@ -9,33 +9,33 @@
 void displayTime(void)
 {
   int key;
+  int lastSecond;
   tft.fillScreen(ST7735_BLACK);
+  tft.setTextSize(2);
+  DateTime now = RTC.now();
   do
   {
-    tft.setTextSize(2);
+    lastSecond = now.second();
+    tft.fillRect(0,8,127,63,ST7735_BLACK);
     setCursorTFT(1, 0);
-    DateTime now = RTC.now();
     tft.print(now.year(), DEC);
     tft.print('/');
     tft.print(now.month(), DEC);
     tft.print('/');
     tft.print(now.day(), DEC);
     setCursorTFT(4, 0);
-    tft.print("         ");
-    setCursorTFT(4, 0);
     tft.print(now.hour(), DEC);
     tft.print(':');
     if (now.minute() < 10)
-      tft.print('0');
+      tft.print("0");
     tft.print(now.minute(), DEC);
     tft.print(':');
     if (now.second() < 10)
-      tft.print('0');
+      tft.print("0");
     tft.print(now.second(), DEC);
-    tft.setTextSize(1);
-    delay(1000);
+    while (now.second() == lastSecond)
+      now = RTC.now();
     key = myOneWireLogger.pollKeypad();
-    delay(20);
   }
   while (key == NONE);
   do
@@ -44,9 +44,12 @@ void displayTime(void)
     delay(20);
   }
   while (key != NONE);
-
+  tft.setTextSize(1);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////////////////////////////////
 
 enum timeState_t
 {

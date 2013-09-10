@@ -148,5 +148,3 @@ void displayMenuLine(int row, int fontColor, int backgroundColor, char * menuStr
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }
-
-
