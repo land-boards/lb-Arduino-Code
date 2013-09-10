@@ -7,15 +7,15 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <SPI.h>
-#include <EEPROM.h>
-#include <SD.h>
 #include <Wire.h>
-#include "RTClib.h"
-RTC_DS1307 RTC;
+#include <EEPROM.h>
+#include <OneWire.h>
+#include <SD.h>
 #include <OneWireLogger.h>
+#include "RTClib.h"
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
-#include <eepromanything.h>    // EEPROM anything
+#include <EEPROMAnything.h>    // EEPROM anything
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
@@ -36,14 +36,12 @@ enum MENUITEMS
   SDCARD_MENU,
   MANTIME_MENU,
   BACKLITE_MENU,
-  TSTKPD_MENU,
+//  TSTKPD_MENU,
   APPENDSD_MENU,
   CREATENEW_MENU,
   NEWFILE_MENU,
   LOAD_MENU,
   STORE_MENU,
-  DISPTIME_MENU,
-  SETTIME_MENU,
   SDERASE_MENU,
   SDLIST_MENU,
   SDEN_MENU,
@@ -56,17 +54,27 @@ enum MENUITEMS
 
 int menuState;  // Used to implement the menuing state machine
 
+unsigned char sensorNumber;
+unsigned char sensorAddr;
+unsigned char firstRun;
+float temps1Wire[32];
+
+OneWire  ds(ONE_WIRE);  // on pin 
+unsigned char sensNum;
+float fahrenheit;
+
 // Board Configuration stored in EEPROM
 struct IZ_Cfgs
 {
-  int bll;       // Backlight level
-  int enableSD;  // Enable the SD card
+  unsigned char bll;       // Backlight level
+  unsigned char enableSD;  // Enable the SD card
 } 
 IZConfigs;
 
 // class initializers
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
 OneWireLogger myOneWireLogger;
+RTC_DS1307 RTC;
 
 //////////////////////////////////////////////////////////////////////////////
 // the setup routine runs once when you press reset:
@@ -76,15 +84,15 @@ void setup()
 {
 #ifdef SERIAL_OUT
   Serial.begin(57600);
-  Serial.print("One Wire Logger");
+  Serial.print(F("1-Wire Logger"));
 #endif
-// EEPROM access
+  // EEPROM access
   EEPROM_readAnything(0, IZConfigs);
 
-// Set up the init menu state
+  // Set up the init menu state
   menuState = LOGGER_MENU;
 
-// TFT init
+  // TFT init
   analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);
   tft.setTextSize(1);
@@ -95,25 +103,27 @@ void setup()
   {
     if (!SD.begin(SD_CS)) 
     {
-      tft.print(F("SD card not present"));
+      tft.print(F("SD card missing"));
       setCursorTFT(1, 0);
-      tft.print(F("Disabling check"));
+      tft.print(F("Disable check"));
       setCursorTFT(2, 0);
-      tft.print(F("Power cycle unit"));
+      tft.print(F("Power cycle"));
       sdDisable();
       EEPROM_writeAnything(0, IZConfigs);
-      delay(2000);
+      myOneWireLogger.delayAvailable(2000);
     }
   }
 
-// RTC init
+  // RTC init starts up the wire interface (TWI/I2C I/F)
   Wire.begin();  
   RTC.begin();
   if (! RTC.isrunning() )
   {
-    tft.print("RTC-Setting time!");
-    RTC.adjust(DateTime(__DATE__, __TIME__));   }
-    delay(1000);
+    tft.print("RTCInit");
+    RTC.adjust(DateTime(__DATE__, __TIME__));   
+  }
+  myOneWireLogger.delayAvailable(1000);
+  sensorNumber = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +132,7 @@ void setup()
 
 void loop() 
 {
-
   menuRefresh();
   menuNav();
 }
+

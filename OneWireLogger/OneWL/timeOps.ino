@@ -3,51 +3,6 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// void displayTime(void)
-//////////////////////////////////////////////////////////////////////////////
-
-void displayTime(void)
-{
-  int key;
-  int lastSecond;
-  tft.fillScreen(ST7735_BLACK);
-  tft.setTextSize(2);
-  DateTime now = RTC.now();
-  do
-  {
-    lastSecond = now.second();
-    tft.fillRect(0,8,127,63,ST7735_BLACK);
-    setCursorTFT(1, 0);
-    tft.print(now.year(), DEC);
-    tft.print('/');
-    tft.print(now.month(), DEC);
-    tft.print('/');
-    tft.print(now.day(), DEC);
-    setCursorTFT(4, 0);
-    tft.print(now.hour(), DEC);
-    tft.print(':');
-    if (now.minute() < 10)
-      tft.print("0");
-    tft.print(now.minute(), DEC);
-    tft.print(':');
-    if (now.second() < 10)
-      tft.print("0");
-    tft.print(now.second(), DEC);
-    while (now.second() == lastSecond)
-      now = RTC.now();
-    key = myOneWireLogger.pollKeypad();
-  }
-  while (key == NONE);
-  do
-  {
-    key = myOneWireLogger.pollKeypad();
-    delay(20);
-  }
-  while (key != NONE);
-  tft.setTextSize(1);
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +25,7 @@ enum timeState_t
 
 void setTime(void)
 {
-  int key;
+  signed char key;
   int currYear, currMonth, currDay, currHour, currMin, currSec;
   timeState_t timeStat = SET_YEAR;
   tft.fillScreen(ST7735_BLACK);
@@ -91,7 +46,7 @@ void setTime(void)
   if (currMonth < 10)
     tft.print('0');
   tft.print(currMonth, DEC);
-  tft.print("  :");
+  tft.print(" :");
   setCursorTFT(3, 0);
   if (currDay < 10)
     tft.print('0');
@@ -309,7 +264,4 @@ void setTime(void)
   }
   while (key == NONE);
 }
-
-
-
 

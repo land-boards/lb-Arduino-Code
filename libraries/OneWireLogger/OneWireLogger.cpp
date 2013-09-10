@@ -109,14 +109,14 @@ signed char OneWireLogger::waitKeyPressed(void)
 
 signed char OneWireLogger::delayAvailable(int delayTime)
 {  
-  int delayTimeDiv5;
-  delayTimeDiv5 = delayTime / 5;
-  while (delayTimeDiv5 > 0)
+  int delayTimeDiv4;
+  delayTimeDiv4 = delayTime >> 2;
+  while (delayTimeDiv4 > 0)
   {
     if (pollKeypad() != NONE)
       return((byte)1);
-    delay(5);
-    delayTimeDiv5--;
+    delay(4);
+    delayTimeDiv4--;
   }
   return((byte)0);
 }

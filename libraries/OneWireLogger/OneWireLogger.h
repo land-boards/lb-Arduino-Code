@@ -43,6 +43,7 @@ enum KEY_PRESSES
 // PD0 =  = SCLK - To RTC
 ////////////////////////////////////////////////////////////////////////////
 
+#define ONE_WIRE    6
 #define LCD_DC      8 
 #define LCD_CS      9
 #define LCD_RST     10
@@ -50,6 +51,9 @@ enum KEY_PRESSES
 #define BACKLIGHT   13
 #define KEYPAD      A5
 #define PWROFF      PD5
+
+#define LCD_ROWS 16
+#define LCD_COLUMNS 21
 
 // #define SDATA       A4
 // #define SDCLK       A5

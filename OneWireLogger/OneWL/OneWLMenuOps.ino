@@ -3,84 +3,32 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-// testKeyPad() - Verify keypad works.
-// All directions plus select display the direction.
-// Holding select for longer than a few seconds will exit this test
-//////////////////////////////////////////////////////////////////////////////
-
-void testKpd(void)
-{
-  tft.fillScreen(ST7735_BLACK);
-  setCursorTFT(0,0);
-  textWhiteOnBlack();
-  tft.print(F("Testing Keypad"));
-  setCursorTFT(1,0);
-  textWhiteOnBlack();
-  tft.print(F("Hold SELECT to exit"));
-  long loopCount = 0;
-  int key;
-  textWhiteOnBlack();
-  while (loopCount < 100)
-  {
-    key = myOneWireLogger.pollKeypad();
-    setCursorTFT(2,0);
-    switch (key)
-    {
-    case NONE:
-      tft.print(F("NONE  "));
-      loopCount = 0;
-      break;
-    case LEFT:
-      tft.print(F("LEFT  "));
-      loopCount = 0;
-      break;
-    case RIGHT:
-      tft.print(F("RIGHT "));
-      loopCount = 0;
-      break;
-    case UP:
-      tft.print(F("UP    "));
-      loopCount = 0;
-      break;
-    case DOWN:
-      tft.print("DOWN  ");
-      loopCount = 0;
-      break;
-    case SELECT:
-      tft.print(F("SELECT"));
-      loopCount++;
-      break;
-    }
-  }
-  setCursorTFT(3,0);
-  tft.print(F("EXITING, release Sel"));
-  while (myOneWireLogger.pollKeypad() == SELECT);
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // setBLt() - Set the backlight level
 //////////////////////////////////////////////////////////////////////////////
 
 void setBLt(void)
 {
-  int key;
+  signed char key;
   tft.fillScreen(ST7735_BLACK);
   textWhiteOnBlack();
   setCursorTFT(0,0);
-  tft.print(F("Set Backlight"));
+  tft.print(F("Set Bklt"));
+  setCursorTFT(1,0);
+  tft.print(F("Sel=Save"));
   do
   {
     key = myOneWireLogger.pollKeypad();
-    delay(200);
+    delay(100);   // allows for holding the up or down key continuously
     if ((key == DOWN) && (IZConfigs.bll <= 250))
-      IZConfigs.bll += 10;
-    else if ((key == UP) && (IZConfigs.bll >= 10))
-      IZConfigs.bll -= 10;
+      IZConfigs.bll += 5;
+    else if ((key == UP) && (IZConfigs.bll >= 5))
+      IZConfigs.bll -= 5;
     analogWrite(BACKLIGHT, IZConfigs.bll);
-    setCursorTFT(1,0);
+    setCursorTFT(0,14);
     tft.print("    ");
-    setCursorTFT(1,0);
-    tft.print(250-IZConfigs.bll);
+    setCursorTFT(0,14);
+    tft.print((100*(250-IZConfigs.bll))/250);
+    tft.print("%");
   }
   while (key != SELECT);
 }
@@ -91,22 +39,21 @@ void setBLt(void)
 
 void loadConfig(void)
 {
-  int key;
+  signed char key;
   tft.fillScreen(ST7735_BLACK);
   textWhiteOnBlack();
   setCursorTFT(0,0);
-  tft.print(F("Select to load config."));
+  tft.print(F("Sel=Load"));
   setCursorTFT(1,0);
-  tft.print(F("Any other key to exit"));
-  do
+  tft.print(F("Other=Exit"));
+  while(1)
   {
-    key = myOneWireLogger.pollKeypad();
+    key = myOneWireLogger.waitKeyPressed();
     if (key == SELECT)
-    {
       EEPROM_readAnything(0, IZConfigs);
-    }
+    if (key != NONE)
+      return;
   }
-  while (key == NONE);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -115,16 +62,16 @@ void loadConfig(void)
 
 void storeConfig(void)
 {
-  int key;
+  signed char key;
   tft.fillScreen(ST7735_BLACK);
   textWhiteOnBlack();
   setCursorTFT(0,0);
-  tft.print(F("Select to store"));
+  tft.print(F("Sel=store"));
   setCursorTFT(1,0);
-  tft.print(F("Any other key to exit"));
+  tft.print(F("Other=exit"));
   do
   {
-    key = myOneWireLogger.pollKeypad();
+    key = myOneWireLogger.waitKeyPressed();
     if (key == SELECT)
       EEPROM_writeAnything(0, IZConfigs);
   }
@@ -148,3 +95,4 @@ void setCursorTFT(int row, int col)
 {
   tft.setCursor(col*6, row*10);
 }
+

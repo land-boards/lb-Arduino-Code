@@ -1,26 +1,38 @@
 ////////////////////////////////////////////////////////////////////////////////////
-// OneWLMenu() - Display the Test Menu.
+// OneWLMenu() - Display the One Wire Menu.
+// Hardware required are five buttons (Up, Down, Left, Right and Select) plus an LCD.
+// The five buttons can be a 5-way switch.
+// The menu operations are typically to have up/down move through the displayed items.
+// Right or select can call submenus.
+// Left can return to the previous menu.
+// Select can execute the selected item.
+// Use left and right arrows to indicate submenu availability.
+// This menu system is fairly lightweight and is strongly geared towards LCDs.
+// This menu system allows for submenus to be called from the first menu.
+// There are corresponding ENUM values for each of the *_MENU_PTR values.
+// The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Menu structure
+// Menu structure - The format of the menu system
+// Memory size could be improved if the menuString was variable size and 
+//  used pointers rather than a fixed array but that would increase complexity.
 ////////////////////////////////////////////////////////////////////////////////////
 
-struct menuStruc
+struct menuStruc                  // The ENUMs for the *_MENU_PTR values must preceed this
 {
-  int CURRENT_MENU_PTR;
-  char menuString[21];
-  int rowNumber;
-  int UP_MENU_PTR;
-  int DOWN_MENU_PTR;
-  int LEFT_MENU_PTR;
-  int RIGHT_MENU_PTR;
-  void (*pt2Function)(void);
-  int SEL_MENU_PTR;
+  char CURRENT_MENU_PTR;          // The current menu item
+  char menuString[LCD_COLUMNS+1]; // The string that gets displayed
+  char rowNumber;                 // The row that the string gets displayed on the LCD
+  char UP_MENU_PTR;               // What menu gets highlighted when the up arrow is pressed
+  char DOWN_MENU_PTR;             // What menu gets highlighted when the down arrow is pressed
+  char LEFT_MENU_PTR;             // What menu gets highlighted when the left arrow is pressed
+  char RIGHT_MENU_PTR;            // What menu gets highlighted when the right arrow is pressed
+  void (*pt2Function)(void);      // Name of the function which gets called when select is pressed
+  char SEL_MENU_PTR;              // Menu to display after the selected function complets
 };
 
-const char * menuHeader     = "*** 1-Wire Logger ***";
-const char * menuFooter     = "";
+const char * menuFooter;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - used to generate the navigation menus. Format is
@@ -34,16 +46,13 @@ menuStruc menus[] =
   LOG2SD_MENU,      "Log to SD card > ",   3, LOGGER_MENU,      LOADSTOR_MENU,    LOG2SD_MENU,      APPENDSD_MENU,   &nullFcn,     APPENDSD_MENU,
   LOADSTOR_MENU,    "Load/Store Config >", 4, LOG2SD_MENU,      SDCARD_MENU,      LOADSTOR_MENU,    LOAD_MENU,       &nullFcn,     LOAD_MENU,
   SDCARD_MENU,      "Manage SD Card >",    5, LOADSTOR_MENU,    MANTIME_MENU,     SDCARD_MENU,      SDERASE_MENU,    &nullFcn,     SDERASE_MENU,
-  MANTIME_MENU,     "Manage Time >",       6, SDCARD_MENU,      BACKLITE_MENU,    MANTIME_MENU,     DISPTIME_MENU,   &nullFcn,     DISPTIME_MENU,
-  BACKLITE_MENU,    "Set Backlight Level", 7, MANTIME_MENU,     TSTKPD_MENU,      BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      BACKLITE_MENU,
-  TSTKPD_MENU,      "Test Keypad",         8, BACKLITE_MENU,    TSTKPD_MENU,      TSTKPD_MENU,      TSTKPD_MENU,     &testKpd,     TSTKPD_MENU,
+  MANTIME_MENU,     "Manage RealTimeClk",  6, SDCARD_MENU,      BACKLITE_MENU,    MANTIME_MENU,     MANTIME_MENU,    &setTime,     MANTIME_MENU,
+  BACKLITE_MENU,    "Set Backlight Level", 7, MANTIME_MENU,     BACKLITE_MENU,    BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      STORE_MENU,
   APPENDSD_MENU,    "< Append to file",    2, APPENDSD_MENU,    CREATENEW_MENU,   LOG2SD_MENU,      APPENDSD_MENU,   &appendSD,    APPENDSD_MENU,
   CREATENEW_MENU,   "Create new file",     3, APPENDSD_MENU,    CREATENEW_MENU,   CREATENEW_MENU,   CREATENEW_MENU,  &createSD,    CREATENEW_MENU,
   NEWFILE_MENU,     "New file",            3, APPENDSD_MENU,    NEWFILE_MENU,     NEWFILE_MENU,     NEWFILE_MENU,    &newfileSD,   NEWFILE_MENU,
   LOAD_MENU,        "< Load Config",       2, LOAD_MENU,        STORE_MENU,       LOADSTOR_MENU,    LOAD_MENU,       &loadConfig,  LOAD_MENU,
   STORE_MENU,       "Store Config",        3, LOAD_MENU,        STORE_MENU,       STORE_MENU,       STORE_MENU,      &storeConfig, STORE_MENU,
-  DISPTIME_MENU,    "< Display Time",      2, DISPTIME_MENU,    SETTIME_MENU,     MANTIME_MENU,     DISPTIME_MENU,   &displayTime, DISPTIME_MENU,
-  SETTIME_MENU,     "Set Time",            3, DISPTIME_MENU,    SETTIME_MENU,     SETTIME_MENU,     SETTIME_MENU,    &setTime,     SETTIME_MENU,
   SDERASE_MENU,     "< Erase SD Card",     2, SDERASE_MENU,     SDLIST_MENU,      SDCARD_MENU,      SDERASE_MENU,    &sdErase,     SDERASE_MENU,
   SDLIST_MENU,      "List SD card files",  3, SDERASE_MENU,     SDEN_MENU,        SDLIST_MENU,      SDLIST_MENU,     &sdList,      SDLIST_MENU,
   SDEN_MENU,        "Enable SD card",      4, SDLIST_MENU,      DSDIS_MENU,       SDEN_MENU,        SDEN_MENU,       &sdEnable,    SDEN_MENU,
@@ -54,13 +63,13 @@ menuStruc menus[] =
 // Refresh the menu
 ////////////////////////////////////////////////////////////////////////////////////
 
-int menuRefresh(void)
+void menuRefresh(void)
 {
   int nextLine, lastLine;
-  tft.fillRect(0,0,127,90,ST7735_BLACK);
+  tft.fillRect(0,0,127,89,ST7735_BLACK);
   setCursorTFT(0,0);
   tft.setTextColor(ST7735_WHITE,ST7735_RED);
-  tft.print(menuHeader);
+  tft.print("*** 1-Wire Logger ***");
   textWhiteOnBlack();
   setCursorTFT(15,0);
   tft.print(__DATE__);
@@ -108,7 +117,7 @@ int menuRefresh(void)
 // menuNav - Uses the joystick switch to move around the menu
 ////////////////////////////////////////////////////////////////////////////////////
 
-int menuNav(void)
+void menuNav(void)
 {
   signed char keyState;
 #ifdef SERIAL_OUT
@@ -143,20 +152,9 @@ int menuNav(void)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-// displayMenuLine
-////////////////////////////////////////////////////////////////////////////////////
-
-void displayMenuLine(int row, int fontColor, int backgroundColor, char * menuString, int selected)
-{
-  setCursorTFT(row,0);
-  tft.setTextColor(fontColor,backgroundColor);
-  tft.print(menuString);
-  return;
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // void nullFcn(void)
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }
+
