@@ -89,9 +89,6 @@ void setup()
   // EEPROM access
   EEPROM_readAnything(0, IZConfigs);
 
-  // Set up the init menu state
-  menuState = LOGGER_MENU;
-
   // TFT init
   analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);
@@ -124,6 +121,9 @@ void setup()
   }
   myOneWireLogger.delayAvailable(1000);
   sensorNumber = 0;
+
+  // Set up the init menu state
+  menuState = LOGGER_MENU;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
