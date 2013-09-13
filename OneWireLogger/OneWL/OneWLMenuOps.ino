@@ -9,9 +9,7 @@
 void setBLt(void)
 {
   signed char key;
-  tft.fillScreen(ST7735_BLACK);
-  textWhiteOnBlack();
-  setCursorTFT(0,0);
+  clearTFT();
   tft.print(F("Set Bklt"));
   setCursorTFT(1,0);
   tft.print(F("Sel=Save"));
@@ -40,9 +38,7 @@ void setBLt(void)
 void loadConfig(void)
 {
   signed char key;
-  tft.fillScreen(ST7735_BLACK);
-  textWhiteOnBlack();
-  setCursorTFT(0,0);
+  clearTFT();
   tft.print(F("Sel=Load"));
   setCursorTFT(1,0);
   tft.print(F("Other=Exit"));
@@ -63,9 +59,7 @@ void loadConfig(void)
 void storeConfig(void)
 {
   signed char key;
-  tft.fillScreen(ST7735_BLACK);
-  textWhiteOnBlack();
-  setCursorTFT(0,0);
+  clearTFT();
   tft.print(F("Sel=store"));
   setCursorTFT(1,0);
   tft.print(F("Other=exit"));
@@ -95,4 +89,36 @@ void setCursorTFT(int row, int col)
 {
   tft.setCursor(col*6, row*10);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////
+// clearTFT()
+//////////////////////////////////////////////////////////////////////////////////////
+
+void clearTFT(void)
+{
+  tft.fillScreen(ST7735_BLACK);
+  setCursorTFT(0,0);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////////////////////////////////////////
+
+void drawCarret(unsigned char row, unsigned char col)
+{
+  setCursorTFT(row, col);
+  tft.print("<");
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////////////////////////////////////////
+
+void clearCarret(unsigned char row, unsigned char col)
+{
+  setCursorTFT(row, col);
+  tft.print(" ");
+}
+
 

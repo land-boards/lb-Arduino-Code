@@ -66,9 +66,7 @@ menuStruc menus[] =
 void menuRefresh(void)
 {
   int nextLine, lastLine;
-  tft.fillRect(0,0,127,89,ST7735_BLACK);
-  setCursorTFT(0,0);
-  tft.setTextColor(ST7735_WHITE,ST7735_RED);
+  clearTFT();
   tft.print("*** 1-Wire Logger ***");
   textWhiteOnBlack();
   setCursorTFT(15,0);

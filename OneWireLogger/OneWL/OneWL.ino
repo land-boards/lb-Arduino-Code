@@ -36,7 +36,6 @@ enum MENUITEMS
   SDCARD_MENU,
   MANTIME_MENU,
   BACKLITE_MENU,
-//  TSTKPD_MENU,
   APPENDSD_MENU,
   CREATENEW_MENU,
   NEWFILE_MENU,
@@ -46,6 +45,24 @@ enum MENUITEMS
   SDLIST_MENU,
   SDEN_MENU,
   DSDIS_MENU,
+};
+
+enum 
+{
+  VIEW_YEAR,
+  VIEW_MONTH,
+  VIEW_DAY,
+  VIEW_HOUR,
+  VIEW_MIN,
+  VIEW_SEC,
+  SET_YEAR,
+  SET_MONTH,
+  SET_DAY,
+  SET_HOUR,
+  SET_MINUTE,
+  SET_SEC,
+  SAVE_TIME,
+  EXIT_TIME,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -62,6 +79,9 @@ float temps1Wire[32];
 OneWire  ds(ONE_WIRE);  // on pin 
 unsigned char sensNum;
 float fahrenheit;
+
+uint16_t currYear;
+uint8_t currMonth, currDay, currHour, currMin, currSec;
 
 // Board Configuration stored in EEPROM
 struct IZ_Cfgs
@@ -112,11 +132,11 @@ void setup()
   }
 
   // RTC init starts up the wire interface (TWI/I2C I/F)
-  Wire.begin();  
+  Wire.begin();
   RTC.begin();
   if (! RTC.isrunning() )
   {
-    tft.print("RTCInit");
+    tft.print("Replace RTC Battery");
     RTC.adjust(DateTime(__DATE__, __TIME__));   
   }
   myOneWireLogger.delayAvailable(1000);

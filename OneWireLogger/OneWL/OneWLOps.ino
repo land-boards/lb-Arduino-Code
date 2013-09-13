@@ -5,9 +5,7 @@
 void do1Wire(void)
 {
   signed char key;
-  tft.fillScreen(ST7735_BLACK);
-  textWhiteOnBlack();
-  setCursorTFT(0,0);
+  clearTFT();
   tft.print(F("Do 1 Wire"));
   do
   {

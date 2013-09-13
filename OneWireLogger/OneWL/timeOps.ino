@@ -6,18 +6,166 @@
 // 
 //////////////////////////////////////////////////////////////////////////////
 
-enum timeState_t
+DateTime setRTCTime;
+
+//////////////////////////////////////////////////////////////////////////////
+// showTimeOnLine() - Refresh the time screen and highlight the selected position
+//////////////////////////////////////////////////////////////////////////////
+
+int showTimeOnLine(int highlightPosition)
 {
-  SET_YEAR,
-  SET_MONTH,
-  SET_DAY,
-  SET_HOUR,
-  SET_MIN,
-  SET_SEC,
-  SAVE_TIME,
-  EXIT_TIME,
-} 
-;
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+
+  setCursorTFT(1, 0);
+  tft.print(currYear);
+  tft.print("/");
+  if (currMonth < 10)
+    tft.print("0");
+  tft.print(currMonth);
+  tft.print("/");
+  if (currDay < 10)
+    tft.print("0");
+  tft.print(currDay);
+  tft.print("/");
+  if (currHour < 10)
+    tft.print("0");
+  tft.print(currHour);
+  tft.print(":");
+  if (currMin < 10)
+    tft.print("0");
+  tft.print(currMin);
+  tft.print(":");
+  if (currSec < 10)
+    tft.print("0");
+  tft.print(currSec);
+  setCursorTFT(2, 0);
+  tft.print("SAVE");
+  setCursorTFT(3, 0);
+  tft.print("EXIT");
+  switch (highlightPosition)
+  {
+    case VIEW_YEAR:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(1, 0);
+      tft.print(currYear);
+    }
+    break; 
+    case VIEW_MONTH:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(1, 5);
+      if (currMonth < 10)
+        tft.print("0");
+      tft.print(currMonth);
+    }
+    break;
+    case VIEW_DAY:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(1, 8);
+      if (currDay < 10)
+        tft.print("0");
+      tft.print(currDay);
+    }
+    break;
+    case VIEW_HOUR:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(1, 11);
+      if (currHour < 10)
+        tft.print("0");
+      tft.print(currHour);
+    }
+    break;
+    case VIEW_MIN:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(1, 14);
+      if (currMin < 10)
+        tft.print("0");
+      tft.print(currMin);
+    }
+    break;
+    case VIEW_SEC:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(1, 17);
+      if (currSec < 10)
+        tft.print("0");
+      tft.print(currSec);
+    }
+    break;
+    case SET_YEAR:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      setCursorTFT(1, 0);
+      tft.print(currYear);
+    }
+    break;
+    case SET_MONTH:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      setCursorTFT(1, 5);
+      if (currMonth < 10)
+        tft.print("0");
+      tft.print(currMonth);
+    }
+    break;
+    case SET_DAY:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      setCursorTFT(1, 8);
+      if (currDay < 10)
+        tft.print("0");
+      tft.print(currDay);
+    }
+    break;
+    case SET_HOUR:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      setCursorTFT(1, 11);
+      if (currHour < 10)
+        tft.print("0");
+      tft.print(currHour);
+    }
+    break;
+    case SET_MINUTE:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      setCursorTFT(1, 14);
+      if (currMin < 10)
+        tft.print("0");
+      tft.print(currMin);
+    }
+    break;
+    case SET_SEC:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      setCursorTFT(1, 17);
+      if (currSec < 10)
+        tft.print("0");
+      tft.print(currSec);
+    }
+    break;
+    case SAVE_TIME:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(2, 0);
+      tft.print("SAVE");
+    }
+    break;
+    case EXIT_TIME:
+    {
+      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      setCursorTFT(3, 0);
+      tft.print("EXIT");
+    }
+    break;
+  }
+  tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  return(highlightPosition);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // void setTime(void)
@@ -25,55 +173,24 @@ enum timeState_t
 
 void setTime(void)
 {
+  DateTime now;
   signed char key;
-  int currYear, currMonth, currDay, currHour, currMin, currSec;
-  timeState_t timeStat = SET_YEAR;
-  tft.fillScreen(ST7735_BLACK);
-  tft.fillScreen(ST7735_BLACK);
+  int timeStat = VIEW_YEAR;
+  clearTFT();
+  tft.print("YYYY MM DD HH MM SS");
   // read the rtc
-  DateTime now = RTC.now();
-  currYear = now.year();
-  currMonth = now.month();
-  currDay = now.day();
-  currHour = now.hour();
-  currMin = now.minute();
-  currSec = now.second();
-
-  setCursorTFT(1, 0);
-  tft.print(currYear, DEC);
-  tft.print(':');
-  setCursorTFT(2, 0);
-  if (currMonth < 10)
-    tft.print('0');
-  tft.print(currMonth, DEC);
-  tft.print(" :");
-  setCursorTFT(3, 0);
-  if (currDay < 10)
-    tft.print('0');
-  tft.print(currDay, DEC);
-  tft.print("  :");
-  setCursorTFT(4, 0);
-  if (currHour < 10)
-    tft.print('0');
-  tft.print(currHour, DEC);
-  tft.print("  :");
+  setRTCTime = RTC.now();
+  currYear = setRTCTime.year();
+  currMonth = setRTCTime.month();
+  currDay = setRTCTime.day();
+  currHour = setRTCTime.hour();
+  currMin = setRTCTime.minute();
+  currSec = setRTCTime.second();
+  showTimeOnLine(VIEW_YEAR);
   setCursorTFT(5, 0);
-  if (currMin < 10)
-    tft.print('0');
-  tft.print(currMin, DEC);
-  tft.print("  :");
+  tft.print(F("Arrows to chose"));
   setCursorTFT(6, 0);
-  if (currSec < 10)
-    tft.print('0');
-  tft.print(currSec, DEC);
-  tft.print("  :");
-  setCursorTFT(7, 0);
-  tft.print("SAVE:");
-  setCursorTFT(8, 0);
-  tft.print(F("Exit:"));
-
-  setCursorTFT(1, 5);
-  tft.print("<");
+  tft.print(F("Select to edit"));
 
   do
   {
@@ -82,185 +199,302 @@ void setTime(void)
     {
       switch (timeStat)
       {
-      case SET_YEAR:
+        case VIEW_YEAR:
         {
-          if (key == DOWN)
+          switch (key)
           {
-            setCursorTFT(1, 5);
-            tft.print("  ");
-            setCursorTFT(2, 5);
-            tft.print("<");
-            timeStat = SET_MONTH;
+            case DOWN:
+              timeStat = showTimeOnLine(SAVE_TIME);
+              break;
+            case RIGHT:
+              timeStat = showTimeOnLine(VIEW_MONTH);
+              break;
+            case SELECT:
+              timeStat = showTimeOnLine(SET_YEAR);
+              break;
           }
-          else if (key == SELECT)
-          {
-            setCursorTFT(1, 0);
-            tft.print(currYear);
-            while(myOneWireLogger.pollKeypad() == SELECT);
-            do
-            {
-              key = myOneWireLogger.pollKeypad();
-              switch (key)
-              {
-              case UP: 
-                currYear++;
-                break;
-              case DOWN:
-                currYear--;
-                break;
-              }
-              setCursorTFT(1, 0);
-              tft.print(currYear);
-              delay(250);
-            }
-            while (myOneWireLogger.pollKeypad() != SELECT);
-          }
-          break;
         }
+        break;
+        case VIEW_MONTH:
+        {
+          switch (key)
+          {
+            case DOWN:
+              timeStat = showTimeOnLine(SAVE_TIME);
+              break;
+            case RIGHT:
+              timeStat = showTimeOnLine(VIEW_DAY);
+              break;
+            case LEFT:
+              timeStat = showTimeOnLine(VIEW_YEAR);
+              break;
+            case SELECT:
+              timeStat = showTimeOnLine(SET_MONTH);
+              break;
+          }
+        }
+        break;
+        case VIEW_DAY:
+        {
+          switch (key)
+          {
+            case DOWN:
+              timeStat = showTimeOnLine(SAVE_TIME);
+              break;
+            case RIGHT:
+              timeStat = showTimeOnLine(VIEW_HOUR);
+              break;
+            case LEFT:
+              timeStat = showTimeOnLine(VIEW_MONTH);
+              break;
+            case SELECT:
+              timeStat = showTimeOnLine(SET_DAY);
+              break;
+          }
+        }
+        break;
+        case VIEW_HOUR:
+        {
+          switch (key)
+          {
+            case DOWN:
+              timeStat = showTimeOnLine(SAVE_TIME);
+              break;
+            case RIGHT:
+              timeStat = showTimeOnLine(VIEW_MIN);
+              break;
+            case LEFT:
+              timeStat = showTimeOnLine(VIEW_DAY);
+              break;
+            case SELECT:
+              timeStat = showTimeOnLine(SET_HOUR);
+              break;
+          }
+        }
+        break;
+        case VIEW_MIN:
+        {
+          switch (key)
+          {
+            case DOWN:
+              timeStat = showTimeOnLine(SAVE_TIME);
+              break;
+            case RIGHT:
+              timeStat = showTimeOnLine(VIEW_SEC);
+              break;
+            case LEFT:
+              timeStat = showTimeOnLine(VIEW_HOUR);
+              break;
+            case SELECT:
+              timeStat = showTimeOnLine(SET_MINUTE);
+              break;
+          }
+        }
+        break;
+        case VIEW_SEC:
+        {
+          switch (key)
+          {
+            case DOWN:
+              timeStat = showTimeOnLine(SAVE_TIME);
+              break;
+            case LEFT:
+              timeStat = showTimeOnLine(VIEW_MIN);
+              break;
+            case SELECT:
+              timeStat = showTimeOnLine(SET_SEC);
+              break;
+          }
+        }
+        break;
+        case SET_YEAR:
+        {
+          timeStat = showTimeOnLine(SET_YEAR);
+          do
+          {
+            key = myOneWireLogger.pollKeypad();
+            switch (key)
+            {
+            case UP: 
+              currYear++;
+              timeStat = showTimeOnLine(SET_YEAR);
+              delay(250);
+              break;
+            case DOWN:
+              currYear--;
+              timeStat = showTimeOnLine(SET_YEAR);
+              delay(250);
+              break;
+            }
+          }
+          while (myOneWireLogger.pollKeypad() != SELECT);
+          timeStat = showTimeOnLine(VIEW_YEAR);
+        }
+        break;
       case SET_MONTH:
         {
-          if (key == DOWN)
+          timeStat = showTimeOnLine(SET_MONTH);
+          do
           {
-            setCursorTFT(2, 5);
-            tft.print(" ");
-            setCursorTFT(3, 5);
-            tft.print("<");
-            timeStat = SET_DAY;
+            key = myOneWireLogger.pollKeypad();
+            switch (key)
+            {
+            case UP: 
+              if (currMonth < 12)
+                currMonth++;
+              timeStat = showTimeOnLine(SET_MONTH);
+              delay(250);
+              break;
+            case DOWN:
+              if (currMonth > 1)
+                currMonth--;
+              timeStat = showTimeOnLine(SET_MONTH);
+              delay(250);
+              break;
+            }
           }
-          else if (key == UP)
-          {
-            setCursorTFT(1, 5);
-            tft.print("<");
-            setCursorTFT(2, 5);
-            tft.print(" ");
-            timeStat = SET_YEAR;
-          }
-          break;
+          while (myOneWireLogger.pollKeypad() != SELECT);
+          timeStat = showTimeOnLine(VIEW_MONTH);
         }
+        break;
       case SET_DAY:
         {
-          if (key == DOWN)
+          timeStat = showTimeOnLine(SET_DAY);
+          do
           {
-            setCursorTFT(3, 5);
-            tft.print(" ");
-            setCursorTFT(4, 5);
-            tft.print("<");
-            timeStat = SET_HOUR;
+            key = myOneWireLogger.pollKeypad();
+            switch (key)
+            {
+            case UP: 
+              if (currDay < 31)
+                currDay++;
+              timeStat = showTimeOnLine(SET_DAY);
+              delay(250);
+              break;
+            case DOWN:
+              if (currDay > 1)
+                currDay--;
+              timeStat = showTimeOnLine(SET_DAY);
+              delay(250);
+              break;
+            }
           }
-          else if (key == UP)
-          {
-            setCursorTFT(2, 5);
-            tft.print("<");
-            setCursorTFT(3, 5);
-            tft.print(" ");
-            timeStat = SET_MONTH;
-          }
-          break;
-        }
+          while (myOneWireLogger.pollKeypad() != SELECT);
+          timeStat = showTimeOnLine(VIEW_DAY);
+       }
+        break;
       case SET_HOUR:
         {
-          if (key == DOWN)
+          timeStat = showTimeOnLine(SET_HOUR);
+          do
           {
-            setCursorTFT(4, 5);
-            tft.print(" ");
-            setCursorTFT(5, 5);
-            tft.print("<");
-            timeStat = SET_MIN;
+            key = myOneWireLogger.pollKeypad();
+            switch (key)
+            {
+            case UP: 
+              if (currHour < 23)
+                currHour++;
+              timeStat = showTimeOnLine(SET_HOUR);
+              delay(250);
+              break;
+            case DOWN:
+              if (currHour > 0)
+                currHour--;
+              timeStat = showTimeOnLine(SET_HOUR);
+              delay(250);
+              break;
+            }
           }
-          else if (key == UP)
-          {
-            setCursorTFT(3, 5);
-            tft.print("<");
-            setCursorTFT(4, 5);
-            tft.print(" ");
-            timeStat = SET_DAY;
-          }
-          break;
+          while (myOneWireLogger.pollKeypad() != SELECT);
+          timeStat = showTimeOnLine(VIEW_HOUR);
         }
-      case SET_MIN:
+        break;
+      case SET_MINUTE:
         {
-          if (key == DOWN)
+          timeStat = showTimeOnLine(SET_MINUTE);
+          do
           {
-            setCursorTFT(5, 5);
-            tft.print(" ");
-            setCursorTFT(6, 5);
-            tft.print("<");
-            timeStat = SET_SEC;
+            key = myOneWireLogger.pollKeypad();
+            switch (key)
+            {
+            case UP: 
+              if (currMin < 23)
+                currMin++;
+              timeStat = showTimeOnLine(SET_MINUTE);
+              delay(250);
+              break;
+            case DOWN:
+              if (currMin > 0)
+                currMin--;
+              timeStat = showTimeOnLine(SET_MINUTE);
+              delay(250);
+              break;
+            }
           }
-          else if (key == UP)
-          {
-            setCursorTFT(4, 5);
-            tft.print("<");
-            setCursorTFT(5, 5);
-            tft.print(" ");
-            timeStat = SET_HOUR;
-          }
-          break;
+          while (myOneWireLogger.pollKeypad() != SELECT);
+          timeStat = showTimeOnLine(VIEW_MIN);
         }
+        break;
       case SET_SEC:
         {
-          if (key == DOWN)
+          timeStat = showTimeOnLine(VIEW_SEC);
+          do
           {
-            setCursorTFT(6, 5);
-            tft.print(" ");
-            setCursorTFT(7, 5);
-            tft.print("<");
-            timeStat = SAVE_TIME;
+            key = myOneWireLogger.pollKeypad();
+            switch (key)
+            {
+            case UP: 
+              if (currSec < 59)
+                currSec++;
+              timeStat = showTimeOnLine(VIEW_SEC);
+              delay(250);
+              break;
+            case DOWN:
+              if (currSec > 0)
+                currSec--;
+              timeStat = showTimeOnLine(VIEW_SEC);
+              delay(250);
+              break;
+            }
           }
-          else if (key == UP)
-          {
-            setCursorTFT(5, 5);
-            tft.print("<");
-            setCursorTFT(6, 5);
-            tft.print(" ");
-            timeStat = SET_MIN;
-          }
-          break;
+          while (myOneWireLogger.pollKeypad() != SELECT);
+          timeStat = showTimeOnLine(VIEW_SEC);
         }
+        break;
       case SAVE_TIME:
         {
           if (key == DOWN)
           {
-            setCursorTFT(7, 5);
-            tft.print(" ");
-            setCursorTFT(8, 5);
-            tft.print("<");
-            timeStat = EXIT_TIME;
+            timeStat = showTimeOnLine(EXIT_TIME);
           }
           else if (key == UP)
           {
-            setCursorTFT(6, 5);
-            tft.print("<");
-            setCursorTFT(7, 5);
-            tft.print(" ");
-            timeStat = SET_SEC; 
+            timeStat = showTimeOnLine(VIEW_YEAR);
           }
           else if (key == SELECT)
           {
+            // TBD add save routine here
+            RTC.adjust(DateTime(currYear,currMonth, currDay, currHour, currMin, currSec));
             return;
           }
-          break;
         }
+        break;
       case EXIT_TIME:
         {
           if (key == UP)
           {
-            setCursorTFT(7, 5);
-            tft.print("<");
-            setCursorTFT(8, 5);
-            tft.print(" ");
-            timeStat = SAVE_TIME;
+            timeStat = showTimeOnLine(SAVE_TIME);
           }
           else if (key == SELECT)
             return;
-          break;
         }
+        break;
       }
       do
         key = myOneWireLogger.pollKeypad();
       while (key != NONE);
     }
-    delay(100);
+    myOneWireLogger.delayAvailable(50);
   }
   while (key == NONE);
 }
