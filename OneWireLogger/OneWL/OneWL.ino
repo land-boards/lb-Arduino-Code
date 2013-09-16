@@ -95,6 +95,7 @@ IZConfigs;
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
 OneWireLogger myOneWireLogger;
 RTC_DS1307 RTC;
+DateTime setRTCTime;
 
 //////////////////////////////////////////////////////////////////////////////
 // the setup routine runs once when you press reset:
@@ -112,10 +113,7 @@ void setup()
   // TFT init
   analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);
-  tft.setTextSize(1);
-  tft.fillScreen(ST7735_BLACK);
-  tft.setCursor(0, 0);
-  textWhiteOnBlack();
+  clearTFT();
   if (IZConfigs.enableSD != 0)
   {
     if (!SD.begin(SD_CS)) 
