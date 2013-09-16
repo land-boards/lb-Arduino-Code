@@ -33,39 +33,9 @@
 
 enum MENUITEMS
 {
-  LOGGER_MENU,
+  LOG2SCRN_MENU,
   LOG2SD_MENU,
-  LOADSTOR_MENU,
-  SDCARD_MENU,
-  MANTIME_MENU,
-  BACKLITE_MENU,
-  APPENDSD_MENU,
-  CREATENEW_MENU,
-  NEWFILE_MENU,
-  LOAD_MENU,
-  STORE_MENU,
-  SDERASE_MENU,
-  SDLIST_MENU,
-  SDEN_MENU,
-  DSDIS_MENU,
-};
-
-enum TIMESET
-{
-  VIEW_YEAR,
-  VIEW_MONTH,
-  VIEW_DAY,
-  VIEW_HOUR,
-  VIEW_MIN,
-  VIEW_SEC,
-  SET_YEAR,
-  SET_MONTH,
-  SET_DAY,
-  SET_HOUR,
-  SET_MINUTE,
-  SET_SEC,
-  SAVE_TIME,
-  EXIT_TIME,
+  LOG2USB_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -80,23 +50,10 @@ uint8_t firstRun;
 float temps1Wire[32];
 float fahrenheit;
 
-uint16_t currYear;
-uint8_t currMonth, currDay, currHour, currMin, currSec;
-
-// Board Configuration stored in EEPROM
-struct IZ_Cfgs
-{
-  uint8_t bll;       // Backlight level
-  uint8_t enableSD;  // Enable the SD card
-} 
-IZConfigs;
-
 // class initializers - most initialize hardware
 OneWireLogger myOneWireLogger;
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
 OneWire  ds(ONE_WIRE);  // on pin 
-RTC_DS1307 RTC;
-DateTime setRTCTime;
 
 //////////////////////////////////////////////////////////////////////////////
 // the setup routine runs once when you press reset:
@@ -108,41 +65,18 @@ void setup()
   Serial.begin(57600);
   Serial.print(F("1-Wire Logger"));
 #endif
-  // EEPROM access
-  EEPROM_readAnything(0, IZConfigs);
 
   // TFT init
-  analogWrite(BACKLIGHT, IZConfigs.bll);
+  analogWrite(BACKLIGHT, 0);
   tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
   clearTFT();
-  if (IZConfigs.enableSD != 0)
-  {
-    if (!SD.begin(SD_CS)) 
-    {
-      tft.print(F("SD card missing"));
-      setCursorTFT(1, 0);
-      tft.print(F("Disabling check"));
-      setCursorTFT(2, 0);
-      tft.print(F("Power cycle"));
-      sdDisable();
-      EEPROM_writeAnything(0, IZConfigs);
-      myOneWireLogger.delayAvailable(2000);
-    }
-  }
 
   // RTC init starts up the I2C wire interface
   Wire.begin();
-  RTC.begin();
-  if (! RTC.isrunning() )
-  {
-    tft.print("Replace RTC Battery");
-    RTC.adjust(DateTime(__DATE__, __TIME__));   
-  }
-  myOneWireLogger.delayAvailable(1000);
   sensorNumber = 0;
 
   // Set up the init menu state
-  menuState = LOGGER_MENU;
+  menuState = LOG2SCRN_MENU;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

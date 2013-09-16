@@ -8,7 +8,7 @@
 
 void setBLt(void)
 {
-  signed char key;
+  uint8_t key;
   clearTFT();
   tft.print(F("Set Bklt"));
   setCursorTFT(1,0);
@@ -37,7 +37,7 @@ void setBLt(void)
 
 void loadConfig(void)
 {
-  signed char key;
+  uint8_t key;
   clearTFT();
   tft.print(F("Sel=Load"));
   setCursorTFT(1,0);
@@ -58,7 +58,7 @@ void loadConfig(void)
 
 void storeConfig(void)
 {
-  signed char key;
+  uint8_t key;
   clearTFT();
   tft.print(F("Sel=store"));
   setCursorTFT(1,0);
@@ -85,7 +85,7 @@ void textWhiteOnBlack(void)
 // setCursorTFT(int row, int col)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void setCursorTFT(int row, int col)
+void setCursorTFT(uint8_t row, uint8_t col)
 {
   tft.setCursor(col*6, row*10);
 }

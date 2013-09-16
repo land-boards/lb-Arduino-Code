@@ -6,7 +6,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////
 
-void printLeadingZero(unsigned char checkNum)
+void printLeadingZero(uint8_t checkNum)
 {
   if (checkNum < 10)
    tft.print(F("0")); 
@@ -16,7 +16,7 @@ void printLeadingZero(unsigned char checkNum)
 // showTimeOnLine() - Refresh the time screen and highlight the selected position
 //////////////////////////////////////////////////////////////////////////////
 
-int showTimeOnLine(int highlightPosition)
+int showTimeOnLine(uint8_t highlightPosition)
 {
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
 
@@ -45,14 +45,14 @@ int showTimeOnLine(int highlightPosition)
   {
     case VIEW_YEAR:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(1, 0);
       tft.print(currYear);
     }
     break; 
     case VIEW_MONTH:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(1, 5);
       printLeadingZero(currMonth);
       tft.print(currMonth);
@@ -60,7 +60,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case VIEW_DAY:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(1, 8);
       printLeadingZero(currDay);
       tft.print(currDay);
@@ -68,7 +68,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case VIEW_HOUR:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(1, 11);
       printLeadingZero(currHour);
       tft.print(currHour);
@@ -76,7 +76,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case VIEW_MIN:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(1, 14);
       printLeadingZero(currMin);
       tft.print(currMin);
@@ -84,7 +84,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case VIEW_SEC:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(1, 17);
       printLeadingZero(currSec);
       tft.print(currSec);
@@ -92,14 +92,14 @@ int showTimeOnLine(int highlightPosition)
     break;
     case SET_YEAR:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      tft.setTextColor(ST7735_WHITE,TFT_RED);
       setCursorTFT(1, 0);
       tft.print(currYear);
     }
     break;
     case SET_MONTH:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      tft.setTextColor(ST7735_WHITE,TFT_RED);
       setCursorTFT(1, 5);
       printLeadingZero(currMonth);
       tft.print(currMonth);
@@ -107,7 +107,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case SET_DAY:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      tft.setTextColor(ST7735_WHITE,TFT_RED);
       setCursorTFT(1, 8);
       printLeadingZero(currDay);
       tft.print(currDay);
@@ -115,7 +115,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case SET_HOUR:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      tft.setTextColor(ST7735_WHITE,TFT_RED);
       setCursorTFT(1, 11);
       printLeadingZero(currHour);
       tft.print(currHour);
@@ -123,7 +123,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case SET_MINUTE:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      tft.setTextColor(ST7735_WHITE,TFT_RED);
       setCursorTFT(1, 14);
       printLeadingZero(currMin);
       tft.print(currMin);
@@ -131,7 +131,7 @@ int showTimeOnLine(int highlightPosition)
     break;
     case SET_SEC:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+      tft.setTextColor(ST7735_WHITE,TFT_RED);
       setCursorTFT(1, 17);
       printLeadingZero(currSec);
       tft.print(currSec);
@@ -139,14 +139,14 @@ int showTimeOnLine(int highlightPosition)
     break;
     case SAVE_TIME:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(2, 0);
       tft.print(F("SAVE"));
     }
     break;
     case EXIT_TIME:
     {
-      tft.setTextColor(ST7735_WHITE,ST7735_RED);
+      tft.setTextColor(ST7735_WHITE,TFT_BLUE);
       setCursorTFT(3, 0);
       tft.print(F("EXIT"));
     }
@@ -163,8 +163,8 @@ int showTimeOnLine(int highlightPosition)
 void setTime(void)
 {
   DateTime now;
-  signed char key;
-  int timeStat = VIEW_YEAR;
+  uint8_t key;
+  uint8_t timeStat = VIEW_YEAR;
   clearTFT();
   tft.print(F("YYYY MM DD HH MM SS"));
   // read the rtc

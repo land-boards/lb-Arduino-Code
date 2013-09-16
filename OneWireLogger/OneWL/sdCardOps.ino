@@ -35,7 +35,7 @@ void sdList(void)
 
 void appendSD(void)
 {
-  
+//  File datafFile = SD.open("datalog.txt", FILE_WRITE);
 }
 
 void createSD(void)
