@@ -6,7 +6,11 @@
 // 
 //////////////////////////////////////////////////////////////////////////////
 
-DateTime setRTCTime;
+void printLeadingZero(unsigned char checkNum)
+{
+  if (checkNum < 10)
+   tft.print(F("0")); 
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // showTimeOnLine() - Refresh the time screen and highlight the selected position
@@ -19,24 +23,19 @@ int showTimeOnLine(int highlightPosition)
   setCursorTFT(1, 0);
   tft.print(currYear);
   tft.print("/");
-  if (currMonth < 10)
-    tft.print("0");
+  printLeadingZero(currMonth);
   tft.print(currMonth);
   tft.print("/");
-  if (currDay < 10)
-    tft.print("0");
+  printLeadingZero(currDay);
   tft.print(currDay);
   tft.print("/");
-  if (currHour < 10)
-    tft.print("0");
+  printLeadingZero(currHour);
   tft.print(currHour);
   tft.print(":");
-  if (currMin < 10)
-    tft.print("0");
+  printLeadingZero(currMin);
   tft.print(currMin);
   tft.print(":");
-  if (currSec < 10)
-    tft.print("0");
+  printLeadingZero(currSec);
   tft.print(currSec);
   setCursorTFT(2, 0);
   tft.print("SAVE");
@@ -55,8 +54,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(1, 5);
-      if (currMonth < 10)
-        tft.print("0");
+      printLeadingZero(currMonth);
       tft.print(currMonth);
     }
     break;
@@ -64,8 +62,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(1, 8);
-      if (currDay < 10)
-        tft.print("0");
+      printLeadingZero(currDay);
       tft.print(currDay);
     }
     break;
@@ -73,8 +70,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(1, 11);
-      if (currHour < 10)
-        tft.print("0");
+      printLeadingZero(currHour);
       tft.print(currHour);
     }
     break;
@@ -82,8 +78,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(1, 14);
-      if (currMin < 10)
-        tft.print("0");
+      printLeadingZero(currMin);
       tft.print(currMin);
     }
     break;
@@ -91,8 +86,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(1, 17);
-      if (currSec < 10)
-        tft.print("0");
+      printLeadingZero(currSec);
       tft.print(currSec);
     }
     break;
@@ -107,8 +101,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
       setCursorTFT(1, 5);
-      if (currMonth < 10)
-        tft.print("0");
+      printLeadingZero(currMonth);
       tft.print(currMonth);
     }
     break;
@@ -116,8 +109,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
       setCursorTFT(1, 8);
-      if (currDay < 10)
-        tft.print("0");
+      printLeadingZero(currDay);
       tft.print(currDay);
     }
     break;
@@ -125,8 +117,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
       setCursorTFT(1, 11);
-      if (currHour < 10)
-        tft.print("0");
+      printLeadingZero(currHour);
       tft.print(currHour);
     }
     break;
@@ -134,8 +125,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
       setCursorTFT(1, 14);
-      if (currMin < 10)
-        tft.print("0");
+      printLeadingZero(currMin);
       tft.print(currMin);
     }
     break;
@@ -143,8 +133,7 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
       setCursorTFT(1, 17);
-      if (currSec < 10)
-        tft.print("0");
+      printLeadingZero(currSec);
       tft.print(currSec);
     }
     break;
@@ -152,14 +141,14 @@ int showTimeOnLine(int highlightPosition)
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(2, 0);
-      tft.print("SAVE");
+      tft.print(F("SAVE"));
     }
     break;
     case EXIT_TIME:
     {
       tft.setTextColor(ST7735_WHITE,ST7735_RED);
       setCursorTFT(3, 0);
-      tft.print("EXIT");
+      tft.print(F("EXIT"));
     }
     break;
   }
@@ -177,7 +166,7 @@ void setTime(void)
   signed char key;
   int timeStat = VIEW_YEAR;
   clearTFT();
-  tft.print("YYYY MM DD HH MM SS");
+  tft.print(F("YYYY MM DD HH MM SS"));
   // read the rtc
   setRTCTime = RTC.now();
   currYear = setRTCTime.year();
@@ -418,7 +407,7 @@ void setTime(void)
             switch (key)
             {
             case UP: 
-              if (currMin < 23)
+              if (currMin < 59)
                 currMin++;
               timeStat = showTimeOnLine(SET_MINUTE);
               delay(250);
@@ -437,7 +426,7 @@ void setTime(void)
         break;
       case SET_SEC:
         {
-          timeStat = showTimeOnLine(VIEW_SEC);
+          timeStat = showTimeOnLine(SET_SEC);
           do
           {
             key = myOneWireLogger.pollKeypad();
@@ -446,13 +435,13 @@ void setTime(void)
             case UP: 
               if (currSec < 59)
                 currSec++;
-              timeStat = showTimeOnLine(VIEW_SEC);
+              timeStat = showTimeOnLine(SET_SEC);
               delay(250);
               break;
             case DOWN:
               if (currSec > 0)
                 currSec--;
-              timeStat = showTimeOnLine(VIEW_SEC);
+              timeStat = showTimeOnLine(SET_SEC);
               delay(250);
               break;
             }
