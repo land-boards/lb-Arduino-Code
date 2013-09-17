@@ -32,8 +32,6 @@ struct menuStruc                  // The ENUMs for the *_MENU_PTR values must pr
   uint8_t SEL_MENU_PTR;              // Menu to display after the selected function complets
 };
 
-const char * menuFooter;
-
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - used to generate the navigation menus. Format is
 // CURR_MENU,MENU_STRING,DISPLAY_ROW,UP_MENU,DOWN_MENU,LEFT_MENU,RIGHT_MENU,select-execute-fcn-name,RETURN_MENU
@@ -63,7 +61,7 @@ void menuRefresh(void)
   tft.print(" ");
   tft.print(__TIME__);
 #ifdef SERIAL_DEBUG
-  Serial.print(F("menuState = "));
+  Serial.print(F("menuState="));
   Serial.print(menuState);
   Serial.print(F(",String="));
   Serial.print(menus[menuState].menuString);

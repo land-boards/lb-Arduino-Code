@@ -7,15 +7,11 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <SPI.h>
-#include <Wire.h>
-#include <EEPROM.h>
 #include <OneWire.h>
 #include <SD.h>
 #include <OneWireLogger.h>
-#include "RTClib.h"
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
-#include <EEPROMAnything.h>    // EEPROM anything
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
@@ -24,7 +20,7 @@
 //#define SERIAL_OUT
 #undef SERIAL_OUT
 
-#define	TFT_RED      0x001F    // Colors are reversed on my display from Adafruit
+#define	TFT_RED      0x001F    // Colors are reversed on my display from Adafruit's library
 #define	TFT_BLUE     0xF800
 
 //////////////////////////////////////////////////////////////////////////////
@@ -61,18 +57,16 @@ OneWire  ds(ONE_WIRE);  // on pin
 
 void setup() 
 {
+  Serial.begin(115200);
 #ifdef SERIAL_OUT
-  Serial.begin(57600);
   Serial.print(F("1-Wire Logger"));
 #endif
 
   // TFT init
   analogWrite(BACKLIGHT, 0);
   tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
-  clearTFT();
 
-  // RTC init starts up the I2C wire interface
-  Wire.begin();
+  // Start up the One Wire Interface
   sensorNumber = 0;
 
   // Set up the init menu state
