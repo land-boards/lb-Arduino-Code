@@ -9,6 +9,8 @@
 #include <SPI.h>
 #include <OneWire.h>
 #include <SD.h>
+#include <Wire.h>
+#include "RTClib.h"
 #include <OneWireLogger.h>
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
@@ -30,7 +32,6 @@
 enum MENUITEMS
 {
   LOG2SCRN_MENU,
-  LOG2SD_MENU,
   LOG2USB_MENU,
 };
 
@@ -50,6 +51,9 @@ float fahrenheit;
 OneWireLogger myOneWireLogger;
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
 OneWire  ds(ONE_WIRE);  // on pin 
+RTC_DS1307 RTC;
+
+DateTime setRTCTime;
 
 //////////////////////////////////////////////////////////////////////////////
 // the setup routine runs once when you press reset:
@@ -68,6 +72,14 @@ void setup()
 
   // Start up the One Wire Interface
   sensorNumber = 0;
+
+  Wire.begin();
+  RTC.begin();
+  if (! RTC.isrunning() )
+  {
+    tft.print("Replace RTC Battery");
+    RTC.adjust(DateTime(__DATE__, __TIME__));   
+  }
 
   // Set up the init menu state
   menuState = LOG2SCRN_MENU;

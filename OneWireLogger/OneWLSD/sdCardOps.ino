@@ -8,13 +8,13 @@
 
 void appendSD(void)
 {
-  String dataString = "";
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
-  dataString += "Adding Stuff";
-  if (dataFile)
-  {
-    dataFile.println(dataString);
-    dataFile.close();
-  }
+//  String dataString = "";
+//  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+//  dataString += "Adding Stuff";
+//  if (dataFile)
+//  {
+//    dataFile.println(dataString);
+//    dataFile.close();
+//  }
 }
 

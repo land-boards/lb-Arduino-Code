@@ -17,12 +17,12 @@
 
 enum KEY_PRESSES
 {
-  NONE = -1,
-  RIGHT = 0,
-  UP = 1,
-  DOWN = 2,
-  LEFT = 3,
-  SELECT = 4,
+  NONE,
+  RIGHT,
+  UP,
+  DOWN,
+  LEFT,
+  SELECT,
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -62,11 +62,11 @@ class OneWireLogger
 {
   public:
     OneWireLogger(void);
-    signed char pollKeypad(void);
+    uint8_t pollKeypad(void);
     void waitForKeyRelease(void);
-    signed char getKeyPressed(void);
-    signed char waitKeyPressed(void);
-    signed char delayAvailable(int delayTime);
+    uint8_t getKeyPressed(void);
+    uint8_t waitKeyPressed(void);
+    uint8_t delayAvailable(int delayTime);
   private:
     void initPins(void);
 };

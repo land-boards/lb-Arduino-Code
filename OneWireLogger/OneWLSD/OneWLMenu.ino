@@ -40,9 +40,8 @@ struct menuStruc                  // The ENUMs for the *_MENU_PTR values must pr
   
 menuStruc menus[] = 
 {
-  LOG2SCRN_MENU,    "Log to screen",      2, LOG2SCRN_MENU,    LOG2SD_MENU,    LOG2SCRN_MENU,    LOG2SCRN_MENU,   &do1WireLCD,  LOG2SCRN_MENU,
-  LOG2SD_MENU,      "Log to SD card",     3, LOG2SCRN_MENU,    LOG2USB_MENU,   LOG2SD_MENU,      LOG2SD_MENU,     &appendSD,    LOG2SD_MENU,
-  LOG2USB_MENU,     "Log to USB Serial",  4, LOG2SD_MENU,      LOG2USB_MENU,   LOG2USB_MENU,     LOG2USB_MENU,    &do1WireUSB,  LOG2USB_MENU,
+  LOG2SCRN_MENU,    "Log to screen",      2, LOG2SCRN_MENU,    LOG2USB_MENU,   LOG2SCRN_MENU,    LOG2SCRN_MENU,   &do1WireLCD,  LOG2SCRN_MENU,
+  LOG2USB_MENU,     "Log to USB Serial",  3, LOG2SCRN_MENU,    LOG2USB_MENU,   LOG2USB_MENU,     LOG2USB_MENU,    &do1WireUSB,  LOG2USB_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

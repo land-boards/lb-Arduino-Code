@@ -36,7 +36,7 @@ void OneWireLogger::initPins(void)
 // pollKeypad() - Returns the value of the instantenously pressed keys
 ////////////////////////////////////////////////////////////////////////////
 
-signed char OneWireLogger::pollKeypad(void)
+uint8_t OneWireLogger::pollKeypad(void)
 {
   unsigned int sensorValue = analogRead(KEYPAD);
 #ifdef SERIAL_DEBUG
@@ -44,17 +44,17 @@ signed char OneWireLogger::pollKeypad(void)
   Serial.println(sensorValue);
 #endif
   if (sensorValue > 871)    // quick if none is pressed
-    return((byte)NONE);  
+    return((uint8_t)NONE);  
   else if (sensorValue <= 67)
-    return((byte)RIGHT);
+    return(RIGHT);
   else if (sensorValue <= 214)
-    return((byte)UP);
+    return(UP);
   else if (sensorValue <= 384)
-    return((byte)DOWN);
+    return(DOWN);
   else if (sensorValue <= 596)
-    return((byte)LEFT);
+    return(LEFT);
   else
-    return((byte)SELECT);
+    return(SELECT);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ void OneWireLogger::waitForKeyRelease(void)
 // Returns the value of the key that was pressed.
 ////////////////////////////////////////////////////////////////////////////
 
-signed char OneWireLogger::getKeyPressed(void)
+uint8_t OneWireLogger::getKeyPressed(void)
 {
   signed char keyPadVal2;
   keyPadVal2 = pollKeypad();
@@ -88,7 +88,7 @@ signed char OneWireLogger::getKeyPressed(void)
 // waitKeyPressed()
 ////////////////////////////////////////////////////////////////////////////
 
-signed char OneWireLogger::waitKeyPressed(void)
+uint8_t OneWireLogger::waitKeyPressed(void)
 {
   signed char keyPadVal3;
   do
@@ -107,7 +107,7 @@ signed char OneWireLogger::waitKeyPressed(void)
 //  there is a reason to break into the delay for serial input.
 ////////////////////////////////////////////////////////////////////////////
 
-signed char OneWireLogger::delayAvailable(int delayTime)
+uint8_t OneWireLogger::delayAvailable(int delayTime)
 {  
   int delayTimeDiv4;
   delayTimeDiv4 = delayTime >> 2;
@@ -118,5 +118,5 @@ signed char OneWireLogger::delayAvailable(int delayTime)
     delay(4);
     delayTimeDiv4--;
   }
-  return((byte)0);
+  return(0);
 }

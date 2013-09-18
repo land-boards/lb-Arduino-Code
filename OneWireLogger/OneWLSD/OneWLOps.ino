@@ -23,43 +23,57 @@ void do1WireLCD(void)
       tft.print(temps1Wire[sensorNumber-1]);
       tft.print(F("F   "));
     }
-    myOneWireLogger.delayAvailable(250);
-    key = myOneWireLogger.pollKeypad();
+    key = myOneWireLogger.delayAvailable(250);
   }
   while (key == NONE);
   tft.fillScreen(ST7735_BLACK);
 }
 
 //////////////////////////////////////////////////////////////////////////////
-//  TBD need to make work
+//  Log the 1-Wire data to the USB port
 //////////////////////////////////////////////////////////////////////////////
 
 void do1WireUSB(void)
 {
   uint8_t key;
   clearTFT();
+  DateTime now;
   tft.print(F("1 Wire USB"));
   do
   {
     readNext1Wire();
     if (sensorNumber > 0)
     {
-      setCursorTFT(sensorNumber,0);
-      tft.print(F("                "));
-      setCursorTFT(sensorNumber,0);
-      tft.print(F("S"));
-      tft.print(sensorNumber);
-      tft.print(F("-"));
-      tft.print(sensorAddr, HEX);
-      tft.print(F(" "));
-      tft.print(temps1Wire[sensorNumber-1]);
-      tft.print(F("F   "));
+      if (sensorNumber == 1)
+      {
+      Serial.println();
+      setRTCTime = RTC.now();
+      Serial.print(setRTCTime.year());
+      Serial.print(F("/"));
+      Serial.print(setRTCTime.month());
+      Serial.print(F("/"));
+      Serial.print(setRTCTime.day());
+      Serial.print(F(" "));
+      Serial.print(setRTCTime.hour());
+      Serial.print(F(":"));
+      Serial.print(setRTCTime.minute());
+      Serial.print(F(":"));
+      Serial.print(setRTCTime.second());
+      Serial.print(F(","));
+      }
+      Serial.print(F("S"));
+      Serial.print(sensorNumber);
+      Serial.print(F("-"));
+      Serial.print(sensorAddr, HEX);
+      Serial.print(F(","));
+      Serial.print(temps1Wire[sensorNumber-1]);
+      Serial.print(F(","));
     }
     myOneWireLogger.delayAvailable(250);
     key = myOneWireLogger.pollKeypad();
   }
   while (key == NONE);
-  tft.fillScreen(ST7735_BLACK);
+//  tft.fillScreen(ST7735_BLACK);
 }
 
 //////////////////////////////////////////////////////////////////////////////
