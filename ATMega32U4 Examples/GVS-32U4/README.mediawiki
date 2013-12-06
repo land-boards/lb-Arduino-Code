@@ -1,0 +1,18 @@
+== Dougs Arduino Files README ==
+
+* These are my [http://land-boards.com/wiki/index.php?title=GVS-32U4 GVS32U4] files.
+
+http://land-boards.com/wiki/index.php?title=File:Gvs-32u4-x2-002.png
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
+
