@@ -1,4 +1,4 @@
-== Dougs Arduino Files README ==
+== GVS32U4 Software Files ==
 
 * These are my [http://land-boards.com/wiki/index.php?title=GVS-32U4 GVS32U4] files.
 
