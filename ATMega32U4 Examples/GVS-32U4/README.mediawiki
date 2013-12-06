@@ -1,8 +1,8 @@
 == GVS32U4 Software Files ==
 
-* These are my [http://land-boards.com/wiki/index.php?title=GVS-32U4 GVS32U4] files.
-
-https://github.com/douggilliland/DougsPCBDesigns/blob/master/GVS-32U4/pictures/gvs-32u4-x2-002.png
+*The GVS32U4 is an Arduino Leonardo compatible board.
+*[http://land-boards.com/wiki/index.php?title=GVS-32U4 Wiki page for the GVS32U4].
+*[https://github.com/douggilliland/DougsPCBDesigns/tree/master/GVS-32U4 Design files for the GVS32U4].
 
 === Ownership ===
 
