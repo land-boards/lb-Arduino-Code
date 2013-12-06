@@ -8,7 +8,7 @@
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
-* Many of them were created by me based on the work of others.
+* Many of these files were created by me based on the work of others.
 
 === Warning ===
 
