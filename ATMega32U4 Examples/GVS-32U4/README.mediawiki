@@ -2,7 +2,7 @@
 
 * These are my [http://land-boards.com/wiki/index.php?title=GVS-32U4 GVS32U4] files.
 
-http://land-boards.com/wiki/images/6/63/Gvs-32u4-x2-002.png
+https://github.com/douggilliland/DougsPCBDesigns/blob/master/GVS-32U4/pictures/gvs-32u4-x2-002.png
 
 === Ownership ===
 
