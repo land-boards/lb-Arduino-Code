@@ -1,6 +1,10 @@
 == GVS32U4 Software ==
 
+=== Description ===
 *The GVS32U4 is an Arduino Leonardo compatible board.
+
+=== Documentation ===
+
 *[http://land-boards.com/wiki/index.php?title=GVS-32U4 Wiki page for the GVS32U4].
 *[https://github.com/douggilliland/DougsPCBDesigns/tree/master/GVS-32U4 Design files for the GVS32U4].
 
