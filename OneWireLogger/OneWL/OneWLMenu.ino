@@ -9,7 +9,7 @@
 // Use left and right arrows to indicate submenu availability.
 // This menu system is fairly lightweight and is strongly geared towards LCDs.
 // This menu system allows for submenus to be called from the first menu.
-// There are corresponding ENUM values for each of the *_MENU_PTR values.
+// There are corresponding ENUM values for each of the xxx_MENU_PTR values.
 // The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,37 +60,43 @@ menuStruc menus[] =
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Refresh the menu
+// Refresh the menu 
+// The special thing about this is that it prints the lines above the selected line first
+// then it prints the lines below the selected lines. For some reason this feels natural.
 ////////////////////////////////////////////////////////////////////////////////////
 
 void menuRefresh(void)
 {
   uint8_t nextLine, lastLine;
-  clearTFT();
-  tft.setTextColor(ST7735_WHITE,TFT_RED);
-  tft.print("*** 1-Wire Logger ***");
-  textWhiteOnBlack();
-  setCursorTFT(15,0);
-  tft.print(__DATE__);
+  clearDisplay();
+  setBannerTextColor();                // Sets color of the banner at the top line of the screen
+  tft.print("*** 1-Wire Logger ***");  // Banner string is always reprinted with every refresh
+  setUnselectedTextColor();            // Return to "normal" text color
+  setDisplayCursor(TFT_HEIGHT-1,0);    // Set the cursor to the bottom line of the screen
+  tft.print(__DATE__);                 // Print the code compilation date and time
   tft.print(" ");
   tft.print(__TIME__);
+// The following lines are helpful to debug the menu but use serial port resources so beware
 #ifdef SERIAL_DEBUG
-  Serial.print(F("menuState = "));
+  Serial.print(F("menuState = "));     // Menu state helps for debugging if the menu is stuck
   Serial.print(menuState);
   Serial.print(F(",String="));
   Serial.print(menus[menuState].menuString);
   Serial.print(F(",RowNumber = "));
   Serial.println(menus[menuState].rowNumber);
 #endif
-  setCursorTFT((menus[menuState].rowNumber)-1,0);
-  tft.setTextColor(ST7735_WHITE,TFT_BLUE);
-  tft.print(menus[menuState].menuString);
-  textWhiteOnBlack();
+// Print the currently selected line
+  setDisplayCursor((menus[menuState].rowNumber)-1,0);
+  setSelectedTextColor();    
+  tft.print(menus[menuState].menuString);     
+// Return to "normal" text color
+  setUnselectedTextColor();
   lastLine = menuState;
+  // display the lines above the selected line first
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
   {
     lastLine = menus[lastLine].UP_MENU_PTR;
-    setCursorTFT(menus[lastLine].rowNumber-1,0);
+    setDisplayCursor(menus[lastLine].rowNumber-1,0);
     tft.print(menus[lastLine].menuString);
 #ifdef SERIAL_DEBUG
     Serial.print(F("UP-1"));
@@ -98,10 +104,11 @@ void menuRefresh(void)
 #endif
   }
   nextLine = menuState;
+  // next display the lines below the selected line
   while (menus[nextLine].DOWN_MENU_PTR != menus[nextLine].CURRENT_MENU_PTR)
   {
     nextLine = menus[nextLine].DOWN_MENU_PTR;
-    setCursorTFT(menus[nextLine].rowNumber-1,0);
+    setDisplayCursor(menus[nextLine].rowNumber-1,0);
     tft.print(menus[nextLine].menuString);
 #ifdef SERIAL_DEBUG
     Serial.print(F("Down,"));

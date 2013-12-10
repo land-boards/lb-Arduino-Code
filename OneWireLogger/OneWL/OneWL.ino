@@ -24,8 +24,11 @@
 //#define SERIAL_OUT
 #undef SERIAL_OUT
 
+// Display specific colors
+
 #define	TFT_RED      0x001F    // Colors are reversed on my display from Adafruit
 #define	TFT_BLUE     0xF800
+#define TFT_HEIGHT   16        // TFT is 16 lines tall
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
@@ -92,6 +95,7 @@ struct IZ_Cfgs
 IZConfigs;
 
 // class initializers - most initialize hardware
+
 OneWireLogger myOneWireLogger;
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
 OneWire  ds(ONE_WIRE);  // on pin 
@@ -114,15 +118,15 @@ void setup()
   // TFT init
   analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
-  clearTFT();
+  clearDisplay();
   if (IZConfigs.enableSD != 0)
   {
     if (!SD.begin(SD_CS)) 
     {
       tft.print(F("SD card missing"));
-      setCursorTFT(1, 0);
+      setDisplayCursor(1, 0);
       tft.print(F("Disabling check"));
-      setCursorTFT(2, 0);
+      setDisplayCursor(2, 0);
       tft.print(F("Power cycle"));
       sdDisable();
       EEPROM_writeAnything(0, IZConfigs);

@@ -5,16 +5,16 @@
 void do1Wire(void)
 {
   uint8_t key;
-  clearTFT();
+  clearDisplay();
   tft.print(F("Do 1 Wire"));
   do
   {
     readNext1Wire();
     if (sensorNumber > 0)
     {
-      setCursorTFT(sensorNumber,0);
+      setDisplayCursor(sensorNumber,0);
       tft.print(F("                "));
-      setCursorTFT(sensorNumber,0);
+      setDisplayCursor(sensorNumber,0);
       tft.print(F("S"));
       tft.print(sensorNumber);
       tft.print(F("-"));

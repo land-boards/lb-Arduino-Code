@@ -1,0 +1,21 @@
+== One-Wire Logger Software ==
+
+=== Description ===
+*The One-Wire Logger is an Arduino Leonardo compatible board.
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=GVS-32U4 Wiki page for the One-Wire Logger].
+*[https://github.com/douggilliland/DougsPCBDesigns/tree/master/GVS-32U4 Design files for the One-Wire Logger].
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.

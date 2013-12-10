@@ -1,0 +1,45 @@
+//////////////////////////////////////////////////////////////////////////////
+// OneWLConfig - One Wire Datalogger Configuration functions
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// void loadConfig(void)
+//////////////////////////////////////////////////////////////////////////////
+
+void loadConfig(void)
+{
+  uint8_t key;
+  clearDisplay();
+  tft.print(F("Sel=Load"));
+  setDisplayCursor(1,0);
+  tft.print(F("Other=Exit"));
+  while(1)
+  {
+    key = myOneWireLogger.waitKeyPressed();
+    if (key == SELECT)
+      EEPROM_readAnything(0, IZConfigs);
+    if (key != NONE)
+      return;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// void storeConfig(void)
+//////////////////////////////////////////////////////////////////////////////
+
+void storeConfig(void)
+{
+  uint8_t key;
+  clearDisplay();
+  tft.print(F("Sel=store"));
+  setDisplayCursor(1,0);
+  tft.print(F("Other=exit"));
+  do
+  {
+    key = myOneWireLogger.waitKeyPressed();
+    if (key == SELECT)
+      EEPROM_writeAnything(0, IZConfigs);
+  }
+  while (key == NONE);
+}
+
