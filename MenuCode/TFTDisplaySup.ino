@@ -12,27 +12,7 @@
 
 void setBLt(void)
 {
-  uint8_t key;
-  clearDisplay();
-  tft.print(F("Set Bklt"));
-  setDisplayCursor(1,0);
-  tft.print(F("Sel=Save"));
-  do
-  {
-    key = myOneWireLogger.pollKeypad();
-    delay(100);   // allows for holding the up or down key continuously
-    if ((key == DOWN) && (IZConfigs.bll <= 250))
-      IZConfigs.bll += 5;
-    else if ((key == UP) && (IZConfigs.bll >= 5))
-      IZConfigs.bll -= 5;
-    analogWrite(BACKLIGHT, IZConfigs.bll);
-    setDisplayCursor(0,14);
-    tft.print("    ");
-    setDisplayCursor(0,14);
-    tft.print((100*(250-IZConfigs.bll))/250);
-    tft.print("%");
-  }
-  while (key != SELECT);
+  analogWrite(BACKLIGHT, 0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -85,5 +65,14 @@ void setUnselectedTextColor(void)
 void setSelectedTextColor(void)
 {
   tft.setTextColor(ST7735_WHITE,TFT_BLUE);
+}
+
+void displayInit(void)
+{
+  // TFT init
+  setBLt();                   // Turns on the backlight of the display
+  tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
+  clearDisplay();
+
 }
 

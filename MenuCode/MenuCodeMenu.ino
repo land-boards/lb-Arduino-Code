@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////
-// OneWLMenu() - Display the One Wire Menu.
-// Hardware required are five buttons (Up, Down, Left, Right and Select) plus an LCD.
+// MenuCodeMenu() - Display the example Menu.
+// Hardware required are five buttons (Up, Down, Left, Right and Select) plus an Display.
 // The five buttons can be a 5-way switch.
 // The menu operations are typically to have up/down move through the displayed items.
 // Right or select can call submenus.
@@ -8,7 +8,7 @@
 // Select can execute the selected item.
 // Use left and right arrows to indicate submenu availability.
 // This menu system is fairly lightweight and is strongly geared towards LCDs.
-// This menu system allows for submenus to be called from the first menu.
+// This menu system allows for submenus to be called.
 // There are corresponding ENUM values for each of the xxx_MENU_PTR values.
 // The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
@@ -22,41 +22,29 @@
 struct menuStruc                  // The ENUMs for the *_MENU_PTR values must preceed this
 {
   uint8_t CURRENT_MENU_PTR;          // The current menu item
-  char    menuString[LCD_COLUMNS+1]; // The string that gets displayed
+  char    menuString[LCD_COLUMNS+1]; // The string that gets displayed for that menu line
   uint8_t rowNumber;                 // The row that the string gets displayed on the LCD
   uint8_t UP_MENU_PTR;               // What menu gets highlighted when the up arrow is pressed
   uint8_t DOWN_MENU_PTR;             // What menu gets highlighted when the down arrow is pressed
   uint8_t LEFT_MENU_PTR;             // What menu gets highlighted when the left arrow is pressed
   uint8_t RIGHT_MENU_PTR;            // What menu gets highlighted when the right arrow is pressed
-  void (*pt2Function)(void);      // Name of the function which gets called when select is pressed
+  void (*pt2Function)(void);         // Name of the function which gets called when select is pressed
   uint8_t SEL_MENU_PTR;              // Menu to display after the selected function complets
 };
-
-const char * menuFooter;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - used to generate the navigation menus. Format is
 // CURR_MENU,MENU_STRING,DISPLAY_ROW,UP_MENU,DOWN_MENU,LEFT_MENU,RIGHT_MENU,select-execute-fcn-name,RETURN_MENU
 // CURR_MENU needs to be ordered in the enums to match the order on the screen
+// DISPLAY_ROW starts with 2 since there is a banner at the top of the display
 ////////////////////////////////////////////////////////////////////////////////////
 
 menuStruc menus[] = 
 {
-  LOGGER_MENU,      "Log to screen",       2, LOGGER_MENU,      LOG2SD_MENU,      LOGGER_MENU,      LOGGER_MENU,     &do1Wire,     LOGGER_MENU,
-  LOG2SD_MENU,      "Log to SD card > ",   3, LOGGER_MENU,      LOADSTOR_MENU,    LOG2SD_MENU,      APPENDSD_MENU,   &nullFcn,     APPENDSD_MENU,
-  LOADSTOR_MENU,    "Load/Store Config >", 4, LOG2SD_MENU,      SDCARD_MENU,      LOADSTOR_MENU,    LOAD_MENU,       &nullFcn,     LOAD_MENU,
-  SDCARD_MENU,      "Manage SD Card >",    5, LOADSTOR_MENU,    MANTIME_MENU,     SDCARD_MENU,      SDERASE_MENU,    &nullFcn,     SDERASE_MENU,
-  MANTIME_MENU,     "Manage RealTimeClk",  6, SDCARD_MENU,      BACKLITE_MENU,    MANTIME_MENU,     MANTIME_MENU,    &setTime,     MANTIME_MENU,
-  BACKLITE_MENU,    "Set Backlight Level", 7, MANTIME_MENU,     BACKLITE_MENU,    BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      STORE_MENU,
-  APPENDSD_MENU,    "< Append to file",    2, APPENDSD_MENU,    CREATENEW_MENU,   LOG2SD_MENU,      APPENDSD_MENU,   &appendSD,    APPENDSD_MENU,
-  CREATENEW_MENU,   "Create new file",     3, APPENDSD_MENU,    CREATENEW_MENU,   CREATENEW_MENU,   CREATENEW_MENU,  &createSD,    CREATENEW_MENU,
-  NEWFILE_MENU,     "New file",            3, APPENDSD_MENU,    NEWFILE_MENU,     NEWFILE_MENU,     NEWFILE_MENU,    &newfileSD,   NEWFILE_MENU,
-  LOAD_MENU,        "< Load Config",       2, LOAD_MENU,        STORE_MENU,       LOADSTOR_MENU,    LOAD_MENU,       &loadConfig,  LOAD_MENU,
-  STORE_MENU,       "Store Config",        3, LOAD_MENU,        STORE_MENU,       STORE_MENU,       STORE_MENU,      &storeConfig, STORE_MENU,
-  SDERASE_MENU,     "< Erase SD Card",     2, SDERASE_MENU,     SDLIST_MENU,      SDCARD_MENU,      SDERASE_MENU,    &sdErase,     SDERASE_MENU,
-  SDLIST_MENU,      "List SD card files",  3, SDERASE_MENU,     SDEN_MENU,        SDLIST_MENU,      SDLIST_MENU,     &sdList,      SDLIST_MENU,
-  SDEN_MENU,        "Enable SD card",      4, SDLIST_MENU,      DSDIS_MENU,       SDEN_MENU,        SDEN_MENU,       &sdEnable,    SDEN_MENU,
-  DSDIS_MENU,       "Disable SD card",     5, SDEN_MENU,        DSDIS_MENU,       DSDIS_MENU,       DSDIS_MENU,      &sdDisable,   DSDIS_MENU,
+  FIRST_LINE_MENU,   "Main Menu - 1st line",  2, FIRST_LINE_MENU,  SECOND_LINE_MENU, FIRST_LINE_MENU,  FIRST_LINE_MENU, &exampleFcn1, FIRST_LINE_MENU,
+  SECOND_LINE_MENU,  "Go to SubMenu >",       3, FIRST_LINE_MENU,  THIRD_LINE_MENU,  SECOND_LINE_MENU, FIRST_SUB_MENU,  &nullFcn,     FIRST_SUB_MENU,
+  THIRD_LINE_MENU,   "Main Menu - 3rd line" , 4, SECOND_LINE_MENU, THIRD_LINE_MENU,  THIRD_LINE_MENU,  THIRD_LINE_MENU, &exampleFcn2, THIRD_LINE_MENU,
+  FIRST_SUB_MENU,    "SubMenu - 1st line",    2, FIRST_SUB_MENU,   FIRST_SUB_MENU,   FIRST_LINE_MENU,  FIRST_SUB_MENU,  &exampleFcn3, SECOND_LINE_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -70,27 +58,16 @@ void menuRefresh(void)
   uint8_t nextLine, lastLine;
   clearDisplay();
   setBannerTextColor();                // Sets color of the banner at the top line of the screen
-  tft.print("*** 1-Wire Logger ***");  // Banner string is always reprinted with every refresh
+  tft.print("**** MENU BANNER ****");  // Banner string is always reprinted with every refresh
   setUnselectedTextColor();            // Return to "normal" text color
   setDisplayCursor(TFT_HEIGHT-1,0);    // Set the cursor to the bottom line of the screen
   tft.print(__DATE__);                 // Print the code compilation date and time
   tft.print(" ");
   tft.print(__TIME__);
-// The following lines are helpful to debug the menu but use serial port resources so beware
-#ifdef SERIAL_DEBUG
-  Serial.print(F("menuState = "));     // Menu state helps for debugging if the menu is stuck
-  Serial.print(menuState);
-  Serial.print(F(",String="));
-  Serial.print(menus[menuState].menuString);
-  Serial.print(F(",RowNumber = "));
-  Serial.println(menus[menuState].rowNumber);
-#endif
-// Print the currently selected line
-  setDisplayCursor((menus[menuState].rowNumber)-1,0);
+  setDisplayCursor((menus[menuState].rowNumber)-1,0); // Print the currently selected line
   setSelectedTextColor();    
   tft.print(menus[menuState].menuString);     
-// Return to "normal" text color
-  setUnselectedTextColor();
+  setUnselectedTextColor();  // Return to "normal" text color
   lastLine = menuState;
   // display the lines above the selected line first
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
@@ -110,12 +87,6 @@ void menuRefresh(void)
     nextLine = menus[nextLine].DOWN_MENU_PTR;
     setDisplayCursor(menus[nextLine].rowNumber-1,0);
     tft.print(menus[nextLine].menuString);
-#ifdef SERIAL_DEBUG
-    Serial.print(F("Down,"));
-    Serial.print(menus[nextLine].menuString);
-    Serial.print(F(",nextLine="));
-    Serial.println(nextLine);
-#endif
   }
 }
 
@@ -126,14 +97,7 @@ void menuRefresh(void)
 void menuNav(void)
 {
   uint8_t keyState;
-#ifdef SERIAL_OUT
-  Serial.println("Waiting for a keypress");
-#endif
   keyState = myOneWireLogger.waitKeyPressed();
-#ifdef SERIAL_OUT
-  Serial.print("menuNav: got");
-  Serial.println(keyState);
-#endif
   switch(keyState)
   {
   case UP:
@@ -159,7 +123,7 @@ void menuNav(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// void nullFcn(void)
+// void nullFcn(void) - Special function which does nothing
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }

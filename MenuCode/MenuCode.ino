@@ -1,30 +1,21 @@
 //////////////////////////////////////////////////////////////////////////////
-//  OneWL - One-Wire Data Logger.
+//  MenuCode - MenuCode Example.
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // Includes follow
 //////////////////////////////////////////////////////////////////////////////
 
-#include <SPI.h>
-#include <Wire.h>
-#include <EEPROM.h>
-#include <OneWire.h>
-#include <SD.h>
-#include <OneWireLogger.h>
-#include "RTClib.h"
-#include <Adafruit_GFX.h>      // Core graphics library
-#include <Adafruit_ST7735.h>   // Hardware-specific library
-#include <EEPROMAnything.h>    // EEPROM anything
+#include <OneWireLogger.h>     // Board Specific hardware config file
+#include <SPI.h>               // SPI library is needed to talk to the TFT display
+#include <Adafruit_GFX.h>      // Core graphics library for the TFT display
+#include <Adafruit_ST7735.h>   // Hardware-specific library for the TFT display
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
 //////////////////////////////////////////////////////////////////////////////
 
-//#define SERIAL_OUT
-#undef SERIAL_OUT
-
-// Display specific colors
+// Display specific colors and height of the display (in character rows)
 
 #define	TFT_RED      0x001F    // Colors are reversed on my display from Adafruit
 #define	TFT_BLUE     0xF800
@@ -36,117 +27,29 @@
 
 enum MENUITEMS
 {
-  LOGGER_MENU,
-  LOG2SD_MENU,
-  LOADSTOR_MENU,
-  SDCARD_MENU,
-  MANTIME_MENU,
-  BACKLITE_MENU,
-  APPENDSD_MENU,
-  CREATENEW_MENU,
-  NEWFILE_MENU,
-  LOAD_MENU,
-  STORE_MENU,
-  SDERASE_MENU,
-  SDLIST_MENU,
-  SDEN_MENU,
-  DSDIS_MENU,
-};
-
-enum TIMESET
-{
-  VIEW_YEAR,
-  VIEW_MONTH,
-  VIEW_DAY,
-  VIEW_HOUR,
-  VIEW_MIN,
-  VIEW_SEC,
-  SET_YEAR,
-  SET_MONTH,
-  SET_DAY,
-  SET_HOUR,
-  SET_MINUTE,
-  SET_SEC,
-  SAVE_TIME,
-  EXIT_TIME,
+  FIRST_LINE_MENU,
+  SECOND_LINE_MENU,
+  THIRD_LINE_MENU,
+  FIRST_SUB_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
 //////////////////////////////////////////////////////////////////////////////
 
-uint8_t menuState;  // Used to implement the menuing state machine
+uint8_t menuState;              // Menu State variable
 
-uint8_t sensorNumber;
-uint8_t sensorAddr;
-uint8_t firstRun;
-float temps1Wire[32];
-float fahrenheit;
-
-uint16_t currYear;
-uint8_t currMonth, currDay, currHour, currMin, currSec;
-
-// Board Configuration stored in EEPROM
-struct IZ_Cfgs
-{
-  uint8_t bll;       // Backlight level
-  uint8_t enableSD;  // Enable the SD card
-} 
-IZConfigs;
-
-// class initializers - most initialize hardware
-
-OneWireLogger myOneWireLogger;
+OneWireLogger myOneWireLogger;  // instantiate the card initializer
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
-OneWire  ds(ONE_WIRE);  // on pin 
-RTC_DS1307 RTC;
-DateTime setRTCTime;
 
 //////////////////////////////////////////////////////////////////////////////
-// the setup routine runs once when you press reset:
+// setup() runs when the card is powered up or reset is pressed
 //////////////////////////////////////////////////////////////////////////////
 
 void setup() 
 {
-#ifdef SERIAL_OUT
-  Serial.begin(57600);
-  Serial.print(F("1-Wire Logger"));
-#endif
-  // EEPROM access
-  EEPROM_readAnything(0, IZConfigs);
-
-  // TFT init
-  analogWrite(BACKLIGHT, IZConfigs.bll);
-  tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
-  clearDisplay();
-  if (IZConfigs.enableSD != 0)
-  {
-    if (!SD.begin(SD_CS)) 
-    {
-      tft.print(F("SD card missing"));
-      setDisplayCursor(1, 0);
-      tft.print(F("Disabling check"));
-      setDisplayCursor(2, 0);
-      tft.print(F("Power cycle"));
-      sdDisable();
-      EEPROM_writeAnything(0, IZConfigs);
-      myOneWireLogger.delayAvailable(2000);
-    }
-  }
-
-  // RTC init starts up the I2C wire interface
-  Wire.begin();
-  RTC.begin();
-  if (! RTC.isrunning() )
-  {
-    tft.print("Replace RTC Battery");
-    RTC.adjust(DateTime(__DATE__, __TIME__));   
-  }
-  myOneWireLogger.delayAvailable(1000);
-  sensorNumber = 0;
-
-  // Set up the init menu state
-  menuState = LOGGER_MENU;
+  displayInit();                // Hardware specific function to set up the display
+  menuState = FIRST_LINE_MENU;  // Set up the init menu state
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
