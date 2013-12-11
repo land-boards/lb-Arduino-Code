@@ -75,10 +75,6 @@ void menuRefresh(void)
     lastLine = menus[lastLine].UP_MENU_PTR;
     setDisplayCursor(menus[lastLine].rowNumber-1,0);
     tft.print(menus[lastLine].menuString);
-#ifdef SERIAL_DEBUG
-    Serial.print(F("UP-1"));
-    Serial.println(menus[lastLine].menuString);
-#endif
   }
   nextLine = menuState;
   // next display the lines below the selected line
