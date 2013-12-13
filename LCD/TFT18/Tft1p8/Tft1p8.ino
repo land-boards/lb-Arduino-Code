@@ -1,9 +1,11 @@
 ///////////////////////////////////////////////////////////////////
-//  This is a sketch for a 1.8" SPI display. 
-//  This sketch works with the library for the Adafruit 
+//  This is a sketch for a 1.8" SPI display.
+//  This sketch works with the libraries for the Adafruit 
 //  1.8" TFT Breakout w/SD card.
 //  This display uses SPI to communicate, 5 pins are used to
 //  interface with the display and I do use the RESET line.
+//  This is a classic Hello World sketch to determine the code size
+//   of the Adafruit drivers.
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -15,19 +17,14 @@
 #include <SPI.h>
 
 ///////////////////////////////////////////////////////////////////
-// Hardware pins
+// Uses the hardware SPI pins for the OneWire Data Logger board
 ///////////////////////////////////////////////////////////////////
 
-#define cs   10
-#define dc   9
-#define rst  8
+#define LCD_DC      8 
+#define LCD_CS      9
+#define LCD_RST     10
 
-///////////////////////////////////////////////////////////////////
-// Uses the hardware SPI pins (for UNO sclk = 13 and sid = 11) 
-// and pin 10 are outputs. 
-///////////////////////////////////////////////////////////////////
-
-Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
+Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
 
 ///////////////////////////////////////////////////////////////////
 // setup() - 
@@ -35,13 +32,12 @@ Adafruit_ST7735 tft = Adafruit_ST7735(cs, dc, rst);
 
 void setup(void)
 {
-//  Serial.begin(9600);
-  tft.initR(INITR_REDTAB);
+  tft.initR(INITR_BLACKTAB);
   tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  tft.print("Hello World");
+  tft.print("Hello World");    // print a single character so that the character fonts get included
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -50,11 +46,5 @@ void setup(void)
 
 void loop() 
 {
-}
-
-
-void setCursorTFT(int row, int col)
-{
-	tft.setCursor(row*8, col*8);
 }
 
