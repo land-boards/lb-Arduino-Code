@@ -17,9 +17,7 @@
 
 // Display specific colors and height of the display (in character rows)
 
-#define	TFT_RED      0x001F    // Colors are reversed on my display from Adafruit
-#define	TFT_BLUE     0xF800
-#define TFT_HEIGHT   16        // TFT is 16 lines tall
+#define DISPLAY_ROWS   16        // TFT is 16 lines tall
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow

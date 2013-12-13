@@ -46,7 +46,7 @@ void clearDisplay(void)
 
 void setBannerTextColor(void)
 {
-  tft.setTextColor(ST7735_WHITE,TFT_RED);
+  tft.setTextColor(ST7735_WHITE,ST7735_RED);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ void setUnselectedTextColor(void)
 
 void setSelectedTextColor(void)
 {
-  tft.setTextColor(ST7735_WHITE,TFT_BLUE);
+  tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ void displayInit(void)
 {
   // TFT init
   setBLt();                   // Turns on the backlight of the display
-  tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
+  tft.initR(INITR_BLACKTAB);    // I actually have a black tab on my part
   clearDisplay();
 
 }

@@ -60,7 +60,7 @@ void menuRefresh(void)
   setBannerTextColor();                // Sets color of the banner at the top line of the screen
   tft.print("**** MENU BANNER ****");  // Banner string is always reprinted with every refresh
   setUnselectedTextColor();            // Return to "normal" text color
-  setDisplayCursor(TFT_HEIGHT-1,0);    // Set the cursor to the bottom line of the screen
+  setDisplayCursor(DISPLAY_ROWS-1,0);  // Set the cursor to the bottom line of the screen
   tft.print(__DATE__);                 // Print the code compilation date and time
   tft.print(" ");
   tft.print(__TIME__);
