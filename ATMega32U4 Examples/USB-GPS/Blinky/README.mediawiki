@@ -1,13 +1,13 @@
 == Blinky Software for the USB-GPS-Hammond ==
 
 === Description ===
-*This code runs on a [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond land-boards USB-GPS-Hammond].
-*The code blinks an LED that is connected to the Port XX pin.
+*This code runs on a [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond#USB_GPS_in_Hammond_Box_Form_Factor_Revision_X1 land-boards USB-GPS-Hammond Rev X1 board].
+*The code blinks an LED that is connected to the Port B2 pin.
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond Wiki page for the USB-GPS-Hammond.
-*[https://github.com/douggilliland/DougsPCBDesigns/tree/master/USB-GPS-Hammond Design files for the USB-GPS-Hammond].
+*[http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond#USB_GPS_in_Hammond_Box_Form_Factor_Revision_X1 Wiki page for the USB-GPS-Hammond.
+*[https://github.com/douggilliland/DougsPCBDesigns/tree/master/USB-GPS-Hammond Design files for the USB-GPS-Hammond Rev X1 board].
 
 === Ownership ===
 
