@@ -1,0 +1,22 @@
+== Blinky Software for the GVS32U4 ==
+
+=== Description ===
+*This code runs on a [http://land-boards.com/wiki/index.php?title=GVS-32U4 land-boards GVS32U4].
+*The code blinks an LED that is connected to the Port B2 pin.
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=GVS-32U4 Wiki page for the GVS32U4].
+*[https://github.com/douggilliland/DougsPCBDesigns/tree/master/GVS-32U4 Design files for the GVS32U4].
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
