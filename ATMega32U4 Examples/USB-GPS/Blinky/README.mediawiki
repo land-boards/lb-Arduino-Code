@@ -1,4 +1,4 @@
-== Blinky Software for the USB-GPS-Hammond ==
+== Blinky Software for the USB-GPS-Hammond Rev X1 Board ==
 
 === Description ===
 *This code runs on a [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond#USB_GPS_in_Hammond_Box_Form_Factor_Revision_X1 land-boards USB-GPS-Hammond Rev X1 board].
