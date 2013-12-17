@@ -1,8 +1,8 @@
 == USB to GPS Code ==
 
-*These are the USB to Serial files for the [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond USB-GPS-Hammond Rev X1 board].
+*These are the USB to Serial files for the [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond#USB_GPS_in_Hammond_Box_Form_Factor_Revision_X1 USB-GPS-Hammond Rev X1 board].
 *For the most part these files are all from the [http://www.fourwalledcubicle.com/LUFA.php LUFA USB to Serial library].
-*Board file is specific to the [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond USB-GPS-Hammond Rev X1 board]
+*Board file is specific to the [http://land-boards.com/wiki/index.php?title=USB-GPS-Hammond#USB_GPS_in_Hammond_Box_Form_Factor_Revision_X1 USB-GPS-Hammond Rev X1 board]
 
 === Ownership ===
 
