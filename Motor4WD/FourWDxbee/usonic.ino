@@ -59,24 +59,25 @@ void initRanges(void)
 }
 
 //////////////////////////////////////////////////////////////////////////
-// getRangeVal() - Returns the digitally filtered range value
-// This algorithm could use some improvement
+// getRangeVal() - Returns the median value of the last five samples.
+// That way high and low values get discarded.
 //////////////////////////////////////////////////////////////////////////
 
 short getRangeVal(void)
 {
-  if (ranges[4] == ranges[3])
-    return(ranges[4]);
-  else if (ranges[4] == ranges[3] + 1)
-    return(ranges[3]);
-  else if (ranges[4] == ranges[3] -1 )
-    return(ranges[3]);
-  else if (ranges[4] == ranges[2])
-    return(ranges[4]);
-  else if (ranges[3] == ranges[2])
-    return(ranges[3]);
-  else if (ranges[2] == ranges[1])
-    return(ranges[2]);
-  return(ranges[4]); 
+  short shuffleSpot;
+  int loopCt;
+  for (loopCt = 0; loopCt < 5; loopCt++)  // copy into the list
+    sortedRanges[loopCt] = ranges[loopCt]; 
+  for (loopCt = 0; loopCt < 4; loopCt++)
+  {
+    if (sortedRanges[loopCt] > sortedRanges[loopCt+1])
+    {
+      shuffleSpot = sortedRanges[loopCt];
+      sortedRanges[loopCt] = sortedRanges[loopCt+1];
+      sortedRanges[loopCt+1] = shuffleSpot;
+    }
+  }
+  return(sortedRanges[2]);
 }
 

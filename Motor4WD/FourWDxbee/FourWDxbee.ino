@@ -16,10 +16,10 @@
 //  11 MOTOR2
 //  12 DIR_LATCH
 //  13  USONIC-TRIG
-//  14 (A0)  Up/Down
-//  15 (A1)  Left/Right
-//  16 (A2)
-//  17 (A3)
+//  14 (A0)  Analog Up/Down
+//  15 (A1)  Analog Left/Right
+//  16 (A2)  Software Serial Receive (from XBEE)
+//  17 (A3)  Software Serial Transmit (to XBEE)
 //  18 (A4)
 //  19 (A5)
 //////////////////////////////////////////////////////////////////////////
@@ -48,6 +48,7 @@ Ultrasonic ultrasonic(13,2);
 SoftwareSerial mySerial(16, 17); // RX, TX
 
 short ranges[5];
+short sortedRanges[5];
 
 int leftSpeed, rightSpeed;
 int currentMotorState;
@@ -89,10 +90,10 @@ void setup()
 // loop()
 //////////////////////////////////////////////////////////////////////////
 
-void loop() 
+void loop()
 {
-  byte joystkVal;
-  if (mySerial.available())    
+  byte joystkVal = -1;
+  if (mySerial.available())
     joystkVal = mySerial.read() - '0';
   else
     return;
@@ -123,5 +124,4 @@ void loop()
       stopMotors();
   }
 }
-
 

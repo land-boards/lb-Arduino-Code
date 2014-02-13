@@ -1,0 +1,20 @@
+== land-boards Atmel Part Programming Files ==
+
+* These are our Atmel related programming files.
+** These files were created to program Atmel parts using 
+[http://land-boards.com/wiki/index.php?title=ATProgHead ATProgHead] and 
+[http://land-boards.com/wiki/index.php?title=GVSDuino GVSDuino] boards,
+or []
+.
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
