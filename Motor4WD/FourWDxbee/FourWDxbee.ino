@@ -16,8 +16,8 @@
 //  11 MOTOR2
 //  12 DIR_LATCH
 //  13  USONIC-TRIG
-//  14 (A0)  Analog Up/Down
-//  15 (A1)  Analog Left/Right
+//  14 (A0)  (Not Used) Analog Up/Down
+//  15 (A1)  (Not Used) Analog Left/Right
 //  16 (A2)  Software Serial Receive (from XBEE)
 //  17 (A3)  Software Serial Transmit (to XBEE)
 //  18 (A4)
@@ -34,7 +34,6 @@
 #undef SERIAL_DEBUG
 #define SERIAL_DEBUG_USONIC
 #undef SERIAL_DEBUG_USONIC
-#undef SERIAL_DEBUG_JOYSTICK
 #undef SERIAL_DEBUG_CTLR
 #undef SERIAL_DEBUG_MOTORS
 
@@ -52,6 +51,7 @@ short sortedRanges[5];
 
 int leftSpeed, rightSpeed;
 int currentMotorState;
+int times100LoopCount;
 
 enum ROBOT_DIR
 {
@@ -71,19 +71,20 @@ enum US_STOP_GO
 };
 
 //////////////////////////////////////////////////////////////////////////
-// setup() 
+// setup()
 //////////////////////////////////////////////////////////////////////////
 
-void setup() 
+void setup()
 {
 #ifdef SERIAL_DEBUG
   Serial.begin(9600);           // set up Serial library at 9600 bps
-  Serial.println("Motor Control from a wired joystick with ultrasonic stopping!");
+  Serial.println("Motor Control from wireless XBEE with ultrasonic stopping!");
 #endif
   mySerial.begin(9600);
-  mySerial.write('A');
+  mySerial.write('A');    // send out an A on the wireless link to say available
   initMotors();  // Set up the motors
   initRanges();  // Set up the ultrasonic
+  times100LoopCount = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -92,11 +93,19 @@ void setup()
 
 void loop()
 {
-  byte joystkVal = -1;
+  byte joystkVal;
   if (mySerial.available())
     joystkVal = mySerial.read() - '0';
   else
-    return;
+  {
+    times100LoopCount++;
+    if (times100LoopCount > 100)
+    {
+      mySerial.write('X');    // send out an X every time that the loop returns
+      times100LoopCount = 0;
+    }
+//    return;
+  }
   if (checkUsonic(12) == US_RUN)
   {
     if (joystkVal == currentMotorState)
