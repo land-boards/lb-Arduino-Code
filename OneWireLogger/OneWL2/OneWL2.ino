@@ -116,7 +116,10 @@ void setup()
   EEPROM_readAnything(0, IZConfigs);
 
   // TFT init
-  analogWrite(BACKLIGHT, IZConfigs.bll);
+  if (IZConfigs.bll == 0xff)
+    analogWrite(BACKLIGHT, 0);
+  else
+    analogWrite(BACKLIGHT, IZConfigs.bll);
   tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
   clearDisplay();
   if (IZConfigs.enableSD != 0)
