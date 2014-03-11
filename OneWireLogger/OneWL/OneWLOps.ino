@@ -49,9 +49,6 @@ char readNext1Wire(void)
 
   if ( !ds.search(addr)) 
   {
-#ifdef SERIAL_OUT
-    Serial.println("");
-#endif
     ds.reset_search();
     delay(250);
     firstRun=0;
@@ -61,18 +58,14 @@ char readNext1Wire(void)
 
   firstRun=0;
 
-#ifdef SERIAL_OUT
+  setDisplayCursor(2,0);
   for( i = 0; i < 8; i++) 
   {
-    Serial.print(addr[i], HEX);
+    tft.print(addr[7-i], HEX);
+    tft.print(" ");
   }
-  Serial.print(",");
-#endif
   if (OneWire::crc8(addr, 7) != addr[7]) 
   {
-#ifdef SERIAL_OUT
-    Serial.println("CRC is not valid!");
-#endif
     return(-2);
   }
 
@@ -88,30 +81,42 @@ char readNext1Wire(void)
     type_s = 0;
     break;
   default:
-#ifdef SERIAL_OUT
-    Serial.println("Device is not a DS18x20 family device.");
-#endif
     return(0);
   } 
+    setDisplayCursor(3,0);
+    tft.print("type_s=");
+    tft.print(type_s);       
+    tft.print("   ");
 
   ds.reset();
+//  ds.select(addr);
+//  ds.write(0x4e,1);         // 
+//  ds.write(0x5f,1);         // 
+//  ds.write(0x00,1);         // 
+//  ds.write(0x3f,1);         // 
+//  delay(100);               // maybe 750ms is enough, maybe not
   ds.select(addr);
   ds.write(0x44,1);         // start conversion, with parasite power on at the end
-
-  delay(750);               // maybe 750ms is enough, maybe not
+  delay(800);               // maybe 750ms is enough, maybe not
   // we might do a ds.depower() here, but the reset will take care of it.
 
   present = ds.reset();
   ds.select(addr);    
-  ds.write(0xBE);         // Read Scratchpad
+  ds.write(0xBE);         // Read Scratchpad command
 
   for ( i = 0; i < 9; i++) 
   {           // we need 9 bytes
     data[i] = ds.read();
+    setDisplayCursor(4+i,0);
+    tft.print("data[");
+    tft.print(i,HEX);     
+    tft.print("]=");
+    tft.print(data[i],HEX);       
+    tft.print("   ");
   }
   // convert the data to actual temperature
 
-  unsigned int raw = (data[1] << 8) | data[0];
+  int raw = (data[1] << 8) | data[0];
   if (type_s) 
   {
     raw = raw << 3; // 9 bit resolution default
