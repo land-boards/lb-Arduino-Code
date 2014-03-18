@@ -42,11 +42,13 @@ const char * menuFooter;
 
 menuStruc menus[] = 
 {
-  LOGGER_MENU,      "Log to screen",        2, LOGGER_MENU,      LOG2SD_MENU,      LOGGER_MENU,      LOGGER_MENU,     &do1Wire,     LOGGER_MENU,
-  LOG2SD_MENU,      "Log to CSV/Serial",    3, LOGGER_MENU,      LOADSTOR_MENU,    LOG2SD_MENU,      LOG2SD_MENU,     &do1WCSV,     LOG2SD_MENU,
-  LOADSTOR_MENU,    "Load/Store Config >",  4, LOG2SD_MENU,      MANTIME_MENU,     LOADSTOR_MENU,    LOADSTOR_MENU,   &nullFcn,     LOADSTOR_MENU,
+  LOGGER_MENU,      "Log to screen",        2, LOGGER_MENU,      LOG2CSV_MENU,     LOGGER_MENU,      LOGGER_MENU,     &do1Wire,     LOGGER_MENU,
+  LOG2CSV_MENU,     "Log to CSV/Serial",    3, LOGGER_MENU,      LOADSTOR_MENU,    LOG2CSV_MENU,     LOG2CSV_MENU,    &do1WCSV,     LOG2CSV_MENU,
+  LOADSTOR_MENU,    "Load/Store Config >",  4, LOG2CSV_MENU,     MANTIME_MENU,     LOADSTOR_MENU,    LOADSTOR_MENU,   &nullFcn,     LOADSTOR_MENU,
   MANTIME_MENU,     "Manage RealTimeClk",   5, LOADSTOR_MENU,    BACKLITE_MENU,    MANTIME_MENU,     MANTIME_MENU,    &setTime,     MANTIME_MENU,
   BACKLITE_MENU,    "Set Backlight Level",  6, MANTIME_MENU,     BACKLITE_MENU,    BACKLITE_MENU,    BACKLITE_MENU,   &setBLt,      BACKLITE_MENU,
+  LDCONFIG_MENU,    "Load Config",          2, BACKLITE_MENU,    STCONFIG_MENU,    LDCONFIG_MENU,    LDCONFIG_MENU,   &loadConfig,  LDCONFIG_MENU,
+  STCONFIG_MENU,    "Store Config",         3, MANTIME_MENU,     STCONFIG_MENU,    STCONFIG_MENU,    STCONFIG_MENU,   &storeConfig, STCONFIG_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
