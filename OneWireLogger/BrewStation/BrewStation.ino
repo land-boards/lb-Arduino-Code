@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////
-//  DisplayTest - Test the TFT LCD Display on the One-Wire Data Logger Board.
+//  BrewStation - BrewStation running on the One-Wire Data Logger Board.
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
@@ -7,11 +7,11 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <SPI.h>
-#include <EEPROM.h>
-#include <SD.h>
 #include <Wire.h>
+#include <EEPROM.h>
+#include <OneWire.h>
+#include <SD.h>
 #include "RTClib.h"
-RTC_DS1307 RTC;
 #include <OneWireLogger.h>     // One Wire Logger
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
@@ -30,12 +30,29 @@ RTC_DS1307 RTC;
 
 enum MENUITEMS
 {
-  BREWSTN_MENU,
-  MANTIME_MENU,
+  STEEP_MENU,
   BOIL_MENU,
-  COOKHOPS_MENU,
-  DISPTIME_MENU,
+  SERLOG_MENU,
   SETTIME_MENU,
+  SETBKLT_MENU,
+};
+
+enum TIMESET
+{
+  VIEW_YEAR,
+  VIEW_MONTH,
+  VIEW_DAY,
+  VIEW_HOUR,
+  VIEW_MIN,
+  VIEW_SEC,
+  SET_YEAR,
+  SET_MONTH,
+  SET_DAY,
+  SET_HOUR,
+  SET_MINUTE,
+  SET_SEC,
+  SAVE_TIME,
+  EXIT_TIME,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -44,17 +61,29 @@ enum MENUITEMS
 
 int menuState;  // Used to implement the menuing state machine
 
+uint8_t sensorNumber;
+uint8_t sensorAddr;
+uint8_t firstRun;
+float temps1Wire[32];
+float fahrenheit;
+
 // Board Configuration stored in EEPROM
 struct IZ_Cfgs
 {
-  int bll;       // Backlight level
-  int enableSD;  // Enable the SD card
+  int bll;           // Backlight level
+  int enableSerLog;  // Enable Serial Logging
 } 
 IZConfigs;
 
+uint16_t currYear;
+uint8_t currMonth, currDay, currHour, currMin, currSec;
+
 // class initializers
-Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
 OneWireLogger myOneWireLogger;
+Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
+OneWire  ds(ONE_WIRE);  // on pin 
+RTC_DS1307 RTC;
+DateTime setRTCTime;
 
 //////////////////////////////////////////////////////////////////////////////
 // the setup routine runs once when you press reset:
@@ -69,30 +98,19 @@ void setup()
 // EEPROM access
   EEPROM_readAnything(0, IZConfigs);
 
-// Set up the init menu state
-  menuState = BREWSTN_MENU;
+// Steep menu is first run
+  menuState = STEEP_MENU;
 
 // TFT init
-  analogWrite(BACKLIGHT, IZConfigs.bll);
-  tft.initR(INITR_REDTAB);
+  if (IZConfigs.bll == 0xff)  // Verify the backlight isn't off
+    analogWrite(BACKLIGHT, 0);
+  else
+    analogWrite(BACKLIGHT, IZConfigs.bll);
+  tft.initR(INITR_BLACKTAB);
   tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);
   tft.setCursor(0, 0);
   textWhiteOnBlack();
-  if (IZConfigs.enableSD != 0)
-  {
-    if (!SD.begin(SD_CS))
-    {
-      tft.print(F("SD card not present"));
-      setCursorTFT(1, 0);
-      tft.print(F("Disabling check"));
-      setCursorTFT(2, 0);
-      tft.print(F("Power cycle unit"));
-      sdDisable();
-      EEPROM_writeAnything(0, IZConfigs);
-      delay(2000);
-    }
-  }
 
 // RTC init
   Wire.begin();  
@@ -105,12 +123,11 @@ void setup()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// loop - runs over and over again forever:
+// loop - Menuing system has two functions, refresh and navigate
 //////////////////////////////////////////////////////////////////////////////////////
 
 void loop() 
 {
-
   menuRefresh();
   menuNav();
 }

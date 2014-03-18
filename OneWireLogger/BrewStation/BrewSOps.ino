@@ -14,67 +14,78 @@ void boil(void)
   DateTime now = RTC.now();
   tft.fillScreen(ST7735_BLACK);
   setCursorTFT(0, 0);
-  tft.print(F("*** Start to Boil ***"));
-  setCursorTFT(1, 0);
-  tft.print(F("2.5G H2O > pot"));
-  setCursorTFT(2, 0);
-  tft.print(F("Grains > pot"));
-  setCursorTFT(3, 0);
-  tft.print(F("Heat near high"));
-  setCursorTFT(4, 0);
-  tft.print(F("Down key to start"));
-  while (myOneWireLogger.waitKeyPressed() != DOWN);
-  setCursorTFT(5, 0);
-  tft.print(F("Waiting for 20 mins"));
-  endTime = now.unixtime() + (2*6);
-  while (now.unixtime() < endTime)
-  {
-    setCursorTFT(6, 0);
-    tft.print(F("                    "));
-    setCursorTFT(6, 0);
-    now = RTC.now();
-    tft.print((int)(now.unixtime() - endTime));
-    tft.print(" secs left");
-    delay(750);
-  }
-  setCursorTFT(7, 0);
-  tft.print(F("Set heat to max"));
-  setCursorTFT(8, 0);
-  tft.print(F("Waiting for boil"));
-  while (myOneWireLogger.waitKeyPressed() != DOWN);
-  setCursorTFT(9, 0);
-  tft.print(F("Turn off heat"));
-  setCursorTFT(10, 0);
-  tft.print(F("Add malt(s)"));
-  setCursorTFT(11, 0);
-  tft.print(F("Add 60 min hop(s)"));
-  while (myOneWireLogger.waitKeyPressed() != DOWN);
-  tft.fillScreen(ST7735_BLACK);
+  tft.print(F("*** Boil ***"));
+  delay(2000);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // cookHops()
 //////////////////////////////////////////////////////////////////////////////
 
-void cookHops(void)
+void steep(void)
 {
-  
+  int key;
+  int timer;
+  unsigned long endTime;
+  DateTime now = RTC.now();
+  tft.fillScreen(ST7735_BLACK);
+  setCursorTFT(0, 0);
+  tft.print(F("*** Steep ***"));
+  delay(2000);  
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// textWhiteOnBlack() - 
+// serLog()
 //////////////////////////////////////////////////////////////////////////////
 
-void textWhiteOnBlack(void)
+void serLog(void)
 {
+  uint8_t key;
+  tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+  setDisplayCursor(1, 0);
+  tft.print("Serial Log: ");
+  setDisplayCursor(2, 0);
+  tft.print("Sel=Save,Up/Dn=Chng");
+  setDisplayCursor(3, 0);
+  tft.print("rt/lf=Exit w/o Save");
+  while(1)
+  {
+    setDisplayCursor(1, 12);
+    if (IZConfigs.enableSerLog == 0)
+    {
+      tft.print("Off");
+    }
+    else
+    {
+      tft.print("On ");
+    }
+    key = myOneWireLogger.pollKeypad();
+    if (key == SELECT)
+    {
+      EEPROM_writeAnything(0, IZConfigs);
+      setDisplayCursor(2, 0);
+      tft.print("Saving.............");
+      setDisplayCursor(3, 0);
+      tft.print("                   ");
+      delay(1500);
+      return;
+    }
+    else if ((key == LEFT) || (key == RIGHT))
+    {
+      setDisplayCursor(2, 0);
+      tft.print("Exiting w/o Saving.");
+      setDisplayCursor(3, 0);
+      tft.print("                   ");
+      delay(1500);
+      return;
+    }
+    else if ((key == UP) || (key == DOWN))
+    {
+      IZConfigs.enableSerLog ^= 1;
+      delay(50);
+      while (myOneWireLogger.pollKeypad() != NONE);
+    }
+  }
 }
 
-//////////////////////////////////////////////////////////////////////////////////////
-// setCursorTFT(int row, int col)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void setCursorTFT(int row, int col)
-{
-  tft.setCursor(col*6, row*10);
-}

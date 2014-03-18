@@ -30,12 +30,11 @@ const char * menuFooter     = "";
 
 menuStruc menus[] =
 {
-  BREWSTN_MENU,     "Brew Station >",      2, BREWSTN_MENU,     MANTIME_MENU,     BREWSTN_MENU,     BOIL_MENU,        &nullFcn,     BOIL_MENU,
-  MANTIME_MENU,     "Time >",              3, BREWSTN_MENU,     MANTIME_MENU,     MANTIME_MENU,     MANTIME_MENU,     &nullFcn,     DISPTIME_MENU,
-  BOIL_MENU,        "< Boil Grains",       2, BOIL_MENU,        COOKHOPS_MENU,    BREWSTN_MENU,     BOIL_MENU,        &boil,        COOKHOPS_MENU,
-  COOKHOPS_MENU,    "Cook Hops",           3, BOIL_MENU,        COOKHOPS_MENU,    COOKHOPS_MENU,    COOKHOPS_MENU,    &cookHops,    COOKHOPS_MENU,
-  DISPTIME_MENU,    "< Display Time",      2, DISPTIME_MENU,    SETTIME_MENU,     MANTIME_MENU,     DISPTIME_MENU,    &displayTime, DISPTIME_MENU,
-  SETTIME_MENU,     "Set Time",            3, DISPTIME_MENU,    SETTIME_MENU,     SETTIME_MENU,     SETTIME_MENU,     &setTime,     SETTIME_MENU,
+  STEEP_MENU,       "Steep",               2, STEEP_MENU,   BOIL_MENU,      STEEP_MENU,    STEEP_MENU,    &steep,       STEEP_MENU,
+  BOIL_MENU,        "Boil",                3, STEEP_MENU,   SERLOG_MENU,    BOIL_MENU,     BOIL_MENU,     &boil,        BOIL_MENU,
+  SERLOG_MENU,      "Serial Logging",      4, BOIL_MENU,    SETTIME_MENU,   SERLOG_MENU,   SERLOG_MENU,   &serLog,      SERLOG_MENU,
+  SETTIME_MENU,     "Set Time",            5, SERLOG_MENU,  SETBKLT_MENU,   SETTIME_MENU,  SETTIME_MENU,  &setTime,     SETTIME_MENU,
+  SETBKLT_MENU,     "Set Backlight Level", 6, SETTIME_MENU, SETBKLT_MENU,   SETBKLT_MENU,  SETBKLT_MENU,  &setBLt,      SETBKLT_MENU, 
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
