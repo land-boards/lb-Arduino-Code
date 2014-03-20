@@ -31,10 +31,12 @@ const char * menuFooter     = "";
 menuStruc menus[] =
 {
   STEEP_MENU,       "Steep",               2, STEEP_MENU,   BOIL_MENU,      STEEP_MENU,    STEEP_MENU,    &steep,       STEEP_MENU,
-  BOIL_MENU,        "Boil",                3, STEEP_MENU,   SERLOG_MENU,    BOIL_MENU,     BOIL_MENU,     &boil,        BOIL_MENU,
-  SERLOG_MENU,      "Serial Logging",      4, BOIL_MENU,    SETTIME_MENU,   SERLOG_MENU,   SERLOG_MENU,   &serLog,      SERLOG_MENU,
-  SETTIME_MENU,     "Set Time",            5, SERLOG_MENU,  SETBKLT_MENU,   SETTIME_MENU,  SETTIME_MENU,  &setTime,     SETTIME_MENU,
-  SETBKLT_MENU,     "Set Backlight Level", 6, SETTIME_MENU, SETBKLT_MENU,   SETBKLT_MENU,  SETBKLT_MENU,  &setBLt,      SETBKLT_MENU, 
+  BOIL_MENU,        "Boil",                3, STEEP_MENU,   THERMO_MENU,    BOIL_MENU,     BOIL_MENU,     &boil,        BOIL_MENU,
+  THERMO_MENU,      "Thermometer",         4, BOIL_MENU,    SERLOG_MENU,    THERMO_MENU,   THERMO_MENU,   &do1Wire,     THERMO_MENU,
+  SERLOG_MENU,      "Serial Logging",      5, THERMO_MENU,  SETTIME_MENU,   SERLOG_MENU,   SERLOG_MENU,   &serLog,      SERLOG_MENU,
+  SETTIME_MENU,     "Set Time",            6, SERLOG_MENU,  SETBKLT_MENU,   SETTIME_MENU,  SETTIME_MENU,  &setTime,     SETTIME_MENU,
+  SETBKLT_MENU,     "Set Backlight Level", 7, SETTIME_MENU, CFG18B20_MENU,  SETBKLT_MENU,  SETBKLT_MENU,  &setBLt,      SETBKLT_MENU,
+  CFG18B20_MENU,    "Configure DS18B20",   8, SETBKLT_MENU, CFG18B20_MENU,  CFG18B20_MENU, CFG18B20_MENU, &cfg18b20,    CFG18B20_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
