@@ -3,35 +3,107 @@
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
+// steep()
+//////////////////////////////////////////////////////////////////////////////
+
+void steep(void)
+{
+  uint8_t key, timerStarted;
+  uint32_t startTime, endTime, currentTime, remainingTime;
+  clearDisplay();
+  tft.setTextSize(3);
+  tft.print(F("*Steep*"));
+  do
+  {
+    readNext1Wire();
+    if (sensorNumber > 0)
+    {
+      if (temps1Wire[sensorNumber-1] < 150.0)
+      {
+        timerStarted = 0;
+        setDisplayCursor(sensorNumber+2,0);
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.print("       ");
+        tft.setTextColor(ST7735_BLACK,ST7735_WHITE);
+        tft.fillRect(0,64,128,72,ST7735_WHITE);
+      }
+      else if (temps1Wire[sensorNumber-1] < 165.0)
+      {
+        if (timerStarted == 0)
+        {
+          startTime = millis() / 1000;
+          endTime = startTime + (20*60);
+          timerStarted = 1;
+        }
+        setDisplayCursor(sensorNumber+2,0);
+        currentTime = millis() / 1000;
+        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        tft.print(endTime - currentTime);
+        tft.print("sec");
+        tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+        tft.fillRect(0,64,128,72,ST7735_BLUE);
+      }
+      else
+      {
+        tft.setTextColor(ST7735_WHITE,ST7735_RED);
+        tft.fillRect(0,64,128,72,ST7735_RED);
+      }
+      setDisplayCursor(sensorNumber+8,0);
+      if (temps1Wire[sensorNumber-1] < 100.0)
+        tft.print(" ");
+      tft.print(temps1Wire[sensorNumber-1]);
+      tft.print(F("F "));
+    }
+    myOneWireLogger.delayAvailable(250);
+    key = myOneWireLogger.pollKeypad();
+  }
+  while (key == NONE);
+  tft.setTextSize(1);
+  tft.fillScreen(ST7735_BLACK);
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // boil() - Step by step from start to boil
 //////////////////////////////////////////////////////////////////////////////
 
 void boil(void)
 {
-  int key;
-  int timer;
-  unsigned long endTime;
-  DateTime now = RTC.now();
+  uint8_t key;
+  clearDisplay();
+  tft.setTextSize(3);
+  tft.print(F("*Boil*"));
+  do
+  {
+    readNext1Wire();
+    if (sensorNumber > 0)
+    {
+      if (temps1Wire[sensorNumber-1] < 190.0)
+      {
+        tft.setTextColor(ST7735_BLACK,ST7735_WHITE);
+        tft.fillRect(0,64,128,80,ST7735_WHITE);
+      }
+      else if (temps1Wire[sensorNumber-1] < 204.0)
+      {
+        tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+        tft.fillRect(0,64,128,80,ST7735_BLUE);
+      }
+      else
+      {
+        tft.setTextColor(ST7735_WHITE,ST7735_RED);
+        tft.fillRect(0,64,128,80,ST7735_RED);
+      }
+      setDisplayCursor(sensorNumber+8,0);
+      if (temps1Wire[sensorNumber-1] < 100.0)
+        tft.print(" ");
+      tft.print(temps1Wire[sensorNumber-1]);
+      tft.print(F("F "));
+    }
+    myOneWireLogger.delayAvailable(250);
+    key = myOneWireLogger.pollKeypad();
+  }
+  while (key == NONE);
+  tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);
-  setCursorTFT(0, 0);
-  tft.print(F("*** Boil ***"));
-  delay(2000);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// cookHops()
-//////////////////////////////////////////////////////////////////////////////
-
-void steep(void)
-{
-  int key;
-  int timer;
-  unsigned long endTime;
-  DateTime now = RTC.now();
-  tft.fillScreen(ST7735_BLACK);
-  setCursorTFT(0, 0);
-  tft.print(F("*** Steep ***"));
-  delay(2000);  
 }
 
 //////////////////////////////////////////////////////////////////////////////
