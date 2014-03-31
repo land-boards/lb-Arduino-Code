@@ -8,8 +8,9 @@
 
 void steep(void)
 {
-  uint8_t key, timerStarted;
-  uint32_t startTime, endTime, currentTime, remainingTime;
+  uint8_t key, timerStarted = 0;
+  int32_t startTime, endTime, currentTime;
+  //, remainingTime;
   clearDisplay();
   tft.setTextSize(3);
   tft.print(F("*Steep*"));
@@ -18,39 +19,48 @@ void steep(void)
     readNext1Wire();
     if (sensorNumber > 0)
     {
-      if (temps1Wire[sensorNumber-1] < 150.0)
+      if (temps1Wire[sensorNumber-1] < 150.0)  // Steep starts at 150 degrees F
       {
         timerStarted = 0;
         setDisplayCursor(sensorNumber+2,0);
         tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
-        tft.print("       ");
+        tft.print(F("       "));
         tft.setTextColor(ST7735_BLACK,ST7735_WHITE);
         tft.fillRect(0,64,128,72,ST7735_WHITE);
       }
-      else if (temps1Wire[sensorNumber-1] < 165.0)
+      else if (temps1Wire[sensorNumber-1] < 165.0)  // Steep is lower than 165 deg F
       {
         if (timerStarted == 0)
         {
           startTime = millis() / 1000;
-          endTime = startTime + (20*60);
+          endTime = startTime + (20*60); // time is 1200 seconds 20*60
           timerStarted = 1;
         }
         setDisplayCursor(sensorNumber+2,0);
         currentTime = millis() / 1000;
-        tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
-        tft.print(endTime - currentTime);
-        tft.print("sec");
+        if (currentTime <= endTime)
+          tft.setTextColor(ST7735_WHITE, ST7735_BLACK);
+        else
+          tft.setTextColor(ST7735_WHITE, ST7735_RED);
+        tft.print(currentTime - endTime);
+        tft.print(F(" s"));
+        if ((currentTime - endTime) < 1000)
+          tft.print(F(" "));
+        else if ((currentTime - endTime) < 100)
+          tft.print(F("  "));
+        else if ((currentTime - endTime) < 10)
+          tft.print(F("  "));
         tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
         tft.fillRect(0,64,128,72,ST7735_BLUE);
       }
-      else
+      else    // Overtemp gest shows as white characters on a red background
       {
         tft.setTextColor(ST7735_WHITE,ST7735_RED);
         tft.fillRect(0,64,128,72,ST7735_RED);
       }
       setDisplayCursor(sensorNumber+8,0);
       if (temps1Wire[sensorNumber-1] < 100.0)
-        tft.print(" ");
+        tft.print(F(" "));
       tft.print(temps1Wire[sensorNumber-1]);
       tft.print(F("F "));
     }
