@@ -56,9 +56,9 @@ void do1WCSV(void)
       tft.print(F("                    "));
       setDisplayCursor(sensorNumber,0);
       tft.print(currHour);
-      tft.print(F(":"));
+//      tft.print(F(":"));
       tft.print(currMin);
-      tft.print(F(":"));
+//      tft.print(F(":"));
       tft.print(currSec);
       tft.print(F(","));
       tft.print(F("S"));
@@ -68,26 +68,28 @@ void do1WCSV(void)
       tft.print(F(" "));
       tft.print(temps1Wire[sensorNumber-1]);
       tft.print(F("F   "));
-      if (temps1Wire[sensorNumber-1] < 150.0)
-      {
-        tft.setTextColor(ST7735_BLACK,ST7735_WHITE);
-        tft.fillRect(0,80,128,64,ST7735_WHITE);
-      }
-      else if (temps1Wire[sensorNumber-1] < 165.0)
-      {
-        tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
-        tft.fillRect(0,80,128,64,ST7735_BLUE);
-      }
-      else
-      {
-        tft.setTextColor(ST7735_WHITE,ST7735_RED);
-        tft.fillRect(0,80,128,64,ST7735_RED);
-      }
-      setDisplayCursor(sensorNumber+8,0);
-	  tft.setTextSize(3);
-      tft.print(temps1Wire[sensorNumber-1]);
-	  tft.setTextSize(1);
-        tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+//      if (temps1Wire[sensorNumber-1] < 150.0)
+//      {
+//        tft.setTextColor(ST7735_BLACK,ST7735_WHITE);
+//        tft.fillRect(0,80,128,64,ST7735_WHITE);
+//      }
+//      else if (temps1Wire[sensorNumber-1] < 165.0)
+//      {
+//        tft.setTextColor(ST7735_WHITE,ST7735_BLUE);
+//        tft.fillRect(0,80,128,64,ST7735_BLUE);
+//      }
+//      else
+//      {
+//        tft.setTextColor(ST7735_WHITE,ST7735_RED);
+//        tft.fillRect(0,80,128,64,ST7735_RED);
+//      }
+//      setDisplayCursor(sensorNumber+8,0);
+//	  tft.setTextSize(3);
+//      tft.print(temps1Wire[sensorNumber-1]);
+      tft.setTextSize(1);
+      tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
+      if (sensorNumber == 1)
+        Serial.print("\n");
       Serial.print(currHour);
       Serial.print(":");
       Serial.print(currMin);
@@ -96,8 +98,11 @@ void do1WCSV(void)
       Serial.print(",");
       Serial.print(sensorNumber);
       Serial.print(",");
+      Serial.print(sensorAddr, HEX);
+      Serial.print(",");
       Serial.print(temps1Wire[sensorNumber-1]);
-      Serial.print("\n");
+      Serial.print(",");
+//      Serial.print("\n");
     }
     myOneWireLogger.delayAvailable(250);
     key = myOneWireLogger.pollKeypad();
@@ -140,7 +145,7 @@ char readNext1Wire(void)
   ds.reset();
   ds.select(addr);
   ds.write(0x44,1);         // start conversion, with parasite power on at the end
-  delay(300);               // 
+  delay(750);               // 
   // we might do a ds.depower() here, but the reset will take care of it.
 
   ds.reset();
@@ -153,9 +158,12 @@ char readNext1Wire(void)
   }
   // convert the data to actual temperature
   int raw = (data[1] << 8) | data[0];
-
-  fahrenheit = ((((float)raw) * 1.8)/16.0) + 32.0;
-  temps1Wire[sensorNumber] = fahrenheit;
+  if ((addr[0] == 0x28) || (addr[0] == 0x22))
+    fahrenheit = ((((float)raw) * 1.8)/16.0) + 32.0;
+  else if (addr[0] == 0x10)
+    fahrenheit = ((((float)raw) * 1.8)/2.0) + 32.0;
+  else
+    fahrenheit = -99.9;  temps1Wire[sensorNumber] = fahrenheit;
   sensorAddr = addr[7];
   sensorNumber++;
 }
