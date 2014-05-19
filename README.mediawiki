@@ -1,7 +1,7 @@
-== Dougs Arduino Files README ==
+== land-boards Arduino Code README ==
 
-* These are my [http://arduino.cc Arduino] files.
-** Most of these files were created to exercise my [http://land-boards.com/blwiki/index.php?title=Arduino_Code Arduino related hardware].
+* These are our [http://arduino.cc Arduino] files.
+** Most of these files were created to exercise our [http://land-boards.com/blwiki/index.php?title=Arduino_Code Arduino related hardware].
 
 === Ownership ===
 
@@ -14,4 +14,3 @@
 
 * Use at your own risk.
 ** If you brick your part or it melts to a puddle, it's on you not me.
-
