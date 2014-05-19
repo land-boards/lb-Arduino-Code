@@ -2,7 +2,7 @@
 
 These are our [Arduino](http://arduino.cc "Arduino website") files. 
 
-Most of [this code](http://land-boards.com/blwiki/index.php?title=Arduino_Code) was created to exercise our [Arduino compatible hardware](http://land-boards.com/blwiki/index.php?title=Board_Designs_by_Function#Arduino_Compatible_Boards).
+[This code is documented here.](http://land-boards.com/blwiki/index.php?title=Arduino_Code) Most of this code was created to exercise our [Arduino compatible hardware](http://land-boards.com/blwiki/index.php?title=Board_Designs_by_Function#Arduino_Compatible_Boards).
 
 ##Ownership
 
