@@ -74,6 +74,7 @@ struct IZ_Cfgs
 {
   int bll;           // Backlight level
   int enableSerLog;  // Enable Serial Logging
+  int initializedEE;  // Initialized EE
 } 
 IZConfigs;
 
@@ -104,10 +105,20 @@ void setup()
   menuState = STEEP_MENU;
 
 // TFT init
+  if (IZConfigs.initializedEE != 0xbaba)
+  {
+    IZConfigs.bll == 0x55;
+    analogWrite(BACKLIGHT, IZConfigs.bll);
+    IZConfigs.initializedEE = 0xbaba;
+    EEPROM_writeAnything(0, IZConfigs);
+  }
+  else
+  {
   if (IZConfigs.bll == 0xff)  // Verify the backlight isn't off
     analogWrite(BACKLIGHT, 0);
   else
     analogWrite(BACKLIGHT, IZConfigs.bll);
+  }
   tft.initR(INITR_BLACKTAB);
   tft.setTextSize(1);
   tft.fillScreen(ST7735_BLACK);
