@@ -17,6 +17,13 @@ void setup() {
   pinMode(ledPulse, OUTPUT);
   pinMode(optoIn, INPUT_PULLUP);
   lastRead = digitalRead(optoIn);   // prime the last read of the opto in
+  digitalWrite(ledHi,HIGH);
+  delay(250);                    // wait for a second
+  digitalWrite(ledHi,LOW);
+  delay(250);                    // wait for a second
+  digitalWrite(ledPulse,HIGH);
+  delay(250);                    // wait for a second
+  digitalWrite(ledPulse,LOW);
 }
 
 // loop repeatedly reads the opto line and compares it to the previous read
@@ -31,12 +38,10 @@ void loop()
   {
     digitalWrite(ledHi,readVal);
     digitalWrite(ledPulse, HIGH);   // turn the LED on (HIGH is the voltage level)
-    delay(250);                    // wait for a second
+    delay(250);                    // wait for 1/4 second
     digitalWrite(ledPulse, LOW);   // if the line went from high to low
     lastRead = readVal;
-  }   
-//  digitalWrite(ledHi, LOW);        // turn the LED off by making the voltage LOW
-//  digitalWrite(ledLo, LOW);        // turn the LED off by making the voltage LOW
+  }
   delay(100);                      // wait for a 1/10 second
 }
 
