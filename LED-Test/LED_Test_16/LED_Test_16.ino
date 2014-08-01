@@ -26,21 +26,13 @@ int delayTime = 175;
 void setup() {
   // initialize the digital pin as an output.
   pinMode(DS1, OUTPUT);
-  digitalWrite(DS1, HIGH);
   pinMode(DS2, OUTPUT);
-  digitalWrite(DS2, HIGH);
   pinMode(DS3, OUTPUT);
-  digitalWrite(DS3, HIGH);
   pinMode(DS4, OUTPUT);
-  digitalWrite(DS4, HIGH);
   pinMode(DS5, OUTPUT);
-  digitalWrite(DS5, HIGH);
   pinMode(DS6, OUTPUT);
-  digitalWrite(DS6, HIGH);
   pinMode(DS7, OUTPUT);
-  digitalWrite(DS7, HIGH);
   pinMode(DS8, OUTPUT);
-  digitalWrite(DS8, HIGH);
   pinMode(DS9, OUTPUT);
   pinMode(DS10, OUTPUT);
   pinMode(DS11, OUTPUT);
@@ -51,57 +43,30 @@ void setup() {
   pinMode(DS16, OUTPUT);
 }
 
+void pulseChannel(unsigned char chNum)
+{
+  digitalWrite(chNum, HIGH);
+  delay(delayTime);               // wait for a second
+  digitalWrite(chNum, LOW);
+}
+
 // the loop routine runs over and over again forever:
 void loop() {
-  digitalWrite(DS1, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS1, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS2, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS2, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS3, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS3, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS4, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS4, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS5, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS5, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS6, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS6, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS7, LOW);   // turn the LED on (LOW is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS7, HIGH);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS8, LOW);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS8, HIGH);    // turn the LED off by making the voltage HIGH
-
-  digitalWrite(DS9, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS9, LOW);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS10, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS10, LOW);    // turn the LED off by making the voltage HIGH
-
-  digitalWrite(DS11, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS11, LOW);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS12, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS12, LOW);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS13, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS13, LOW);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS14, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS14, LOW);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS15, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS15, LOW);    // turn the LED off by making the voltage HIGH
-  digitalWrite(DS16, HIGH);   // turn the LED on (LOWHIGHHIGHHIGH is the voltage level)
-  delay(delayTime);               // wait for a second
-  digitalWrite(DS16, LOW);    // turn the LED off by making the voltage HIGH
+  pulseChannel(DS1);
+  pulseChannel(DS2);
+  pulseChannel(DS3);
+  pulseChannel(DS4);
+  pulseChannel(DS5);
+  pulseChannel(DS6);
+  pulseChannel(DS7);
+  pulseChannel(DS8);
+  pulseChannel(DS9);
+  pulseChannel(DS10);
+  pulseChannel(DS11);
+  pulseChannel(DS12);
+  pulseChannel(DS13);
+  pulseChannel(DS14);
+  pulseChannel(DS15);
+  pulseChannel(DS16);
 }
 
