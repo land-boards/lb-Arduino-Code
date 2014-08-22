@@ -1,26 +1,36 @@
 /*
   LED_Tesr_GVS_32U4
-  
- */
+*/
 
-unsigned char DS1 = 6;
-unsigned char DS2 = 7;
-unsigned char DS3 = 8;
-unsigned char DS4 = 9;
-unsigned char DS5 = 10;
-unsigned char DS6 = 11;
-unsigned char DS7 = 12;
-unsigned char DS8 = 13;
-unsigned char DS9 = 3;
-unsigned char DS10 = 2;
-unsigned char DS11 = 14;  // MISO
-unsigned char DS12 = 15;  // SCK
-unsigned char DS13 = 16;  // MOSI
-unsigned char DS14 = 17;   // RXLED
-unsigned char DS15 = 18;
-unsigned char DS16 = 19;
+unsigned char DS1 = 17;  // RXLED
+unsigned char DS2 = 15;  // SCK
+unsigned char DS3 = 16;  // MOSI
+unsigned char DS4 = 14;  // MISO
+unsigned char DS5 = 11;
+unsigned char DS6 = 3;
+unsigned char DS7 = 2;
+unsigned char DS8 = 0;
+
+unsigned char DS9 = 1;
+unsigned char DS10 = 4;
+unsigned char DS11 = 12;
+unsigned char DS12 = 6;
+unsigned char DS13 = 8;
+unsigned char DS14 = 9;
+unsigned char DS15 = 10;
+unsigned char DS16 = 5;
+
+unsigned char DS1B = 13;
+unsigned char DS2B = 18;  // A0
+unsigned char DS3B = 19;  // A1
+unsigned char DS4B = 20;  // A2
+unsigned char DS5B = 21;  // A3
+unsigned char DS6B = 22;  // A4
+unsigned char DS7B = 23;  // A5
+unsigned char DS8B = \/  // A5
+
+
 int delayTime = 175;
-
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -41,6 +51,14 @@ void setup() {
   pinMode(DS14, OUTPUT);
   pinMode(DS15, OUTPUT);
   pinMode(DS16, OUTPUT);
+  pinMode(DS1B, OUTPUT);
+  pinMode(DS2B, OUTPUT);
+  pinMode(DS3B, OUTPUT);
+  pinMode(DS4B, OUTPUT);
+  pinMode(DS5B, OUTPUT);
+  pinMode(DS6B, OUTPUT);
+  pinMode(DS7B, OUTPUT);
+  pinMode(DS8B, OUTPUT);
 }
 
 void pulseChannel(unsigned char chNum)
@@ -68,5 +86,13 @@ void loop() {
   pulseChannel(DS14);
   pulseChannel(DS15);
   pulseChannel(DS16);
+  pulseChannel(DS1B);
+  pulseChannel(DS2B);
+  pulseChannel(DS3B);
+  pulseChannel(DS4B);
+  pulseChannel(DS5B);
+  pulseChannel(DS6B);
+  pulseChannel(DS7B);
+  pulseChannel(DS8B);
 }
 
