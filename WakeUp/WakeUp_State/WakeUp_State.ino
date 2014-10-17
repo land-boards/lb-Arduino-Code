@@ -69,12 +69,7 @@ void loop()
         buzzerOff();
         state = WAIT_FOR_AC_POWER;
       }
-      if (isACPowerOn() == true)
-      {
-        buzzerOff();
-        state = AC_POWER_ON_NORMAL_OPS;
-      }
-      else if (isButtonPressed() == true)
+      if (isButtonPressed() == true)
       {
         buzzerOff();
         state = WAIT_FOR_AC_POWER;
