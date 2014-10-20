@@ -1,18 +1,18 @@
-// WakeUp_State - State machine implementation of the power monitor/alarm
+///////////////////////////////////////////////////////////////////
+// WakeUp_State - State machine implementation of power monitor/alarm
 
-// Hardware
+// Hardware device to pin mapping
 const int BUZZER = 0;
 const int BUTTON = 3;
 
 // State machine related objects and definitions
-const int ELAPSED_TIME_LIMIT = 3000;
+const int ELAPSED_TIME_LIMIT = 3000;	// Buzzer time in 10 mSec increments
 
 enum
 {
   POWER_ON,
   WAIT_FOR_AC_POWER,
-  POWER_OFF_ALARM_ON,
-  POWER_OFF_DETECTED,
+  ALARM_ON,
   AC_POWER_ON_NORMAL_OPS,
   BUZZER_TEST,
 };
@@ -43,50 +43,59 @@ void loop()
   int loopCount;
   switch (state)
   {
-    case POWER_ON:               // power is turned on
+  case POWER_ON:               // power is turned on
+    buzzerOn();
+    delay(500);
+    buzzerOff();
+    state = WAIT_FOR_AC_POWER;
+    break;
+  case WAIT_FOR_AC_POWER:        // wait for the AC Power to come on
+    if (isACPowerOn() == true)
+    {
+      state = AC_POWER_ON_NORMAL_OPS;
+      break;
+    }
+    break;
+  case AC_POWER_ON_NORMAL_OPS:   // "normal" state with AC Power OK
+    if (isACPowerOn() == false)
+    {
       buzzerOn();
-      delay(500);
+      elapsedTime = 0;
+      state = ALARM_ON;
+      break;
+    }
+    if (isButtonPressed() == true)
+    {
+      state = BUZZER_TEST;
+      break;
+    }
+    break;
+  case ALARM_ON:
+    if (isButtonPressed() == true)
+    {
       buzzerOff();
       state = WAIT_FOR_AC_POWER;
       break;
-    case WAIT_FOR_AC_POWER:          // wait for the AC Power to come on
-      if (isACPowerOn() == true)
-        state = AC_POWER_ON_NORMAL_OPS;
+    }
+    if (elapsedTime < ELAPSED_TIME_LIMIT)
+    {
+      delay(10);      // 10 mSec increments allow switch polling to be quicker
+      elapsedTime++;
       break;
-    case POWER_OFF_DETECTED:
-      buzzerOn();
-      elapsedTime = 0;
-      state = POWER_OFF_ALARM_ON;
-      break;
-    case POWER_OFF_ALARM_ON:
-      if (elapsedTime < ELAPSED_TIME_LIMIT)
-      {
-        delay(10);      // 10 mSec increments allow switch polling to be quicker
-        elapsedTime++;
-      }
-      else
-      {
-        buzzerOff();
-        state = WAIT_FOR_AC_POWER;
-      }
-      if (isButtonPressed() == true)
-      {
-        buzzerOff();
-        state = WAIT_FOR_AC_POWER;
-      }
-      break;
-    case AC_POWER_ON_NORMAL_OPS:   // "normal" state with AC Power OK
-      if (isACPowerOn() == false)
-        state = POWER_OFF_DETECTED;
-      if (isButtonPressed() == true)
-        state = BUZZER_TEST;
-      break;
-    case BUZZER_TEST:
-      buzzerOn();
-      while (isButtonPressed() == true);
+    }
+    else
+    {
       buzzerOff();
-      state = AC_POWER_ON_NORMAL_OPS;
-      break;        
+      state = WAIT_FOR_AC_POWER;
+      break;
+    }
+    break;
+  case BUZZER_TEST:
+    buzzerOn();
+    while (isButtonPressed() == true);
+    buzzerOff();
+    state = AC_POWER_ON_NORMAL_OPS;
+    break;
   }
 }
 
@@ -127,4 +136,5 @@ void buzzerOff(void)
 {
   digitalWrite(BUZZER, LOW);
 }
+
 
