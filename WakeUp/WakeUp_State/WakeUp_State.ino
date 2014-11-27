@@ -4,6 +4,7 @@
 // Hardware device to pin mapping
 const int BUZZER = 0;
 const int BUTTON = 3;
+const int LED = 1;
 
 // State machine related objects and definitions
 const int ELAPSED_TIME_LIMIT = 3000;	// Buzzer time in 10 mSec increments
@@ -127,6 +128,7 @@ int isACPowerOn(void)
 void buzzerOn(void)
 {
   digitalWrite(BUZZER, HIGH);
+  digitalWrite(LED, HIGH);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -135,6 +137,7 @@ void buzzerOn(void)
 void buzzerOff(void)
 {
   digitalWrite(BUZZER, LOW);
+  digitalWrite(LED, LOW);
 }
 
 
