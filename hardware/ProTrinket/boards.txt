@@ -1,0 +1,57 @@
+
+##############################################################
+
+
+protrinket5.name=Pro Trinket 5V/16MHz (USB)
+protrinket5.upload.using=usbtiny
+protrinket5.upload.maximum_size=28672
+protrinket5.upload.speed=115200
+protrinket5.build.mcu=atmega328p
+protrinket5.build.f_cpu=16000000L
+protrinket5.build.core=arduino:arduino
+protrinket5.build.variant=arduino:eightanaloginputs
+
+protrinket3.name=Pro Trinket 3V/12MHz (USB)
+protrinket3.upload.using=usbtiny
+protrinket3.upload.maximum_size=28672
+protrinket3.upload.speed=115200
+protrinket3.build.mcu=atmega328p
+protrinket3.build.f_cpu=12000000L
+protrinket3.build.core=arduino:arduino
+protrinket3.build.variant=arduino:eightanaloginputs
+
+
+##############################################################
+
+
+protrinket5ftdi.name=Pro Trinket 5V/16MHz (FTDI)
+protrinket5ftdi.upload.protocol=arduino
+protrinket5ftdi.upload.maximum_size=28672
+protrinket5ftdi.upload.speed=115200
+protrinket5ftdi.bootloader.low_fuses=0xff
+protrinket5ftdi.bootloader.high_fuses=0xde
+protrinket5ftdi.bootloader.extended_fuses=0x05
+protrinket5ftdi.bootloader.path=optiboot
+protrinket5ftdi.bootloader.file=optiboot_atmega328.hex
+protrinket5ftdi.bootloader.unlock_bits=0x3F
+protrinket5ftdi.bootloader.lock_bits=0x0F
+protrinket5ftdi.build.mcu=atmega328p
+protrinket5ftdi.build.f_cpu=16000000L
+protrinket5ftdi.build.core=arduino:arduino
+protrinket5ftdi.build.variant=arduino:eightanaloginputs
+
+protrinket3ftdi.name=Pro Trinket 3V/12MHz (FTDI)
+protrinket3ftdi.upload.protocol=arduino
+protrinket3ftdi.upload.maximum_size=28672
+protrinket3ftdi.upload.speed=115200
+protrinket3ftdi.bootloader.low_fuses=0xff
+protrinket3ftdi.bootloader.high_fuses=0xde
+protrinket3ftdi.bootloader.extended_fuses=0x05
+protrinket3ftdi.bootloader.path=optiboot
+protrinket3ftdi.bootloader.file=optiboot_atmega328.hex
+protrinket3ftdi.bootloader.unlock_bits=0x3F
+protrinket3ftdi.bootloader.lock_bits=0x0F
+protrinket3ftdi.build.mcu=atmega328p
+protrinket3ftdi.build.f_cpu=12000000L
+protrinket3ftdi.build.core=arduino:arduino
+protrinket3ftdi.build.variant=arduino:eightanaloginputs
