@@ -1,0 +1,60 @@
+////////////////////////////////////////////////////////////////////////////
+//  IReflow.h - Library for IReflow Shield
+//  Created by Douglas Gilliland. 2012-07-27
+////////////////////////////////////////////////////////////////////////////
+// Pin assignments as referenced to the IReflow Board
+// 
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef IReflow_h
+#define IReflow_h
+
+#include "Arduino.h"
+
+////////////////////////////////////////////////////////////////////////////////////
+// enums follow
+////////////////////////////////////////////////////////////////////////////////////
+
+enum KEY_PRESSES
+{
+  NONE,
+  RIGHT,
+  UP,
+  DOWN,
+  LEFT,
+  SELECT,
+};
+
+////////////////////////////////////////////////////////////////////////////
+// I/O Pins on the Arduino UNO as used by the Board
+// Ports/Leo Functions/Connections
+// PF0(ADC0) = Analog Input 5 = SW5WAY
+// PB3 = MISO
+// PB2 = MOSI
+// PB1 = SCK
+////////////////////////////////////////////////////////////////////////////
+
+#define SSR 4
+#define GRN_LITE 5   // pwmable
+#define RED_LITE 6   // pwmable
+#define BUZZ 10      // pwmable
+
+#define KEYPAD      A0
+
+#define LCD_ROWS 5
+#define LCD_COLUMNS 13
+
+class IReflow
+{
+  public:
+    IReflow(void);
+    uint8_t pollKeypad(void);
+    void waitForKeyRelease(void);
+    uint8_t getKeyPressed(void);
+    uint8_t waitKeyPressed(void);
+    uint8_t delayAvailable(int delayTime);
+  private:
+    void initPins(void);
+};
+
+#endif
