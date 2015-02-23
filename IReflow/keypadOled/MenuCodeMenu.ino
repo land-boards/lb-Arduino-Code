@@ -41,10 +41,11 @@ struct menuStruc                  // The ENUMs for the *_MENU_PTR values must pr
 
 menuStruc menus[] = 
 {
-  FIRST_LINE_MENU,   "Run Cycle",  1, FIRST_LINE_MENU,  SECOND_LINE_MENU, FIRST_LINE_MENU,  FIRST_LINE_MENU, &exampleFcn1, FIRST_LINE_MENU,
-  SECOND_LINE_MENU,  "Profile >",  2, FIRST_LINE_MENU,  THIRD_LINE_MENU,  SECOND_LINE_MENU, FIRST_SUB_MENU,  &nullFcn,     FIRST_SUB_MENU,
-  THIRD_LINE_MENU,   "Setup" ,  3, SECOND_LINE_MENU, THIRD_LINE_MENU,  THIRD_LINE_MENU,  THIRD_LINE_MENU, &exampleFcn2, THIRD_LINE_MENU,
-  FIRST_SUB_MENU,    "Lead free",  1, FIRST_SUB_MENU,   FIRST_SUB_MENU,   FIRST_LINE_MENU,  FIRST_SUB_MENU,  &exampleFcn3, SECOND_LINE_MENU,
+  FIRST_LINE_MENU,   "Run Cycle", 1, FIRST_LINE_MENU,  SECOND_LINE_MENU, FIRST_LINE_MENU,  FIRST_LINE_MENU, &runProfileFcn, FIRST_LINE_MENU,
+  SECOND_LINE_MENU,  "Profile",   2, FIRST_LINE_MENU,  THIRD_LINE_MENU,  SECOND_LINE_MENU, FIRST_SUB_MENU,  &nullFcn,       FIRST_SUB_MENU,
+  THIRD_LINE_MENU,   "Mon Temp",  3, SECOND_LINE_MENU, THIRD_LINE_MENU,  THIRD_LINE_MENU,  THIRD_LINE_MENU, &monTempFcn,    FIRST_LINE_MENU,
+  FIRST_SUB_MENU,    "Lead free", 1, FIRST_SUB_MENU,   SECOND_SUB_MENU,  FIRST_LINE_MENU,  FIRST_SUB_MENU,  &LeadFreeFcn,   FIRST_LINE_MENU,
+  SECOND_SUB_MENU,   "Lead",      2, FIRST_SUB_MENU,   SECOND_SUB_MENU,  FIRST_LINE_MENU,  FIRST_SUB_MENU,  &LeadFcn,       FIRST_LINE_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -58,8 +59,10 @@ void menuRefresh(void)
   uint8_t nextLine, lastLine;
   clearDisplay();
   setDisplayCursor((menus[menuState].rowNumber)-1,0); // Print the currently selected line
-  setSelectedTextColor();    
+  setSelectedTextColor();
+  u8g.print("*");
   u8g.print(menus[menuState].menuString);     
+  u8g.print("*");
   setUnselectedTextColor();  // Return to "normal" text color
   lastLine = menuState;
   // display the lines above the selected line first

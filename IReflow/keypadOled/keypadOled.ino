@@ -6,6 +6,11 @@
 
 #include "IReflow.h"
 #include "U8glib.h"
+#include <SPI.h>
+#include "Adafruit_MAX31855.h"
+
+#define CS   9
+Adafruit_MAX31855 thermocouple(CS);
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
@@ -17,6 +22,7 @@ enum MENUITEMS
   SECOND_LINE_MENU,
   THIRD_LINE_MENU,
   FIRST_SUB_MENU,
+  SECOND_SUB_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -29,11 +35,11 @@ IReflow myIReflow;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
-
 void setup(void) 
 {
   displayInit();                // Hardware specific function to set up the display
   menuState = FIRST_LINE_MENU;  // Set up the init menu state
+  delay(500);
 }
 
 void loop(void) 
