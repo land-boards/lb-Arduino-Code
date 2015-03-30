@@ -23,22 +23,32 @@ IReflow::IReflow(void)
 
 void IReflow::initPins(void)
 {
+  digitalWrite(SSR, LOW);    // turn the LED off by making the voltage LOW
   pinMode(SSR, OUTPUT);
+  digitalWrite(RED_LITE, LOW);    // turn the LED on by making the voltage LOW
+  digitalWrite(GRN_LITE, HIGH);    // turn the LED on by making the voltage LOW
   pinMode(RED_LITE, OUTPUT);
   pinMode(GRN_LITE, OUTPUT);
-  pinMode(BUZZ, OUTPUT);
-  digitalWrite(SSR, LOW);    // turn the LED off by making the voltage LOW
   digitalWrite(BUZZ, LOW);    // turn the LED off by making the voltage LOW
-  digitalWrite(RED_LITE, HIGH);    // turn the LED off by making the voltage LOW
-  digitalWrite(GRN_LITE, HIGH);    // turn the LED off by making the voltage LOW
+  pinMode(BUZZ, OUTPUT);
   return;
+}
+
+void IReflow::redLED(int ledVal)
+{
+	digitalWrite(RED_LITE, ledVal);    // turn the LED off by making the voltage LOW
+}
+
+void IReflow::greenLED(int ledVal)
+{
+	digitalWrite(GRN_LITE, ledVal);    // turn the LED off by making the voltage LOW
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // pollKeypad() - Returns the value of the instantenously pressed keys
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t IReflow::pollKeypad(void)
+/* uint8_t IReflow::pollKeypad(void)
 {
   unsigned int sensorValue = analogRead(KEYPAD);
   if (sensorValue > 871)    // quick if none is pressed
@@ -54,16 +64,16 @@ uint8_t IReflow::pollKeypad(void)
   else
     return(SELECT);
 }
-
+ */
 ////////////////////////////////////////////////////////////////////////////
 // waitForKeyRelease() - Stick in the routine as long as the key is pressed
 ////////////////////////////////////////////////////////////////////////////
 
-void IReflow::waitForKeyRelease(void)
+/* void IReflow::waitForKeyRelease(void)
 {
   while (analogRead(KEYPAD) <= 871)
     delay(5);
-}
+} */
 
 ////////////////////////////////////////////////////////////////////////////
 // getKeyPressed() - Hang around polling the keypad waiting for a key 
@@ -72,7 +82,7 @@ void IReflow::waitForKeyRelease(void)
 // Returns the value of the key that was pressed.
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t IReflow::getKeyPressed(void)
+/* uint8_t IReflow::getKeyPressed(void)
 {
   signed char keyPadVal2;
   keyPadVal2 = pollKeypad();
@@ -80,13 +90,13 @@ uint8_t IReflow::getKeyPressed(void)
     return((byte)NONE);
   waitForKeyRelease();
   return((byte)keyPadVal2);
-}
+} */
 
 ////////////////////////////////////////////////////////////////////////////
 // waitKeyPressed()
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t IReflow::waitKeyPressed(void)
+/* uint8_t IReflow::waitKeyPressed(void)
 {
   signed char keyPadVal3;
   do
@@ -97,7 +107,7 @@ uint8_t IReflow::waitKeyPressed(void)
   delay(5);
   waitForKeyRelease();
   return((byte)keyPadVal3);
-}
+} */
 
 ////////////////////////////////////////////////////////////////////////////
 // delayAvailable(int delayTime) - Delay but check the Serial.available flag
@@ -105,7 +115,7 @@ uint8_t IReflow::waitKeyPressed(void)
 //  there is a reason to break into the delay for serial input.
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t IReflow::delayAvailable(int delayTime)
+/* uint8_t IReflow::delayAvailable(int delayTime)
 {  
   int delayTimeDiv4;
   delayTimeDiv4 = delayTime >> 2;
@@ -117,4 +127,4 @@ uint8_t IReflow::delayAvailable(int delayTime)
     delayTimeDiv4--;
   }
   return(0);
-}
+} */

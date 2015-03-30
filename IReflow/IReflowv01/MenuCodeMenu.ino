@@ -45,7 +45,7 @@ menuStruc menus[] =
   SECOND_LINE_MENU,  "Profile",   2, FIRST_LINE_MENU,  THIRD_LINE_MENU,  SECOND_LINE_MENU, FIRST_SUB_MENU,  &nullFcn,       FIRST_SUB_MENU,
   THIRD_LINE_MENU,   "Mon Temp",  3, SECOND_LINE_MENU, THIRD_LINE_MENU,  THIRD_LINE_MENU,  THIRD_LINE_MENU, &monTempFcn,    FIRST_LINE_MENU,
   FIRST_SUB_MENU,    "Lead free", 1, FIRST_SUB_MENU,   SECOND_SUB_MENU,  FIRST_LINE_MENU,  FIRST_SUB_MENU,  &LeadFreeFcn,   FIRST_LINE_MENU,
-  SECOND_SUB_MENU,   "Lead",      2, FIRST_SUB_MENU,   SECOND_SUB_MENU,  FIRST_LINE_MENU,  FIRST_SUB_MENU,  &LeadFcn,       FIRST_LINE_MENU,
+  SECOND_SUB_MENU,   "Lead",      2, FIRST_SUB_MENU,   SECOND_SUB_MENU,  SECOND_SUB_MENU,  SECOND_SUB_MENU, &LeadFcn,       FIRST_LINE_MENU,
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -89,23 +89,25 @@ void menuRefresh(void)
 void menuNav(void)
 {
   uint8_t keyState;
-//  digitalWrite(RED_LITE, HIGH);
-//  delay(100);
-//  digitalWrite(RED_LITE, LOW);
-  keyState = myIReflow.waitKeyPressed();
+//  keyState = myIReflow.waitKeyPressed();
+  keyState = menuCard.waitKeyPressed();
   switch(keyState)
   {
   case UP:
     menuState = menus[menuState].UP_MENU_PTR;
+    while(menuCard.pollKeypad() == UP);
     break;
   case DOWN:
     menuState = menus[menuState].DOWN_MENU_PTR;
+    while(menuCard.pollKeypad() == DOWN);
     break;
   case LEFT:
     menuState = menus[menuState].LEFT_MENU_PTR;
+    while(menuCard.pollKeypad() == LEFT);
     break;
   case RIGHT:
     menuState = menus[menuState].RIGHT_MENU_PTR;
+    while(menuCard.pollKeypad() == RIGHT);
     break;
   case SELECT:
     // run the selected function
@@ -113,6 +115,7 @@ void menuNav(void)
     foo = menus[menuState].pt2Function;
     foo();
     menuState = menus[menuState].SEL_MENU_PTR;
+    while(menuCard.pollKeypad() == SELECT);
     break;
   }
 }

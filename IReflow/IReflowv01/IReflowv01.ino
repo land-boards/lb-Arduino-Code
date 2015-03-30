@@ -1,12 +1,16 @@
 /*
 
- keypadOled.ino
+ IReflowv01.ino
  
- */
+*/
+
+#include "Wire.h"
+#include <SPI.h>
 
 #include "IReflow.h"
+#include "MyMenu.h"
+
 #include "U8glib.h"
-#include <SPI.h>
 #include "Adafruit_MAX31855.h"
 
 #define CS   9
@@ -32,14 +36,20 @@ enum MENUITEMS
 uint8_t menuState;              // Menu State variable
 
 IReflow myIReflow;
+MyMenu menuCard;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
 void setup(void) 
 {
-  displayInit();                // Hardware specific function to set up the display
   menuState = FIRST_LINE_MENU;  // Set up the init menu state
-  delay(500);
+  myIReflow.redLED(LOW);
+  delay(250);
+  myIReflow.redLED(HIGH);
+  myIReflow.greenLED(LED_ON);
+  delay(100);
+  myIReflow.greenLED(LED_OFF);
+  displayInit();                // Hardware specific function to set up the display
 }
 
 void loop(void) 
@@ -50,9 +60,6 @@ void loop(void)
     menuRefresh();
   } 
   while( u8g.nextPage() );
-
-  // rebuild the picture after some delay
-//  delay(50);
 
   menuNav();
 }

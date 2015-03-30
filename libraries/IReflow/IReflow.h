@@ -15,15 +15,15 @@
 // enums follow
 ////////////////////////////////////////////////////////////////////////////////////
 
-enum KEY_PRESSES
-{
-  NONE,
-  RIGHT,
-  UP,
-  DOWN,
-  LEFT,
-  SELECT,
-};
+// enum KEY_PRESSES
+// {
+  // NONE,
+  // RIGHT,
+  // UP,
+  // DOWN,
+  // LEFT,
+  // SELECT,
+// };
 
 ////////////////////////////////////////////////////////////////////////////
 // I/O Pins on the Arduino UNO as used by the Board
@@ -39,20 +39,25 @@ enum KEY_PRESSES
 #define RED_LITE 6   // pwmable
 #define BUZZ 10      // pwmable
 
-#define KEYPAD      A0
+// #define KEYPAD      A0
 
 #define LCD_ROWS 5
 #define LCD_COLUMNS 13
+
+#define LED_ON LOW
+#define LED_OFF HIGH
 
 class IReflow
 {
   public:
     IReflow(void);
-    uint8_t pollKeypad(void);
-    void waitForKeyRelease(void);
-    uint8_t getKeyPressed(void);
-    uint8_t waitKeyPressed(void);
-    uint8_t delayAvailable(int delayTime);
+    // uint8_t pollKeypad(void);
+    // void waitForKeyRelease(void);
+    // uint8_t getKeyPressed(void);
+    // uint8_t waitKeyPressed(void);
+    // uint8_t delayAvailable(int delayTime);
+	void redLED(int);
+	void greenLED(int);
   private:
     void initPins(void);
 };
