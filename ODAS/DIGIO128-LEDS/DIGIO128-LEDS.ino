@@ -23,6 +23,7 @@ void setup() {
   mcp5.begin(5);      // use default address 0
   mcp6.begin(6);      // use default address 0
   mcp7.begin(7);      // use default address 0
+  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   uint8_t chip;
   uint8_t port;
@@ -48,7 +49,7 @@ void loop() {
     for (port = 0; port < 16; port++)
     {
       mcpWrite(chip, port, HIGH);
-      delay(10);
+//      delay(10);
       mcpWrite(chip, port, LOW);
     }
   }
