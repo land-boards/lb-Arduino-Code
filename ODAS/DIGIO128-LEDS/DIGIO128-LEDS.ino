@@ -49,11 +49,7 @@ void loop() {
     for (port = 0; port < 16; port++)
     {
       mcpWrite(chip, port, HIGH);
-<<<<<<< HEAD
-      delay(100);
-=======
       delay(25);
->>>>>>> origin/master
       mcpWrite(chip, port, LOW);
     }
   }
