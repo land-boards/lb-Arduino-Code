@@ -49,7 +49,7 @@ void loop() {
     for (port = 0; port < 16; port++)
     {
       mcpWrite(chip, port, HIGH);
-      delay(25);
+      delay(100);
       mcpWrite(chip, port, LOW);
     }
   }

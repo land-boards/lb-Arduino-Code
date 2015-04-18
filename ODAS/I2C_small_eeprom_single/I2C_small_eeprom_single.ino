@@ -31,6 +31,8 @@ void setup()
   SERIAL_DEBUG.println("IT IS BEGINNING"); 
   
   eeprom.begin();
+  TWBR = 12;    // go to 400 KHz I2C speed mode
+  
   
     SERIAL_DEBUG.println("----------------------------------------------");     
     SERIAL_DEBUG.print("SINGLE BYTE: writing and retreiving EEPROM on I2C at address ");
