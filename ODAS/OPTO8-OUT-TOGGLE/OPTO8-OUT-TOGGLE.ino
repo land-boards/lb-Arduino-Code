@@ -7,6 +7,7 @@ Adafruit_MCP23008 mcp;
   
 void setup() {  
   mcp.begin();      // use default address 0
+  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   mcp.pinMode(0, OUTPUT);
 }
