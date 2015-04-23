@@ -5,9 +5,7 @@ MyMenu myMenuCard;
 
 void setup()
 {
-  myMenuCard.setLED(0, HIGH);
-  delay(100);
-  myMenuCard.setLED(0, LOW);
+  myMenuCard.begin();
 }
 
 void loop()
@@ -16,7 +14,8 @@ void loop()
   a = myMenuCard.pollKeypad();
   if (a == SELECT)
     myMenuCard.setLED(0, HIGH);
-  delay(100);
-  myMenuCard.setLED(0, LOW);
+  else
+    myMenuCard.setLED(0, LOW);
+  delay(10);
 }
 

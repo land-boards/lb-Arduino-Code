@@ -1,7 +1,5 @@
 /*
-
  IReflowv01.ino
- 
 */
 
 #include "Wire.h"
@@ -36,9 +34,10 @@ enum MENUITEMS
 uint8_t menuState;              // Menu State variable
 
 IReflow myIReflow;
-MyMenu menuCard;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
+
+MyMenu menuCard;
 
 void setup(void) 
 {
@@ -50,6 +49,8 @@ void setup(void)
   delay(100);
   myIReflow.greenLED(LED_OFF);
   displayInit();                // Hardware specific function to set up the display
+  menuCard.begin();
+  TWBR = 12;
 }
 
 void loop(void) 

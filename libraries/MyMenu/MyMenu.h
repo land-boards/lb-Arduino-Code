@@ -1,16 +1,24 @@
 ////////////////////////////////////////////////////////////////////////////
 //  MyMenu.h - Library for MyMenu Shield
-//  Created by Douglas Gilliland. 2012-07-27
+//  Created by Douglas Gilliland. 2015-04-21
 ////////////////////////////////////////////////////////////////////////////
-// Pin assignments as referenced to the MyMenu Board
-// 
+// MCP23008 expander pin assignments are -
+//  0 = LED D3
+//	1 = LED D2
+//	2 = LED D1
+//	3 = SELECT
+//	4 = RIGHT
+//	5 = DOWN
+//	6 = UP
+//	7 = LEFT
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef MyMenu_h
 #define MyMenu_h
 
 #include <inttypes.h>
-#include <../Adafruit_MCP23008/Adafruit_MCP23008.h>
+#include <Adafruit_MCP23008.h>
+#include "Arduino.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // enums follow
@@ -25,8 +33,6 @@ enum KEY_PRESSES
   LEFT,
   SELECT,
 };
-#define GRN_LITE 5   // pwmable
-#define RED_LITE 6   // pwmable
 
 ////////////////////////////////////////////////////////////////////////////
 // I2C Ports
@@ -44,6 +50,7 @@ class MyMenu
     uint8_t waitKeyPressed(void);
     uint8_t delayAvailable(int delayTime);
 	void setLED(int ledNum, int val);
+	void begin(void);
   private:
     void initPins(void);
 	Adafruit_MCP23008 mcp;

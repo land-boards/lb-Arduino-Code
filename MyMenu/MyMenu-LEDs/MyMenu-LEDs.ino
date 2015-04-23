@@ -1,7 +1,7 @@
 #include <Wire.h>
-#include <DGG_MCP23008.h>
+#include <Adafruit_MCP23008.h>
 
-DGG_MCP23008 mcp;
+Adafruit_MCP23008 mcp;
   
 void setup() {  
   mcp.begin();      // use default address 0

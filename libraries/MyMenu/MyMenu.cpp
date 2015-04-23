@@ -1,28 +1,36 @@
 ////////////////////////////////////////////////////////////////////////////
 //  MyMenu.cpp - Library for MyMenu
-//  Created by Douglas Gilliland. 2015-03-29
-//  MyMenu is a card which has all of the menu parts\
-//		OLED pass-thru connector
-//		Keypad (Up, Down, Left, Right, Select)
-//		(3) LEDs
+//  Created by Douglas Gilliland. 2015-04-23
+//  MyMenu is a card which has all of the menu parts
 //		I2C Two-wire interface
+//		OLED pass-thru connector
+//      MCP23008 I2C Port Expander GPIO
+//			Keypad (Up, Down, Left, Right, Select)
+//			(3) LEDs
 //	http://land-boards.com/blwiki/index.php?title=MyMenu
 ////////////////////////////////////////////////////////////////////////////
 
 #include "MyMenu.h"
 
-#include "Arduino.h"
 #include <inttypes.h>
 
 ////////////////////////////////////////////////////////////////////////////
-// MyMenu constructor
+// MyMenu constructor - As I learned by looking at the Adafruit LiquidCrystal 
+// 	I2C library, can't can't call begin from the constructor. 
+//	This probably has something to do with the constructor being a global.
+//	The begin gets called from the setup code.
 ////////////////////////////////////////////////////////////////////////////
 
 MyMenu::MyMenu(void)
 {
-	mcp.begin();      // use default address 0
-	initPins();
 	return;
+}
+
+void MyMenu::begin(void)
+{
+	mcp.begin();      // use default address 0	
+	TWBR = 12;    // go to 400 KHz I2C speed mode
+	initPins();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -31,11 +39,6 @@ MyMenu::MyMenu(void)
 
 void MyMenu::initPins(void)
 {
-  digitalWrite(RED_LITE, HIGH);    // LED, HIGH = OFF, LOW = ON
-  digitalWrite(GRN_LITE, HIGH);    // LED, HIGH = OFF, LOW = ON
-  pinMode(RED_LITE, OUTPUT);
-  mcp.pinMode(GRN_LITE, OUTPUT);
-  digitalWrite(RED_LITE, LOW);    // LED, HIGH = OFF, LOW = ON
 	mcp.pinMode(0, OUTPUT);
 	mcp.pinMode(1, OUTPUT);
 	mcp.pinMode(2, OUTPUT);
@@ -44,7 +47,6 @@ void MyMenu::initPins(void)
 	mcp.pinMode(5, INPUT);
 	mcp.pinMode(6, INPUT);
 	mcp.pinMode(7, INPUT);
-
 	return;
 }
 
@@ -72,7 +74,8 @@ uint8_t MyMenu::pollKeypad(void)
 		return(UP);
 	else if (mcp.digitalRead(7) == 0)
 		return(LEFT);
-	return(NONE);
+	else
+		return(NONE);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -122,7 +125,7 @@ uint8_t MyMenu::waitKeyPressed(void)
 
 ////////////////////////////////////////////////////////////////////////////
 // delayAvailable(int delayTime) - Delay but check the Serial.available flag
-// This is useful for places that a delay lasts for a noticable time and
+// This is useful for places that a delay lasts for a noticeable time and
 //  there is a reason to break into the delay for serial input.
 ////////////////////////////////////////////////////////////////////////////
 
