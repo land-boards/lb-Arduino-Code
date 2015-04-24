@@ -9,9 +9,9 @@ void runProfileFcn(void)
   do
   {
     setDisplayCursor(0, 0);
-    u8g.print("Running");
+    u8g.print(F("Running"));
     setDisplayCursor(1, 0);
-    u8g.print("profile");
+    u8g.print(F("profile"));
   }
   while ( u8g.nextPage() );
   delay(500);
@@ -30,7 +30,7 @@ void monTempFcn(void)
     {
       myTemp = thermocouple.readCelsius();
       setDisplayCursor(0, 0);
-      u8g.print("Temp=");
+      u8g.print(F("Temp="));
       u8g.print(myTemp);
     }
     while ( u8g.nextPage() );
@@ -48,11 +48,11 @@ void LeadFreeFcn(void)
   do
   {
     setDisplayCursor(1, 0);
-    u8g.print("Lead free");
+    u8g.print(F("Lead free"));
     setDisplayCursor(2, 0);
-    u8g.print("profile");
+    u8g.print(F("profile"));
     setDisplayCursor(3, 0);
-    u8g.print("selected");
+    u8g.print(F("selected"));
   }
   while ( u8g.nextPage() );
   delay(2000);
@@ -67,9 +67,9 @@ void LeadFcn(void)
   do
   {
     setDisplayCursor(1, 0);
-    u8g.print("Lead profile");
+    u8g.print(F("Lead profile"));
     setDisplayCursor(2, 0);
-    u8g.print("selected");
+    u8g.print(F("selected"));
   }
   while ( u8g.nextPage() );
   delay(2000);
@@ -84,11 +84,11 @@ void testButtons(void)
   do
   {
     setDisplayCursor(0, 0);
-    u8g.print("Button tests");
+    u8g.print(F("Button tests"));
     setDisplayCursor(1, 0);
-    u8g.print("Press button");
+    u8g.print(F("Press button"));
     setDisplayCursor(2, 0);
-    u8g.print("Select=exit");
+    u8g.print(F("Select=exit"));
   }
   while ( u8g.nextPage() );
   do
@@ -131,9 +131,9 @@ void testLEDsFcn(void)
   do
   {
     setDisplayCursor(0, 0);
-    u8g.print("Running");
+    u8g.print(F("Running"));
     setDisplayCursor(1, 0);
-    u8g.print("LED Tests");
+    u8g.print(F("LED Tests"));
   }
   while ( u8g.nextPage() );
   menuCard.setLED(0, HIGH);
