@@ -7,17 +7,17 @@
 #include <Wire.h>
 #include <I2C_eeprom.h>
 
-// it's only 1Kbit!!!
-#define EE24LC01MAXBYTES 1024/8
+// it's only 2Kbit!!!
+#define EE24LC024MAXBYTES 2048/8
 
 // the address of your EEPROM
-#define DEVICEADDRESS (0xa0)
+#define DEVICEADDRESS (0x50)
 
 #define TEST_ADDR 16
 
 #define SERIAL_DEBUG Serial
 
-I2C_eeprom eeprom(DEVICEADDRESS, EE24LC01MAXBYTES);
+I2C_eeprom eeprom(DEVICEADDRESS, EE24LC024MAXBYTES);
 
 void readAndWriteVar() { 
 
