@@ -23,8 +23,11 @@ enum MENUITEMS
   FIRST_LINE_MENU,
   SECOND_LINE_MENU,
   THIRD_LINE_MENU,
+  FOURTH_LINE_MENU,
   FIRST_SUB_MENU,
   SECOND_SUB_MENU,
+  FSTL_TESTS_MENU,
+  SCND_TESTS_MENU
 };
 
 //////////////////////////////////////////////////////////////////////////////

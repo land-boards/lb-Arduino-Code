@@ -28,8 +28,8 @@ MyMenu::MyMenu(void)
 
 void MyMenu::begin(void)
 {
-	mcp.begin();      // use default address 0	
-	TWBR = 12;    // go to 400 KHz I2C speed mode
+	mcp.begin();   	// use default address 0	
+	TWBR = 12;    	// go to 400 KHz I2C speed mode
 	initPins();
 }
 
@@ -64,15 +64,19 @@ void MyMenu::setLED(int ledNum, int val)
 
 uint8_t MyMenu::pollKeypad(void)
 {
-	if (mcp.digitalRead(3) == 0)
+	uint8_t readVal;
+	readVal = mcp.readGPIO();
+	if ((readVal & 0xf8) == 0xf8)
+		return(NONE);
+	else if ((readVal & 0x08) == 0)
 		return(SELECT);
-	else if (mcp.digitalRead(4) == 0)
+	else if ((readVal & 0x10) == 0)
 		return(RIGHT);
-	else if (mcp.digitalRead(5) == 0)
+	else if ((readVal & 0x20) == 0)
 		return(DOWN);
-	else if (mcp.digitalRead(6) == 0)
+	else if ((readVal & 0x40) == 0)
 		return(UP);
-	else if (mcp.digitalRead(7) == 0)
+	else if ((readVal & 0x80) == 0)
 		return(LEFT);
 	else
 		return(NONE);
@@ -101,9 +105,9 @@ uint8_t MyMenu::getKeyPressed(void)
 	signed char keyPadVal2;
 	keyPadVal2 = pollKeypad();
 	if (keyPadVal2 == NONE)
-	return((byte)NONE);
+		return((byte)NONE);
 	waitForKeyRelease();
-	return((byte)keyPadVal2);
+		return((byte)keyPadVal2);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -136,7 +140,7 @@ uint8_t MyMenu::delayAvailable(int delayTime)
 	while (delayTimeDiv4 > 0)
 	{
 		if (pollKeypad() != NONE)
-		return((byte)1);
+			return((byte)1);
 		delay(4);
 		delayTimeDiv4--;
 	}
