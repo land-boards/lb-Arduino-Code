@@ -1,16 +1,13 @@
 //
-//    FILE: I2C_small_eeprom_test.ino
-//  AUTHOR: 
-// VERSION: 0.1.00
+// I2C_small_eeprom_test-block.ino
 // PURPOSE: show/test I2C_EEPROM library with small EEPROMS
 //
 #include <Wire.h>
 #include <I2C_eeprom.h>
 
-// it's only 2kbit!!!
 #define EE24LC024MAXBYTES 2048/8
 
-// the address of your EEPROM
+// EEPROM nase address 
 #define DEVICEADDRESS (0x50)
 
 #define TEST_ADDR 16
@@ -43,8 +40,7 @@ void readAndWriteVar() {
 
     SERIAL_DEBUG.print("last value: ");
     SERIAL_DEBUG.println(curval);
-
-
+    
     curval += 1;
     eeprom.writeByte(TEST_ADDR, curval);
 
@@ -61,22 +57,12 @@ void readAndWritePage(unsigned int pageAddress, int bufferLen) {
     // always make the maximum size, just don't use all of it.
     byte testBuffer[LONG_BUFFER_LEN + 1];
 
-    SERIAL_DEBUG.println("Inside readAndWritePage()");
-    SERIAL_DEBUG.print("pageAddress=");
-    SERIAL_DEBUG.println(pageAddress);
-    SERIAL_DEBUG.print("bufferLen=");
-    SERIAL_DEBUG.println(bufferLen);
-   
     testBuffer[0] = '1';
     testBuffer[1] = '2';
     testBuffer[2] = '3';
     testBuffer[3] = '4';
     testBuffer[4] = 0;
     
-    SERIAL_DEBUG.print("initialized testBuffer[]=");
-    SERIAL_DEBUG.println((char*)testBuffer);
-
-    SERIAL_DEBUG.println("calling readBlock");
     eeprom.readBlock(pageAddress, testBuffer, bufferLen);
     SERIAL_DEBUG.print("testBuffer (after read):=");
     SERIAL_DEBUG.println((char*)testBuffer);
@@ -86,12 +72,8 @@ void readAndWritePage(unsigned int pageAddress, int bufferLen) {
       // use max to init to all AAAA's on first run.
       testBuffer[i] = max('A', (testBuffer[i] + ((i % 4) + 1) % 'z'));
     }
-    SERIAL_DEBUG.print("Filled buffer=");
-    SERIAL_DEBUG.println((char *) testBuffer);
-    
-    SERIAL_DEBUG.println("calling writeBlock");
+
     eeprom.writeBlock(pageAddress, testBuffer, bufferLen);
-    SERIAL_DEBUG.println("returned from writeBlock");
 
     SERIAL_DEBUG.print("updating to: ");
     SERIAL_DEBUG.println((char*)testBuffer);
