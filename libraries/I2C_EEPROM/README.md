@@ -1,6 +1,6 @@
 #I2C_EEPROM library
 
-The original library had a bug in the page write function.
+The original library had a bug in the page write function. Fixed here https://github.com/douggilliland/lb-Arduino-Code/commit/372eb734cb66c95d27627cbe4ab93c315346d850.
 
 ##Ownership
 
