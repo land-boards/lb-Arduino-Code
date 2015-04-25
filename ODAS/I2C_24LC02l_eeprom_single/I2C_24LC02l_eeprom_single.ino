@@ -19,10 +19,6 @@
 
 I2C_eeprom eeprom(DEVICEADDRESS, EE24LC024MAXBYTES);
 
-void readAndWriteVar() { 
-
-}
-
 void setup()
 {
   SERIAL_DEBUG.begin(57600); 
