@@ -26,7 +26,6 @@ void Adafruit_MCP23008::begin(uint8_t addr) {
   Wire.write((byte)0x00);
   Wire.write((byte)0x00);	
   Wire.endTransmission();
-
 }
 
 void Adafruit_MCP23008::begin(void) {
@@ -55,7 +54,6 @@ void Adafruit_MCP23008::pinMode(uint8_t p, uint8_t d) {
 }
 
 uint8_t Adafruit_MCP23008::readGPIO(void) {
-  // read the current GPIO
   return read8(MCP23008_GPIO);
 }
 
