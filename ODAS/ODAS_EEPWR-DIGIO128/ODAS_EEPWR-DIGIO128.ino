@@ -74,11 +74,11 @@ struct eep_vals
   myEep.uuid[13] = '0';
   myEep.uuid[14] = '0';
   myEep.uuid[15] = '0';
-  myEep.pid = 0x01;
+  myEep.pid = 0x02;
   myEep.vslen = 32;
   myEep.pslen = 32;
   strcpy(myEep.vstr,"land.boards.com");
-  strcpy(myEep.pstr,"DIGIO16-I2C");
+  strcpy(myEep.pstr,"DIGIO128");
   
   Serial.print("len of buffer=");
   Serial.println(sizeof(myEep));
