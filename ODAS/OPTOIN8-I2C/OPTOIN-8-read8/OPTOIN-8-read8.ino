@@ -3,12 +3,17 @@
 
 Adafruit_MCP23008 mcp;
 
+int d13shadow;
+
 void setup()
 {
   int loopVal;
+  d13shadow = 0;
   Serial.begin(57600);
   mcp.begin();      // use default address 0
-
+  TWBR = 12;
+  digitalWrite(13, LOW);
+  pinMode(13, d13shadow);
   for (loopVal = 4; loopVal < 12; loopVal++)
   {
     digitalWrite(loopVal, LOW);
@@ -59,5 +64,8 @@ void loop()
     Serial.println("Test failed");
   else
     Serial.println("Test passed");
+  d13shadow ^= 0x1;
+  pinMode(13, d13shadow);
+  delay(100);  
 }
 
