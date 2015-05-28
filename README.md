@@ -10,4 +10,4 @@ Some of these files (particularly libraries) were created by others. There may b
 
 ##Warning
 
-Use at your own risk. If you brick your part or it melts to a puddle, it's on you not me.
+Use at your own risk. If you brick your part or it melts to a puddle, it's on you not me. Really!
