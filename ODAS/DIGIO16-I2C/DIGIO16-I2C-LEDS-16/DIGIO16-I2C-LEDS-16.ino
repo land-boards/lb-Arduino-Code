@@ -1,5 +1,5 @@
-// DIGIO-16 Example code
-// Make all 128 lines outputs
+// DIGIO16-I2C Example code
+// Make all 16 lines outputs
 // Blink each line, one at a time
 
 #include <Wire.h>
