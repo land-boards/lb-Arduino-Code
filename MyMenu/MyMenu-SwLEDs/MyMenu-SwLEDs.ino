@@ -4,7 +4,7 @@
 Adafruit_MCP23008 mcp;
   
 void setup() {  
-  mcp.begin();      // use default address 0
+  mcp.begin(1);      // use default address 0
 
   mcp.pinMode(0, OUTPUT);
   mcp.pinMode(1, OUTPUT);
