@@ -23,12 +23,7 @@ void setDisplayCursor(uint8_t row, uint8_t col)
 
 void clearDisplay(void)
 {
-//  u8g.firstPage();  
-//  do 
-//  {
-//  } 
-//  while( u8g.nextPage() );
-    }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 // setUnselectedTextColor() - Sets the color of the text for non-selected text
