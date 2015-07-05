@@ -26,6 +26,13 @@ MyMenu::MyMenu(void)
 	return;
 }
 
+void MyMenu::begin(int portNum)
+{
+	mcp.begin(portNum);   	// use default address 0	
+	TWBR = 12;    	// go to 400 KHz I2C speed mode
+	initPins();
+}
+
 void MyMenu::begin(void)
 {
 	mcp.begin();   	// use default address 0	

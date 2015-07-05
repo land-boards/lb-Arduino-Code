@@ -50,7 +50,8 @@ class MyMenu
     uint8_t waitKeyPressed(void);
     uint8_t delayAvailable(int delayTime);
 	void setLED(int ledNum, int val);
-	void begin(void);
+	void begin(int);
+	void begin();
   private:
     void initPins(void);
 	Adafruit_MCP23008 mcp;
