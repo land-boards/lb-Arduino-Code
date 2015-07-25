@@ -11,7 +11,7 @@ void runProfileFcn(void)
     setDisplayCursor(0, 0);
     u8g.print(F("Running"));
     setDisplayCursor(1, 0);
-    u8g.print(F("profile"));
+    u8g.print(F("Thing"));
   }
   while ( u8g.nextPage() );
   delay(500);
@@ -29,8 +29,7 @@ void monTempFcn(void)
     do
     {
       setDisplayCursor(0, 0);
-      u8g.print(F("Temp="));
-      u8g.print(myTemp);
+      u8g.print(F("Monitoring"));
     }
     while ( u8g.nextPage() );
     delay(10);
@@ -46,15 +45,12 @@ void LeadFreeFcn(void)
   do
   {
     setDisplayCursor(1, 0);
-    u8g.print(F("Lead free"));
+    u8g.print(F("Selected"));
     setDisplayCursor(2, 0);
-    u8g.print(F("profile"));
-    setDisplayCursor(3, 0);
-    u8g.print(F("selected"));
+    u8g.print(F("Option1"));
   }
   while ( u8g.nextPage() );
   delay(2000);
-  delay(500);
 }
 
 void LeadFcn(void)
@@ -63,13 +59,12 @@ void LeadFcn(void)
   do
   {
     setDisplayCursor(1, 0);
-    u8g.print(F("Lead profile"));
+    u8g.print(F("Selected"));
     setDisplayCursor(2, 0);
-    u8g.print(F("selected"));
+    u8g.print(F("Option2"));
   }
   while ( u8g.nextPage() );
   delay(2000);
-  delay(500);
 }
 
 void testButtons(void)

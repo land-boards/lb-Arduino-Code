@@ -34,7 +34,7 @@ U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
 MyMenu menuCard;
 
-#define LCD_COLUMNS 13
+#define LCD_COLUMNS 14
 
 void setup(void) 
 {
