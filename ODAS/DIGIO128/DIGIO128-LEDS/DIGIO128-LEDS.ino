@@ -176,30 +176,29 @@ uint8_t mcpRead(uint8_t chipNum, uint8_t chNum)
 {
   switch (chipNum)
   {
-  case 0:
-    mcp0.digitalRead(chNum);
-    break;
-  case 1:
-    mcp1.digitalRead(chNum);
-    break;
-  case 2:
-    mcp2.digitalRead(chNum);
-    break;
-  case 3:
-    mcp3.digitalRead(chNum);
-    break;
-  case 4:
-    mcp4.digitalRead(chNum);
-    break;
-  case 5:
-    mcp5.digitalRead(chNum);
-    break;
-  case 6:
-    mcp6.digitalRead(chNum);
-    break;
-  case 7:
-    mcp7.digitalRead(chNum);
-    break;
-  }  
+    case 0:
+      return(mcp0.digitalRead(chNum));
+      break;
+    case 1:
+      return(mcp1.digitalRead(chNum));
+      break;
+    case 2:
+      return(mcp2.digitalRead(chNum));
+      break;
+    case 3:
+      return(mcp3.digitalRead(chNum));
+      break;
+    case 4:
+      return(mcp4.digitalRead(chNum));
+      break;
+    case 5:
+      return(mcp5.digitalRead(chNum));
+      break;
+    case 6:
+      return(mcp6.digitalRead(chNum));
+      break;
+    case 7:
+      return(mcp7.digitalRead(chNum));
+      break;
+  }
 }
-
