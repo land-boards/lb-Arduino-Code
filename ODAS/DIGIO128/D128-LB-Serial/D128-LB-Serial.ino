@@ -14,8 +14,8 @@ Adafruit_MCP23017 mcp5;
 Adafruit_MCP23017 mcp6;
 Adafruit_MCP23017 mcp7;
 
-int failCount;
-int passCount;
+uint32_t failCount;
+uint32_t passCount;
 
 void setup()
 {
@@ -50,10 +50,10 @@ void loop()
     passCount++;
   else
     failCount++;
-  Serial.print("Loopback Test PASS = ");
-  Serial.print(passCount);  
-  Serial.print(", FAIL = ");
-  Serial.println(failCount);
+//  Serial.print("Loopback Test PASS = ");
+//  Serial.print(passCount);  
+//  Serial.print(", FAIL = ");
+//  Serial.println(failCount);
 }
 
 uint8_t loopBackTest(void)
@@ -68,9 +68,9 @@ uint8_t loopBackTest(void)
       mcpPinMode(chip, port, OUTPUT);
       mcpPinMode(chip + 1, 15 - port,INPUT);
       
-      delay(2);
+      delay(1);
       mcpWrite(chip, port, HIGH);
-      delay(2);
+      delay(1);
       if (mcpRead(chip + 1, 15 - port) != HIGH)
       {
         Serial.print("Error on chip ");
@@ -81,7 +81,7 @@ uint8_t loopBackTest(void)
         pass0fail1 = 1;
       }
       mcpWrite(chip, port, LOW);
-      delay(2);
+      delay(1);
       if (mcpRead(chip + 1, 15 - port) != LOW)
       {
         Serial.print("Error on chip ");
@@ -92,7 +92,7 @@ uint8_t loopBackTest(void)
         pass0fail1 = 1;
       }
       mcpPinMode(chip, port, INPUT);
-      delay(2);
+      delay(1);
     }
     return pass0fail1;
   }
