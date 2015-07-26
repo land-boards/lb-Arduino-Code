@@ -1,6 +1,5 @@
-// DIGIO-16 Example code
-// Make all 128 lines outputs
-// Blink each line, one at a time
+// DIGIO-16 Loopback code
+// Test each channel
 
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
@@ -42,6 +41,7 @@ void setup()
   }
 failCount = 0;
 passCount = 0;
+Serial.println("Test running");
 }
 
 void loop()
