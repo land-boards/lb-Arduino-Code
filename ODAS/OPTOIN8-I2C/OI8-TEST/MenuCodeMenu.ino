@@ -60,11 +60,11 @@ void menuRefresh(void)
   uint8_t nextLine, lastLine;
   clearDisplay();
   setDisplayCursor((menus[menuState].rowNumber)-1,0); // Print the currently selected line
-  setSelectedTextColor();
-  u8g.print("*");
+  u8g.setColorIndex(1);
+  u8g.drawBox(0,((menus[menuState].rowNumber-1)*13)+1,127,13);
+  u8g.setColorIndex(0);
   u8g.print(menus[menuState].menuString);     
-  u8g.print("*");
-  setUnselectedTextColor();  // Return to "normal" text color
+  u8g.setColorIndex(1);
   lastLine = menuState;
   // display the lines above the selected line first
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))

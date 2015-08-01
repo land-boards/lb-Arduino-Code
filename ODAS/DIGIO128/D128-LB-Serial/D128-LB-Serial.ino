@@ -151,7 +151,7 @@ void loop()
       myEep.vslen = 32;
       myEep.pslen = 32;
       strcpy(myEep.vstr, "land-boards.com");
-      strcpy(myEep.pstr, "DIGIO128");
+      strcpy(myEep.pstr, "DIGIO-128");
 
       Serial.print("len of buffer=");
       Serial.println(sizeof(myEep));
@@ -221,6 +221,10 @@ uint8_t loopBackTest(void)
   {
     for (port = 0; port < 16; port++)
     {
+//      Serial.print("chip ");
+//      Serial.print(chip);
+//      Serial.print(", port ");
+//      Serial.println(port);
       mcpPinMode(chip, port, OUTPUT);
       mcpPinMode(chip + 1, 15 - port, INPUT);
 
@@ -250,8 +254,8 @@ uint8_t loopBackTest(void)
       mcpPinMode(chip, port, INPUT);
       delay(1);
     }
-    return pass0fail1;
   }
+   return pass0fail1;
 }
 
 /* mcpWrite(chipNum, chNum, val)
