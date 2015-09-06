@@ -30,17 +30,49 @@ void setup() {
 /*
  This method will display the characters for the
  word "Arduino" one after the other on digit 0. 
+ setRow values
+ 0x01 = center
+ 0x02 = upper left
+ 0x04 =  lower left
+ 0x08 = bottom
+ 0x10 = lower right
+ 0x20 = upper right
+ 0x40 = top
  */
+ 
+#define CENTER 0x1
+#define UL 0x2
+#define LL 0x4
+#define BOTTOM 0x8
+#define LR 0x10
+#define UR 0x20
+#define TOP 0x40
+ 
 void writeArduinoOn7Segment() 
 {
-  lc.setChar(0,0,'d',false);    // d
+  lc.setChar(0,7,'l',false);    // L
   delay(delaytime);
-  lc.setRow(0,0,0x1D);          // o
+  lc.setRow(0,6,0x7d);          // a
   delay(delaytime);
-  lc.setRow(0,0,0x1c);          // u
+  lc.setRow(0,5,0x15);          // n
   delay(delaytime);
-  lc.setChar(0,0,'9',false);    // g
+  lc.setChar(0,4,'d',false);    // d
   delay(delaytime);
+  lc.setRow(0,3,(CENTER));          // r
+  delay(delaytime*4);
+  lc.clearDisplay(0);
+  lc.setChar(0,7,'b',false);    // b
+  delay(delaytime);
+  lc.setRow(0,6,(LL|CENTER|BOTTOM|LR));          // o
+  delay(delaytime);
+  lc.setRow(0,5,0x7d);          // a
+  delay(delaytime);
+  lc.setRow(0,4,(LL|CENTER));          // r
+  delay(delaytime);
+  lc.setChar(0,3,'d',false);    // d
+  delay(delaytime);
+  lc.setRow(0,2 ,(BOTTOM|LR|CENTER|UL|TOP));          // S
+  delay(delaytime*4);
 } 
 
 /*
@@ -68,6 +100,6 @@ void loop() {
   lc.clearDisplay(0);
   delay(delaytime);
   writeArduinoOn7Segment();
-  scrollDigits();
+//  scrollDigits();
 }
 
