@@ -7,14 +7,15 @@
 #include "landboards_pca9544a.h"
 
 Adafruit_MCP23017 mcp0;
+
 landboards_pca9544a mux;
 
 void setup() {
+  mux.begin(0);
+  mux.setI2CChannel(0);
   mcp0.begin(0);      // use default address 0
-  mux.begin(1);
   TWBR = 12;    // go to 400 KHz I2C speed mode
 
-  mux.setI2CChannel(0);
   
   uint8_t chip;
   uint8_t port;
