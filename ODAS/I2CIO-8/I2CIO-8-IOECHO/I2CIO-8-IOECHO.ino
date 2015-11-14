@@ -3,18 +3,7 @@
 #include <Wire.h>
 #include "Adafruit_MCP23008.h"
 
-#define IODIR 0x0
-#define IPOL 0x1
-#define GPINTEN 0x2
-#define DEFVAL 0x3
-#define INTCON 0x4
-#define IOCON 0x5
 #define INTPOLACTHI 0x02
-#define GPPU 0x6
-#define INTF 0x7
-#define INTCAP 0x8
-#define GPIO 0x9
-#define OLAT 0xa
 
 Adafruit_MCP23008 mcp;
 
@@ -26,25 +15,20 @@ void setup()
     mcp.pinMode(loopCnt, OUTPUT);
   for (int loopCnt = 4; loopCnt < 8; loopCnt++)
     mcp.pinMode(loopCnt, INPUT);
-    mcpwrite8(IOCON,INTPOLACTHI);
+    mcpwrite8(MCP23008_IOCON,INTPOLACTHI);
 }
 
 //
 
 void loop()
 {
-  mcp.digitalWrite(3, LOW);
-  mcp.digitalWrite(0, HIGH);
-  delay(500);
-  mcp.digitalWrite(0, LOW);
-  mcp.digitalWrite(1, HIGH);
-  delay(500);
-  mcp.digitalWrite(1, LOW);
-  mcp.digitalWrite(2, HIGH);
-  delay(500);
-  mcp.digitalWrite(2, LOW);
-  mcp.digitalWrite(3, HIGH);
-  delay(500);
+char theChar;
+
+theChar = read8(MCP23008_GPIO);
+mcpwrite8(MCP23008_OLAT,theChar>>4);
+mcpwrite8(MCP23008_IPOL,0xf0);
+mcpwrite8(MCP23008_GPINTEN,0xf0);
+delay(500);
 }
 
 void mcpwrite8(uint8_t addr, uint8_t data) {
@@ -52,5 +36,14 @@ void mcpwrite8(uint8_t addr, uint8_t data) {
   Wire.write((byte)addr);
   Wire.write((byte)data);
   Wire.endTransmission();
+}
+
+uint8_t read8(uint8_t addr) {
+  Wire.beginTransmission(0x20);
+  Wire.write((byte)addr);  
+  Wire.endTransmission();
+  Wire.requestFrom(0x20, 1);
+
+  return Wire.read();
 }
 
