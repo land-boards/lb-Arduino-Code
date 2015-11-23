@@ -1,6 +1,6 @@
-// DIGIO-16 Example code
-// Make all 128 lines outputs
-// Blink each line, one at a time
+// DIGIO-16 Loopback code
+// Tests port-to-port loopback
+// Reports any failures
 
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"

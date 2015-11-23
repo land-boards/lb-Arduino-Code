@@ -13,7 +13,7 @@
 
 #define EE24LC024MAXBYTES 2048/8
 
-// EEPROM nase address
+// EEPROM base address
 #define DEVICEADDRESS (0x50)
 
 #define TEST_ADDR 16
