@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // D16-TEST
-// Test the Gigio16-I2C card
+// Test the DigIO16-I2C card
 // Uses GVSDuino card
 // Uses MyMenu card
 // https://code.google.com/p/u8glib/wiki/u8glib?tm=6
