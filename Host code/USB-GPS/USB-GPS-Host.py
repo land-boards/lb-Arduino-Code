@@ -1,4 +1,4 @@
-# python code for interfacing to USB-GPS9 
+# python code for interfacing to USB-GPS9
 # pretty basic stuff
 # written by ladyada. MIT license
 
