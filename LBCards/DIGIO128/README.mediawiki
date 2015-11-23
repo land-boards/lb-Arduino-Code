@@ -34,17 +34,6 @@
 * D128Loop - Loopback test portion isolated
 * D128mcp - MCP23017 expansion from single chip to 8 chips
 
-==== D128LBSerial ====
-
-* Performs loopback testing from one chip to the next (0-1, 2-3, 405, 6-7 chips)
-* Uses an Arduino UNO with a Host USB connection
-* Standalone version of the loopback code contained in the D128FAT
-* Requires 8 loopback cables (10 pin 1:1 jumper cables)
-
-==== D128mcp ====
-
-* The code isolated for the mcp chip drivers
-
 === Ownership ===
 
 * Some of these files (particularly libraries) were created by others.
