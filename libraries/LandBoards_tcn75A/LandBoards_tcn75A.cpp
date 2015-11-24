@@ -1,16 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////
-//  landboards_pca9544a.cpp - I2C Bridge PCA9544A Library 
-//  Created by Douglas Gilliland. 2015-09-05
-//  landboards_pca9544a
-//	http://land-boards.com/blwiki/index.php?title=I2C-RPT
+//  landboards_TCN75A.cpp - I2C Temperature Library
+//  Created by Douglas Gilliland. 2015-11-24
+//	http://land-boards.com/blwiki/index.php?title=I2C-TEMP-01
 ////////////////////////////////////////////////////////////////////////////
 
-#include "landboards_pca9544a.h"
-#include <Wire.h>
+#include "Wire.h"
 #include <avr/pgmspace.h>
 #include <inttypes.h>
+#include "landboards_TCN75A.h"
 
-landboards_pca9544a::landboards_pca9544a()
+////////////////////////////////////////////////////////////////////////////
+// Constructor
+////////////////////////////////////////////////////////////////////////////
+
+landboards_TCN75A::landboards_TCN75A()
 {
 	return;
 }
@@ -19,55 +22,66 @@ landboards_pca9544a::landboards_pca9544a()
 // begin(uint8_t addr) - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::begin(uint8_t addr) 
+void landboards_TCN75A::begin(uint8_t addr) 
 {
 	i2cAddrOffset = addr & 0x7;
-	Wire.begin();
-	ctrl_copy = 0;  // ctrl reg initialized 
-	Wire.beginTransmission(PCA9544A_ADDRESS | i2cAddrOffset);
-	Wire.write((byte)ctrl_copy);
-	Wire.endTransmission();
+	configShadow = 0;
+	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
+	Wire.write((uint8_t)TCN75A_CONFIG);           			// Register Point to config register
+	Wire.endTransmission();           						// Command to read bytes
+	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
+	Wire.write((uint8_t)configShadow);	           			// Clear the config shadow
+	Wire.endTransmission();           						// Command to read bytes
+	TWBR = 12;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // begin(void) - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::begin(void)
-{	
+void landboards_TCN75A::begin(void)
+{
 	begin(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// setI2CChannel(channelNumber) - Set the channel number
+// getTemp() - Set the temperature
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::setI2CChannel(uint8_t channelNumber)
+float landboards_TCN75A::getTemp(void)
 {
-	channelNumber &= 0x3;
-	ctrl_copy = 0x04 | channelNumber;
-	Wire.beginTransmission(PCA9544A_ADDRESS | i2cAddrOffset);
-	Wire.write((byte)ctrl_copy);
-	Wire.endTransmission();
-	return;
+  uint8_t upperByte, lowerByte;
+  float temp=.0;
+  Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);	// Start I2C connection
+  Wire.write((uint8_t)TCN75A_TEMPREG);           			// Register Point to first register
+  Wire.endTransmission();           						// Command to read bytes
+  Wire.requestFrom(TCN75A_BASEADDR | i2cAddrOffset, 2);     // Read first two bytes
+  upperByte = Wire.read();                  				// Read the temp upper
+  lowerByte = Wire.read();                  				// Read the temp lower
+  if (upperByte>127)            // check for below zero degrees
+  {
+    temp=((upperByte-128)*-1);
+    if (lowerByte==128)         // check for 0.5 fraction
+    {
+      temp-=0.5;
+    }
+  }
+  else                   // it must be above zero degrees
+  {
+    temp=upperByte;
+    if (lowerByte==128)         // check for 0.5 fraction
+    {
+      temp+=0.5;
+    }
+  }
+  return(temp);
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// getCurrentChannel(void) 
+// readControlRegister() - Read from the control register
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t landboards_pca9544a::setI2CChannel(void)
+uint8_t readControlRegister(void)
 {
-	Wire.requestFrom(PCA9544A_ADDRESS | i2cAddrOffset, 1);
-	return (Wire.read() & 0x3);
-}
-
-////////////////////////////////////////////////////////////////////////////
-// getIntStatus
-////////////////////////////////////////////////////////////////////////////
-
-uint8_t landboards_pca9544a::getIntStatus(void)
-{
-	Wire.requestFrom(PCA9544A_ADDRESS | i2cAddrOffset, 1);
-	return ((Wire.read() >> 4) & 0xf);
+	return(0);
 }
