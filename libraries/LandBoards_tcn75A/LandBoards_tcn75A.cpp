@@ -21,10 +21,10 @@ landboards_pca9544a::landboards_pca9544a()
 
 void landboards_pca9544a::begin(uint8_t addr) 
 {
-	i2caddr = addr & 0x7;
+	i2cAddrOffset = addr & 0x7;
 	Wire.begin();
 	ctrl_copy = 0;  // ctrl reg initialized 
-	Wire.beginTransmission(PCA9544A_ADDRESS | i2caddr);
+	Wire.beginTransmission(PCA9544A_ADDRESS | i2cAddrOffset);
 	Wire.write((byte)ctrl_copy);
 	Wire.endTransmission();
 }
@@ -39,15 +39,14 @@ void landboards_pca9544a::begin(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// setI2CChannel() - 
+// setI2CChannel(channelNumber) - Set the channel number
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::setI2CChannel(uint8_t chNum)
+void landboards_pca9544a::setI2CChannel(uint8_t channelNumber)
 {
-	if (chNum > 3)
-		return;
-	ctrl_copy = 0x04 | chNum;
-	Wire.beginTransmission(PCA9544A_ADDRESS | i2caddr);
+	channelNumber &= 0x3;
+	ctrl_copy = 0x04 | channelNumber;
+	Wire.beginTransmission(PCA9544A_ADDRESS | i2cAddrOffset);
 	Wire.write((byte)ctrl_copy);
 	Wire.endTransmission();
 	return;
@@ -59,7 +58,7 @@ void landboards_pca9544a::setI2CChannel(uint8_t chNum)
 
 uint8_t landboards_pca9544a::setI2CChannel(void)
 {
-	Wire.requestFrom(PCA9544A_ADDRESS | i2caddr, 1);
+	Wire.requestFrom(PCA9544A_ADDRESS | i2cAddrOffset, 1);
 	return (Wire.read() & 0x3);
 }
 
@@ -69,6 +68,6 @@ uint8_t landboards_pca9544a::setI2CChannel(void)
 
 uint8_t landboards_pca9544a::getIntStatus(void)
 {
-	Wire.requestFrom(PCA9544A_ADDRESS | i2caddr, 1);
+	Wire.requestFrom(PCA9544A_ADDRESS | i2cAddrOffset, 1);
 	return ((Wire.read() >> 4) & 0xf);
 }
