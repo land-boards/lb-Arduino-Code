@@ -4,8 +4,8 @@
 //	http://land-boards.com/blwiki/index.php?title=I2C-TEMP-01
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef _landboards_TCN75A_h
-#define _landboards_TCN75A_h
+#ifndef _LandBoards_I2CTEMP01_h
+#define _LandBoards_I2CTEMP01_h
 
 #include <Wire.h>
 #include <inttypes.h>
@@ -39,10 +39,10 @@
 #define TCN75A_RES12BIT 0x60
 #define TCN75A_RESMASK 0x9f
 
-class landboards_TCN75A
+class LandBoards_I2CTEMP01
 {
   public:
-    landboards_TCN75A(void);
+    LandBoards_I2CTEMP01(void);
 	void begin(uint8_t);
 	void begin();
     float getTemp(void);

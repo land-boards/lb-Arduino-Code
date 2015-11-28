@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  landboards_TCN75A.cpp - I2C Temperature Library
+//  LandBoards_I2CTEMP01.cpp - I2C Temperature Library
 //  Created by Douglas Gilliland. 2015-11-24
 //	http://land-boards.com/blwiki/index.php?title=I2C-TEMP-01
 ////////////////////////////////////////////////////////////////////////////
@@ -7,13 +7,13 @@
 #include "Wire.h"
 #include <avr/pgmspace.h>
 #include <inttypes.h>
-#include "landboards_TCN75A.h"
+#include "LandBoards_I2CTEMP01.h"
 
 ////////////////////////////////////////////////////////////////////////////
 // Constructor
 ////////////////////////////////////////////////////////////////////////////
 
-landboards_TCN75A::landboards_TCN75A()
+LandBoards_I2CTEMP01::LandBoards_I2CTEMP01()
 {
 	return;
 }
@@ -22,7 +22,7 @@ landboards_TCN75A::landboards_TCN75A()
 // begin(uint8_t addr) - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::begin(uint8_t addr) 
+void LandBoards_I2CTEMP01::begin(uint8_t addr) 
 {
 	i2cAddrOffset = addr & 0x7;
 	configShadow = 0;
@@ -42,7 +42,7 @@ void landboards_TCN75A::begin(uint8_t addr)
 // begin(void) - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::begin(void)
+void LandBoards_I2CTEMP01::begin(void)
 {
 	begin(0);
 }
@@ -51,7 +51,7 @@ void landboards_TCN75A::begin(void)
 // getTemp() - Get the temperature
 ////////////////////////////////////////////////////////////////////////////
 
-float landboards_TCN75A::getTemp(void)
+float LandBoards_I2CTEMP01::getTemp(void)
 {
   uint16_t tempValue;
   float temp=.0;
@@ -70,7 +70,7 @@ float landboards_TCN75A::getTemp(void)
 // readShadowConfigRegister() - Read from the Config register
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t landboards_TCN75A::readShadowConfigRegister(void)
+uint8_t LandBoards_I2CTEMP01::readShadowConfigRegister(void)
 {
 	return(configShadow);
 }
@@ -79,7 +79,7 @@ uint8_t landboards_TCN75A::readShadowConfigRegister(void)
 // readConfigRegister() - Read from the Config register
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t landboards_TCN75A::readConfigRegister(void)
+uint8_t LandBoards_I2CTEMP01::readConfigRegister(void)
 {
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
 	Wire.write((uint8_t)TCN75A_CONFIG);           			// Register Point to config register
@@ -93,7 +93,7 @@ uint8_t landboards_TCN75A::readConfigRegister(void)
 // writeConfigRegister(ctrlVal) - Write ctrlVal to the Config register
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::writeConfigRegister(uint8_t ctrlVal)
+void LandBoards_I2CTEMP01::writeConfigRegister(uint8_t ctrlVal)
 {
 	configShadow = ctrlVal;
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);	// Start I2C connection
@@ -105,7 +105,7 @@ void landboards_TCN75A::writeConfigRegister(uint8_t ctrlVal)
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t landboards_TCN75A::readTSetRegister(void)
+uint16_t LandBoards_I2CTEMP01::readTSetRegister(void)
 {
 	return(read16BitReg(TCN75A_SET));
 }
@@ -114,7 +114,7 @@ uint16_t landboards_TCN75A::readTSetRegister(void)
 //
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::writeTSetRegister(uint16_t setVal)
+void LandBoards_I2CTEMP01::writeTSetRegister(uint16_t setVal)
 {
 	write16BitReg(TCN75A_SET, setVal);
 }
@@ -127,7 +127,7 @@ void landboards_TCN75A::writeTSetRegister(uint16_t setVal)
 // #define TCN75A_RES12BIT 0x60
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::setResolution(uint8_t res)
+void LandBoards_I2CTEMP01::setResolution(uint8_t res)
 {
 	configShadow = readConfigRegister();
 	configShadow &= TCN75A_RESMASK;
@@ -139,7 +139,7 @@ void landboards_TCN75A::setResolution(uint8_t res)
 //
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t landboards_TCN75A::readTHystRegister(void)
+uint16_t LandBoards_I2CTEMP01::readTHystRegister(void)
 {
 	return(read16BitReg(TCN75A_THYST));
 }
@@ -148,7 +148,7 @@ uint16_t landboards_TCN75A::readTHystRegister(void)
 //
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::writeTHystRegister(uint16_t hystVal)
+void LandBoards_I2CTEMP01::writeTHystRegister(uint16_t hystVal)
 {
 	write16BitReg((uint8_t)TCN75A_THYST, (uint16_t)hystVal);
 }
@@ -157,7 +157,7 @@ void landboards_TCN75A::writeTHystRegister(uint16_t hystVal)
 // void write16BitReg(uint16_t wrReg, setVal)
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_TCN75A::write16BitReg(uint8_t wrReg, uint16_t setVal)
+void LandBoards_I2CTEMP01::write16BitReg(uint8_t wrReg, uint16_t setVal)
 {
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
 	Wire.write((uint8_t)wrReg);			           			// Register Point to first register
@@ -170,7 +170,7 @@ void landboards_TCN75A::write16BitReg(uint8_t wrReg, uint16_t setVal)
 // uint16_t read16BitReg(uint8_t wrReg)
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t landboards_TCN75A::read16BitReg(uint8_t wrReg)
+uint16_t LandBoards_I2CTEMP01::read16BitReg(uint8_t wrReg)
 {
 	uint16_t retVal = 0;
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
