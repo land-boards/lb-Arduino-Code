@@ -1,10 +1,10 @@
 == land-boards DigIO-128 Library Files ==
 
-* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card library] files.
+* These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8 card library] files.
 
 === Files ===
 
-==== landboards_digio128 ====
+==== LandBoards_I2CIO8 ====
 
 * Library code
 

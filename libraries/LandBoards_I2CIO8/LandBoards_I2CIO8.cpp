@@ -22,25 +22,27 @@ I2CIO8::I2CIO8(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// begin(void) - Initialize the card
+// begin(addr) - Initialize the card
 ////////////////////////////////////////////////////////////////////////////
 
 void I2CIO8::begin(uint8_t addr)
 {
-	mcp.begin(addr);
+	i2caddr = addr;
+
+	Wire.begin();
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-	mcp.pinMode(LED0,OUTPUT);	// First four bits are LEDs
-	mcp.pinMode(LED1,OUTPUT);
-	mcp.pinMode(LED2,OUTPUT);
-	mcp.pinMode(LED3,OUTPUT);
-	mcp.pinMode(H4JUMPER,INPUT);	// Second four bits are input jumpers
-	mcp.pinMode(H5JUMPER,INPUT);
-	mcp.pinMode(H6JUMPER,INPUT);
-	mcp.pinMode(H7JUMPER,INPUT);
-	mcp.digitalWrite(LED0,LOW);	// Turn off all of the LEDs
-	mcp.digitalWrite(LED1,LOW);
-	mcp.digitalWrite(LED2,LOW);
-	mcp.digitalWrite(LED0,LOW);
+	pinMode(LED0,OUTPUT);	// First four bits are LEDs
+	pinMode(LED1,OUTPUT);
+	pinMode(LED2,OUTPUT);
+	pinMode(LED3,OUTPUT);
+	pinMode(H4JUMPER,INPUT);	// Second four bits are input jumpers
+	pinMode(H5JUMPER,INPUT);
+	pinMode(H6JUMPER,INPUT);
+	pinMode(H7JUMPER,INPUT);
+	digitalWrite(LED0,LOW);	// Turn off all of the LEDs
+	digitalWrite(LED1,LOW);
+	digitalWrite(LED2,LOW);
+	digitalWrite(LED0,LOW);
 	return;
 }
 
@@ -50,17 +52,17 @@ void I2CIO8::begin(uint8_t addr)
 
 void I2CIO8::begin(void)
 {
-	mcp.begin(0);
+	begin(0);
 	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// writeLED(uint8_t,uint8_t)
+// writeLED(bit,value)
 ////////////////////////////////////////////////////////////////////////////
 
 void I2CIO8::writeLED(uint8_t bit,uint8_t value)
 {
-	mcp.digitalWrite(bit, value);
+	digitalWrite(bit, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -69,24 +71,7 @@ void I2CIO8::writeLED(uint8_t bit,uint8_t value)
 
 uint8_t I2CIO8::readJumper(uint8_t bit)
 {
-	return mcp.digitalRead(bit);
-}
-////////////////////////////////////////////////////////////////////////////
-// digitalWrite(uint8_t bit, uint8_t value)
-////////////////////////////////////////////////////////////////////////////
-
-void I2CIO8::digitalWrite(uint8_t bit, uint8_t value)
-{
-	mcp.digitalWrite(bit, value);
-}
-
-////////////////////////////////////////////////////////////////////////////
-// uint8_t digitalRead(uint8_t p)
-////////////////////////////////////////////////////////////////////////////
-
-uint8_t I2CIO8::digitalRead(uint8_t p)
-{
-	return mcp.digitalRead(p);
+	return digitalRead(bit);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -100,20 +85,102 @@ uint8_t I2CIO8::digitalRead(uint8_t p)
 // This eliminates the separate pullup function
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8::pinMode(uint8_t p, uint8_t d)
+void I2CIO8::pinMode(uint8_t bit, uint8_t d)
 {
+	uint8_t iodir;
+	bit &= 7;
+	iodir = read8(MCP23008_IODIR);
+	if (d == INPUT) 
+	{
+		iodir |= 1 << bit; 
+	} 
+	else 
+	{
+		iodir &= ~(1 << bit);
+	}
+	write8(MCP23008_IODIR, iodir);
 	if (d == INPUT)
 	{
-		mcp.pinMode(p,0);		// Pullup disabled
-		mcp.pinMode(p,INPUT);
+		pullUp(bit,LOW);		// Pullup disabled
 	}
 	else if (d == INPUT_PULLUP)
 	{
-		mcp.pullUp(p,1);			// Pullup enabled
-		mcp.pinMode(p,INPUT);
+		pullUp(bit,HIGH);			// Pullup enabled
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////
+//  uint8_t pullUp(bit, d) 
+////////////////////////////////////////////////////////////////////////////
+
+void I2CIO8::pullUp(uint8_t bit, uint8_t d) 
+{
+	uint8_t gppuCopy;
+	bit &= 7;
+
+	// only 8 bits!
+	if (bit > 7)
+	return;
+
+	gppuCopy = read8(MCP23008_GPPU);
+	// set the pin and direction
+	if (d == HIGH) {
+		gppuCopy |= 1 << bit; 
+	} else {
+		gppuCopy &= ~(1 << bit);
+	}
+	// write the new GPIO
+	write8(MCP23008_GPPU, gppuCopy);
+}
+
+////////////////////////////////////////////////////////////////////////////
+//  uint8_t digitalWrite(uint8_t, uint8_t)
+////////////////////////////////////////////////////////////////////////////
+
+void I2CIO8::digitalWrite(uint8_t bit, uint8_t d) 
+{
+	uint8_t gpioCopy;
+
+	bit &= 7;
+	gpioCopy = read8(MCP23008_GPIO);
+	if (d == HIGH)
+		gpioCopy |= 1 << bit;
 	else
-	{
-		mcp.pinMode(p,OUTPUT);
-	}
+		gpioCopy &= ~(1 << bit);
+	write8(MCP23008_GPIO, gpioCopy);
+}
+
+////////////////////////////////////////////////////////////////////////////
+//  uint8_t digitalRead(bit)
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t I2CIO8::digitalRead(uint8_t bit)
+{
+	bit &= 7;
+	return (read8(MCP23008_GPIO) >> bit) & 0x1;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint8_t read8(addr) 
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t I2CIO8::read8(uint8_t addr) 
+{
+	Wire.beginTransmission(MCP23008_ADDRESS | i2caddr);
+	Wire.write((uint8_t)addr);	
+	Wire.endTransmission();
+	Wire.requestFrom(MCP23008_ADDRESS | i2caddr, 1);
+	return Wire.read();
+}
+
+////////////////////////////////////////////////////////////////////////////
+// void I2CIO8::write8(addr, data) 
+////////////////////////////////////////////////////////////////////////////
+
+void I2CIO8::write8(uint8_t addr, uint8_t data) 
+{
+	Wire.beginTransmission(MCP23008_ADDRESS | i2caddr);
+	Wire.write((uint8_t)addr);
+	Wire.write((uint8_t)data);
+	Wire.endTransmission();
 }
