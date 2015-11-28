@@ -1,4 +1,4 @@
-#land-boards I2C=TEMP-01 Card Code
+#land-boards I2C-TEMP-01 Card Code
 
 These are the files needed to use the I2C=TEMP-01 card with the Arduino.
 
