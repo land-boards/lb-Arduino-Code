@@ -2,7 +2,7 @@
 
 These are the files needed to use the I2C-TEMP-01 card with the Arduino.
 
-[The Wiki page for this card is here.](http://land-boards.com/blwiki/index.php?title=I2C-TEMP-01)
+[The Wiki page for this card is here.](http://land-boards.com/blwiki/index.php?title=I2C-TEMP)
 
 ##Ownership
 
