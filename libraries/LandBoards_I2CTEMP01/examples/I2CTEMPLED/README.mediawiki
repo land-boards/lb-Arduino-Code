@@ -1,4 +1,4 @@
-== land-boards DigIO-128 Library Files ==
+== land-boards I2C-TEMP-01 Files ==
 
 * These is the LED Temperature example code files for the [http://land-boards.com/blwiki/index.php?title=I2C-TEMP I2C-TEMP-01 card library].
 
