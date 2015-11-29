@@ -3,7 +3,8 @@
 * These are the example code files for the [http://land-boards.com/blwiki/index.php?title=I2C-TEMP I2C-TEMP-01 card library].
 * This code uses an Arduino UNO Compatible, the [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino] as the processor.
 * This code uses an 8-digit 7-segment LED card to display the temperature.
-* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LedControl/src LedControl library] is found here].
+* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LedControl/src LedControl library is found here].
+
 <img src="http://land-boards.com/blwiki/images/6/6b/I2C-TEMP-01-640PX.jpg" alt="I2C-TEMP-01" title="I2C-TEMP-01" />
 
 === Ownership ===
