@@ -2,7 +2,7 @@
 
 * These is the LED Temperature example code files for the [http://land-boards.com/blwiki/index.php?title=I2C-TEMP I2C-TEMP-01 card library].
 
-[http://land-boards.com/blwiki/images/1/16/I2C-TEMP-640px.jpg]
+http://land-boards.com/blwiki/images/1/16/I2C-TEMP-640px.jpg
 
 === Ownership ===
 
