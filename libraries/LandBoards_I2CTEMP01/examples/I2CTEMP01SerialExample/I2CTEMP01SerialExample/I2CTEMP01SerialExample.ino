@@ -2,10 +2,11 @@
 // Example code that exercises the LandBoards_tcn75A library
 ////////////////////////////////////////////////////////////////////////////
 
-#include <LandBoards_tcn75A.h>
+#include <LandBoards_I2CTEMP01.h>
+
 #include "Wire.h"
 
-landboards_TCN75A myTemp;
+LandBoards_I2CTEMP01 myTemp;
 
 ////////////////////////////////////////////////////////////////////////////
 // setup()
