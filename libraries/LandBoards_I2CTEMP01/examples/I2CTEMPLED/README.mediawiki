@@ -1,6 +1,6 @@
-== land-boards I2C-TEMP-01 Files ==
+== Land Boards I2C-TEMP-01 LED Example ==
 
-* These are the example code files for the [http://land-boards.com/blwiki/index.php?title=I2C-TEMP I2C-TEMP-01 card library].
+* This example displays the temperature usiing the  [http://land-boards.com/blwiki/index.php?title=I2C-TEMP I2C-TEMP-01 card] and [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_I2CTEMP01 I2C-TEMP-01 library]
 * This code uses an Arduino UNO Compatible, the [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino] as the processor.
 * This code uses an 8-digit 7-segment LED card to display the temperature.
 * The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LedControl/src LedControl library is found here].
