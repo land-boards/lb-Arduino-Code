@@ -1,6 +1,6 @@
-== Land Boards Cards Example Files ==
+== Land Boards Cards Arduino Code Example Files ==
 
-* These are the [http://land-boards.com/blwiki/index.php?title=Main_Page Land Boards Cards] example files.
+* These are the [http://land-boards.com/blwiki/index.php?title=Main_Page Land Boards Cards] Arduino code example files.
 
 === Ownership ===
 
