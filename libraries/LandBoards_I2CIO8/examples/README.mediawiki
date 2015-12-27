@@ -1,4 +1,4 @@
-== Land Boards I2CIO-8 Library Files ==
+== Land Boards I2CIO-8 Example Files ==
 
 * These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8 card] example files.
 
