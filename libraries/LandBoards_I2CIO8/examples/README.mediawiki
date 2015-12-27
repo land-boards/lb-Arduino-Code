@@ -2,11 +2,6 @@
 
 * These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8 card] library and example files.
 
-=== Library Files ===
-
-* LandBoards_I2CIO8.cpp
-* LandBoards_I2CIO8.h
-
 ==== Examples ====
 
 * I2CIO8Blink1 - Blink an LED (Requires Adafruit_MCP23008 library)
