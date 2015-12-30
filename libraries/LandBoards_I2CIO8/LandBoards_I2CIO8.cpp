@@ -31,18 +31,12 @@ void I2CIO8::begin(uint8_t addr)
 
 	Wire.begin();
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-	pinMode(LED0,OUTPUT);	// First four bits are LEDs
-	pinMode(LED1,OUTPUT);
-	pinMode(LED2,OUTPUT);
-	pinMode(LED3,OUTPUT);
-	pinMode(H4JUMPER,INPUT);	// Second four bits are input jumpers
-	pinMode(H5JUMPER,INPUT);
-	pinMode(H6JUMPER,INPUT);
-	pinMode(H7JUMPER,INPUT);
-	digitalWrite(LED0,LOW);	// Turn off all of the LEDs
-	digitalWrite(LED1,LOW);
-	digitalWrite(LED2,LOW);
-	digitalWrite(LED0,LOW);
+	write8(MCP23008_IODIR,0xf0);
+	write8(MCP23008_GPIO, 0x00);
+	write8(MCP23008_INTCON,0x00);
+	write8(MCP23008_IPOL,0xf0);
+	write8(MCP23008_GPINTEN,0xf0);
+	read8(MCP23008_GPIO);
 	return;
 }
 
@@ -63,6 +57,15 @@ void I2CIO8::begin(void)
 void I2CIO8::writeLED(uint8_t bit,uint8_t value)
 {
 	digitalWrite(bit, value);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// readAllJumpers()
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t I2CIO8::readAllJumpers(void)
+{
+	return ((read8(MCP23008_GPIO) & 0xf0) >> 4);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -142,7 +145,8 @@ void I2CIO8::digitalWrite(uint8_t bit, uint8_t d)
 	uint8_t gpioCopy;
 
 	bit &= 7;
-	gpioCopy = read8(MCP23008_GPIO);
+//	gpioCopy = read8(MCP23008_GPIO);
+	gpioCopy = read8(MCP23008_OLAT);
 	if (d == HIGH)
 		gpioCopy |= 1 << bit;
 	else

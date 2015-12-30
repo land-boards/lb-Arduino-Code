@@ -58,11 +58,12 @@ class I2CIO8
 	void begin(uint8_t);
 	void writeLED(uint8_t,uint8_t);			// Writes to a single LED
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper
+	uint8_t readAllJumpers(void);
 	void pinMode(uint8_t, uint8_t);
   private:
-	uint8_t i2caddr;
 	void digitalWrite(uint8_t, uint8_t);
 	uint8_t digitalRead(uint8_t);
+	uint8_t i2caddr;
 	void pullUp(uint8_t, uint8_t);
 	void write8(uint8_t addr, uint8_t data);
 	uint8_t read8(uint8_t addr);
