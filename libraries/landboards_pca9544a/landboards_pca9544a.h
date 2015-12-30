@@ -28,8 +28,8 @@ class landboards_pca9544a
 	void begin(uint8_t addr);
 	void begin();
     landboards_pca9544a(void);
-    uint8_t setI2CChannel(void);
     void setI2CChannel(uint8_t);
+	uint8_t getI2CChannel(void);
     uint8_t getIntStatus(void);
 	void setIntr(int intNum, int val);
 	void clrIntr(int intNum, int val);

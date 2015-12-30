@@ -15,7 +15,6 @@ landboards_pca9544a::landboards_pca9544a()
 	
 }
 
-
 ////////////////////////////////////////////////////////////////////////////
 // begin(uint8_t addr) - 
 ////////////////////////////////////////////////////////////////////////////
@@ -58,7 +57,7 @@ void landboards_pca9544a::setI2CChannel(uint8_t chNum)
 // getCurrentChannel(void) 
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t landboards_pca9544a::setI2CChannel(void)
+uint8_t landboards_pca9544a::getI2CChannel(void)
 {
 	Wire.requestFrom(PCA9544A_ADDRESS | i2caddr, 1);
 	return (Wire.read() & 0x3);
