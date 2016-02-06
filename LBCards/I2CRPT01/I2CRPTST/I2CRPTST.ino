@@ -4,6 +4,10 @@
 // 4x I2CIO-8 cards
 // I2C-RPI-01 as UUT
 // Blink each line, one at a time
+// Wiring to UNO
+//  I2C - A4 (SDA), A5 (SCL)
+//  INTR from I2C-RPT-01 = D8
+//  LED = D9
 /////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
@@ -16,6 +20,9 @@ I2CIO8 myI2CIO82;
 I2CIO8 myI2CIO83;
 
 landboards_pca9544a mux;
+
+#define INTRPIN 9
+#define INTRLED 8
 
 /////////////////////////////////////////////////////////////////////////
 // setup()
@@ -35,6 +42,8 @@ void setup()
   myI2CIO82.begin(0);      // use default address 0
   mux.setI2CChannel(3);
   myI2CIO83.begin(0);      // use default address 0
+  pinMode(INTRPIN, INPUT);
+  pinMode(INTRLED, OUTPUT);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -43,6 +52,14 @@ void setup()
 
 void pollMuxIntrReg(void)
 {
+  if (digitalRead(INTRPIN) == 1)
+  {
+    return;
+  }
+  digitalWrite(INTRLED, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);              // wait for a second
+  digitalWrite(INTRLED, LOW);    // turn the LED off by making the voltage LOW
+  Serial.print("Intr");
   uint8_t intStatus = mux.getIntStatus();
   if ((intStatus & 0x1) == 0x1)
   {
