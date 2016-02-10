@@ -1,29 +1,46 @@
-/* Rotary Encoder Demo
-
-   David Johnson-Davies - www.technoblogy.com - 3rd October 2015
-   ATtiny85 @ 1 MHz (internal oscillator; BOD disabled)
-   
-   CC BY 4.0
-   Licensed under a Creative Commons Attribution 4.0 International license: 
-   http://creativecommons.org/licenses/by/4.0/
-*/
+/////////////////////////////////////////////////////////////////////////////////////////
+// RotarySwitch - Arduino Code to interface an incremental rotary switch to an ATTiny85.
+// LED is controlled via PWM to dim/brighten based on turning the knob.
+// Using TinyGrid85 card:
+//   http://land-boards.com/blwiki/index.php?title=TinyGrid85
+// Wired Rotary Switch to Digital Pins 0 and 1
+// Added 10K pullups on the Rotary Switch pins
+// Wired LED to Digital Pin 4
+// Code is based in part on: 
+// Rotary Encoder Demo
+//
+//   David Johnson-Davies - www.technoblogy.com - 3rd October 2015
+//   ATtiny85 @ 1 MHz (internal oscillator; BOD disabled)
+//   
+//   CC BY 4.0
+//   Licensed under a Creative Commons Attribution 4.0 International license: 
+//   http://creativecommons.org/licenses/by/4.0/
+//
+// Differences are that the Encoder Switch is not used.
+// Also the port assignments are different.
+// Some of the port assignment stuff was hardcoded and the hardcoding was removed.
+// Made Laststate a global.
+// Set brightness in the setup code.
+// Using external pullups rather than the pullups in the ATTiny85.
+// Each click of encoder includes four state changes
+/////////////////////////////////////////////////////////////////////////////////////////
 
 // ATtiny85 inputs/outputs
-const int LED = 4;
-const int LED2 = 2;
 const int EncoderA = 1;
 const int EncoderB = 0;
-const int EncoderSwitch = 3;
+const int LED = 4;
 
-// Global - lamp brightness
-volatile int Brightness = 128;
+// Globals
+volatile int Brightness = 512;
 int Laststate;
-int swTurned;
 
+/////////////////////////////////////////////////////////////////////////////////////////
 // Pin change interrupt service routine
-ISR (PCINT0_vect) {
-  digitalWrite(LED2,swTurned);
-  swTurned ^= 1;
+// Seems like this code as it was originally written increments on both edges
+/////////////////////////////////////////////////////////////////////////////////////////
+
+ISR (PCINT0_vect) 
+{
   int Gray = (PINB & ((1<<EncoderA)|(1<<EncoderB)));               // Read PB1 and PB2
   int State = (Gray>>1) ^ Gray;              // Convert from Gray code to binary
   if (State != Laststate) {
@@ -34,27 +51,34 @@ ISR (PCINT0_vect) {
   GIFR = 1<<PCIF;                            // Clear pin change interrupt flag.
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
 // Called when encoder is rotated; Change is -1 (anticlockwise) or 1 (clockwise)
-void ChangeValue (int Change) {
-  Brightness = max(min(Brightness+Change, 255), 0);
-  analogWrite(LED, Brightness);
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void ChangeValue (int Change) 
+{
+  Brightness = max(min(Brightness+Change, 1023), 0);
+  analogWrite(LED, Brightness>>2);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   pinMode(LED, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  pinMode(EncoderA, INPUT_PULLUP);
-  pinMode(EncoderB, INPUT_PULLUP);
-  pinMode(EncoderSwitch, INPUT_PULLUP);
-  // Configure pin change interrupts on PB0, PB1, and PB3
-  PCMSK |= 1<<PCINT0 | 1<<PCINT1;
-  GIMSK = 1<<PCIE;                // Enable pin change interrupts
-  GIFR = 1<<PCIF;                 // Clear pin change interrupt flag.
-  analogWrite(LED, Brightness);
-  swTurned = 1;
-  digitalWrite(LED2,swTurned);
+  pinMode(EncoderA, INPUT);
+  pinMode(EncoderB, INPUT);
+  PCMSK |= 1<<PCINT0 | 1<<PCINT1;  // Pin change interrupt mask
+  GIMSK = 1<<PCIE;                 // Enable pin change interrupts
+  GIFR = 1<<PCIF;                  // Clear pin change interrupt flag.
+  analogWrite(LED, Brightness>>2);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
 // Everything done under interrupt!
-void loop() {
+/////////////////////////////////////////////////////////////////////////////////////////
+
+void loop() 
+{
 }
+
