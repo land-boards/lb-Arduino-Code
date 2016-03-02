@@ -65,7 +65,11 @@ ISR (PCINT0_vect)
 void ChangeValue (int Change)
 {
   uint16_t oldRotaryCount = rotaryCount;
-  rotaryCount = max(min(rotaryCount + Change, 512), 0);
+  if ((oldRotaryCount == 0) && (Change == -1))
+    return;
+  if ((oldRotaryCount == 1023) && (Change == 1))
+    return;
+  rotaryCount = max(min(rotaryCount + Change, 1023), 0);
   if ((oldRotaryCount >> 2) != (rotaryCount >> 2))
     writePotValue(rotaryCount >> 2);
 }
@@ -120,7 +124,7 @@ void setup()
   PCMSK |= 1 << PCINT0 | 1 << PCINT1; // Pin change interrupt mask
   GIMSK = 1 << PCIE;               // Enable pin change interrupts
   GIFR = 1 << PCIF;                // Clear pin change interrupt flag.
-  rotaryCount = 256;
+  rotaryCount = 1023;
   writePotValue(rotaryCount >> 2);	// half scale
 }
 
