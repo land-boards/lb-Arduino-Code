@@ -1,6 +1,5 @@
 /*
-  LED_Tesr_ActiveLOW8
-  
+  Screwduino_test - Bounce an LED around all pins
  */
 
 unsigned char DS1 = 2;
@@ -22,7 +21,6 @@ unsigned char DS16 = 17;
 unsigned char DS17 = 18;
 unsigned char DS18 = 19;
 int delayTime = 125;
-
 
 // the setup routine runs once when you press reset:
 void setup() {
