@@ -1,4 +1,4 @@
-#land-boards I2C-RPT-01 Card Code
+#Land Boards I2C-RPT-01 Card Arduino Code
 
 These are the files needed to use the I2C-RPT-01 card with the Arduino.
 
