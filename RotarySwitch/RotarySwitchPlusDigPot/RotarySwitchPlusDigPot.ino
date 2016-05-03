@@ -124,8 +124,8 @@ void setup()
   PCMSK |= 1 << PCINT0 | 1 << PCINT1; // Pin change interrupt mask
   GIMSK = 1 << PCIE;               // Enable pin change interrupts
   GIFR = 1 << PCIF;                // Clear pin change interrupt flag.
-  rotaryCount = 1023;
-  writePotValue(rotaryCount >> 2);	// half scale
+  rotaryCount = 2027;
+  writePotValue(rotaryCount >> 2);	// 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

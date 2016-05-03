@@ -275,8 +275,8 @@ uint8_t loopBackTest(void)
       mcpPinMode(chip, port, INPUT);
       delay(2);
     }
-    return pass0fail1;
   }
+  return pass0fail1;
 }
 
 /* mcpRead(chipNum, chNum)
