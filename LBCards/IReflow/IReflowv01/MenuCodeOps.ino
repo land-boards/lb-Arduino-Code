@@ -4,17 +4,61 @@
 
 void runProfileFcn(void)
 {
-  menuCard.setLED(2, HIGH);
-  u8g.firstPage();
+  double myTemp;
+  double goalTemp;
+  uint8_t keyState;
+  menuCard.setLED(1, HIGH);
+  setTime(0);
+  time_t t = now();
   do
   {
-    setDisplayCursor(0, 0);
-    u8g.print(F("Running"));
-    setDisplayCursor(1, 0);
-    u8g.print(F("profile"));
+    u8g.firstPage();
+    do
+    {
+      myTemp = thermocouple.readCelsius();
+      setDisplayCursor(0, 0);
+      u8g.print(F("Meas="));
+      u8g.print(myTemp);
+      if (profileSelected == LEAD_FREE)
+      {
+        goalTemp = getDesiredTempLeadFree(60 * minute(t) + second(t));
+      }
+      else if (profileSelected == LEADED)
+      {
+        goalTemp = getDesiredTempLeaded(60 * minute(t) + second(t));
+      }
+      else
+      {
+        goalTemp = -10.0;
+      }
+      setDisplayCursor(1, 0);
+      u8g.print(F("Goal="));
+      u8g.print(goalTemp);
+      setDisplayCursor(2, 0);
+      if (myTemp > goalTemp)
+      {
+        u8g.print(F("SSR=Off"));
+        digitalWrite(SSR, LOW);
+        menuCard.setLED(2, LOW);
+      }
+      else
+      {
+        u8g.print(F("SSR=On"));
+        digitalWrite(SSR, HIGH);
+        menuCard.setLED(2, HIGH);
+      }
+      setDisplayCursor(3, 0);
+      u8g.print(F("Time="));
+      u8g.print((60 * minute(t)) + second(t));
+    }
+    while ( u8g.nextPage() );
+    delay(100);
+    t = now();
+    keyState = menuCard.pollKeypad();
   }
-  while ( u8g.nextPage() );
-  delay(500);
+  while ( (keyState != SELECT) && (t < 600));
+  digitalWrite(SSR, LOW);
+  menuCard.setLED(1, LOW);
   menuCard.setLED(2, LOW);
 }
 
@@ -23,6 +67,8 @@ void monTempFcn(void)
   double myTemp;
   uint8_t keyState;
   menuCard.setLED(0, HIGH);
+  setTime(0);
+  time_t t = now();
   do
   {
     u8g.firstPage();
@@ -32,9 +78,12 @@ void monTempFcn(void)
       setDisplayCursor(0, 0);
       u8g.print(F("Temp="));
       u8g.print(myTemp);
+      setDisplayCursor(1, 0);
+      u8g.print((60 * minute(t)) + second(t));
     }
     while ( u8g.nextPage() );
-    delay(10);
+    delay(100);
+    t = now();
     keyState = menuCard.pollKeypad();
   }
   while (keyState != SELECT);
@@ -43,6 +92,7 @@ void monTempFcn(void)
 
 void LeadFreeFcn(void)
 {
+  profileSelected = LEAD_FREE;
   digitalWrite(GRN_LITE, LOW);
   u8g.firstPage();
   do
@@ -62,6 +112,7 @@ void LeadFreeFcn(void)
 
 void LeadFcn(void)
 {
+  profileSelected = LEADED;
   digitalWrite(GRN_LITE, LOW);
   u8g.firstPage();
   do

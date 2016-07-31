@@ -10,6 +10,7 @@
 
 #include "U8glib.h"
 #include "Adafruit_MAX31855.h"
+#include <Time.h>  
 
 #define CS   9
 Adafruit_MAX31855 thermocouple(CS);
@@ -30,6 +31,14 @@ enum MENUITEMS
   SCND_TESTS_MENU
 };
 
+typedef enum PROFILES
+{
+  NO_PROFILE,
+  LEAD_FREE,
+  LEADED
+} myRprfiles;
+
+
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
 //////////////////////////////////////////////////////////////////////////////
@@ -42,8 +51,11 @@ U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
 MyMenu menuCard;
 
+myRprfiles profileSelected;
+
 void setup(void) 
 {
+  profileSelected = NO_PROFILE;
   menuState = FIRST_LINE_MENU;  // Set up the init menu state
   myIReflow.redLED(LOW);
   delay(250);
@@ -54,6 +66,11 @@ void setup(void)
   displayInit();                // Hardware specific function to set up the display
   menuCard.begin();
   TWBR = 12;
+  Serial.begin(9600);
+  time_t t = now();
+  delay(100);
+  Serial.println("Hey");
+
 }
 
 void loop(void) 
