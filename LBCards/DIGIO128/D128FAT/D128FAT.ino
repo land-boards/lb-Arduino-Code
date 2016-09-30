@@ -74,7 +74,7 @@ void setup()
   mcp5.begin(5);
   mcp6.begin(6);
   mcp7.begin(7);
-  TWBR = 12;    // go to 400 KHz I2C speed mode
+//  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   for (uint8_t chip = 0; chip < 8; chip++)
   {
