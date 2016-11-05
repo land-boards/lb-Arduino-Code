@@ -4,6 +4,7 @@
  * This uses delay() to pause between LED toggles.
  */
 
+#define  BUILTIN_LED 1
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);  // initialize onboard LED as output
 }
