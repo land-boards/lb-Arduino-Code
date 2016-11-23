@@ -1,0 +1,38 @@
+== land-boards DigIO16-I2C Card Files ==
+
+* These are my [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card related] files.
+** These files were created to exercise my [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card].
+
+=== Files ===
+
+==== D16-TEST ====
+
+* Factory Acceptance Test for the DigIO16-I2C card
+* Uses GVSDuino card
+* Uses MyMenu card
+
+==== DIGIO16I2CLEDS2 ====
+
+* Test single bit of the DigIO16-I2C card
+* Commented out larger test
+
+==== DIGIO16I2CLEDS16 ====
+
+* Bounce a light around the 16 bits of the DigIO16-I2C card
+
+==== DIGIO16I2CToggle ====
+
+* Test single bit of the DigIO16-I2C card
+* Code is stripped down to the bare minimum
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
