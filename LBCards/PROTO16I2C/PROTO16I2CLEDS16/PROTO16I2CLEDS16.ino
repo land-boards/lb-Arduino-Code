@@ -24,9 +24,9 @@ void loop() {
   for (uint8_t port = 0; port < 16; port++)
   {
     mcp0.digitalWrite(port, HIGH);
-    delay(2);
+    delay(250);
     mcp0.digitalWrite(port, LOW);
-    //      delay(250);
+//    gdelay(250);
   }
 }
 

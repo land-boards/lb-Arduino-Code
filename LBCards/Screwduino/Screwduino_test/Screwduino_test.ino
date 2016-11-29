@@ -20,7 +20,7 @@ unsigned char DS15 = 16;
 unsigned char DS16 = 17;
 unsigned char DS17 = 18;
 unsigned char DS18 = 19;
-int delayTime = 50;
+int delayTime = 250;
 
 // the setup routine runs once when you press reset:
 void setup() {

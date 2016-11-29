@@ -1,0 +1,1425 @@
+
+GccApplication1.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000000  00800100  00800100  00000b4c  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         00000ad8  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .bss          0000036e  00800100  00800100  00000b4c  2**0
+                  ALLOC
+  3 .comment      00000030  00000000  00000000  00000b4c  2**0
+                  CONTENTS, READONLY
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000b7c  2**2
+                  CONTENTS, READONLY
+  5 .debug_aranges 000000c0  00000000  00000000  00000bbc  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_info   000011c1  00000000  00000000  00000c7c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_abbrev 000008a5  00000000  00000000  00001e3d  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_line   00000e05  00000000  00000000  000026e2  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_frame  00000254  00000000  00000000  000034e8  2**2
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_str    000006df  00000000  00000000  0000373c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_loc    00000881  00000000  00000000  00003e1b  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 12 .debug_ranges 000000b0  00000000  00000000  0000469c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 b8 00 	jmp	0x170	; 0x170 <__ctors_end>
+   4:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+   8:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+   c:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  10:	0c 94 12 01 	jmp	0x224	; 0x224 <__vector_4>
+  14:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  18:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  1c:	0c 94 15 04 	jmp	0x82a	; 0x82a <__vector_7>
+  20:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  24:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  28:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  2c:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  30:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  34:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  38:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  3c:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  40:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  44:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  48:	0c 94 cd 01 	jmp	0x39a	; 0x39a <__vector_18>
+  4c:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  50:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  54:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  58:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  5c:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  60:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+  64:	0c 94 ca 00 	jmp	0x194	; 0x194 <__bad_interrupt>
+
+00000068 <__trampolines_end>:
+  68:	00 95       	com	r16
+  6a:	00 91 8f 8d 	lds	r16, 0x8D8F	; 0x808d8f <__bss_end+0x8921>
+  6e:	8e 98       	cbi	0x11, 6	; 17
+  70:	00 96       	adiw	r24, 0x00	; 0
+  72:	94 92       	xch	Z, r9
+  74:	90 00       	.word	0x0090	; ????
+  76:	ac 00       	.word	0x00ac	; ????
+  78:	00 00       	nop
+  7a:	00 00       	nop
+  7c:	00 51       	subi	r16, 0x10	; 16
+  7e:	21 00       	.word	0x0021	; ????
+  80:	00 00       	nop
+  82:	5a 53       	subi	r21, 0x3A	; 58
+  84:	41 57       	subi	r20, 0x71	; 113
+  86:	22 00       	.word	0x0022	; ????
+  88:	00 43       	sbci	r16, 0x30	; 48
+  8a:	58 44       	sbci	r21, 0x48	; 72
+  8c:	45 24       	eor	r4, r5
+  8e:	a3 3a       	cpi	r26, 0xA3	; 163
+  90:	00 20       	and	r0, r0
+  92:	56 46       	sbci	r21, 0x66	; 102
+  94:	54 52       	subi	r21, 0x24	; 36
+  96:	25 00       	.word	0x0025	; ????
+  98:	00 4e       	sbci	r16, 0xE0	; 224
+  9a:	42 48       	sbci	r20, 0x82	; 130
+  9c:	47 59       	subi	r20, 0x97	; 151
+  9e:	5e 00       	.word	0x005e	; ????
+  a0:	00 4c       	sbci	r16, 0xC0	; 192
+  a2:	4d 4a       	sbci	r20, 0xAD	; 173
+  a4:	55 26       	eor	r5, r21
+  a6:	2a 00       	.word	0x002a	; ????
+  a8:	00 3c       	cpi	r16, 0xC0	; 192
+  aa:	4b 49       	sbci	r20, 0x9B	; 155
+  ac:	4f 29       	or	r20, r15
+  ae:	28 00       	.word	0x0028	; ????
+  b0:	00 3e       	cpi	r16, 0xE0	; 224
+  b2:	3f 4c       	sbci	r19, 0xCF	; 207
+  b4:	3a 50       	subi	r19, 0x0A	; 10
+  b6:	5f 00       	.word	0x005f	; ????
+  b8:	00 00       	nop
+  ba:	40 00       	.word	0x0040	; ????
+  bc:	7b 2b       	or	r23, r27
+  be:	00 00       	nop
+  c0:	00 00       	nop
+  c2:	0d 7d       	andi	r16, 0xDD	; 221
+  c4:	00 7e       	andi	r16, 0xE0	; 224
+  c6:	00 00       	nop
+  c8:	00 7c       	andi	r16, 0xC0	; 192
+  ca:	00 00       	nop
+  cc:	00 08       	sbc	r0, r0
+  ce:	00 00       	nop
+  d0:	31 00       	.word	0x0031	; ????
+  d2:	34 37       	cpi	r19, 0x74	; 116
+  d4:	00 00       	nop
+  d6:	00 00       	nop
+  d8:	30 2e       	mov	r3, r16
+  da:	32 35       	cpi	r19, 0x52	; 82
+  dc:	36 38       	cpi	r19, 0x86	; 134
+  de:	03 00       	.word	0x0003	; ????
+  e0:	97 2b       	or	r25, r23
+  e2:	33 2d       	mov	r19, r3
+  e4:	2a 39       	cpi	r18, 0x9A	; 154
+  e6:	00 00       	nop
+  e8:	00 00       	nop
+  ea:	00 87       	std	Z+8, r16	; 0x08
+
+000000ec <kbNormal>:
+  ec:	00 89 00 85 83 81 82 8c 00 8a 88 86 84 07 06 00     ................
+  fc:	00 00 00 00 00 71 31 00 00 00 7a 73 61 77 32 00     .....q1...zsaw2.
+ 10c:	00 63 78 64 65 34 33 3b 00 20 76 66 74 72 35 00     .cxde43;. vftr5.
+ 11c:	00 6e 62 68 67 79 36 07 08 2c 6d 6a 75 37 38 00     .nbhgy6..,mju78.
+ 12c:	00 2c 6b 69 6f 30 39 00 00 2e 2f 6c 3b 70 2d 00     .,kio09.../l;p-.
+ 13c:	00 00 27 00 5b 3d 00 00 00 00 0d 5d 00 23 00 00     ..'.[=.....].#..
+ 14c:	00 5c 00 00 00 00 08 00 00 31 00 34 37 00 00 00     .\.......1.47...
+ 15c:	30 2e 32 35 36 38 03 00 8b 2b 33 2d 2a 39 00 00     0.2568...+3-*9..
+ 16c:	00 00 00 87                                         ....
+
+00000170 <__ctors_end>:
+ 170:	11 24       	eor	r1, r1
+ 172:	1f be       	out	0x3f, r1	; 63
+ 174:	cf ef       	ldi	r28, 0xFF	; 255
+ 176:	d8 e0       	ldi	r29, 0x08	; 8
+ 178:	de bf       	out	0x3e, r29	; 62
+ 17a:	cd bf       	out	0x3d, r28	; 61
+
+0000017c <__do_clear_bss>:
+ 17c:	24 e0       	ldi	r18, 0x04	; 4
+ 17e:	a0 e0       	ldi	r26, 0x00	; 0
+ 180:	b1 e0       	ldi	r27, 0x01	; 1
+ 182:	01 c0       	rjmp	.+2      	; 0x186 <.do_clear_bss_start>
+
+00000184 <.do_clear_bss_loop>:
+ 184:	1d 92       	st	X+, r1
+
+00000186 <.do_clear_bss_start>:
+ 186:	ae 36       	cpi	r26, 0x6E	; 110
+ 188:	b2 07       	cpc	r27, r18
+ 18a:	e1 f7       	brne	.-8      	; 0x184 <.do_clear_bss_loop>
+ 18c:	0e 94 47 04 	call	0x88e	; 0x88e <main>
+ 190:	0c 94 6a 05 	jmp	0xad4	; 0xad4 <_exit>
+
+00000194 <__bad_interrupt>:
+ 194:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000198 <setRTS>:
+	}
+
+}
+
+void error(unsigned char location, unsigned char err)
+{
+ 198:	80 91 69 04 	lds	r24, 0x0469	; 0x800469 <serInPointer>
+ 19c:	90 91 6a 04 	lds	r25, 0x046A	; 0x80046a <serInPointer+0x1>
+ 1a0:	20 91 59 04 	lds	r18, 0x0459	; 0x800459 <serOutPointer>
+ 1a4:	30 91 5a 04 	lds	r19, 0x045A	; 0x80045a <serOutPointer+0x1>
+ 1a8:	82 17       	cp	r24, r18
+ 1aa:	93 07       	cpc	r25, r19
+ 1ac:	18 f0       	brcs	.+6      	; 0x1b4 <setRTS+0x1c>
+ 1ae:	82 1b       	sub	r24, r18
+ 1b0:	93 0b       	sbc	r25, r19
+ 1b2:	04 c0       	rjmp	.+8      	; 0x1bc <setRTS+0x24>
+ 1b4:	80 5e       	subi	r24, 0xE0	; 224
+ 1b6:	9c 4f       	sbci	r25, 0xFC	; 252
+ 1b8:	82 1b       	sub	r24, r18
+ 1ba:	93 0b       	sbc	r25, r19
+ 1bc:	80 32       	cpi	r24, 0x20	; 32
+ 1be:	91 05       	cpc	r25, r1
+ 1c0:	08 f4       	brcc	.+2      	; 0x1c4 <setRTS+0x2c>
+ 1c2:	43 98       	cbi	0x08, 3	; 8
+ 1c4:	81 30       	cpi	r24, 0x01	; 1
+ 1c6:	93 40       	sbci	r25, 0x03	; 3
+ 1c8:	08 f0       	brcs	.+2      	; 0x1cc <setRTS+0x34>
+ 1ca:	43 9a       	sbi	0x08, 3	; 8
+ 1cc:	08 95       	ret
+
+000001ce <setKeyboardToReceiveMode>:
+ 1ce:	e2 eb       	ldi	r30, 0xB2	; 178
+ 1d0:	f0 e0       	ldi	r31, 0x00	; 0
+ 1d2:	10 82       	st	Z, r1
+ 1d4:	86 e6       	ldi	r24, 0x66	; 102
+ 1d6:	95 e0       	ldi	r25, 0x05	; 5
+ 1d8:	01 97       	sbiw	r24, 0x01	; 1
+ 1da:	f1 f7       	brne	.-4      	; 0x1d8 <setKeyboardToReceiveMode+0xa>
+ 1dc:	00 00       	nop
+ 1de:	39 9a       	sbi	0x07, 1	; 7
+ 1e0:	41 98       	cbi	0x08, 1	; 8
+ 1e2:	86 e6       	ldi	r24, 0x66	; 102
+ 1e4:	95 e0       	ldi	r25, 0x05	; 5
+ 1e6:	01 97       	sbiw	r24, 0x01	; 1
+ 1e8:	f1 f7       	brne	.-4      	; 0x1e6 <setKeyboardToReceiveMode+0x18>
+ 1ea:	00 00       	nop
+ 1ec:	3a 9a       	sbi	0x07, 2	; 7
+ 1ee:	42 98       	cbi	0x08, 2	; 8
+ 1f0:	86 e6       	ldi	r24, 0x66	; 102
+ 1f2:	95 e0       	ldi	r25, 0x05	; 5
+ 1f4:	01 97       	sbiw	r24, 0x01	; 1
+ 1f6:	f1 f7       	brne	.-4      	; 0x1f4 <setKeyboardToReceiveMode+0x26>
+ 1f8:	00 00       	nop
+ 1fa:	39 98       	cbi	0x07, 1	; 7
+ 1fc:	41 98       	cbi	0x08, 1	; 8
+ 1fe:	10 82       	st	Z, r1
+ 200:	81 e0       	ldi	r24, 0x01	; 1
+ 202:	80 93 62 04 	sts	0x0462, r24	; 0x800462 <kbWrPar>
+ 206:	10 92 33 01 	sts	0x0133, r1	; 0x800133 <kbClockCount>
+ 20a:	80 93 65 04 	sts	0x0465, r24	; 0x800465 <kbWriteActive>
+ 20e:	08 95       	ret
+
+00000210 <setKeyboardToSendMode>:
+ 210:	87 b1       	in	r24, 0x07	; 7
+ 212:	89 7f       	andi	r24, 0xF9	; 249
+ 214:	87 b9       	out	0x07, r24	; 7
+ 216:	08 95       	ret
+
+00000218 <sendBitToKB>:
+ 218:	81 30       	cpi	r24, 0x01	; 1
+ 21a:	11 f4       	brne	.+4      	; 0x220 <sendBitToKB+0x8>
+ 21c:	42 9a       	sbi	0x08, 2	; 8
+ 21e:	08 95       	ret
+ 220:	42 98       	cbi	0x08, 2	; 8
+ 222:	08 95       	ret
+
+00000224 <__vector_4>:
+ 224:	1f 92       	push	r1
+ 226:	0f 92       	push	r0
+ 228:	0f b6       	in	r0, 0x3f	; 63
+ 22a:	0f 92       	push	r0
+ 22c:	11 24       	eor	r1, r1
+ 22e:	2f 93       	push	r18
+ 230:	3f 93       	push	r19
+ 232:	4f 93       	push	r20
+ 234:	5f 93       	push	r21
+ 236:	6f 93       	push	r22
+ 238:	7f 93       	push	r23
+ 23a:	8f 93       	push	r24
+ 23c:	9f 93       	push	r25
+ 23e:	af 93       	push	r26
+ 240:	bf 93       	push	r27
+ 242:	ef 93       	push	r30
+ 244:	ff 93       	push	r31
+ 246:	10 92 b2 00 	sts	0x00B2, r1	; 0x8000b2 <__TEXT_REGION_LENGTH__+0x7e00b2>
+ 24a:	80 91 65 04 	lds	r24, 0x0465	; 0x800465 <kbWriteActive>
+ 24e:	81 30       	cpi	r24, 0x01	; 1
+ 250:	f1 f5       	brne	.+124    	; 0x2ce <__vector_4+0xaa>
+ 252:	31 9b       	sbis	0x06, 1	; 6
+ 254:	75 c0       	rjmp	.+234    	; 0x340 <__vector_4+0x11c>
+ 256:	80 91 33 01 	lds	r24, 0x0133	; 0x800133 <kbClockCount>
+ 25a:	8f 5f       	subi	r24, 0xFF	; 255
+ 25c:	80 93 33 01 	sts	0x0133, r24	; 0x800133 <kbClockCount>
+ 260:	8a 30       	cpi	r24, 0x0A	; 10
+ 262:	11 f4       	brne	.+4      	; 0x268 <__vector_4+0x44>
+ 264:	0e 94 08 01 	call	0x210	; 0x210 <setKeyboardToSendMode>
+ 268:	80 91 33 01 	lds	r24, 0x0133	; 0x800133 <kbClockCount>
+ 26c:	8b 30       	cpi	r24, 0x0B	; 11
+ 26e:	39 f4       	brne	.+14     	; 0x27e <__vector_4+0x5a>
+ 270:	10 92 65 04 	sts	0x0465, r1	; 0x800465 <kbWriteActive>
+ 274:	10 92 33 01 	sts	0x0133, r1	; 0x800133 <kbClockCount>
+ 278:	10 92 58 04 	sts	0x0458, r1	; 0x800458 <kbTemp>
+ 27c:	61 c0       	rjmp	.+194    	; 0x340 <__vector_4+0x11c>
+ 27e:	89 30       	cpi	r24, 0x09	; 9
+ 280:	59 f4       	brne	.+22     	; 0x298 <__vector_4+0x74>
+ 282:	80 91 62 04 	lds	r24, 0x0462	; 0x800462 <kbWrPar>
+ 286:	81 30       	cpi	r24, 0x01	; 1
+ 288:	19 f4       	brne	.+6      	; 0x290 <__vector_4+0x6c>
+ 28a:	0e 94 0c 01 	call	0x218	; 0x218 <sendBitToKB>
+ 28e:	58 c0       	rjmp	.+176    	; 0x340 <__vector_4+0x11c>
+ 290:	80 e0       	ldi	r24, 0x00	; 0
+ 292:	0e 94 0c 01 	call	0x218	; 0x218 <sendBitToKB>
+ 296:	54 c0       	rjmp	.+168    	; 0x340 <__vector_4+0x11c>
+ 298:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
+ 29c:	80 ff       	sbrs	r24, 0
+ 29e:	0e c0       	rjmp	.+28     	; 0x2bc <__vector_4+0x98>
+ 2a0:	81 e0       	ldi	r24, 0x01	; 1
+ 2a2:	0e 94 0c 01 	call	0x218	; 0x218 <sendBitToKB>
+ 2a6:	80 91 62 04 	lds	r24, 0x0462	; 0x800462 <kbWrPar>
+ 2aa:	81 30       	cpi	r24, 0x01	; 1
+ 2ac:	19 f4       	brne	.+6      	; 0x2b4 <__vector_4+0x90>
+ 2ae:	10 92 62 04 	sts	0x0462, r1	; 0x800462 <kbWrPar>
+ 2b2:	07 c0       	rjmp	.+14     	; 0x2c2 <__vector_4+0x9e>
+ 2b4:	81 e0       	ldi	r24, 0x01	; 1
+ 2b6:	80 93 62 04 	sts	0x0462, r24	; 0x800462 <kbWrPar>
+ 2ba:	03 c0       	rjmp	.+6      	; 0x2c2 <__vector_4+0x9e>
+ 2bc:	80 e0       	ldi	r24, 0x00	; 0
+ 2be:	0e 94 0c 01 	call	0x218	; 0x218 <sendBitToKB>
+ 2c2:	80 91 00 01 	lds	r24, 0x0100	; 0x800100 <_edata>
+ 2c6:	86 95       	lsr	r24
+ 2c8:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
+ 2cc:	39 c0       	rjmp	.+114    	; 0x340 <__vector_4+0x11c>
+ 2ce:	31 99       	sbic	0x06, 1	; 6
+ 2d0:	37 c0       	rjmp	.+110    	; 0x340 <__vector_4+0x11c>
+ 2d2:	80 91 33 01 	lds	r24, 0x0133	; 0x800133 <kbClockCount>
+ 2d6:	8f 5f       	subi	r24, 0xFF	; 255
+ 2d8:	80 93 33 01 	sts	0x0133, r24	; 0x800133 <kbClockCount>
+ 2dc:	81 30       	cpi	r24, 0x01	; 1
+ 2de:	81 f1       	breq	.+96     	; 0x340 <__vector_4+0x11c>
+ 2e0:	8a 30       	cpi	r24, 0x0A	; 10
+ 2e2:	71 f1       	breq	.+92     	; 0x340 <__vector_4+0x11c>
+ 2e4:	8b 30       	cpi	r24, 0x0B	; 11
+ 2e6:	19 f4       	brne	.+6      	; 0x2ee <__vector_4+0xca>
+ 2e8:	10 92 33 01 	sts	0x0133, r1	; 0x800133 <kbClockCount>
+ 2ec:	29 c0       	rjmp	.+82     	; 0x340 <__vector_4+0x11c>
+ 2ee:	90 91 58 04 	lds	r25, 0x0458	; 0x800458 <kbTemp>
+ 2f2:	96 95       	lsr	r25
+ 2f4:	90 93 58 04 	sts	0x0458, r25	; 0x800458 <kbTemp>
+ 2f8:	32 9b       	sbis	0x06, 2	; 6
+ 2fa:	03 c0       	rjmp	.+6      	; 0x302 <__vector_4+0xde>
+ 2fc:	90 58       	subi	r25, 0x80	; 128
+ 2fe:	90 93 58 04 	sts	0x0458, r25	; 0x800458 <kbTemp>
+ 302:	89 30       	cpi	r24, 0x09	; 9
+ 304:	e9 f4       	brne	.+58     	; 0x340 <__vector_4+0x11c>
+ 306:	80 91 6c 04 	lds	r24, 0x046C	; 0x80046c <kbInPointer>
+ 30a:	90 91 6d 04 	lds	r25, 0x046D	; 0x80046d <kbInPointer+0x1>
+ 30e:	01 96       	adiw	r24, 0x01	; 1
+ 310:	82 33       	cpi	r24, 0x32	; 50
+ 312:	91 05       	cpc	r25, r1
+ 314:	10 f0       	brcs	.+4      	; 0x31a <__vector_4+0xf6>
+ 316:	80 e0       	ldi	r24, 0x00	; 0
+ 318:	90 e0       	ldi	r25, 0x00	; 0
+ 31a:	20 91 60 04 	lds	r18, 0x0460	; 0x800460 <kbOutPointer>
+ 31e:	30 91 61 04 	lds	r19, 0x0461	; 0x800461 <kbOutPointer+0x1>
+ 322:	82 17       	cp	r24, r18
+ 324:	93 07       	cpc	r25, r19
+ 326:	51 f0       	breq	.+20     	; 0x33c <__vector_4+0x118>
+ 328:	fc 01       	movw	r30, r24
+ 32a:	ef 5f       	subi	r30, 0xFF	; 255
+ 32c:	fe 4f       	sbci	r31, 0xFE	; 254
+ 32e:	20 91 58 04 	lds	r18, 0x0458	; 0x800458 <kbTemp>
+ 332:	20 83       	st	Z, r18
+ 334:	90 93 6d 04 	sts	0x046D, r25	; 0x80046d <kbInPointer+0x1>
+ 338:	80 93 6c 04 	sts	0x046C, r24	; 0x80046c <kbInPointer>
+ 33c:	10 92 58 04 	sts	0x0458, r1	; 0x800458 <kbTemp>
+ 340:	ff 91       	pop	r31
+ 342:	ef 91       	pop	r30
+ 344:	bf 91       	pop	r27
+ 346:	af 91       	pop	r26
+ 348:	9f 91       	pop	r25
+ 34a:	8f 91       	pop	r24
+ 34c:	7f 91       	pop	r23
+ 34e:	6f 91       	pop	r22
+ 350:	5f 91       	pop	r21
+ 352:	4f 91       	pop	r20
+ 354:	3f 91       	pop	r19
+ 356:	2f 91       	pop	r18
+ 358:	0f 90       	pop	r0
+ 35a:	0f be       	out	0x3f, r0	; 63
+ 35c:	0f 90       	pop	r0
+ 35e:	1f 90       	pop	r1
+ 360:	18 95       	reti
+
+00000362 <updateKeyboardLEDs>:
+ 362:	81 e0       	ldi	r24, 0x01	; 1
+ 364:	90 91 63 04 	lds	r25, 0x0463	; 0x800463 <kbScrollLock>
+ 368:	91 30       	cpi	r25, 0x01	; 1
+ 36a:	09 f0       	breq	.+2      	; 0x36e <updateKeyboardLEDs+0xc>
+ 36c:	80 e0       	ldi	r24, 0x00	; 0
+ 36e:	90 91 67 04 	lds	r25, 0x0467	; 0x800467 <kbNumLock>
+ 372:	91 30       	cpi	r25, 0x01	; 1
+ 374:	09 f4       	brne	.+2      	; 0x378 <updateKeyboardLEDs+0x16>
+ 376:	8e 5f       	subi	r24, 0xFE	; 254
+ 378:	90 91 68 04 	lds	r25, 0x0468	; 0x800468 <kbCaps>
+ 37c:	91 30       	cpi	r25, 0x01	; 1
+ 37e:	09 f4       	brne	.+2      	; 0x382 <updateKeyboardLEDs+0x20>
+ 380:	8c 5f       	subi	r24, 0xFC	; 252
+ 382:	9d ee       	ldi	r25, 0xED	; 237
+ 384:	90 93 5f 04 	sts	0x045F, r25	; 0x80045f <kbBuffer2>
+ 388:	80 93 5d 04 	sts	0x045D, r24	; 0x80045d <kbBuffer1>
+ 38c:	82 e0       	ldi	r24, 0x02	; 2
+ 38e:	80 93 35 01 	sts	0x0135, r24	; 0x800135 <kbWriteCount>
+ 392:	81 e0       	ldi	r24, 0x01	; 1
+ 394:	80 93 37 01 	sts	0x0137, r24	; 0x800137 <kbAckReceived>
+ 398:	08 95       	ret
+
+0000039a <__vector_18>:
+ 39a:	1f 92       	push	r1
+ 39c:	0f 92       	push	r0
+ 39e:	0f b6       	in	r0, 0x3f	; 63
+ 3a0:	0f 92       	push	r0
+ 3a2:	11 24       	eor	r1, r1
+ 3a4:	2f 93       	push	r18
+ 3a6:	3f 93       	push	r19
+ 3a8:	4f 93       	push	r20
+ 3aa:	5f 93       	push	r21
+ 3ac:	6f 93       	push	r22
+ 3ae:	7f 93       	push	r23
+ 3b0:	8f 93       	push	r24
+ 3b2:	9f 93       	push	r25
+ 3b4:	af 93       	push	r26
+ 3b6:	bf 93       	push	r27
+ 3b8:	ef 93       	push	r30
+ 3ba:	ff 93       	push	r31
+ 3bc:	80 91 c0 00 	lds	r24, 0x00C0	; 0x8000c0 <__TEXT_REGION_LENGTH__+0x7e00c0>
+ 3c0:	20 91 c6 00 	lds	r18, 0x00C6	; 0x8000c6 <__TEXT_REGION_LENGTH__+0x7e00c6>
+ 3c4:	8c 71       	andi	r24, 0x1C	; 28
+ 3c6:	09 f0       	breq	.+2      	; 0x3ca <__vector_18+0x30>
+ 3c8:	2f e3       	ldi	r18, 0x3F	; 63
+ 3ca:	80 91 69 04 	lds	r24, 0x0469	; 0x800469 <serInPointer>
+ 3ce:	90 91 6a 04 	lds	r25, 0x046A	; 0x80046a <serInPointer+0x1>
+ 3d2:	01 96       	adiw	r24, 0x01	; 1
+ 3d4:	80 32       	cpi	r24, 0x20	; 32
+ 3d6:	33 e0       	ldi	r19, 0x03	; 3
+ 3d8:	93 07       	cpc	r25, r19
+ 3da:	14 f0       	brlt	.+4      	; 0x3e0 <__vector_18+0x46>
+ 3dc:	80 e0       	ldi	r24, 0x00	; 0
+ 3de:	90 e0       	ldi	r25, 0x00	; 0
+ 3e0:	40 91 59 04 	lds	r20, 0x0459	; 0x800459 <serOutPointer>
+ 3e4:	50 91 5a 04 	lds	r21, 0x045A	; 0x80045a <serOutPointer+0x1>
+ 3e8:	84 17       	cp	r24, r20
+ 3ea:	95 07       	cpc	r25, r21
+ 3ec:	41 f0       	breq	.+16     	; 0x3fe <__vector_18+0x64>
+ 3ee:	fc 01       	movw	r30, r24
+ 3f0:	e8 5c       	subi	r30, 0xC8	; 200
+ 3f2:	fe 4f       	sbci	r31, 0xFE	; 254
+ 3f4:	20 83       	st	Z, r18
+ 3f6:	90 93 6a 04 	sts	0x046A, r25	; 0x80046a <serInPointer+0x1>
+ 3fa:	80 93 69 04 	sts	0x0469, r24	; 0x800469 <serInPointer>
+ 3fe:	0e 94 cc 00 	call	0x198	; 0x198 <setRTS>
+ 402:	ff 91       	pop	r31
+ 404:	ef 91       	pop	r30
+ 406:	bf 91       	pop	r27
+ 408:	af 91       	pop	r26
+ 40a:	9f 91       	pop	r25
+ 40c:	8f 91       	pop	r24
+ 40e:	7f 91       	pop	r23
+ 410:	6f 91       	pop	r22
+ 412:	5f 91       	pop	r21
+ 414:	4f 91       	pop	r20
+ 416:	3f 91       	pop	r19
+ 418:	2f 91       	pop	r18
+ 41a:	0f 90       	pop	r0
+ 41c:	0f be       	out	0x3f, r0	; 63
+ 41e:	0f 90       	pop	r0
+ 420:	1f 90       	pop	r1
+ 422:	18 95       	reti
+
+00000424 <initUSART>:
+ 424:	10 92 c5 00 	sts	0x00C5, r1	; 0x8000c5 <__TEXT_REGION_LENGTH__+0x7e00c5>
+ 428:	85 e0       	ldi	r24, 0x05	; 5
+ 42a:	80 93 c4 00 	sts	0x00C4, r24	; 0x8000c4 <__TEXT_REGION_LENGTH__+0x7e00c4>
+ 42e:	86 e0       	ldi	r24, 0x06	; 6
+ 430:	80 93 c2 00 	sts	0x00C2, r24	; 0x8000c2 <__TEXT_REGION_LENGTH__+0x7e00c2>
+ 434:	88 e9       	ldi	r24, 0x98	; 152
+ 436:	80 93 c1 00 	sts	0x00C1, r24	; 0x8000c1 <__TEXT_REGION_LENGTH__+0x7e00c1>
+ 43a:	08 95       	ret
+
+0000043c <sendUSART>:
+ 43c:	e0 ec       	ldi	r30, 0xC0	; 192
+ 43e:	f0 e0       	ldi	r31, 0x00	; 0
+ 440:	90 81       	ld	r25, Z
+ 442:	95 ff       	sbrs	r25, 5
+ 444:	fd cf       	rjmp	.-6      	; 0x440 <sendUSART+0x4>
+ 446:	80 93 c6 00 	sts	0x00C6, r24	; 0x8000c6 <__TEXT_REGION_LENGTH__+0x7e00c6>
+ 44a:	08 95       	ret
+
+0000044c <send8BitToDisplay>:
+ 44c:	28 b1       	in	r18, 0x08	; 8
+ 44e:	96 b1       	in	r25, 0x06	; 6
+ 450:	20 72       	andi	r18, 0x20	; 32
+ 452:	90 71       	andi	r25, 0x10	; 16
+ 454:	99 0f       	add	r25, r25
+ 456:	29 17       	cp	r18, r25
+ 458:	39 f0       	breq	.+14     	; 0x468 <send8BitToDisplay+0x1c>
+ 45a:	28 b1       	in	r18, 0x08	; 8
+ 45c:	96 b1       	in	r25, 0x06	; 6
+ 45e:	20 72       	andi	r18, 0x20	; 32
+ 460:	90 71       	andi	r25, 0x10	; 16
+ 462:	99 0f       	add	r25, r25
+ 464:	29 13       	cpse	r18, r25
+ 466:	f9 cf       	rjmp	.-14     	; 0x45a <send8BitToDisplay+0xe>
+ 468:	95 b1       	in	r25, 0x05	; 5
+ 46a:	9e 7d       	andi	r25, 0xDE	; 222
+ 46c:	80 fd       	sbrc	r24, 0
+ 46e:	9f 5f       	subi	r25, 0xFF	; 255
+ 470:	84 fd       	sbrc	r24, 4
+ 472:	90 5e       	subi	r25, 0xE0	; 224
+ 474:	95 b9       	out	0x05, r25	; 5
+ 476:	81 ff       	sbrs	r24, 1
+ 478:	02 c0       	rjmp	.+4      	; 0x47e <send8BitToDisplay+0x32>
+ 47a:	90 e8       	ldi	r25, 0x80	; 128
+ 47c:	01 c0       	rjmp	.+2      	; 0x480 <send8BitToDisplay+0x34>
+ 47e:	90 e0       	ldi	r25, 0x00	; 0
+ 480:	82 fd       	sbrc	r24, 2
+ 482:	90 5c       	subi	r25, 0xC0	; 192
+ 484:	83 fd       	sbrc	r24, 3
+ 486:	90 5e       	subi	r25, 0xE0	; 224
+ 488:	85 fd       	sbrc	r24, 5
+ 48a:	90 5f       	subi	r25, 0xF0	; 240
+ 48c:	86 fd       	sbrc	r24, 6
+ 48e:	98 5f       	subi	r25, 0xF8	; 248
+ 490:	88 23       	and	r24, r24
+ 492:	0c f4       	brge	.+2      	; 0x496 <send8BitToDisplay+0x4a>
+ 494:	9c 5f       	subi	r25, 0xFC	; 252
+ 496:	9b b9       	out	0x0b, r25	; 11
+ 498:	98 b1       	in	r25, 0x08	; 8
+ 49a:	80 e2       	ldi	r24, 0x20	; 32
+ 49c:	89 27       	eor	r24, r25
+ 49e:	88 b9       	out	0x08, r24	; 8
+ 4a0:	08 95       	ret
+
+000004a2 <send2x4BitToDisplay>:
+ 4a2:	45 98       	cbi	0x08, 5	; 8
+ 4a4:	34 9b       	sbis	0x06, 4	; 6
+ 4a6:	02 c0       	rjmp	.+4      	; 0x4ac <send2x4BitToDisplay+0xa>
+ 4a8:	34 99       	sbic	0x06, 4	; 6
+ 4aa:	fe cf       	rjmp	.-4      	; 0x4a8 <send2x4BitToDisplay+0x6>
+ 4ac:	95 b1       	in	r25, 0x05	; 5
+ 4ae:	9e 7f       	andi	r25, 0xFE	; 254
+ 4b0:	84 fd       	sbrc	r24, 4
+ 4b2:	9f 5f       	subi	r25, 0xFF	; 255
+ 4b4:	95 b9       	out	0x05, r25	; 5
+ 4b6:	85 ff       	sbrs	r24, 5
+ 4b8:	02 c0       	rjmp	.+4      	; 0x4be <send2x4BitToDisplay+0x1c>
+ 4ba:	90 e8       	ldi	r25, 0x80	; 128
+ 4bc:	01 c0       	rjmp	.+2      	; 0x4c0 <send2x4BitToDisplay+0x1e>
+ 4be:	90 e0       	ldi	r25, 0x00	; 0
+ 4c0:	86 fd       	sbrc	r24, 6
+ 4c2:	90 5c       	subi	r25, 0xC0	; 192
+ 4c4:	88 23       	and	r24, r24
+ 4c6:	0c f4       	brge	.+2      	; 0x4ca <send2x4BitToDisplay+0x28>
+ 4c8:	90 5e       	subi	r25, 0xE0	; 224
+ 4ca:	9b b9       	out	0x0b, r25	; 11
+ 4cc:	45 9a       	sbi	0x08, 5	; 8
+ 4ce:	34 99       	sbic	0x06, 4	; 6
+ 4d0:	02 c0       	rjmp	.+4      	; 0x4d6 <send2x4BitToDisplay+0x34>
+ 4d2:	34 9b       	sbis	0x06, 4	; 6
+ 4d4:	fe cf       	rjmp	.-4      	; 0x4d2 <send2x4BitToDisplay+0x30>
+ 4d6:	95 b1       	in	r25, 0x05	; 5
+ 4d8:	9e 7f       	andi	r25, 0xFE	; 254
+ 4da:	80 fd       	sbrc	r24, 0
+ 4dc:	9f 5f       	subi	r25, 0xFF	; 255
+ 4de:	95 b9       	out	0x05, r25	; 5
+ 4e0:	81 ff       	sbrs	r24, 1
+ 4e2:	02 c0       	rjmp	.+4      	; 0x4e8 <send2x4BitToDisplay+0x46>
+ 4e4:	90 e8       	ldi	r25, 0x80	; 128
+ 4e6:	01 c0       	rjmp	.+2      	; 0x4ea <send2x4BitToDisplay+0x48>
+ 4e8:	90 e0       	ldi	r25, 0x00	; 0
+ 4ea:	82 fd       	sbrc	r24, 2
+ 4ec:	90 5c       	subi	r25, 0xC0	; 192
+ 4ee:	83 fd       	sbrc	r24, 3
+ 4f0:	90 5e       	subi	r25, 0xE0	; 224
+ 4f2:	9b b9       	out	0x0b, r25	; 11
+ 4f4:	45 98       	cbi	0x08, 5	; 8
+ 4f6:	08 95       	ret
+
+000004f8 <startTWI>:
+ 4f8:	84 ea       	ldi	r24, 0xA4	; 164
+ 4fa:	80 93 bc 00 	sts	0x00BC, r24	; 0x8000bc <__TEXT_REGION_LENGTH__+0x7e00bc>
+ 4fe:	ec eb       	ldi	r30, 0xBC	; 188
+ 500:	f0 e0       	ldi	r31, 0x00	; 0
+ 502:	80 81       	ld	r24, Z
+ 504:	88 23       	and	r24, r24
+ 506:	ec f7       	brge	.-6      	; 0x502 <startTWI+0xa>
+ 508:	80 91 b9 00 	lds	r24, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
+ 50c:	82 e0       	ldi	r24, 0x02	; 2
+ 50e:	80 93 bb 00 	sts	0x00BB, r24	; 0x8000bb <__TEXT_REGION_LENGTH__+0x7e00bb>
+ 512:	84 e8       	ldi	r24, 0x84	; 132
+ 514:	80 93 bc 00 	sts	0x00BC, r24	; 0x8000bc <__TEXT_REGION_LENGTH__+0x7e00bc>
+ 518:	ec eb       	ldi	r30, 0xBC	; 188
+ 51a:	f0 e0       	ldi	r31, 0x00	; 0
+ 51c:	80 81       	ld	r24, Z
+ 51e:	88 23       	and	r24, r24
+ 520:	ec f7       	brge	.-6      	; 0x51c <startTWI+0x24>
+ 522:	80 91 b9 00 	lds	r24, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
+ 526:	81 e0       	ldi	r24, 0x01	; 1
+ 528:	80 93 5e 04 	sts	0x045E, r24	; 0x80045e <twiStarted>
+ 52c:	08 95       	ret
+
+0000052e <sendTWItoDisplay>:
+ 52e:	cf 93       	push	r28
+ 530:	c8 2f       	mov	r28, r24
+ 532:	80 91 5e 04 	lds	r24, 0x045E	; 0x80045e <twiStarted>
+ 536:	81 11       	cpse	r24, r1
+ 538:	02 c0       	rjmp	.+4      	; 0x53e <sendTWItoDisplay+0x10>
+ 53a:	0e 94 7c 02 	call	0x4f8	; 0x4f8 <startTWI>
+ 53e:	c0 93 bb 00 	sts	0x00BB, r28	; 0x8000bb <__TEXT_REGION_LENGTH__+0x7e00bb>
+ 542:	84 e8       	ldi	r24, 0x84	; 132
+ 544:	80 93 bc 00 	sts	0x00BC, r24	; 0x8000bc <__TEXT_REGION_LENGTH__+0x7e00bc>
+ 548:	ec eb       	ldi	r30, 0xBC	; 188
+ 54a:	f0 e0       	ldi	r31, 0x00	; 0
+ 54c:	90 81       	ld	r25, Z
+ 54e:	99 23       	and	r25, r25
+ 550:	ec f7       	brge	.-6      	; 0x54c <sendTWItoDisplay+0x1e>
+ 552:	90 91 b9 00 	lds	r25, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
+ 556:	98 7f       	andi	r25, 0xF8	; 248
+ 558:	98 32       	cpi	r25, 0x28	; 40
+ 55a:	71 f0       	breq	.+28     	; 0x578 <sendTWItoDisplay+0x4a>
+ 55c:	0e 94 7c 02 	call	0x4f8	; 0x4f8 <startTWI>
+ 560:	c0 93 bb 00 	sts	0x00BB, r28	; 0x8000bb <__TEXT_REGION_LENGTH__+0x7e00bb>
+ 564:	84 e8       	ldi	r24, 0x84	; 132
+ 566:	80 93 bc 00 	sts	0x00BC, r24	; 0x8000bc <__TEXT_REGION_LENGTH__+0x7e00bc>
+ 56a:	ec eb       	ldi	r30, 0xBC	; 188
+ 56c:	f0 e0       	ldi	r31, 0x00	; 0
+ 56e:	80 81       	ld	r24, Z
+ 570:	88 23       	and	r24, r24
+ 572:	ec f7       	brge	.-6      	; 0x56e <sendTWItoDisplay+0x40>
+ 574:	80 91 b9 00 	lds	r24, 0x00B9	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
+ 578:	cf 91       	pop	r28
+ 57a:	08 95       	ret
+
+0000057c <sendToDisplay>:
+ 57c:	23 b1       	in	r18, 0x03	; 3
+ 57e:	93 b1       	in	r25, 0x03	; 3
+ 580:	94 70       	andi	r25, 0x04	; 4
+ 582:	21 fd       	sbrc	r18, 1
+ 584:	04 c0       	rjmp	.+8      	; 0x58e <sendToDisplay+0x12>
+ 586:	90 e0       	ldi	r25, 0x00	; 0
+ 588:	0e 94 51 02 	call	0x4a2	; 0x4a2 <send2x4BitToDisplay>
+ 58c:	08 95       	ret
+ 58e:	91 11       	cpse	r25, r1
+ 590:	04 c0       	rjmp	.+8      	; 0x59a <sendToDisplay+0x1e>
+ 592:	90 e0       	ldi	r25, 0x00	; 0
+ 594:	0e 94 97 02 	call	0x52e	; 0x52e <sendTWItoDisplay>
+ 598:	08 95       	ret
+ 59a:	90 e0       	ldi	r25, 0x00	; 0
+ 59c:	0e 94 26 02 	call	0x44c	; 0x44c <send8BitToDisplay>
+ 5a0:	08 95       	ret
+
+000005a2 <getInChar>:
+ 5a2:	cf 93       	push	r28
+ 5a4:	20 91 69 04 	lds	r18, 0x0469	; 0x800469 <serInPointer>
+ 5a8:	30 91 6a 04 	lds	r19, 0x046A	; 0x80046a <serInPointer+0x1>
+ 5ac:	80 91 59 04 	lds	r24, 0x0459	; 0x800459 <serOutPointer>
+ 5b0:	90 91 5a 04 	lds	r25, 0x045A	; 0x80045a <serOutPointer+0x1>
+ 5b4:	28 17       	cp	r18, r24
+ 5b6:	39 07       	cpc	r19, r25
+ 5b8:	61 f4       	brne	.+24     	; 0x5d2 <getInChar+0x30>
+ 5ba:	00 00       	nop
+ 5bc:	20 91 69 04 	lds	r18, 0x0469	; 0x800469 <serInPointer>
+ 5c0:	30 91 6a 04 	lds	r19, 0x046A	; 0x80046a <serInPointer+0x1>
+ 5c4:	80 91 59 04 	lds	r24, 0x0459	; 0x800459 <serOutPointer>
+ 5c8:	90 91 5a 04 	lds	r25, 0x045A	; 0x80045a <serOutPointer+0x1>
+ 5cc:	28 17       	cp	r18, r24
+ 5ce:	39 07       	cpc	r19, r25
+ 5d0:	a1 f3       	breq	.-24     	; 0x5ba <getInChar+0x18>
+ 5d2:	f8 94       	cli
+ 5d4:	20 91 59 04 	lds	r18, 0x0459	; 0x800459 <serOutPointer>
+ 5d8:	30 91 5a 04 	lds	r19, 0x045A	; 0x80045a <serOutPointer+0x1>
+ 5dc:	2f 5f       	subi	r18, 0xFF	; 255
+ 5de:	3f 4f       	sbci	r19, 0xFF	; 255
+ 5e0:	20 32       	cpi	r18, 0x20	; 32
+ 5e2:	83 e0       	ldi	r24, 0x03	; 3
+ 5e4:	38 07       	cpc	r19, r24
+ 5e6:	10 f0       	brcs	.+4      	; 0x5ec <getInChar+0x4a>
+ 5e8:	20 e0       	ldi	r18, 0x00	; 0
+ 5ea:	30 e0       	ldi	r19, 0x00	; 0
+ 5ec:	f9 01       	movw	r30, r18
+ 5ee:	e8 5c       	subi	r30, 0xC8	; 200
+ 5f0:	fe 4f       	sbci	r31, 0xFE	; 254
+ 5f2:	c0 81       	ld	r28, Z
+ 5f4:	30 93 5a 04 	sts	0x045A, r19	; 0x80045a <serOutPointer+0x1>
+ 5f8:	20 93 59 04 	sts	0x0459, r18	; 0x800459 <serOutPointer>
+ 5fc:	78 94       	sei
+ 5fe:	0e 94 cc 00 	call	0x198	; 0x198 <setRTS>
+ 602:	8c 2f       	mov	r24, r28
+ 604:	cf 91       	pop	r28
+ 606:	08 95       	ret
+
+00000608 <isInCharAvailable>:
+ 608:	40 91 69 04 	lds	r20, 0x0469	; 0x800469 <serInPointer>
+ 60c:	50 91 6a 04 	lds	r21, 0x046A	; 0x80046a <serInPointer+0x1>
+ 610:	20 91 59 04 	lds	r18, 0x0459	; 0x800459 <serOutPointer>
+ 614:	30 91 5a 04 	lds	r19, 0x045A	; 0x80045a <serOutPointer+0x1>
+ 618:	81 e0       	ldi	r24, 0x01	; 1
+ 61a:	42 17       	cp	r20, r18
+ 61c:	53 07       	cpc	r21, r19
+ 61e:	09 f4       	brne	.+2      	; 0x622 <isInCharAvailable+0x1a>
+ 620:	80 e0       	ldi	r24, 0x00	; 0
+ 622:	08 95       	ret
+
+00000624 <getKbCode>:
+ 624:	20 91 6c 04 	lds	r18, 0x046C	; 0x80046c <kbInPointer>
+ 628:	30 91 6d 04 	lds	r19, 0x046D	; 0x80046d <kbInPointer+0x1>
+ 62c:	80 91 60 04 	lds	r24, 0x0460	; 0x800460 <kbOutPointer>
+ 630:	90 91 61 04 	lds	r25, 0x0461	; 0x800461 <kbOutPointer+0x1>
+ 634:	28 17       	cp	r18, r24
+ 636:	39 07       	cpc	r19, r25
+ 638:	b1 f0       	breq	.+44     	; 0x666 <getKbCode+0x42>
+ 63a:	f8 94       	cli
+ 63c:	20 91 60 04 	lds	r18, 0x0460	; 0x800460 <kbOutPointer>
+ 640:	30 91 61 04 	lds	r19, 0x0461	; 0x800461 <kbOutPointer+0x1>
+ 644:	2f 5f       	subi	r18, 0xFF	; 255
+ 646:	3f 4f       	sbci	r19, 0xFF	; 255
+ 648:	22 33       	cpi	r18, 0x32	; 50
+ 64a:	31 05       	cpc	r19, r1
+ 64c:	10 f0       	brcs	.+4      	; 0x652 <getKbCode+0x2e>
+ 64e:	20 e0       	ldi	r18, 0x00	; 0
+ 650:	30 e0       	ldi	r19, 0x00	; 0
+ 652:	f9 01       	movw	r30, r18
+ 654:	ef 5f       	subi	r30, 0xFF	; 255
+ 656:	fe 4f       	sbci	r31, 0xFE	; 254
+ 658:	80 81       	ld	r24, Z
+ 65a:	30 93 61 04 	sts	0x0461, r19	; 0x800461 <kbOutPointer+0x1>
+ 65e:	20 93 60 04 	sts	0x0460, r18	; 0x800460 <kbOutPointer>
+ 662:	78 94       	sei
+ 664:	08 95       	ret
+ 666:	80 e0       	ldi	r24, 0x00	; 0
+ 668:	08 95       	ret
+
+0000066a <processATKeyboard>:
+ 66a:	cf 93       	push	r28
+ 66c:	0e 94 12 03 	call	0x624	; 0x624 <getKbCode>
+ 670:	c8 2f       	mov	r28, r24
+ 672:	88 23       	and	r24, r24
+ 674:	09 f4       	brne	.+2      	; 0x678 <processATKeyboard+0xe>
+ 676:	d7 c0       	rjmp	.+430    	; 0x826 <processATKeyboard+0x1bc>
+ 678:	8a 3f       	cpi	r24, 0xFA	; 250
+ 67a:	39 f4       	brne	.+14     	; 0x68a <processATKeyboard+0x20>
+ 67c:	81 e0       	ldi	r24, 0x01	; 1
+ 67e:	80 93 37 01 	sts	0x0137, r24	; 0x800137 <kbAckReceived>
+ 682:	8a ef       	ldi	r24, 0xFA	; 250
+ 684:	80 93 6b 04 	sts	0x046B, r24	; 0x80046b <prevKbCode>
+ 688:	ce c0       	rjmp	.+412    	; 0x826 <processATKeyboard+0x1bc>
+ 68a:	80 91 6b 04 	lds	r24, 0x046B	; 0x80046b <prevKbCode>
+ 68e:	80 3f       	cpi	r24, 0xF0	; 240
+ 690:	b1 f4       	brne	.+44     	; 0x6be <processATKeyboard+0x54>
+ 692:	c0 3e       	cpi	r28, 0xE0	; 224
+ 694:	09 f4       	brne	.+2      	; 0x698 <processATKeyboard+0x2e>
+ 696:	c7 c0       	rjmp	.+398    	; 0x826 <processATKeyboard+0x1bc>
+ 698:	c0 93 6b 04 	sts	0x046B, r28	; 0x80046b <prevKbCode>
+ 69c:	c2 31       	cpi	r28, 0x12	; 18
+ 69e:	11 f0       	breq	.+4      	; 0x6a4 <processATKeyboard+0x3a>
+ 6a0:	c9 35       	cpi	r28, 0x59	; 89
+ 6a2:	11 f4       	brne	.+4      	; 0x6a8 <processATKeyboard+0x3e>
+ 6a4:	10 92 64 04 	sts	0x0464, r1	; 0x800464 <kbShift>
+ 6a8:	c4 31       	cpi	r28, 0x14	; 20
+ 6aa:	19 f4       	brne	.+6      	; 0x6b2 <processATKeyboard+0x48>
+ 6ac:	10 92 34 01 	sts	0x0134, r1	; 0x800134 <kbCrtl>
+ 6b0:	ba c0       	rjmp	.+372    	; 0x826 <processATKeyboard+0x1bc>
+ 6b2:	c1 31       	cpi	r28, 0x11	; 17
+ 6b4:	09 f0       	breq	.+2      	; 0x6b8 <processATKeyboard+0x4e>
+ 6b6:	b7 c0       	rjmp	.+366    	; 0x826 <processATKeyboard+0x1bc>
+ 6b8:	10 92 66 04 	sts	0x0466, r1	; 0x800466 <kbAlt>
+ 6bc:	b4 c0       	rjmp	.+360    	; 0x826 <processATKeyboard+0x1bc>
+ 6be:	80 3e       	cpi	r24, 0xE0	; 224
+ 6c0:	21 f0       	breq	.+8      	; 0x6ca <processATKeyboard+0x60>
+ 6c2:	80 91 67 04 	lds	r24, 0x0467	; 0x800467 <kbNumLock>
+ 6c6:	81 11       	cpse	r24, r1
+ 6c8:	3e c0       	rjmp	.+124    	; 0x746 <processATKeyboard+0xdc>
+ 6ca:	c0 93 6b 04 	sts	0x046B, r28	; 0x80046b <prevKbCode>
+ 6ce:	c5 37       	cpi	r28, 0x75	; 117
+ 6d0:	21 f4       	brne	.+8      	; 0x6da <processATKeyboard+0x70>
+ 6d2:	85 e0       	ldi	r24, 0x05	; 5
+ 6d4:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 6d8:	a6 c0       	rjmp	.+332    	; 0x826 <processATKeyboard+0x1bc>
+ 6da:	c2 37       	cpi	r28, 0x72	; 114
+ 6dc:	21 f4       	brne	.+8      	; 0x6e6 <processATKeyboard+0x7c>
+ 6de:	88 e1       	ldi	r24, 0x18	; 24
+ 6e0:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 6e4:	a0 c0       	rjmp	.+320    	; 0x826 <processATKeyboard+0x1bc>
+ 6e6:	cb 36       	cpi	r28, 0x6B	; 107
+ 6e8:	21 f4       	brne	.+8      	; 0x6f2 <processATKeyboard+0x88>
+ 6ea:	80 e1       	ldi	r24, 0x10	; 16
+ 6ec:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 6f0:	9a c0       	rjmp	.+308    	; 0x826 <processATKeyboard+0x1bc>
+ 6f2:	c4 37       	cpi	r28, 0x74	; 116
+ 6f4:	21 f4       	brne	.+8      	; 0x6fe <processATKeyboard+0x94>
+ 6f6:	84 e0       	ldi	r24, 0x04	; 4
+ 6f8:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 6fc:	94 c0       	rjmp	.+296    	; 0x826 <processATKeyboard+0x1bc>
+ 6fe:	c0 37       	cpi	r28, 0x70	; 112
+ 700:	21 f4       	brne	.+8      	; 0x70a <processATKeyboard+0xa0>
+ 702:	81 e0       	ldi	r24, 0x01	; 1
+ 704:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 708:	8e c0       	rjmp	.+284    	; 0x826 <processATKeyboard+0x1bc>
+ 70a:	c1 37       	cpi	r28, 0x71	; 113
+ 70c:	21 f4       	brne	.+8      	; 0x716 <processATKeyboard+0xac>
+ 70e:	81 e0       	ldi	r24, 0x01	; 1
+ 710:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 714:	88 c0       	rjmp	.+272    	; 0x826 <processATKeyboard+0x1bc>
+ 716:	cc 36       	cpi	r28, 0x6C	; 108
+ 718:	21 f4       	brne	.+8      	; 0x722 <processATKeyboard+0xb8>
+ 71a:	81 e0       	ldi	r24, 0x01	; 1
+ 71c:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 720:	82 c0       	rjmp	.+260    	; 0x826 <processATKeyboard+0x1bc>
+ 722:	c9 36       	cpi	r28, 0x69	; 105
+ 724:	21 f4       	brne	.+8      	; 0x72e <processATKeyboard+0xc4>
+ 726:	81 e0       	ldi	r24, 0x01	; 1
+ 728:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 72c:	7c c0       	rjmp	.+248    	; 0x826 <processATKeyboard+0x1bc>
+ 72e:	cd 37       	cpi	r28, 0x7D	; 125
+ 730:	21 f4       	brne	.+8      	; 0x73a <processATKeyboard+0xd0>
+ 732:	81 e0       	ldi	r24, 0x01	; 1
+ 734:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 738:	76 c0       	rjmp	.+236    	; 0x826 <processATKeyboard+0x1bc>
+ 73a:	ca 37       	cpi	r28, 0x7A	; 122
+ 73c:	21 f4       	brne	.+8      	; 0x746 <processATKeyboard+0xdc>
+ 73e:	81 e0       	ldi	r24, 0x01	; 1
+ 740:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 744:	70 c0       	rjmp	.+224    	; 0x826 <processATKeyboard+0x1bc>
+ 746:	c2 31       	cpi	r28, 0x12	; 18
+ 748:	11 f0       	breq	.+4      	; 0x74e <processATKeyboard+0xe4>
+ 74a:	c9 35       	cpi	r28, 0x59	; 89
+ 74c:	21 f4       	brne	.+8      	; 0x756 <processATKeyboard+0xec>
+ 74e:	81 e0       	ldi	r24, 0x01	; 1
+ 750:	80 93 64 04 	sts	0x0464, r24	; 0x800464 <kbShift>
+ 754:	66 c0       	rjmp	.+204    	; 0x822 <processATKeyboard+0x1b8>
+ 756:	c4 31       	cpi	r28, 0x14	; 20
+ 758:	21 f4       	brne	.+8      	; 0x762 <processATKeyboard+0xf8>
+ 75a:	81 e0       	ldi	r24, 0x01	; 1
+ 75c:	80 93 34 01 	sts	0x0134, r24	; 0x800134 <kbCrtl>
+ 760:	60 c0       	rjmp	.+192    	; 0x822 <processATKeyboard+0x1b8>
+ 762:	c1 31       	cpi	r28, 0x11	; 17
+ 764:	21 f4       	brne	.+8      	; 0x76e <processATKeyboard+0x104>
+ 766:	81 e0       	ldi	r24, 0x01	; 1
+ 768:	80 93 66 04 	sts	0x0466, r24	; 0x800466 <kbAlt>
+ 76c:	5a c0       	rjmp	.+180    	; 0x822 <processATKeyboard+0x1b8>
+ 76e:	c8 35       	cpi	r28, 0x58	; 88
+ 770:	69 f4       	brne	.+26     	; 0x78c <processATKeyboard+0x122>
+ 772:	80 91 68 04 	lds	r24, 0x0468	; 0x800468 <kbCaps>
+ 776:	81 30       	cpi	r24, 0x01	; 1
+ 778:	19 f4       	brne	.+6      	; 0x780 <processATKeyboard+0x116>
+ 77a:	10 92 68 04 	sts	0x0468, r1	; 0x800468 <kbCaps>
+ 77e:	03 c0       	rjmp	.+6      	; 0x786 <processATKeyboard+0x11c>
+ 780:	81 e0       	ldi	r24, 0x01	; 1
+ 782:	80 93 68 04 	sts	0x0468, r24	; 0x800468 <kbCaps>
+ 786:	0e 94 b1 01 	call	0x362	; 0x362 <updateKeyboardLEDs>
+ 78a:	4b c0       	rjmp	.+150    	; 0x822 <processATKeyboard+0x1b8>
+ 78c:	c7 37       	cpi	r28, 0x77	; 119
+ 78e:	69 f4       	brne	.+26     	; 0x7aa <processATKeyboard+0x140>
+ 790:	80 91 67 04 	lds	r24, 0x0467	; 0x800467 <kbNumLock>
+ 794:	81 30       	cpi	r24, 0x01	; 1
+ 796:	19 f4       	brne	.+6      	; 0x79e <processATKeyboard+0x134>
+ 798:	10 92 67 04 	sts	0x0467, r1	; 0x800467 <kbNumLock>
+ 79c:	03 c0       	rjmp	.+6      	; 0x7a4 <processATKeyboard+0x13a>
+ 79e:	81 e0       	ldi	r24, 0x01	; 1
+ 7a0:	80 93 67 04 	sts	0x0467, r24	; 0x800467 <kbNumLock>
+ 7a4:	0e 94 b1 01 	call	0x362	; 0x362 <updateKeyboardLEDs>
+ 7a8:	3c c0       	rjmp	.+120    	; 0x822 <processATKeyboard+0x1b8>
+ 7aa:	ce 37       	cpi	r28, 0x7E	; 126
+ 7ac:	69 f4       	brne	.+26     	; 0x7c8 <processATKeyboard+0x15e>
+ 7ae:	80 91 63 04 	lds	r24, 0x0463	; 0x800463 <kbScrollLock>
+ 7b2:	81 30       	cpi	r24, 0x01	; 1
+ 7b4:	19 f4       	brne	.+6      	; 0x7bc <processATKeyboard+0x152>
+ 7b6:	10 92 63 04 	sts	0x0463, r1	; 0x800463 <kbScrollLock>
+ 7ba:	03 c0       	rjmp	.+6      	; 0x7c2 <processATKeyboard+0x158>
+ 7bc:	81 e0       	ldi	r24, 0x01	; 1
+ 7be:	80 93 63 04 	sts	0x0463, r24	; 0x800463 <kbScrollLock>
+ 7c2:	0e 94 b1 01 	call	0x362	; 0x362 <updateKeyboardLEDs>
+ 7c6:	2d c0       	rjmp	.+90     	; 0x822 <processATKeyboard+0x1b8>
+ 7c8:	c4 38       	cpi	r28, 0x84	; 132
+ 7ca:	58 f5       	brcc	.+86     	; 0x822 <processATKeyboard+0x1b8>
+ 7cc:	80 91 64 04 	lds	r24, 0x0464	; 0x800464 <kbShift>
+ 7d0:	81 11       	cpse	r24, r1
+ 7d2:	06 c0       	rjmp	.+12     	; 0x7e0 <processATKeyboard+0x176>
+ 7d4:	ec 2f       	mov	r30, r28
+ 7d6:	f0 e0       	ldi	r31, 0x00	; 0
+ 7d8:	e4 51       	subi	r30, 0x14	; 20
+ 7da:	ff 4f       	sbci	r31, 0xFF	; 255
+ 7dc:	84 91       	lpm	r24, Z
+ 7de:	05 c0       	rjmp	.+10     	; 0x7ea <processATKeyboard+0x180>
+ 7e0:	ec 2f       	mov	r30, r28
+ 7e2:	f0 e0       	ldi	r31, 0x00	; 0
+ 7e4:	e8 59       	subi	r30, 0x98	; 152
+ 7e6:	ff 4f       	sbci	r31, 0xFF	; 255
+ 7e8:	84 91       	lpm	r24, Z
+ 7ea:	88 23       	and	r24, r24
+ 7ec:	d1 f0       	breq	.+52     	; 0x822 <processATKeyboard+0x1b8>
+ 7ee:	9f e9       	ldi	r25, 0x9F	; 159
+ 7f0:	98 0f       	add	r25, r24
+ 7f2:	9a 31       	cpi	r25, 0x1A	; 26
+ 7f4:	30 f4       	brcc	.+12     	; 0x802 <processATKeyboard+0x198>
+ 7f6:	90 91 68 04 	lds	r25, 0x0468	; 0x800468 <kbCaps>
+ 7fa:	91 30       	cpi	r25, 0x01	; 1
+ 7fc:	59 f4       	brne	.+22     	; 0x814 <processATKeyboard+0x1aa>
+ 7fe:	80 52       	subi	r24, 0x20	; 32
+ 800:	09 c0       	rjmp	.+18     	; 0x814 <processATKeyboard+0x1aa>
+ 802:	9f eb       	ldi	r25, 0xBF	; 191
+ 804:	98 0f       	add	r25, r24
+ 806:	9a 31       	cpi	r25, 0x1A	; 26
+ 808:	28 f4       	brcc	.+10     	; 0x814 <processATKeyboard+0x1aa>
+ 80a:	90 91 68 04 	lds	r25, 0x0468	; 0x800468 <kbCaps>
+ 80e:	91 30       	cpi	r25, 0x01	; 1
+ 810:	09 f4       	brne	.+2      	; 0x814 <processATKeyboard+0x1aa>
+ 812:	80 5e       	subi	r24, 0xE0	; 224
+ 814:	90 91 34 01 	lds	r25, 0x0134	; 0x800134 <kbCrtl>
+ 818:	91 30       	cpi	r25, 0x01	; 1
+ 81a:	09 f4       	brne	.+2      	; 0x81e <processATKeyboard+0x1b4>
+ 81c:	8f 71       	andi	r24, 0x1F	; 31
+ 81e:	0e 94 1e 02 	call	0x43c	; 0x43c <sendUSART>
+ 822:	c0 93 6b 04 	sts	0x046B, r28	; 0x80046b <prevKbCode>
+ 826:	cf 91       	pop	r28
+ 828:	08 95       	ret
+
+0000082a <__vector_7>:
+ 82a:	1f 92       	push	r1
+ 82c:	0f 92       	push	r0
+ 82e:	0f b6       	in	r0, 0x3f	; 63
+ 830:	0f 92       	push	r0
+ 832:	11 24       	eor	r1, r1
+ 834:	2f 93       	push	r18
+ 836:	3f 93       	push	r19
+ 838:	4f 93       	push	r20
+ 83a:	5f 93       	push	r21
+ 83c:	6f 93       	push	r22
+ 83e:	7f 93       	push	r23
+ 840:	8f 93       	push	r24
+ 842:	9f 93       	push	r25
+ 844:	af 93       	push	r26
+ 846:	bf 93       	push	r27
+ 848:	ef 93       	push	r30
+ 84a:	ff 93       	push	r31
+ 84c:	10 92 33 01 	sts	0x0133, r1	; 0x800133 <kbClockCount>
+ 850:	10 92 58 04 	sts	0x0458, r1	; 0x800458 <kbTemp>
+ 854:	10 92 35 01 	sts	0x0135, r1	; 0x800135 <kbWriteCount>
+ 858:	80 91 65 04 	lds	r24, 0x0465	; 0x800465 <kbWriteActive>
+ 85c:	81 30       	cpi	r24, 0x01	; 1
+ 85e:	31 f4       	brne	.+12     	; 0x86c <__vector_7+0x42>
+ 860:	0e 94 e7 00 	call	0x1ce	; 0x1ce <setKeyboardToReceiveMode>
+ 864:	0e 94 08 01 	call	0x210	; 0x210 <setKeyboardToSendMode>
+ 868:	10 92 65 04 	sts	0x0465, r1	; 0x800465 <kbWriteActive>
+ 86c:	ff 91       	pop	r31
+ 86e:	ef 91       	pop	r30
+ 870:	bf 91       	pop	r27
+ 872:	af 91       	pop	r26
+ 874:	9f 91       	pop	r25
+ 876:	8f 91       	pop	r24
+ 878:	7f 91       	pop	r23
+ 87a:	6f 91       	pop	r22
+ 87c:	5f 91       	pop	r21
+ 87e:	4f 91       	pop	r20
+ 880:	3f 91       	pop	r19
+ 882:	2f 91       	pop	r18
+ 884:	0f 90       	pop	r0
+ 886:	0f be       	out	0x3f, r0	; 63
+ 888:	0f 90       	pop	r0
+ 88a:	1f 90       	pop	r1
+ 88c:	18 95       	reti
+
+0000088e <main>:
+}
+int main(void)
+{
+	unsigned char serInChar;
+	unsigned char prevInChar;
+	kbInPointer=0;
+ 88e:	10 92 6d 04 	sts	0x046D, r1	; 0x80046d <kbInPointer+0x1>
+ 892:	10 92 6c 04 	sts	0x046C, r1	; 0x80046c <kbInPointer>
+	kbOutPointer=0;
+ 896:	10 92 61 04 	sts	0x0461, r1	; 0x800461 <kbOutPointer+0x1>
+ 89a:	10 92 60 04 	sts	0x0460, r1	; 0x800460 <kbOutPointer>
+	kbClockCount=0;
+ 89e:	10 92 33 01 	sts	0x0133, r1	; 0x800133 <kbClockCount>
+	prevKbCode=0;
+ 8a2:	10 92 6b 04 	sts	0x046B, r1	; 0x80046b <prevKbCode>
+	prevInChar=0;
+	unsigned char escParam1;
+	unsigned char escParam2;
+	
+	enableAnsiConversion=1;
+ 8a6:	81 e0       	ldi	r24, 0x01	; 1
+ 8a8:	80 93 36 01 	sts	0x0136, r24	; 0x800136 <enableAnsiConversion>
+
+	twiStarted=0;
+ 8ac:	10 92 5e 04 	sts	0x045E, r1	; 0x80045e <twiStarted>
+	
+	serInPointer=0;
+ 8b0:	10 92 6a 04 	sts	0x046A, r1	; 0x80046a <serInPointer+0x1>
+ 8b4:	10 92 69 04 	sts	0x0469, r1	; 0x800469 <serInPointer>
+	serOutPointer=0;
+ 8b8:	10 92 5a 04 	sts	0x045A, r1	; 0x80045a <serOutPointer+0x1>
+ 8bc:	10 92 59 04 	sts	0x0459, r1	; 0x800459 <serOutPointer>
+
+	kbWriteActive=0;
+ 8c0:	10 92 65 04 	sts	0x0465, r1	; 0x800465 <kbWriteActive>
+	kbWriteCount=0;
+ 8c4:	10 92 35 01 	sts	0x0135, r1	; 0x800135 <kbWriteCount>
+	kbAckReceived=0;
+ 8c8:	10 92 37 01 	sts	0x0137, r1	; 0x800137 <kbAckReceived>
+	kbWrPar=0;
+ 8cc:	10 92 62 04 	sts	0x0462, r1	; 0x800462 <kbWrPar>
+
+	PORTB = 0b00000110; // TWI and 4 bit interface select pin pull-up
+ 8d0:	86 e0       	ldi	r24, 0x06	; 6
+ 8d2:	85 b9       	out	0x05, r24	; 5
+	DDRB = 0b00101001;
+ 8d4:	89 e2       	ldi	r24, 0x29	; 41
+ 8d6:	84 b9       	out	0x04, r24	; 4
+	PORTD = 0x00;
+ 8d8:	1b b8       	out	0x0b, r1	; 11
+	PORTC = 0x00; // ACK = low
+ 8da:	18 b8       	out	0x08, r1	; 8
+
+	DDRD = 0b11111111;
+ 8dc:	8f ef       	ldi	r24, 0xFF	; 255
+ 8de:	8a b9       	out	0x0a, r24	; 10
+	unsigned char twiPin = PINB & 0b00000100; //PB2=0 if two wire interface selected
+
+	if (twiPin==0) // Two wire interface selected so both TWI pins to be inputs by default
+ 8e0:	1a 99       	sbic	0x03, 2	; 3
+ 8e2:	08 c0       	rjmp	.+16     	; 0x8f4 <main+0x66>
+	{
+		DDRC = 0b00001000; // Only PC3 is an output (/RTS)
+ 8e4:	88 e0       	ldi	r24, 0x08	; 8
+ 8e6:	87 b9       	out	0x07, r24	; 7
+		// Two wire speed initialisation
+		// SCL freq = CPU freq / (16+2*TWBR*Prescaler)
+		TWSR=0; // Prescaler = 1
+ 8e8:	10 92 b9 00 	sts	0x00B9, r1	; 0x8000b9 <__TEXT_REGION_LENGTH__+0x7e00b9>
+		TWBR=7; // Bit rate 7 = 400KHz for 12MHz clk  (=12 for 16MHz clk)
+ 8ec:	87 e0       	ldi	r24, 0x07	; 7
+ 8ee:	80 93 b8 00 	sts	0x00B8, r24	; 0x8000b8 <__TEXT_REGION_LENGTH__+0x7e00b8>
+ 8f2:	02 c0       	rjmp	.+4      	; 0x8f8 <main+0x6a>
+	}
+	else
+	{
+		DDRC = 0b00101000; // PC3 and PC5 are outputs (/RTS and AVAIL)
+ 8f4:	88 e2       	ldi	r24, 0x28	; 40
+ 8f6:	87 b9       	out	0x07, r24	; 7
+	}
+
+	PCICR=1<<PCIE1; // Interrupt on pin change
+ 8f8:	c2 e0       	ldi	r28, 0x02	; 2
+ 8fa:	c0 93 68 00 	sts	0x0068, r28	; 0x800068 <__TEXT_REGION_LENGTH__+0x7e0068>
+	PCMSK1=1<<PCINT9; // enable pin PC1 change (KB clock) to interrupt
+ 8fe:	c0 93 6c 00 	sts	0x006C, r28	; 0x80006c <__TEXT_REGION_LENGTH__+0x7e006c>
+
+	kbShift=0;
+ 902:	10 92 64 04 	sts	0x0464, r1	; 0x800464 <kbShift>
+	kbCrtl=0;
+ 906:	10 92 34 01 	sts	0x0134, r1	; 0x800134 <kbCrtl>
+	kbAlt=0;
+ 90a:	10 92 66 04 	sts	0x0466, r1	; 0x800466 <kbAlt>
+	kbCaps=0;
+ 90e:	10 92 68 04 	sts	0x0468, r1	; 0x800468 <kbCaps>
+	kbNumLock=0;
+ 912:	10 92 67 04 	sts	0x0467, r1	; 0x800467 <kbNumLock>
+	kbScrollLock=0;
+ 916:	10 92 63 04 	sts	0x0463, r1	; 0x800463 <kbScrollLock>
+	
+	initUSART();
+ 91a:	0e 94 12 02 	call	0x424	; 0x424 <initUSART>
+
+	TIMSK2 = TIMSK2 | (1<<OCIE2A);  // Enable Interrupt TimerCounter2 Compare Match A (TIMER2_COMPA_vect)
+ 91e:	e0 e7       	ldi	r30, 0x70	; 112
+ 920:	f0 e0       	ldi	r31, 0x00	; 0
+ 922:	80 81       	ld	r24, Z
+ 924:	82 60       	ori	r24, 0x02	; 2
+ 926:	80 83       	st	Z, r24
+	TCCR2A = 1<<WGM21;  // Mode = CTC
+ 928:	c0 93 b0 00 	sts	0x00B0, r28	; 0x8000b0 <__TEXT_REGION_LENGTH__+0x7e00b0>
+	TCCR2B = (1<<CS22) | (1<<CS21) | (1<<CS20);   // Clock div 1024
+ 92c:	87 e0       	ldi	r24, 0x07	; 7
+ 92e:	80 93 b1 00 	sts	0x00B1, r24	; 0x8000b1 <__TEXT_REGION_LENGTH__+0x7e00b1>
+	OCR2A = 215;          // Interrupt every 20mS unless value reset
+ 932:	87 ed       	ldi	r24, 0xD7	; 215
+ 934:	80 93 b3 00 	sts	0x00B3, r24	; 0x8000b3 <__TEXT_REGION_LENGTH__+0x7e00b3>
+
+	sei();
+ 938:	78 94       	sei
+			//If it is an escape character then get the following characters to interpret
+			//them as an ANSI escape sequence
+			if (serInChar==27 && enableAnsiConversion==1) // && prevInChar!=26) // If the previous char was a "force character (26)" prefix then don't treat 27 as an escape
+			{
+				escParam1=0;
+				escParam2=0;
+ 93a:	10 e0       	ldi	r17, 0x00	; 0
+			}
+			else if (kbWriteCount==2 && kbAckReceived==1)
+			{
+				kbAckReceived=0;
+				kbWriteDataVal=kbBuffer2;
+				kbWriteCount--;
+ 93c:	ff 24       	eor	r15, r15
+ 93e:	f3 94       	inc	r15
+		if (kbWriteActive==0 && kbWriteCount>0)
+		{
+			if (kbWriteCount==3)
+			{
+				kbWriteDataVal=kbBuffer3;
+				kbWriteCount--;
+ 940:	02 e0       	ldi	r16, 0x02	; 2
+	// Loop forever
+	while (1==1)
+	{
+		//Get a character from the serial port
+		
+		if (isInCharAvailable()==1)
+ 942:	0e 94 04 03 	call	0x608	; 0x608 <isInCharAvailable>
+ 946:	81 30       	cpi	r24, 0x01	; 1
+ 948:	09 f0       	breq	.+2      	; 0x94c <__stack+0x4d>
+ 94a:	8b c0       	rjmp	.+278    	; 0xa62 <__stack+0x163>
+		{
+			serInChar=getInChar();
+ 94c:	0e 94 d1 02 	call	0x5a2	; 0x5a2 <getInChar>
+			//If it is an escape character then get the following characters to interpret
+			//them as an ANSI escape sequence
+			if (serInChar==27 && enableAnsiConversion==1) // && prevInChar!=26) // If the previous char was a "force character (26)" prefix then don't treat 27 as an escape
+ 950:	8b 31       	cpi	r24, 0x1B	; 27
+ 952:	09 f0       	breq	.+2      	; 0x956 <__stack+0x57>
+ 954:	84 c0       	rjmp	.+264    	; 0xa5e <__stack+0x15f>
+ 956:	90 91 36 01 	lds	r25, 0x0136	; 0x800136 <enableAnsiConversion>
+ 95a:	91 30       	cpi	r25, 0x01	; 1
+ 95c:	09 f0       	breq	.+2      	; 0x960 <__stack+0x61>
+ 95e:	7f c0       	rjmp	.+254    	; 0xa5e <__stack+0x15f>
+			{
+				escParam1=0;
+				escParam2=0;
+				serInChar=getInChar();
+ 960:	0e 94 d1 02 	call	0x5a2	; 0x5a2 <getInChar>
+
+				if (serInChar=='-')
+ 964:	8d 32       	cpi	r24, 0x2D	; 45
+ 966:	19 f4       	brne	.+6      	; 0x96e <__stack+0x6f>
+				{
+					enableAnsiConversion=0;  // ESC- will turn off the ANSI interpreter
+ 968:	10 93 36 01 	sts	0x0136, r17	; 0x800136 <enableAnsiConversion>
+ 96c:	7a c0       	rjmp	.+244    	; 0xa62 <__stack+0x163>
+				}
+				if (serInChar=='[')
+ 96e:	8b 35       	cpi	r24, 0x5B	; 91
+ 970:	09 f0       	breq	.+2      	; 0x974 <__stack+0x75>
+ 972:	77 c0       	rjmp	.+238    	; 0xa62 <__stack+0x163>
+				{
+					serInChar=getInChar();
+ 974:	0e 94 d1 02 	call	0x5a2	; 0x5a2 <getInChar>
+					// Process a number after the "[" character
+					while (serInChar>='0' && serInChar<='9')
+ 978:	90 ed       	ldi	r25, 0xD0	; 208
+ 97a:	98 0f       	add	r25, r24
+ 97c:	9a 30       	cpi	r25, 0x0A	; 10
+ 97e:	80 f4       	brcc	.+32     	; 0x9a0 <__stack+0xa1>
+ 980:	c1 2f       	mov	r28, r17
+					{
+						serInChar=serInChar-'0';
+						if (escParam1<100)
+ 982:	c4 36       	cpi	r28, 0x64	; 100
+ 984:	30 f4       	brcc	.+12     	; 0x992 <__stack+0x93>
+						{
+							escParam1=escParam1*10;
+ 986:	cc 0f       	add	r28, r28
+ 988:	8c 2f       	mov	r24, r28
+ 98a:	88 0f       	add	r24, r24
+ 98c:	88 0f       	add	r24, r24
+ 98e:	c8 0f       	add	r28, r24
+							escParam1=escParam1+serInChar;
+ 990:	c9 0f       	add	r28, r25
+						}
+						serInChar=getInChar();
+ 992:	0e 94 d1 02 	call	0x5a2	; 0x5a2 <getInChar>
+				}
+				if (serInChar=='[')
+				{
+					serInChar=getInChar();
+					// Process a number after the "[" character
+					while (serInChar>='0' && serInChar<='9')
+ 996:	90 ed       	ldi	r25, 0xD0	; 208
+ 998:	98 0f       	add	r25, r24
+ 99a:	9a 30       	cpi	r25, 0x0A	; 10
+ 99c:	90 f3       	brcs	.-28     	; 0x982 <__stack+0x83>
+ 99e:	01 c0       	rjmp	.+2      	; 0x9a2 <__stack+0xa3>
+			serInChar=getInChar();
+			//If it is an escape character then get the following characters to interpret
+			//them as an ANSI escape sequence
+			if (serInChar==27 && enableAnsiConversion==1) // && prevInChar!=26) // If the previous char was a "force character (26)" prefix then don't treat 27 as an escape
+			{
+				escParam1=0;
+ 9a0:	c1 2f       	mov	r28, r17
+							escParam1=escParam1+serInChar;
+						}
+						serInChar=getInChar();
+					}
+					// If a ";" then process the next number
+					if (serInChar==';')
+ 9a2:	8b 33       	cpi	r24, 0x3B	; 59
+ 9a4:	b1 f4       	brne	.+44     	; 0x9d2 <__stack+0xd3>
+					{
+						serInChar=getInChar();
+ 9a6:	0e 94 d1 02 	call	0x5a2	; 0x5a2 <getInChar>
+						while (serInChar>='0' && serInChar<='9')
+ 9aa:	90 ed       	ldi	r25, 0xD0	; 208
+ 9ac:	98 0f       	add	r25, r24
+ 9ae:	9a 30       	cpi	r25, 0x0A	; 10
+ 9b0:	90 f4       	brcc	.+36     	; 0x9d6 <__stack+0xd7>
+ 9b2:	d1 2f       	mov	r29, r17
+						{
+							serInChar=serInChar-'0';
+							if (escParam2<100)
+ 9b4:	d4 36       	cpi	r29, 0x64	; 100
+ 9b6:	30 f4       	brcc	.+12     	; 0x9c4 <__stack+0xc5>
+							{
+								escParam2=escParam2*10;
+ 9b8:	dd 0f       	add	r29, r29
+ 9ba:	8d 2f       	mov	r24, r29
+ 9bc:	88 0f       	add	r24, r24
+ 9be:	88 0f       	add	r24, r24
+ 9c0:	d8 0f       	add	r29, r24
+								escParam2=escParam2+serInChar;
+ 9c2:	d9 0f       	add	r29, r25
+							}
+							serInChar=getInChar();
+ 9c4:	0e 94 d1 02 	call	0x5a2	; 0x5a2 <getInChar>
+					}
+					// If a ";" then process the next number
+					if (serInChar==';')
+					{
+						serInChar=getInChar();
+						while (serInChar>='0' && serInChar<='9')
+ 9c8:	90 ed       	ldi	r25, 0xD0	; 208
+ 9ca:	98 0f       	add	r25, r24
+ 9cc:	9a 30       	cpi	r25, 0x0A	; 10
+ 9ce:	90 f3       	brcs	.-28     	; 0x9b4 <__stack+0xb5>
+ 9d0:	03 c0       	rjmp	.+6      	; 0x9d8 <__stack+0xd9>
+			//If it is an escape character then get the following characters to interpret
+			//them as an ANSI escape sequence
+			if (serInChar==27 && enableAnsiConversion==1) // && prevInChar!=26) // If the previous char was a "force character (26)" prefix then don't treat 27 as an escape
+			{
+				escParam1=0;
+				escParam2=0;
+ 9d2:	d1 2f       	mov	r29, r17
+ 9d4:	01 c0       	rjmp	.+2      	; 0x9d8 <__stack+0xd9>
+ 9d6:	d1 2f       	mov	r29, r17
+							serInChar=getInChar();
+						}
+
+					}
+					// Esc[line;ColumnH or Esc[line;Columnf moves cursor to that coordinate
+					if (serInChar=='H' || serInChar=='f')
+ 9d8:	88 34       	cpi	r24, 0x48	; 72
+ 9da:	11 f0       	breq	.+4      	; 0x9e0 <__stack+0xe1>
+ 9dc:	86 36       	cpi	r24, 0x66	; 102
+ 9de:	89 f4       	brne	.+34     	; 0xa02 <__stack+0x103>
+					{
+						if (escParam1>0)
+ 9e0:	c1 11       	cpse	r28, r1
+						{
+							escParam1--;
+ 9e2:	c1 50       	subi	r28, 0x01	; 1
+						}
+						if (escParam2>0)
+ 9e4:	d1 11       	cpse	r29, r1
+						{
+							escParam2--;
+ 9e6:	d1 50       	subi	r29, 0x01	; 1
+						}
+						sendToDisplay(0x0F);
+ 9e8:	8f e0       	ldi	r24, 0x0F	; 15
+ 9ea:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+						sendToDisplay(escParam1);
+ 9ee:	8c 2f       	mov	r24, r28
+ 9f0:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+						sendToDisplay(0x0E);
+ 9f4:	8e e0       	ldi	r24, 0x0E	; 14
+ 9f6:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+						sendToDisplay(escParam2);
+ 9fa:	8d 2f       	mov	r24, r29
+ 9fc:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a00:	30 c0       	rjmp	.+96     	; 0xa62 <__stack+0x163>
+					}
+					//Esc[J=clear from cursor down, Esc[1J=clear from cursor up, Esc[2J=clear complete screen
+					else if (serInChar=='J')
+ a02:	8a 34       	cpi	r24, 0x4A	; 74
+ a04:	91 f4       	brne	.+36     	; 0xa2a <__stack+0x12b>
+					{
+						if (escParam1==0)
+ a06:	c1 11       	cpse	r28, r1
+ a08:	04 c0       	rjmp	.+8      	; 0xa12 <__stack+0x113>
+						{
+							sendToDisplay(0x13);
+ a0a:	83 e1       	ldi	r24, 0x13	; 19
+ a0c:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a10:	28 c0       	rjmp	.+80     	; 0xa62 <__stack+0x163>
+						}
+						if (escParam1==1)
+ a12:	c1 30       	cpi	r28, 0x01	; 1
+ a14:	21 f4       	brne	.+8      	; 0xa1e <__stack+0x11f>
+						{
+							sendToDisplay(0x12);
+ a16:	82 e1       	ldi	r24, 0x12	; 18
+ a18:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a1c:	22 c0       	rjmp	.+68     	; 0xa62 <__stack+0x163>
+						}
+						if (escParam1==2)
+ a1e:	c2 30       	cpi	r28, 0x02	; 2
+ a20:	01 f5       	brne	.+64     	; 0xa62 <__stack+0x163>
+						{
+							sendToDisplay(0x0C);
+ a22:	8c e0       	ldi	r24, 0x0C	; 12
+ a24:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a28:	1c c0       	rjmp	.+56     	; 0xa62 <__stack+0x163>
+						}
+
+					}
+					// Esc[K = erase to end of line, Esc[1K = erase to start of line
+					else if (serInChar=='K')
+ a2a:	8b 34       	cpi	r24, 0x4B	; 75
+ a2c:	61 f4       	brne	.+24     	; 0xa46 <__stack+0x147>
+					{
+						if (escParam1==0)
+ a2e:	c1 11       	cpse	r28, r1
+ a30:	04 c0       	rjmp	.+8      	; 0xa3a <__stack+0x13b>
+						{
+							sendToDisplay(0x11);
+ a32:	81 e1       	ldi	r24, 0x11	; 17
+ a34:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a38:	14 c0       	rjmp	.+40     	; 0xa62 <__stack+0x163>
+						}
+						if (escParam1==1)
+ a3a:	c1 30       	cpi	r28, 0x01	; 1
+ a3c:	91 f4       	brne	.+36     	; 0xa62 <__stack+0x163>
+						{
+							sendToDisplay(0x10);
+ a3e:	80 e1       	ldi	r24, 0x10	; 16
+ a40:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a44:	0e c0       	rjmp	.+28     	; 0xa62 <__stack+0x163>
+						}
+
+					}
+					// Esc[L = scroll down
+					else if (serInChar=='L')
+ a46:	8c 34       	cpi	r24, 0x4C	; 76
+ a48:	21 f4       	brne	.+8      	; 0xa52 <__stack+0x153>
+					{
+						sendToDisplay(0x15);
+ a4a:	85 e1       	ldi	r24, 0x15	; 21
+ a4c:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a50:	08 c0       	rjmp	.+16     	; 0xa62 <__stack+0x163>
+					}
+					// Esc[M = scroll up
+					else if (serInChar=='M')
+ a52:	8d 34       	cpi	r24, 0x4D	; 77
+ a54:	31 f4       	brne	.+12     	; 0xa62 <__stack+0x163>
+					{
+						sendToDisplay(0x14);
+ a56:	84 e1       	ldi	r24, 0x14	; 20
+ a58:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+ a5c:	02 c0       	rjmp	.+4      	; 0xa62 <__stack+0x163>
+				} // end of in char = '['
+			} // end of in char = 27
+			else
+			{
+
+				sendToDisplay(serInChar);
+ a5e:	0e 94 be 02 	call	0x57c	; 0x57c <sendToDisplay>
+			}
+			prevInChar=serInChar;
+		}
+
+		processATKeyboard();
+ a62:	0e 94 35 03 	call	0x66a	; 0x66a <processATKeyboard>
+		
+		if (kbWriteActive==0 && kbWriteCount>0)
+ a66:	80 91 65 04 	lds	r24, 0x0465	; 0x800465 <kbWriteActive>
+ a6a:	81 11       	cpse	r24, r1
+ a6c:	6a cf       	rjmp	.-300    	; 0x942 <__stack+0x43>
+ a6e:	80 91 35 01 	lds	r24, 0x0135	; 0x800135 <kbWriteCount>
+ a72:	88 23       	and	r24, r24
+ a74:	09 f4       	brne	.+2      	; 0xa78 <__stack+0x179>
+ a76:	65 cf       	rjmp	.-310    	; 0x942 <__stack+0x43>
+		{
+			if (kbWriteCount==3)
+ a78:	83 30       	cpi	r24, 0x03	; 3
+ a7a:	49 f4       	brne	.+18     	; 0xa8e <__stack+0x18f>
+			{
+				kbWriteDataVal=kbBuffer3;
+ a7c:	80 91 5b 04 	lds	r24, 0x045B	; 0x80045b <kbBuffer3>
+ a80:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
+				kbWriteCount--;
+ a84:	00 93 35 01 	sts	0x0135, r16	; 0x800135 <kbWriteCount>
+				setKeyboardToReceiveMode();
+ a88:	0e 94 e7 00 	call	0x1ce	; 0x1ce <setKeyboardToReceiveMode>
+ a8c:	5a cf       	rjmp	.-332    	; 0x942 <__stack+0x43>
+			}
+			else if (kbWriteCount==2 && kbAckReceived==1)
+ a8e:	82 30       	cpi	r24, 0x02	; 2
+ a90:	81 f4       	brne	.+32     	; 0xab2 <__stack+0x1b3>
+ a92:	80 91 37 01 	lds	r24, 0x0137	; 0x800137 <kbAckReceived>
+ a96:	81 30       	cpi	r24, 0x01	; 1
+ a98:	09 f0       	breq	.+2      	; 0xa9c <__stack+0x19d>
+ a9a:	53 cf       	rjmp	.-346    	; 0x942 <__stack+0x43>
+			{
+				kbAckReceived=0;
+ a9c:	10 93 37 01 	sts	0x0137, r17	; 0x800137 <kbAckReceived>
+				kbWriteDataVal=kbBuffer2;
+ aa0:	80 91 5f 04 	lds	r24, 0x045F	; 0x80045f <kbBuffer2>
+ aa4:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
+				kbWriteCount--;
+ aa8:	f0 92 35 01 	sts	0x0135, r15	; 0x800135 <kbWriteCount>
+				setKeyboardToReceiveMode();
+ aac:	0e 94 e7 00 	call	0x1ce	; 0x1ce <setKeyboardToReceiveMode>
+ ab0:	48 cf       	rjmp	.-368    	; 0x942 <__stack+0x43>
+			}
+			else if (kbWriteCount==1 && kbAckReceived==1)
+ ab2:	81 30       	cpi	r24, 0x01	; 1
+ ab4:	09 f0       	breq	.+2      	; 0xab8 <__stack+0x1b9>
+ ab6:	45 cf       	rjmp	.-374    	; 0x942 <__stack+0x43>
+ ab8:	80 91 37 01 	lds	r24, 0x0137	; 0x800137 <kbAckReceived>
+ abc:	81 30       	cpi	r24, 0x01	; 1
+ abe:	09 f0       	breq	.+2      	; 0xac2 <__stack+0x1c3>
+ ac0:	40 cf       	rjmp	.-384    	; 0x942 <__stack+0x43>
+			{
+				kbWriteDataVal=kbBuffer1;
+ ac2:	80 91 5d 04 	lds	r24, 0x045D	; 0x80045d <kbBuffer1>
+ ac6:	80 93 00 01 	sts	0x0100, r24	; 0x800100 <_edata>
+				kbWriteCount--;
+ aca:	10 93 35 01 	sts	0x0135, r17	; 0x800135 <kbWriteCount>
+				setKeyboardToReceiveMode();
+ ace:	0e 94 e7 00 	call	0x1ce	; 0x1ce <setKeyboardToReceiveMode>
+ ad2:	37 cf       	rjmp	.-402    	; 0x942 <__stack+0x43>
+
+00000ad4 <_exit>:
+ ad4:	f8 94       	cli
+
+00000ad6 <__stop_program>:
+ ad6:	ff cf       	rjmp	.-2      	; 0xad6 <__stop_program>
