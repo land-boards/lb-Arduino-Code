@@ -181,7 +181,10 @@ public:
 	}
 */
 
-private:
+public:
+	// update() is not meant to be called from outside Encoder,
+	// but it is public to allow static interrupt routines.
+	// DO NOT call update() directly from sketches.
 	static void update(Encoder_internal_state_t *arg) {
 #if defined(__AVR__)
 		// The compiler believes this is just 1 line of code, so
@@ -290,6 +293,7 @@ private:
 		}
 #endif
 	}
+private:
 /*
 #if defined(__AVR__)
 	// TODO: this must be a no inline function
@@ -936,6 +940,11 @@ ISR(INT6_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(6)]);
 ISR(INT7_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(7)]); }
 #endif
 #endif // AVR
+#if defined(attachInterrupt)
+// Don't intefere with other libraries or sketch use of attachInterrupt()
+// https://github.com/PaulStoffregen/Encoder/issues/8
+#undef attachInterrupt
+#endif
 #endif // ENCODER_OPTIMIZE_INTERRUPTS
 
 
