@@ -236,6 +236,18 @@ uint8_t detectBoardInEeprom(void)
     Serial.println("Detected DIGIO-128 board");
     return 0;
   }
+  else if (strcmp(testStr, "PROTO16-I2C") == 0)
+  {
+    boardType = PROTO16I2C;
+    Serial.println("Detected PROTO16-I2C board");
+    return 0;
+  }
+  else if (strcmp(testStr, "ODAS-PSOC5") == 0)
+  {
+    boardType = ODASPSOC5;
+    Serial.println("Detected ODAS-PSOC5 board");
+    return 0;
+  }
   Serial.print("Did not find board match");
   Serial.println((char*)testStr);
   return 1;

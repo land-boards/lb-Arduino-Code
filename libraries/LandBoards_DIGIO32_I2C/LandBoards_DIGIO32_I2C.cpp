@@ -31,8 +31,8 @@ Digio32::Digio32(void)
 
 void Digio32::begin(uint8_t baseAddr)
 {
-	mcp0.begin(baseAddr);
-	mcp1.begin(baseAddr+1);
+	mcp0.begin((baseAddr&7));
+	mcp1.begin((baseAddr&7)+1);
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
     for (uint8_t port = 0; port < 16; port++)
     {
