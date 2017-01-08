@@ -31,14 +31,14 @@ Digio128::Digio128(void)
 
 void Digio128::begin(void)
 {
-	mcp0.begin(0x20);
-	mcp1.begin(0x21);
-	mcp2.begin(0x22);
-	mcp3.begin(0x23);
-	mcp4.begin(0x24);
-	mcp5.begin(0x25);
-	mcp6.begin(0x26);
-	mcp7.begin(0x27);
+	mcp0.begin(0);
+	mcp1.begin(1);
+	mcp2.begin(2);
+	mcp3.begin(3);
+	mcp4.begin(4);
+	mcp5.begin(5);
+	mcp6.begin(6);
+	mcp7.begin(7);
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
 	return;
 }
