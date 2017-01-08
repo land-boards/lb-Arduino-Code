@@ -47,35 +47,36 @@ void Digio128::begin(void)
 // digitalWrite(uint8_t bit, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128::digitalWrite(uint8_t bit, uint8_t value)
+void Digio128::digitalWrite(uint8_t p, uint8_t value)
 {
-	int chip;
-	chip = bit >> 4;
+	uint8_t chip, bit;
+	chip = (p >> 4) & 0x7;
+	bit = p & 0xf;
 	switch (chip)
 	{
 		case 0:
-			mcp0.digitalWrite(bit & 0xf, value);
+			mcp0.digitalWrite(bit, value);
 			break;
 		case 1:
-			mcp1.digitalWrite(bit & 0xf, value);
+			mcp1.digitalWrite(bit, value);
 			break;
 		case 2:
-			mcp2.digitalWrite(bit & 0xf, value);
+			mcp2.digitalWrite(bit, value);
 			break;
 		case 3:
-			mcp3.digitalWrite(bit & 0xf, value);
+			mcp3.digitalWrite(bit, value);
 			break;
 		case 4:
-			mcp4.digitalWrite(bit & 0xf, value);
+			mcp4.digitalWrite(bit, value);
 			break;
 		case 5:
-			mcp5.digitalWrite(bit & 0xf, value);
+			mcp5.digitalWrite(bit, value);
 			break;
 		case 6:
-			mcp6.digitalWrite(bit & 0xf, value);
+			mcp6.digitalWrite(bit, value);
 			break;
 		case 7:
-			mcp7.digitalWrite(bit & 0xf, value);
+			mcp7.digitalWrite(bit, value);
 			break;
 	}
 }

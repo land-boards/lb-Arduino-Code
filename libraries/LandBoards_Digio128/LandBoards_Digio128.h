@@ -12,7 +12,7 @@
 
 #include <inttypes.h>
 #include <Adafruit_MCP23017.h>
-#include "Arduino.h"
+#include <Arduino.h>
 
 ////////////////////////////////////////////////////////////////////////////////////
 // enums follow
