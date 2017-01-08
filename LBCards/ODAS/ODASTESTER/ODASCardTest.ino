@@ -212,7 +212,7 @@ uint8_t loopBackTestOptoIn8(void)
   unsigned char readVal;
   int testPass = 1;
   int testBit = 0x1;
-  Serial.println("Testing OptoIn8-I2C card");
+//  Serial.println("Testing OptoIn8-I2C card");
 
   initOI8pins();
   for (int loopVal = 2; loopVal < 6; loopVal++)
@@ -328,7 +328,7 @@ void initOO8pins(void)
 
 uint8_t loopBackTestOptoOut8(void)
 {
-  Serial.println("Testing OptoOut8-I2C card");
+//  Serial.println("Testing OptoOut8-I2C card");
 
   Adafruit_MCP23008 mcpOO8;
   mcpOO8.begin();               // use default address 0
@@ -426,8 +426,8 @@ uint8_t loopBackTestDigio128(void)
   {
     Dio128.pinMode(port, INPUT_PULLUP);
   }
-  uint8_t testPass = 0;
-  for (uint8_t chip = 0; chip < 2; chip += 2)
+  uint8_t testPass = 1;
+  for (uint8_t chip = 0; chip < 8; chip += 2)
   {
     for (uint8_t port = 0; port < 16; port++)
     {
@@ -445,7 +445,7 @@ uint8_t loopBackTestDigio128(void)
         Serial.print(" and port ");
         Serial.print(port);
         Serial.println(" Expected High");
-        testPass = 1;
+        testPass = 0;
       }
       Dio128.digitalWrite((chip * 16) + port, LOW);
       delay(2);
@@ -456,7 +456,7 @@ uint8_t loopBackTestDigio128(void)
         Serial.print(" and port ");
         Serial.print(port);
         Serial.println(" Expected LOW");
-        testPass = 1;
+        testPass = 0;
       }
       Dio128.pinMode((chip * 16) + port, INPUT);
       delay(2);
