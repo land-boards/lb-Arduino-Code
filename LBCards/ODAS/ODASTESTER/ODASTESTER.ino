@@ -44,6 +44,8 @@ uint32_t failCount;
 uint32_t passCount;
 int looping;
 
+landboards_pca9544a myI2CMux;
+
 //////////////////////////////////////////////////////////
 // setup()
 //////////////////////////////////////////////////////////
@@ -51,6 +53,8 @@ int looping;
 void setup()
 {
   Serial.begin(9600);
+  myI2CMux.begin();
+  myI2CMux.setI2CChannel(0);
   TWBR = 12;    // go to 400 KHz I2C speed mode
 
   failCount = 0;
