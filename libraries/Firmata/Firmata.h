@@ -1,7 +1,7 @@
 /*
-  Firmata.h - Firmata library v2.5.3 - 2016-06-18
+  Firmata.h - Firmata library v2.5.4 - 2016-10-23
   Copyright (c) 2006-2008 Hans-Christoph Steiner.  All rights reserved.
-  Copyright (C) 2009-2015 Jeff Hoefs.  All rights reserved.
+  Copyright (C) 2009-2016 Jeff Hoefs.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@
  */
 #define FIRMATA_FIRMWARE_MAJOR_VERSION  2
 #define FIRMATA_FIRMWARE_MINOR_VERSION  5
-#define FIRMATA_FIRMWARE_BUGFIX_VERSION 3
+#define FIRMATA_FIRMWARE_BUGFIX_VERSION 4
 
 /* DEPRECATED as of Firmata v2.5.1. As of 2.5.1 there are separate version numbers for
  * the protocol version and the firmware version.
@@ -201,7 +201,7 @@ class FirmataClass
     stringCallbackFunction currentStringCallback;
     sysexCallbackFunction currentSysexCallback;
 
-    boolean blinkVersionDisabled = false;
+    boolean blinkVersionDisabled;
 
     /* private methods ------------------------------ */
     void processSysexMessage(void);

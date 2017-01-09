@@ -308,11 +308,11 @@ void mcpWrite(uint8_t chipNum, uint8_t chNum, uint8_t val)
 void eepromRead(void)
 {
   char readBuff[97];
-  readBuff[96] = 0;
   Serial.println("Reading EEPROM");
   delay(10);
 
   eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
+  readBuff[96] = 0;
 
   Serial.print("Family=");
   for (int loopv = 0; loopv < 4; loopv++)
@@ -361,7 +361,7 @@ uint8_t eepromCheck(void)
   //  Serial.print("Testing Company...");
   for (int loopv = 32; loopv < 48; loopv++)
     testStr[loopv - 32] = readBuff[loopv];
-  testStr[33] = 0;
+  testStr[32] = 0;
   if (strcmp(testStr, "land-boards.com") != 0)
   {
     //    Serial.println("Company Mismatch");

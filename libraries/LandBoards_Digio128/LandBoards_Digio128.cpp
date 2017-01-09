@@ -31,14 +31,14 @@ Digio128::Digio128(void)
 
 void Digio128::begin(void)
 {
-	mcp0.begin(0x20);
-	mcp1.begin(0x21);
-	mcp2.begin(0x22);
-	mcp3.begin(0x23);
-	mcp4.begin(0x24);
-	mcp5.begin(0x25);
-	mcp6.begin(0x26);
-	mcp7.begin(0x27);
+	mcp0.begin(0);
+	mcp1.begin(1);
+	mcp2.begin(2);
+	mcp3.begin(3);
+	mcp4.begin(4);
+	mcp5.begin(5);
+	mcp6.begin(6);
+	mcp7.begin(7);
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
 	for (uint8_t pinNum = 0; pinNum < 16; pinNum++)	// Set all pins to input by default
 	{
@@ -59,35 +59,36 @@ void Digio128::begin(void)
 // digitalWrite(uint8_t bit, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128::digitalWrite(uint8_t bit, uint8_t value)
+void Digio128::digitalWrite(uint8_t p, uint8_t value)
 {
-	int chip;
-	chip = bit >> 4;
+	uint8_t chip, bit;
+	chip = (p >> 4) & 0x7;
+	bit = p & 0xf;
 	switch (chip)
 	{
 		case 0:
-			mcp0.digitalWrite(bit & 0xf, value);
+			mcp0.digitalWrite(bit, value);
 			break;
 		case 1:
-			mcp1.digitalWrite(bit & 0xf, value);
+			mcp1.digitalWrite(bit, value);
 			break;
 		case 2:
-			mcp2.digitalWrite(bit & 0xf, value);
+			mcp2.digitalWrite(bit, value);
 			break;
 		case 3:
-			mcp3.digitalWrite(bit & 0xf, value);
+			mcp3.digitalWrite(bit, value);
 			break;
 		case 4:
-			mcp4.digitalWrite(bit & 0xf, value);
+			mcp4.digitalWrite(bit, value);
 			break;
 		case 5:
-			mcp5.digitalWrite(bit & 0xf, value);
+			mcp5.digitalWrite(bit, value);
 			break;
 		case 6:
-			mcp6.digitalWrite(bit & 0xf, value);
+			mcp6.digitalWrite(bit, value);
 			break;
 		case 7:
-			mcp7.digitalWrite(bit & 0xf, value);
+			mcp7.digitalWrite(bit, value);
 			break;
 	}
 }

@@ -18,7 +18,7 @@ void setup(void)
   Dio128.begin();              // connects to the 8 MCP23017 parts
   TWBR = 12;                   // go to 400 KHz I2C speed mode
   for (uint8_t pin = 0; pin < 128; pin++)
-    Dio128.pinMode(pin, OUTPUT);    // make all pins into OUTPUTs
+    Dio128.pinMode(pin, INPUT);    // make all pins into INPUTs
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

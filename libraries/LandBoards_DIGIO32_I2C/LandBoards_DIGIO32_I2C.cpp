@@ -13,13 +13,13 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
-#include "LandBoards_DIGIO32_I2C.h"
+#include <LandBoards_DIGIO32_I2C.h>
 
 ////////////////////////////////////////////////////////////////////////////
-// Digio128 constructor - has no address since the card uses all 0x20-0x27
+// Digio32 constructor - has no address since the card uses all 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-Digio128::Digio128(void)
+Digio32::Digio32(void)
 {
 	return;
 }
@@ -29,11 +29,16 @@ Digio128::Digio128(void)
 // Sets all bits to inputs
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128::begin(uint8_t baseAddr)
+void Digio32::begin(uint8_t baseAddr)
 {
-	mcp0.begin(baseAddr);
-	mcp1.begin(baseAddr+1);
+	mcp0.begin((baseAddr&7));
+	mcp1.begin((baseAddr&7)+1);
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+    for (uint8_t port = 0; port < 16; port++)
+    {
+      mcp0.pinMode(port, INPUT);
+      mcp1.pinMode(port, INPUT);
+    }
 	return;
 }
 
@@ -41,10 +46,10 @@ void Digio128::begin(uint8_t baseAddr)
 // digitalWrite(uint8_t bit, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128::digitalWrite(uint8_t p, uint8_t value)
+void Digio32::digitalWrite(uint8_t bit, uint8_t value)
 {
 	int chip;
-	chip = p >> 1;
+	chip = bit >> 4;
 	switch (chip)
 	{
 		case 0:
@@ -60,10 +65,10 @@ void Digio128::digitalWrite(uint8_t p, uint8_t value)
 // uint8_t digitalRead(uint8_t p)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio128::digitalRead(uint8_t p)
+uint8_t Digio32::digitalRead(uint8_t p)
 {
 	int chip, bit;
-	chip = p >> 1;
+	chip = bit >> 4;
 	bit = p & 0xf;
 	switch (chip)
 	{
@@ -87,10 +92,10 @@ uint8_t Digio128::digitalRead(uint8_t p)
 // This eliminates the separate pullup function
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128::pinMode(uint8_t p, uint8_t d)
+void Digio32::pinMode(uint8_t p, uint8_t d)
 {
 	int chip, bit;
-	chip = p >> 1;
+	chip = bit >> 4;
 	bit = p & 0xf;
 	switch (chip)
 	{
@@ -133,7 +138,7 @@ void Digio128::pinMode(uint8_t p, uint8_t d)
 // void writeGPIOAB(chip,baData)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128::writeGPIOAB(uint8_t chip, uint16_t baData)
+void Digio32::writeGPIOAB(uint8_t chip, uint16_t baData)
 {
 	switch (chip)
 	{
@@ -150,7 +155,7 @@ void Digio128::writeGPIOAB(uint8_t chip, uint16_t baData)
 // uint16_t readGPIOAB(chip)
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t Digio128::readGPIOAB(uint8_t chip)
+uint16_t Digio32::readGPIOAB(uint8_t chip)
 {
 	switch (chip)
 	{
