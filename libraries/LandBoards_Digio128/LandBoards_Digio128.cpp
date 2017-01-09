@@ -40,6 +40,18 @@ void Digio128::begin(void)
 	mcp6.begin(0x26);
 	mcp7.begin(0x27);
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+	for (uint8_t pinNum = 0; pinNum < 16; pinNum++)	// Set all pins to input by default
+	{
+		mcp0.pinMode(pinNum, INPUT);
+		mcp1.pinMode(pinNum, INPUT);
+		mcp2.pinMode(pinNum, INPUT);
+		mcp3.pinMode(pinNum, INPUT);
+		mcp4.pinMode(pinNum, INPUT);
+		mcp5.pinMode(pinNum, INPUT);
+		mcp6.pinMode(pinNum, INPUT);
+		mcp7.pinMode(pinNum, INPUT);
+	}
+
 	return;
 }
 
