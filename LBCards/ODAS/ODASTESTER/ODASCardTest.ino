@@ -10,34 +10,34 @@ uint8_t loopBackTestCard(void)
 {
   switch (boardType)
   {
-    case DIGIO16I2C:
+    case DIGIO16I2C_CARD:
       Serial.println(F("Not supported at present"));
       break;
-    case DIGIO128:
-      return (loopBackTestDigio128());
+    case DIGIO128_CARD:
+      return (loopBackTestDIGIO128_CARD());
       break;
-    case OPTOIN8I2C:
+    case OPTOIN8I2C_CARD:
       return (loopBackTestOptoIn8());
       break;
-    case OPTOOUT8I2C:
+    case OPTOOUT8I2C_CARD:
       return (loopBackTestOptoOut8());
       break;
-    case DIGIO32I2C:
+    case DIGIO32I2C_CARD:
       return (loopBackTestDigio32());
       break;
-    case PROTO16I2C:
+    case PROTO16I2C_CARD:
       Serial.println(F("Not supported at present"));
       break;
-    case ODASPSOC5:
+    case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
       break;
-    case I2CIO8:
+    case I2CIO8_CARD:
       return (testI2CIO8());
       break;
-    case I2CIO8X:
+    case I2CIO8X_CARD:
       return (testI2CIO8X());
       break;
-    case NEWBOARD:
+    case NEW_CARD:
       Serial.println(F("Not supported at present"));
       break;
     default:
@@ -48,20 +48,27 @@ uint8_t loopBackTestCard(void)
   return 1; // fail
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t testI2CIO8(void) - Test the I2CIO8 card
+//////////////////////////////////////////////////////////////////////////////////////
+
 uint8_t testI2CIO8(void)
 {
-  Serial.println(F("I2CIO8 card"));
   I2CIO8 i2cio8Card;
   i2cio8Card.begin();
-  while(1)
+  Serial.println(F("I2CIO8 card"));
+  while (1)
   {
-    uint8 theJumpers;
-    writeLED(0,i2cio8Card.readJumper(0));
-    writeLED(1,i2cio8Card.readJumper(1));
-    writeLED(2,i2cio8Card.readJumper(2));
-    writeLED(3,i2cio8Card.readJumper(3));
+    i2cio8Card.writeLED(0, i2cio8Card.readJumper(0));
+    i2cio8Card.writeLED(1, i2cio8Card.readJumper(1));
+    i2cio8Card.writeLED(2, i2cio8Card.readJumper(2));
+    i2cio8Card.writeLED(3, i2cio8Card.readJumper(3));
   }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t testI2CIO8X(void)
 {
@@ -76,18 +83,18 @@ uint8_t loopBackTestDigio32(void)
 {
   uint8_t port;
   uint8_t pass0fail1 = 0;
-  Digio32 Dio32;
-  Dio32.begin(0);
+  Digio32 Dio32Card;
+  Dio32Card.begin(0);
 
   for (port = 0; port < 16; port++)
   {
-    Dio32.pinMode(port, OUTPUT);
-    Dio32.pinMode(port, INPUT_PULLUP);
+    Dio32Card.pinMode(port, OUTPUT);
+    Dio32Card.pinMode(port, INPUT_PULLUP);
 
     delay(2);
-    Dio32.digitalWrite(port, HIGH);
+    Dio32Card.digitalWrite(port, HIGH);
     delay(2);
-    if (Dio32.digitalRead(port + 16) != HIGH)
+    if (Dio32Card.digitalRead(port + 16) != HIGH)
     {
       Serial.print(F("Error on chip 0"));
       Serial.print(F(" and port "));
@@ -95,9 +102,9 @@ uint8_t loopBackTestDigio32(void)
       Serial.println(F(" Expected High"));
       pass0fail1 = 1;
     }
-    Dio32.digitalWrite(port, LOW);
+    Dio32Card.digitalWrite(port, LOW);
     delay(2);
-    if (Dio32.digitalRead(port + 16) != LOW)
+    if (Dio32Card.digitalRead(port + 16) != LOW)
     {
       Serial.print(F("Error on chip 0"));
       Serial.print(F(" and port "));
@@ -105,7 +112,7 @@ uint8_t loopBackTestDigio32(void)
       Serial.println(F(" Expected LOW"));
       pass0fail1 = 1;
     }
-    Dio32.pinMode(port, INPUT_PULLUP);
+    Dio32Card.pinMode(port, INPUT_PULLUP);
     delay(2);
   }
 
@@ -365,10 +372,10 @@ uint8_t loopBackTestOptoOut8(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestDigio128(void) -
+// uint8_t loopBackTestDIGIO128_CARD(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestDigio128(void)
+uint8_t loopBackTestDIGIO128_CARD(void)
 {
   Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
   Dio128.begin();      // connects to the 8 MCP23017 parts

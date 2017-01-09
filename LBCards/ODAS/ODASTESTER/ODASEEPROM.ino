@@ -114,28 +114,28 @@ void eepromWrite(void)
   strcpy(myEep.vstr, "land-boards.com");
   switch (boardType)
   {
-    case DIGIO16I2C:
+    case DIGIO16I2C_CARD:
       strcpy(myEep.pstr, "DIGIO16-I2C");
       break;
-    case DIGIO128:
+    case DIGIO128_CARD:
       strcpy(myEep.pstr, "DIGIO-128");
       break;
-    case OPTOIN8I2C:
+    case OPTOIN8I2C_CARD:
       strcpy(myEep.pstr, "OptoIn8-I2C");
       break;
-    case OPTOOUT8I2C:
+    case OPTOOUT8I2C_CARD:
       strcpy(myEep.pstr, "OptoOut8-I2C");
       break;
-    case DIGIO32I2C:
+    case DIGIO32I2C_CARD:
       strcpy(myEep.pstr, "DIGIO32-I2C");
       break;
-    case PROTO16I2C:
+    case PROTO16I2C_CARD:
       strcpy(myEep.pstr, "PROTO16-I2C");
       break;
-    case ODASPSOC5:
+    case ODASPSOC5_CARD:
       strcpy(myEep.pstr, "ODAS-PSOC5");
       break;
-    case NEWBOARD:
+    case NEW_CARD:
       strcpy(myEep.pstr, "TBD");
       break;
   }
@@ -213,43 +213,43 @@ uint8_t detectBoardInEeprom(void)
   testStr[loopv - 64] = 0;
   if (strcmp(testStr, "DIGIO32-I2C") == 0)
   {
-    boardType = DIGIO32I2C;
+    boardType = DIGIO32I2C_CARD;
     Serial.println(F("Detected DIGIO32-I2C board"));
     return 0;
   }
   else if (strcmp(testStr, "DIGIO16-I2C") == 0)
   {
-    boardType = DIGIO16I2C;
+    boardType = DIGIO16I2C_CARD;
     Serial.println(F("Detected DIGIO16-I2C board"));
     return 0;
   }
   else if (strcmp(testStr, "OptoIn8-I2C") == 0)
   {
-    boardType = OPTOIN8I2C;
+    boardType = OPTOIN8I2C_CARD;
     Serial.println(F("Detected OptoIn8-I2C board"));
     return 0;
   }
   else if (strcmp(testStr, "OptoOut8-I2C") == 0)
   {
-    boardType = OPTOOUT8I2C;
+    boardType = OPTOOUT8I2C_CARD;
     Serial.println(F("Detected OptoOut8-I2C board"));
     return 0;
   }
   else if (strcmp(testStr, "DIGIO-128") == 0)
   {
-    boardType = DIGIO128;
+    boardType = DIGIO128_CARD;
     Serial.println(F("Detected DIGIO-128 board"));
     return 0;
   }
   else if (strcmp(testStr, "PROTO16-I2C") == 0)
   {
-    boardType = PROTO16I2C;
+    boardType = PROTO16I2C_CARD;
     Serial.println(F("Detected PROTO16-I2C board"));
     return 0;
   }
   else if (strcmp(testStr, "ODAS-PSOC5") == 0)
   {
-    boardType = ODASPSOC5;
+    boardType = ODASPSOC5_CARD;
     Serial.println(F("Detected ODAS-PSOC5 board"));
     return 0;
   }
@@ -287,47 +287,47 @@ void selectBoardType(void)
     {
       case '1':
         {
-          boardType = DIGIO16I2C;
+          boardType = DIGIO16I2C_CARD;
           break;
         }
       case '2':
         {
-          boardType = DIGIO128;
+          boardType = DIGIO128_CARD;
           break;
         }
       case '3':
         {
-          boardType = OPTOIN8I2C;
+          boardType = OPTOIN8I2C_CARD;
           break;
         }
       case '4':
         {
-          boardType = OPTOOUT8I2C;
+          boardType = OPTOOUT8I2C_CARD;
           break;
         }
       case '5':
         {
-          boardType = DIGIO32I2C;
+          boardType = DIGIO32I2C_CARD;
           break;
         }
       case '6':
         {
-          boardType = PROTO16I2C;
+          boardType = PROTO16I2C_CARD;
           break;
         }
       case '7':
         {
-          boardType = ODASPSOC5;
+          boardType = ODASPSOC5_CARD;
           break;
         }
       case '8':
         {
-          boardType = NEWBOARD;
+          boardType = NEW_CARD;
           break;
         }
       case '9':
         {
-          boardType = NEWBOARD;
+          boardType = NEW_CARD;
           break;
         }
       case 'X':
@@ -369,7 +369,12 @@ void otherBoardType(void)
     {
       case '1':
         {
-          boardType = I2CIO8;
+          boardType = I2CIO8_CARD;
+          break;
+        }
+      case '2':
+        {
+          boardType = I2CIO8X_CARD;
           break;
         }
       default:

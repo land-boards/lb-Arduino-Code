@@ -1,0 +1,28 @@
+== Land Boards I2CIO-8 Library Files ==
+
+* These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8 card] library and example files.
+
+=== Library Files ===
+
+* LandBoards_I2CIO8.cpp
+* LandBoards_I2CIO8.h
+
+==== Examples ====
+
+* I2CIO8Blink1 - Blink an LED (Requires Adafruit_MCP23008 library)
+* I2CIO8Blink4 - Bounce across 4 LEDs (Requires Adafruit_MCP23008 library)
+* I2CIO8ECHO - Poll the (4) input jumpers and write out to (4) LEDs (Requires Adafruit_MCP23008 library)
+* I2CIO8ECHO2 - Echo the I/O lines by polling the interrupt line (No library required)
+* I2CIO8Example - Uses LandBoards_I2CIO8 library to echo the I/O lines
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.

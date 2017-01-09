@@ -1,14 +1,14 @@
 ////////////////////////////////////////////////////////////////////////////
-//  landboards_I2CIO8.h - Library for Land Boards I2CIO-8 card
-//  Created by Douglas Gilliland. 2015-11-23
+//  landboards_I2CIO8X.h - Library for Land Boards I2CIO-8X card
+//  Created by Douglas Gilliland. 2017-01-09
 ////////////////////////////////////////////////////////////////////////////
 // Card has an MCP23008 chip
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef LandBoards_I2CIO8_h
-#define LandBoards_I2CIO8_h
+#ifndef LandBoards_I2CIO8X_h
+#define LandBoards_I2CIO8X_h
 
 #include "Arduino.h"
 #include <inttypes.h>
@@ -21,10 +21,10 @@
 // defines follow
 ////////////////////////////////////////////////////////////////////////////
 
-#define LED0		0x00
-#define LED1		0x01
-#define LED2		0x02
-#define LED3		0x03
+#define H0JUMPER	0x00
+#define H1JUMPER	0x01
+#define H2JUMPER	0x02
+#define H3JUMPER	0x03
 #define H4JUMPER	0x04
 #define H5JUMPER	0x05
 #define H6JUMPER	0x06
@@ -48,13 +48,12 @@
 //	MCP23017 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-class I2CIO8
+class I2CIO8X
 {
   public:
-    I2CIO8(void);
+    I2CIO8X(void);
 	void begin(void);
 	void begin(uint8_t);
-	void writeLED(uint8_t,uint8_t);			// Writes to a single LED
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper
 	uint8_t readAllJumpers(void);
 	void pinMode(uint8_t, uint8_t);

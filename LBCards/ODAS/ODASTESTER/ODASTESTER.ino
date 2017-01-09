@@ -1,15 +1,17 @@
 //////////////////////////////////////////////////////////
 // ODASTESTER Factory Test code
-// Test each channel
+// Test each card and channel
 // Read/write EEPROM
 //////////////////////////////////////////////////////////
 
-//#include <Wire.h>
 #include <LandBoards_DIGIO32_I2C.h>
 #include <LandBoards_Digio128.h>
 #include <LandBoards_I2CIO8.h>
+#include <LandBoards_I2CIO8X.h>
+#include <LandBoards_I2CTEMP01.h>
+#include <landboards_pca9544a.h>
 #include <Adafruit_MCP23008.h>
-#include "Adafruit_MCP23017.h"
+#include <Adafruit_MCP23017.h>
 
 //////////////////////////////////////////////////////////
 // defines follow
@@ -18,21 +20,23 @@
 
 typedef enum {
   NONE,
-  DIGIO16I2C = 1,
-  DIGIO128,
-  OPTOIN8I2C,
-  OPTOOUT8I2C,
-  DIGIO32I2C,
-  PROTO16I2C,
-  ODASPSOC5,
-  NEWBOARD = 499,
+  DIGIO16I2C_CARD = 1,
+  DIGIO128_CARD,
+  OPTOIN8I2C_CARD,
+  OPTOOUT8I2C_CARD,
+  DIGIO32I2C_CARD,
+  PROTO16I2C_CARD,
+  ODASPSOC5_CARD,
+  NEW_CARD = 499,
   NOEEPROMAFTER = 500,
-  I2CIO8,
-  I2CIO8X,
-  OPTOSMALL,
-  OPTOFAST,
-}
-boardType_t;
+  I2CIO8_CARD,
+  I2CIO8X_CARD,
+  OPTOSMALL_CARD,
+  OPTOFAST_CARD,
+} boardType_t;
+
+//////////////////////////////////////////////////////////
+// globals follow
 
 boardType_t boardType;
 
@@ -47,12 +51,12 @@ int looping;
 void setup()
 {
   Serial.begin(9600);
-  //  TWBR = 12;    // go to 400 KHz I2C speed mode
+  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   failCount = 0;
   passCount = 0;
   looping = 0;
-  boardType = NEWBOARD;
+  boardType = NEW_CARD;
   if (detectBoardInEeprom() == 1)
   {
     selectBoardType();
