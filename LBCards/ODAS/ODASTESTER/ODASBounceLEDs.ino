@@ -4,6 +4,7 @@
 
 void bounceLedsCard(void)
 {
+  setMuxChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     case DIGIO16I2C_CARD:

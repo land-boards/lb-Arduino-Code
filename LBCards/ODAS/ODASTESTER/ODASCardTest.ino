@@ -8,6 +8,7 @@
 
 uint8_t loopBackTestCard(void)
 {
+  setMuxChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
@@ -45,6 +46,7 @@ uint8_t loopBackTestCard(void)
       return 1;
       break;
   }
+  setMuxChannel(UUT_CARD_MUX_CH);
   return 1; // fail
 }
 

@@ -44,6 +44,11 @@ uint32_t failCount;
 uint32_t passCount;
 int looping;
 
+typedef enum {
+  UUT_CARD_MUX_CH=0,
+  TEST_STN_INT_MUX_CH=1,
+} muxChannel_t;
+
 landboards_pca9544a myI2CMux;
 
 //////////////////////////////////////////////////////////
@@ -54,7 +59,7 @@ void setup()
 {
   Serial.begin(9600);
   myI2CMux.begin();
-  myI2CMux.setI2CChannel(0);
+  setMuxChannel(UUT_CARD_MUX_CH);
   TWBR = 12;    // go to 400 KHz I2C speed mode
 
   failCount = 0;
@@ -149,5 +154,18 @@ void loop()
       Serial.println(failCount);
     }
   }
+}
+
+
+//////////////////////////////////////////////////////////
+// void setMuxChannel(muxChannel_t)
+//  UUT_Card = 0,
+//  TEST_STN_DIGIO32_I2C=1,
+//////////////////////////////////////////////////////////
+
+void setMuxChannel(muxChannel_t newMuxChannel)
+{
+    myI2CMux.setI2CChannel(newMuxChannel);
+
 }
 

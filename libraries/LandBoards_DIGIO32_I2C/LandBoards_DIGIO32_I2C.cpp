@@ -95,7 +95,7 @@ uint8_t Digio32::digitalRead(uint8_t p)
 void Digio32::pinMode(uint8_t p, uint8_t d)
 {
 	int chip, bit;
-	chip = bit >> 4;
+	chip = p >> 4;
 	bit = p & 0xf;
 	switch (chip)
 	{
