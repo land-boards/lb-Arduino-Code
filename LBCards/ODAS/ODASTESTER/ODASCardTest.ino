@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestCard(void) - 
+// uint8_t loopBackTestCard(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t loopBackTestCard(void)
@@ -11,6 +11,7 @@ uint8_t loopBackTestCard(void)
   switch (boardType)
   {
     case DIGIO16I2C:
+      Serial.println(F("Not supported at present"));
       break;
     case DIGIO128:
       return (loopBackTestDigio128());
@@ -25,17 +26,46 @@ uint8_t loopBackTestCard(void)
       return (loopBackTestDigio32());
       break;
     case PROTO16I2C:
+      Serial.println(F("Not supported at present"));
       break;
     case ODASPSOC5:
+      Serial.println(F("Not supported at present"));
+      break;
+    case I2CIO8:
+      return (testI2CIO8());
+      break;
+    case I2CIO8X:
+      return (testI2CIO8X());
       break;
     case NEWBOARD:
+      Serial.println(F("Not supported at present"));
       break;
     default:
-      Serial.println("Undefined board type");
+      Serial.println(F("Undefined board type"));
       return 1;
       break;
   }
   return 1; // fail
+}
+
+uint8_t testI2CIO8(void)
+{
+  Serial.println(F("I2CIO8 card"));
+  I2CIO8 i2cio8Card;
+  i2cio8Card.begin();
+  while(1)
+  {
+    uint8 theJumpers;
+    writeLED(0,i2cio8Card.readJumper(0));
+    writeLED(1,i2cio8Card.readJumper(1));
+    writeLED(2,i2cio8Card.readJumper(2));
+    writeLED(3,i2cio8Card.readJumper(3));
+  }
+}
+
+uint8_t testI2CIO8X(void)
+{
+  Serial.println(F("I2CIO8X card"));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -60,19 +90,19 @@ uint8_t loopBackTestDigio32(void)
     if (Dio32.digitalRead(port + 16) != HIGH)
     {
       Serial.print(F("Error on chip 0"));
-      Serial.print(" and port ");
+      Serial.print(F(" and port "));
       Serial.print(port + 16);
-      Serial.println(" Expected High");
+      Serial.println(F(" Expected High"));
       pass0fail1 = 1;
     }
     Dio32.digitalWrite(port, LOW);
     delay(2);
     if (Dio32.digitalRead(port + 16) != LOW)
     {
-      Serial.print("Error on chip 0");
-      Serial.print(" and port ");
+      Serial.print(F("Error on chip 0"));
+      Serial.print(F(" and port "));
       Serial.print(port);
-      Serial.println(" Expected LOW");
+      Serial.println(F(" Expected LOW"));
       pass0fail1 = 1;
     }
     Dio32.pinMode(port, INPUT_PULLUP);
@@ -133,7 +163,7 @@ uint8_t loopBackTestOptoIn8(void)
   unsigned char readVal;
   int testPass = 1;
   int testBit = 0x1;
-//  Serial.println("Testing OptoIn8-I2C card");
+  //  Serial.println(F("Testing OptoIn8-I2C card"));
 
   initOI8pins();
   for (int loopVal = 2; loopVal < 6; loopVal++)
@@ -145,7 +175,7 @@ uint8_t loopBackTestOptoIn8(void)
     if ((readVal & testBit) != testBit)
     {
       testPass = 0;
-      Serial.print("OptoIn8-I2C failed LOW on bit ");
+      Serial.print(F("OptoIn8-I2C failed LOW on bit "));
       Serial.println(testBit);
     }
     digitalWrite(loopVal, HIGH);
@@ -154,9 +184,9 @@ uint8_t loopBackTestOptoIn8(void)
     if ((readVal & testBit) == testBit)
     {
       testPass = 0;
-      Serial.print("OptoIn8-I2C failed HIGH on bit ");
+      Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
       Serial.println(testBit);
-      Serial.print("Read back on  ");
+      Serial.print(F("Read back on  "));
       Serial.println(testBit);
     }
     testBit <<= 1;
@@ -170,7 +200,7 @@ uint8_t loopBackTestOptoIn8(void)
     if ((readVal & testBit) != testBit)
     {
       testPass = 0;
-      Serial.print("OptoIn8-I2C failed LOW on bit ");
+      Serial.print(F("OptoIn8-I2C failed LOW on bit "));
       Serial.println(testBit);
     }
     digitalWrite(loopVal, HIGH);
@@ -179,9 +209,9 @@ uint8_t loopBackTestOptoIn8(void)
     if ((readVal & testBit) == testBit)
     {
       testPass = 0;
-      Serial.print("OptoIn8-I2C failed HIGH on bit ");
+      Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
       Serial.println(testBit);
-      Serial.print("Read back on  ");
+      Serial.print(F("Read back on  "));
       Serial.println(testBit);
     }
     testBit <<= 1;
@@ -195,7 +225,7 @@ uint8_t loopBackTestOptoIn8(void)
     if ((readVal & testBit) != testBit)
     {
       testPass = 0;
-      Serial.print("OptoIn8-I2C failed LOW on bit ");
+      Serial.print(F("OptoIn8-I2C failed LOW on bit "));
       Serial.println(testBit);
     }
     digitalWrite(loopVal, HIGH);
@@ -204,9 +234,9 @@ uint8_t loopBackTestOptoIn8(void)
     if ((readVal & testBit) == testBit)
     {
       testPass = 0;
-      Serial.print("OptoIn8-I2C failed HIGH on bit ");
+      Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
       Serial.println(testBit);
-      Serial.print("Read back on  ");
+      Serial.print(F("Read back on  "));
       Serial.println(testBit);
     }
     testBit <<= 1;
@@ -249,7 +279,7 @@ void initOO8pins(void)
 
 uint8_t loopBackTestOptoOut8(void)
 {
-//  Serial.println("Testing OptoOut8-I2C card");
+  //  Serial.println(F("Testing OptoOut8-I2C card"));
 
   Adafruit_MCP23008 mcpOO8;
   mcpOO8.begin();               // use default address 0
@@ -267,7 +297,7 @@ uint8_t loopBackTestOptoOut8(void)
     if (readVal != HIGH)
     {
       testPass = 0;
-      Serial.print("OptoOut8-I2C failed HIGH on bit ");
+      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
     mcpOO8.digitalWrite(testChannel, LOW);
@@ -276,7 +306,7 @@ uint8_t loopBackTestOptoOut8(void)
     if (readVal != LOW)
     {
       testPass = 0;
-      Serial.print("OptoOut8-I2C failed LOW on bit ");
+      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
       Serial.println(testChannel);
     }
     testBit <<= 1;
@@ -290,7 +320,7 @@ uint8_t loopBackTestOptoOut8(void)
     if (readVal != HIGH)
     {
       testPass = 0;
-      Serial.print("OptoOut8-I2C failed HIGH on bit ");
+      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
     mcpOO8.digitalWrite(testChannel, LOW);
@@ -299,7 +329,7 @@ uint8_t loopBackTestOptoOut8(void)
     if (readVal != LOW)
     {
       testPass = 0;
-      Serial.print("OptoOut8-I2C failed LOW on bit ");
+      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
       Serial.println(testChannel);
     }
     testBit <<= 1;
@@ -313,7 +343,7 @@ uint8_t loopBackTestOptoOut8(void)
     if (readVal != HIGH)
     {
       testPass = 0;
-      Serial.print("OptoOut8-I2C failed HIGH on bit ");
+      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
     mcpOO8.digitalWrite(testChannel, LOW);
@@ -322,7 +352,7 @@ uint8_t loopBackTestOptoOut8(void)
     if (readVal != LOW)
     {
       testPass = 0;
-      Serial.print("OptoOut8-I2C failed LOW on bit ");
+      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
       Serial.println(testChannel);
     }
     testBit <<= 1;
@@ -361,22 +391,22 @@ uint8_t loopBackTestDigio128(void)
       delay(2);
       if (Dio128.digitalRead(((chip + 1) * 16) + 15 - port) != HIGH)
       {
-        Serial.print("Error on chip ");
+        Serial.print(F("Error on chip "));
         Serial.print(chip);
-        Serial.print(" and port ");
+        Serial.print(F(" and port "));
         Serial.print(port);
-        Serial.println(" Expected High");
+        Serial.println(F(" Expected High"));
         testPass = 0;
       }
       Dio128.digitalWrite((chip * 16) + port, LOW);
       delay(2);
       if (Dio128.digitalRead(((chip + 1) * 16) + 15 - port) != LOW)
       {
-        Serial.print("Error on chip ");
+        Serial.print(F("Error on chip "));
         Serial.print(chip);
-        Serial.print(" and port ");
+        Serial.print(F(" and port "));
         Serial.print(port);
-        Serial.println(" Expected LOW");
+        Serial.println(F(" Expected LOW"));
         testPass = 0;
       }
       Dio128.pinMode((chip * 16) + port, INPUT);

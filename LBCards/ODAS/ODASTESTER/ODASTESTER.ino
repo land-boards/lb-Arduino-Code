@@ -7,8 +7,9 @@
 //#include <Wire.h>
 #include <LandBoards_DIGIO32_I2C.h>
 #include <LandBoards_Digio128.h>
+#include <LandBoards_I2CIO8.h>
 #include <Adafruit_MCP23008.h>
-//#include "Adafruit_MCP23017.h"
+#include "Adafruit_MCP23017.h"
 
 //////////////////////////////////////////////////////////
 // defines follow
@@ -24,7 +25,12 @@ typedef enum {
   DIGIO32I2C,
   PROTO16I2C,
   ODASPSOC5,
-  NEWBOARD = 9999,
+  NEWBOARD = 499,
+  NOEEPROMAFTER = 500,
+  I2CIO8,
+  I2CIO8X,
+  OPTOSMALL,
+  OPTOFAST,
 }
 boardType_t;
 
