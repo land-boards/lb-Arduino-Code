@@ -2,7 +2,7 @@
 
 * These are our [http://arduino.cc Arduino] files.
 * The [http://land-boards.com/blwiki/index.php?title=Arduino_Code Wiki page] for this code is here]
-* Most of this code was created to exercise our [http://land-boards.com/blwiki/index.php?title=Board_Designs_by_Function#Arduino_Compatible_Boards Arduino compatible hardware]
+* Most of this code was created to exercise our [http://land-boards.com/blwiki/index.php?title=Board_Designs_by_Function#Arduino_Compatible_Boards Arduino compatible cards] and [http://land-boards.com/blwiki/index.php?title=Open_Data_Acquisition_System Open Data Acquisition System cards]
 
 == Ownership ==
 
