@@ -25,7 +25,7 @@ Digio32::Digio32(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// begin(void) - Initialize the card
+// begin(baseAddr) - Initialize the card
 // Sets all bits to inputs
 ////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@ void Digio32::begin(uint8_t baseAddr)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// digitalWrite(uint8_t bit, uint8_t value)
+// void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
 ////////////////////////////////////////////////////////////////////////////
 
 void Digio32::digitalWrite(uint8_t bit, uint8_t value)
@@ -62,7 +62,7 @@ void Digio32::digitalWrite(uint8_t bit, uint8_t value)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t digitalRead(uint8_t p)
+// uint8_t digitalRead(uint8_t p) - read back a bit
 ////////////////////////////////////////////////////////////////////////////
 
 uint8_t Digio32::digitalRead(uint8_t p)
@@ -82,14 +82,11 @@ uint8_t Digio32::digitalRead(uint8_t p)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t PinMode(port, direction)
+// void PinMode(port, direction)- Set the direction of a bit (INPUT, OUTPUT, INPUT_PULLUP)
 // Arduino.h defines for direction are:
 //	#define INPUT 0x0
 //	#define OUTPUT 0x1
 //	#define INPUT_PULLUP 0x2
-// Adafruit's pinMode implementation only supports INPUT and OUTPUT
-// This implementation supports INPUT_PULLUP with separate calls to Adafruit
-// This eliminates the separate pullup function
 ////////////////////////////////////////////////////////////////////////////
 
 void Digio32::pinMode(uint8_t p, uint8_t d)
@@ -135,7 +132,7 @@ void Digio32::pinMode(uint8_t p, uint8_t d)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void writeGPIOAB(chip,baData)
+// void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
 ////////////////////////////////////////////////////////////////////////////
 
 void Digio32::writeGPIOAB(uint8_t chip, uint16_t baData)
@@ -152,7 +149,7 @@ void Digio32::writeGPIOAB(uint8_t chip, uint16_t baData)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint16_t readGPIOAB(chip)
+// uint16_t readGPIOAB(chip) - Read 16-bits at a time
 ////////////////////////////////////////////////////////////////////////////
 
 uint16_t Digio32::readGPIOAB(uint8_t chip)
@@ -166,4 +163,24 @@ uint16_t Digio32::readGPIOAB(uint8_t chip)
 			return mcp1.readGPIOAB();
 			break;
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////
+// void write32(uint8_t,uint32_t) - Write 32-bits
+////////////////////////////////////////////////////////////////////////////
+
+void write32(uint32_t longVal)
+{
+	mcp0.writeGPIOAB((uint32_t)(longVal&0xffff));
+	mcp1.writeGPIOAB((uint32_t)(longVal>>16));
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint32_t readGPIO32(void) - Read 32-bits
+////////////////////////////////////////////////////////////////////////////
+
+uint32_t readGPIO32(void)
+{
+	uint32_t longReadVal = 0;
+	longReadVal = (mcp1.readGPIOAB() << 16) | mcp0.readGPIOAB();
 }
