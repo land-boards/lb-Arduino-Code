@@ -2,10 +2,9 @@
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card library] files.
 
-=== LandBoards_DIGIO32_I2C ===
+=== LandBoards_DIGIO32_I2C - Arduino library Code ===
 
-* Library code
-* #include <LandBoards_DIGIO32_I2C.h>
+<pre>#include <LandBoards_DIGIO32_I2C.h></pre>
 * Class Name: Digio32
 * begin(baseAddr) - Initialize the card
 * void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
