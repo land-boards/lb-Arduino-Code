@@ -1,6 +1,6 @@
-== land-boards DigIO-128 Library Files ==
+== land-boards DigIO32-I2C Library Files ==
 
-* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card library] files.
+* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card library] files.
 
 === Files ===
 
