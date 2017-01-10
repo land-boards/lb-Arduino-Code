@@ -2,17 +2,23 @@
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card library] files.
 
-=== Files ===
-
-==== landboards_digio128 ====
+=== LandBoards_DIGIO32_I2C ===
 
 * Library code
+* #include <LandBoards_DIGIO32_I2C.h>
+* Class Name: Digio32
+* begin(baseAddr) - Initialize the card
+* void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
+* uint8_t digitalRead(uint8_t p) - read back a bit
+* void PinMode(port, direction)- Set the direction of a bit (INPUT, OUTPUT, INPUT_PULLUP)
+* void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
+* uint16_t readGPIOAB(chip) - Read 16-bits at a time
+* void write32(uint32_t) - Write 32-bits
+* uint32_t readGPIO32() - Read 32-bits
 
-==== Examples ====
+=== Examples ===
 
-
-
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
