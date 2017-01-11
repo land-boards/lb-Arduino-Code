@@ -125,13 +125,14 @@ uint8_t loopBackTestDigio32(void)
   for (port = 0; port < 16; port++)
   {
     Dio32Card.pinMode(port, OUTPUT);
-    Dio32Card.pinMode(port, INPUT_PULLUP);
+    Dio32Card.pinMode(port+16, INPUT_PULLUP);
 
     delay(2);
     Dio32Card.digitalWrite(port, HIGH);
     delay(2);
     if (Dio32Card.digitalRead(port + 16) != HIGH)
     {
+      
       Serial.print(F("Error on chip 0"));
       Serial.print(F(" and port "));
       Serial.print(port + 16);

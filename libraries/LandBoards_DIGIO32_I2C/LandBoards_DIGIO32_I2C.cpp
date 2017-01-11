@@ -169,17 +169,17 @@ uint16_t Digio32::readGPIOAB(uint8_t chip)
 // void write32(uint8_t,uint32_t) - Write 32-bits
 ////////////////////////////////////////////////////////////////////////////
 
-void write32(uint32_t longVal)
+void Digio32::write32(uint32_t longVal)
 {
-	mcp0.writeGPIOAB((uint32_t)(longVal&0xffff));
-	mcp1.writeGPIOAB((uint32_t)(longVal>>16));
+	mcp0.writeGPIOAB((uint16_t)(longVal&0xffff));
+	mcp1.writeGPIOAB((uint16_t)(longVal>>16));
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // uint32_t readGPIO32(void) - Read 32-bits
 ////////////////////////////////////////////////////////////////////////////
 
-uint32_t readGPIO32(void)
+uint32_t Digio32::readGPIO32(void)
 {
 	uint32_t longReadVal = 0;
 	longReadVal = (mcp1.readGPIOAB() << 16) | mcp0.readGPIOAB();
