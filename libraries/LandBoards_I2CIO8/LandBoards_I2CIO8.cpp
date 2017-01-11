@@ -123,9 +123,7 @@ void I2CIO8::pullUp(uint8_t bit, uint8_t d)
 	uint8_t gppuCopy;
 	bit &= 7;
 
-	// only 8 bits!
-	if (bit > 7)
-	return;
+	bit &= 7;
 
 	gppuCopy = read8(MCP23008_GPPU);
 	// set the pin and direction

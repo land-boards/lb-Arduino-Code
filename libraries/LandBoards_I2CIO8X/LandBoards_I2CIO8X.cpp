@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_I2CIO8.cpp - Library for I2CIO8-8 card
+//  LandBoards_I2CIO8X.cpp - Library for I2CIO-8X card
 //  Created by Douglas Gilliland. 2017-01-09
-//  I2CIO8-8 is a card which has an MCP23008 8-bit port expander
+//  I2CIO-8X is a card which has an MCP23008 8-bit port expander
 //	Communication with the card is via I2C Two-wire interface
-//  This library allows for both bit access
+//  This library allows for bit access
 //  	Bit access via digitalWrite, digitalRead, pinMode
 //  Webpage for the card is at:
-//	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+//	http://land-boards.com/blwiki/index.php?title=I2CIO-8X
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>
@@ -33,11 +33,11 @@ void I2CIO8X::begin(uint8_t addr)
 
 	Wire.begin();
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-	write8(MCP23008_IODIR,0xf0);
+	write8(MCP23008_IODIR,0xff);
 	write8(MCP23008_GPIO, 0x00);
 	write8(MCP23008_INTCON,0x00);
-	write8(MCP23008_IPOL,0xf0);
-	write8(MCP23008_GPINTEN,0xf0);
+	write8(MCP23008_IPOL,0x00);
+	write8(MCP23008_GPINTEN,0x00);
 	read8(MCP23008_GPIO);
 	return;
 }
@@ -76,8 +76,6 @@ uint8_t I2CIO8X::readJumper(uint8_t bit)
 //	#define INPUT 0x0
 //	#define OUTPUT 0x1
 //	#define INPUT_PULLUP 0x2
-// Adafruit's pinMode implementation only supports INPUT and OUTPUT
-// This implementation supports INPUT_PULLUP with separate calls to Adafruit
 // This eliminates the separate pullup function
 ////////////////////////////////////////////////////////////////////////////
 
@@ -113,10 +111,6 @@ void I2CIO8X::pullUp(uint8_t bit, uint8_t d)
 {
 	uint8_t gppuCopy;
 	bit &= 7;
-
-	// only 8 bits!
-	if (bit > 7)
-	return;
 
 	gppuCopy = read8(MCP23008_GPPU);
 	// set the pin and direction

@@ -57,24 +57,58 @@ uint8_t loopBackTestCard(void)
 uint8_t testI2CIO8(void)
 {
   I2CIO8 i2cio8Card;
-  i2cio8Card.begin();
-  Serial.println(F("I2CIO8 card"));
+  i2cio8Card.begin(0);
+  Serial.println(F("I2CIO8 card tests"));
+  Serial.println(F("Move jumper across H5-H8, observe LEDs D0-D3"));
+  Serial.println(F("Verify Int LED blinks"));
+  Serial.println(F("Hit a key to stop test"));
   while (1)
   {
-    i2cio8Card.writeLED(0, i2cio8Card.readJumper(0));
-    i2cio8Card.writeLED(1, i2cio8Card.readJumper(1));
-    i2cio8Card.writeLED(2, i2cio8Card.readJumper(2));
-    i2cio8Card.writeLED(3, i2cio8Card.readJumper(3));
+    i2cio8Card.writeLED(LED0, !i2cio8Card.readJumper(H4JUMPER));
+    i2cio8Card.writeLED(LED1, !i2cio8Card.readJumper(H5JUMPER));
+    i2cio8Card.writeLED(LED2, !i2cio8Card.readJumper(H6JUMPER));
+    i2cio8Card.writeLED(LED3, !i2cio8Card.readJumper(H7JUMPER));
+    delay(250);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return 0;
+    }
   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// 
+// uint8_t testI2CIO8X(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t testI2CIO8X(void)
 {
-  Serial.println(F("I2CIO8X card"));
+  uint8_t jumpers;
+  I2CIO8X i2cio8Card;
+  i2cio8Card.begin(0);
+//  Serial.println(F("I2CIO8X card"));
+//  Serial.println(F("Install test jumper"));
+//  Serial.println(F("Hit a key to stop test"));
+  for (jumpers = 0; jumpers < 4; jumpers++)
+    i2cio8Card.pinMode(jumpers, INPUT);
+  for (jumpers = 4; jumpers < 8; jumpers++)
+    i2cio8Card.pinMode(jumpers, OUTPUT);
+  for (jumpers = 0; jumpers < 4; jumpers++)
+  {
+    i2cio8Card.digitalWrite(jumpers + H4JUMPER, LOW);
+    if (i2cio8Card.digitalRead(jumpers) != LOW)
+    {
+      Serial.println(F("Failed LOW"));
+      return 1;
+    }
+    i2cio8Card.digitalWrite(jumpers + H4JUMPER, HIGH);
+    if (i2cio8Card.digitalRead(jumpers) != HIGH)
+    {
+      Serial.println(F("Failed HIGH"));
+      return 1;
+    }
+  }
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

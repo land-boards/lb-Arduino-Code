@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////
 // Card has an MCP23008 chip
 //  Webpage for the card is at:
-//	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+//	http://land-boards.com/blwiki/index.php?title=I2CIO-8X
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef LandBoards_I2CIO8X_h
@@ -57,9 +57,9 @@ class I2CIO8X
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper
 	uint8_t readAllJumpers(void);
 	void pinMode(uint8_t, uint8_t);
-  private:
 	void digitalWrite(uint8_t, uint8_t);
 	uint8_t digitalRead(uint8_t);
+  private:
 	uint8_t i2caddr;
 	void pullUp(uint8_t, uint8_t);
 	void write8(uint8_t addr, uint8_t data);
