@@ -55,7 +55,7 @@ void bounceLedsPROTO16I2C_CARD(void)
 {
   Serial.println(F("Bouncing LEDs - any key to stop"));
   Adafruit_MCP23017 mcp;
-  mcp.begin(1);      // use default address ?
+  mcp.begin(0);      // use default address
 
   while (1)
   {

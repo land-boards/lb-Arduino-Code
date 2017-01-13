@@ -27,7 +27,7 @@ uint8_t loopBackTestCard(void)
       return (loopBackTestDigio32());
       break;
     case PROTO16I2C_CARD:
-      Serial.println(F("Not supported at present"));
+      return (testProto16());
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
@@ -48,6 +48,43 @@ uint8_t loopBackTestCard(void)
   }
   setMuxChannel(UUT_CARD_MUX_CH);
   return 1; // fail
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t testProto16(void) - Test the PROTO16-I2C card
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t testProto16(void)
+{
+  uint8_t failed = 0;
+  uint8_t loopCnt;
+  uint16_t readBackVal;
+//  Serial.println(F("Testing PROTO16-I2C card"));
+  Adafruit_MCP23017 mcp;
+  mcp.begin(0);      // use default address
+  for (loopCnt = 0; loopCnt < 16; loopCnt++)
+    mcp.pinMode(loopCnt,OUTPUT);
+  mcp.writeGPIOAB(0x55aa);
+  readBackVal = mcp.readGPIOAB();
+  if (readBackVal != 0x55aa)
+  {
+    Serial.print(F("Readback="));
+    Serial.println(readBackVal);
+    failed = 1;
+  }
+  delay(10);
+  mcp.writeGPIOAB(0xaa55);
+  readBackVal = mcp.readGPIOAB();
+  if (readBackVal != 0xaa55)
+  {
+    Serial.print(F("Readback="));
+    Serial.println(readBackVal);
+    failed = 1;
+  }
+  for (loopCnt = 0; loopCnt < 16; loopCnt++)
+    mcp.pinMode(loopCnt,INPUT);
+  delay(10);
+  return(failed);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
