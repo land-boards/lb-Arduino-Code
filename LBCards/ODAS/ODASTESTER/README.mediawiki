@@ -4,7 +4,7 @@
 
 === Hardware ===
 
-<img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg">Test Station Hardware</img>
+<img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
 
 * [[Open_Data_Acquisition_System#ODAS_Card_Test_Software|ODAS Card Test Software]] runs on Arduino Nano [[NANO-BKOUT]] with [[I2C-RPT]] card
 * USB running puTTY
