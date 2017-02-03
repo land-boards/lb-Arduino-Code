@@ -7,7 +7,8 @@
 
 ==== D16-TEST ====
 
-* Factory Acceptance Test for the DigIO16-I2C card
+* Original Factory Acceptance Test for the DigIO16-I2C card
+** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester Code]
 * Uses GVSDuino card
 * Uses MyMenu card
 
