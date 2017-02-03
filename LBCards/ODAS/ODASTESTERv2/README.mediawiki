@@ -16,19 +16,17 @@
 
 * This list will grow with time. 
 * See listings for details of currently supported cards.
-** DIGIO16I2C_CARD,
-** DIGIO128_CARD,
-** OPTOIN8I2C_CARD,
-** OPTOOUT8I2C_CARD,
-** DIGIO32I2C_CARD,
-** PROTO16I2C_CARD,
-** ODASPSOC5_CARD,
-** NEW_CARD = 499,
-** NOEEPROMAFTER = 500,
-** I2CIO8_CARD,
-** I2CIO8X_CARD,
-** OPTOSMALL_CARD,
-** OPTOFAST_CARD
+** DIGIO16I2C
+** DIGIO128
+** OPTOIN8I2C
+** OPTOOUT8I2C
+** DIGIO32I2C
+** PROTO16I2C
+** ODASPSOC5
+** I2CIO8
+** I2CIO8X
+** OPTOSMALL
+** OPTOFAST
 
 === Program Function ===
 
