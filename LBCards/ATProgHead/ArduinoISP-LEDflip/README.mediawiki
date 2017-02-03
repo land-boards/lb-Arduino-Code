@@ -1,0 +1,21 @@
+== Land Boards ATProgHead Code ==
+
+<img src="http://land-boards.com/blwiki/images/5/56/ATProgHead-X2-CCA-640-001.JPG" alt="ATProgHead card Image"></img>
+
+* These are the Land Boards Cards [http://land-boards.com/blwiki/index.php?title=ATProgHead ATProgHead] code files.
+* ArduinoISPLEDflip.ino is the ArduinoISP code with the LED sense flipped
+* Our [http://land-boards.com/blwiki/index.php?title=ATProgHead_Revision_X1#Rev_X1_Issues first ATProgHead card had the LED senses backwards].
+* There is also other people's code here.
+** The original code was Copyright (c) 2008-2011 Randall Bohn
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or melt it to a puddle, it's on you not me.

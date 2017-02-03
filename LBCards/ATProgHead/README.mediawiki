@@ -1,6 +1,6 @@
-== Land Boards Arduino Code Files ==
+== Land Boards ATProgHead Arduino Code Files ==
 
-<img src="http://land-boards.com/blwiki/images/0/0e/NANO-BKOUT-P1010078-800px.jpg" alt="NANO Breakout card Image"></img>
+<img src="" alt="ATProgHead card Image"></img>
 
 * These are the [http://land-boards.com/blwiki/index.php?title=Main_Page#Arduino_Compatible Land Boards Cards] Arduino code libraries and example files.
 * There is also other people's code here.
