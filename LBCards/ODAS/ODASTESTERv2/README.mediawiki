@@ -1,0 +1,55 @@
+== land-boards ODAS Card Test Software (ODATTESTERv2) Files ==
+
+* These are Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Test Code.
+* This is the second version of the test station.
+* This code adds a DIGIO32-I2C card as the master/slave card to communicate with the Digio lines on the UUT.
+* This eliminates the need to connect to the Digital lines on the [[NANO_BKOUT]] card.
+
+=== Hardware ===
+
+<img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
+
+* ODAS Card Test Software runs on Arduino Nano [[NANO-BKOUT]] with [[I2C-RPT]] card
+* USB running puTTY
+** 9600 baud
+
+=== Supported Cards ===
+
+* This list will grow with time. 
+* See listings for details of currently supported cards.
+** DIGIO16I2C_CARD,
+** DIGIO128_CARD,
+** OPTOIN8I2C_CARD,
+** OPTOOUT8I2C_CARD,
+** DIGIO32I2C_CARD,
+** PROTO16I2C_CARD,
+** ODASPSOC5_CARD,
+** NEW_CARD = 499,
+** NOEEPROMAFTER = 500,
+** I2CIO8_CARD,
+** I2CIO8X_CARD,
+** OPTOSMALL_CARD,
+** OPTOFAST_CARD
+
+=== Program Function ===
+
+* Menu driven
+* 
+* Uses the Configuration EEPROM contents to auto-detects card (if EEPROM has already been programmed)
+* Allows EEPROM to be written using card types
+* Use to run Loopback Tests
+* Use to run Bouncing LEDs
+
+=== Files ===
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
