@@ -1,0 +1,37 @@
+== land-boards ODAS Card Software Files ==
+
+* These are Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Code.
+* There are two Testers in these folders.
+* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS/ODASTESTER first tester] runs on an Arduino Nano mounted to a [http://land-boards.com/blwiki/index.php?title=NANO-BKOUT NANO-BKOUT] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT card]
+* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS/ODASTESTERv2 second tester] also requires a [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DIGIO32-I2C] card
+
+=== Hardware ===
+
+<img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
+
+* ODAS Card Test Software runs on Arduino Nano [[NANO-BKOUT]] with [[I2C-RPT]] card
+* USB running puTTY
+** 9600 baud
+
+=== Program Function ===
+
+* Menu driven
+* 
+* Uses the Configuration EEPROM contents to auto-detects card (if EEPROM has already been programmed)
+* Allows EEPROM to be written using card types
+* Use to run Loopback Tests
+* Use to run Bouncing LEDs
+
+=== Files ===
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
