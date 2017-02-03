@@ -10,6 +10,24 @@
 * USB running puTTY
 ** 9600 baud
 
+=== Supported Cards ===
+
+* This list will grow with time. 
+* See listings for details of currently supported cards.
+** DIGIO16I2C_CARD,
+** DIGIO128_CARD,
+** OPTOIN8I2C_CARD,
+** OPTOOUT8I2C_CARD,
+** DIGIO32I2C_CARD,
+** PROTO16I2C_CARD,
+** ODASPSOC5_CARD,
+** NEW_CARD = 499,
+** NOEEPROMAFTER = 500,
+** I2CIO8_CARD,
+** I2CIO8X_CARD,
+** OPTOSMALL_CARD,
+** OPTOFAST_CARD
+
 === Program Function ===
 
 * Menu driven
@@ -31,4 +49,4 @@
 === Warning ===
 
 * Use at your own risk.
-** If you brick your part or it melt to a puddle, it's on you not me.
+** If you brick your part or it melt to a puddle, it's on you not us.
