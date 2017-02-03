@@ -3,7 +3,7 @@
 <img src="http://land-boards.com/blwiki/images/a/a3/SerialTerminal-P1010506-720px.jpg" alt="Serial Terminal"></img>
 
 * Consists of two cards with two sets of files
-** [http://land-boards.com/blwiki/index.php?title=Serial_Terminal Serial Terminal Source files folders
+** [http://land-boards.com/blwiki/index.php?title=Serial_Terminal Serial Terminal] Source files folders
 ** [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 Display Processor] source code files.
 
 === Ownership ===
