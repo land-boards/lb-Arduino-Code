@@ -1,17 +1,12 @@
 == land-boards ODAS Card Software Files ==
 
 * These are Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Code.
+* Individual card details are in their own GitHub folders or under the library folder
 * There are two Testers in these folders.
-* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS/ODASTESTER first tester] runs on an Arduino Nano mounted to a [http://land-boards.com/blwiki/index.php?title=NANO-BKOUT NANO-BKOUT] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT card]
-* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS/ODASTESTERv2 second tester] also requires a [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DIGIO32-I2C] card
-
-=== Hardware ===
+* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS/ODASTESTER first tester] runs on an Arduino Nano mounted to a [http://land-boards.com/blwiki/index.php?title=NANO-BKOUT NANO-BKOUT] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT] card
+* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS/ODASTESTERv2 second tester] requires the same cards plus a [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DIGIO32-I2C] card
 
 <img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
-
-* ODAS Card Test Software runs on Arduino Nano [[NANO-BKOUT]] with [[I2C-RPT]] card
-* USB running puTTY
-** 9600 baud
 
 === Program Function ===
 
