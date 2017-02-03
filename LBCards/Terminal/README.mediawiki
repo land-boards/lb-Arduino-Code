@@ -5,14 +5,12 @@
 * Consists of two cards with two sets of files
 ** [http://land-boards.com/blwiki/index.php?title=Serial_Terminal Serial Terminal Source files folders
 ** [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 Display Processor] source code files.
-* This code is [http://searle.hostei.com/grant/MonitorKeyboard/index.html#SourceCode Grant Searle's code]
 
 === Ownership ===
 
-* Some of these files (particularly libraries) were created by others.
-** There may be newer versions of these libraries "out there".
-** Some libraries even have the same names but don't work the same.
-* Many of these files were created by me based on the work of others.
+* This code is [http://searle.hostei.com/grant/MonitorKeyboard/index.html#SourceCode Grant Searle's code]
+* There may be newer versions of this code "out there".
+* This is the version that we got to work with our hardware implementation.
 
 === Warning ===
 
