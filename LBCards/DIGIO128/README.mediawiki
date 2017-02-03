@@ -1,7 +1,7 @@
 == land-boards DigIO-128 Card Files ==
 
 <img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
-
+* [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128 Library for the DIGIO-128 card]
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card related] files.
 
 === Files ===
