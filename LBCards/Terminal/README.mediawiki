@@ -17,4 +17,4 @@
 === Warning ===
 
 * Use at your own risk.
-** If you brick your part or it melt to a puddle, it's on you not me.
+** If you brick your part or it melt to a puddle, it's on you not us.
