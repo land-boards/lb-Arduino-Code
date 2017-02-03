@@ -2,9 +2,9 @@
 
 <img src="http://land-boards.com/blwiki/images/a/a3/SerialTerminal-P1010506-720px.jpg" alt="Serial Terminal"></img>
 
-* [http://land-boards.com/blwiki/index.php?title=Serial_Terminal Serial Terminal] consists of two cards with two sets of files
-** [http://land-boards.com/blwiki/index.php?title=SIOProc-01 Serial I/O Processor] Source files folders
-** [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 Display Processor] source code files.
+* [http://land-boards.com/blwiki/index.php?title=Serial_Terminal Serial Terminal] consists of two cards with two sets of Source Code files
+** [http://land-boards.com/blwiki/index.php?title=SIOProc-01 Serial I/O Processor] Source Code files.
+** [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 Display Processor] Source Code files.
 
 === Ownership ===
 
