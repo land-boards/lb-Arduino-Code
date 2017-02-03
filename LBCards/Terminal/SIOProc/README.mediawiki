@@ -1,0 +1,18 @@
+== land-boards Serial Interface Card Source Code ==
+
+<img src="http://land-boards.com/blwiki/images/d/d1/SIOPROC-01-640px.jpg" alt="Serial I/O Card"></img>
+
+* [http://land-boards.com/blwiki/index.php?title=SIOProc-01 Serial Interface] Source files folders
+** Card converts a PS/2 Keyboard to a fast Parallel port with handshake
+* Used along with [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 Display Processor] source code files.
+
+=== Ownership ===
+
+* This code is [http://searle.hostei.com/grant/MonitorKeyboard/index.html#SourceCode Grant Searle's code]
+* There may be newer versions of this code "out there".
+* This is the version that we got to work with our hardware implementation.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
