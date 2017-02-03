@@ -15,10 +15,6 @@
 * void write32(uint32_t) - Write 32-bits
 * uint32_t readGPIO32() - Read 32-bits
 
-=== Examples ===
-
-[https://github.com/douggilliland/lb-Arduino-Code/blob/master/libraries/LandBoards_DIGIO32_I2C/examples/D128LibExample.ino Bounce an LED across the lines]
-
 == Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
