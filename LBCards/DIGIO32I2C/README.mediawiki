@@ -1,38 +1,19 @@
-== land-boards DigIO-128 Card Files ==
+== land-boards DigIO32-I2C Card Source Code Files ==
 
-* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card related] files.
+* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card] Source code files.
+* Here is the [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_DIGIO32_I2C Land Board DIGIO32-I2C Library] code
 
 === Files ===
 
-==== D128FAT ====
+==== DIGIO32I2CFAT ====
 
-* Factory Acceptance Test for the DigIO-128 card
+* Original Factory Acceptance Test for the DIGIO32-I2C card
+** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester]
 * Uses an Arduino UNO with a Host USB connection
-* Requires 8 loopback cables (10 pin 1:1 jumper cables)
-* Performs loopback testing from one chip to the next (0-1, 2-3, 4-5, 6-7 chips)
+* Performs loopback testing from one chip to the next (0-1 chips)
 * Also, attempts to program the EEPROM and presents the result if successful
 * Runs with Host Serial Connection
 * Loops on running the loopback test forever - good for endurance testing
-
-==== D128LEDS ====
-
-* Move the light around 128 LEDs
-* Uses a [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino card]
-
-==== D128Loopback ====
-
-* The FAT code isolated for the 128-bit loopback
-* Loops on running the loopback test forever - good for endurance testing
-
-==== D128Utils ====
-
-* D128eep - EEPROM test portion isolated
-** Programs the EEPROM in the DigIO-128 Card
-** Uses an Arduino UNO with a Host USB connection
-** Standalone version of the eeprom code contained in the D128FAT
-** Write, read and check functions
-* D128Loop - Loopback test portion isolated
-* D128mcp - MCP23017 expansion from single chip to 8 chips
 
 === Ownership ===
 
