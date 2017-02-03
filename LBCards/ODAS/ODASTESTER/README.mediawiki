@@ -1,4 +1,4 @@
-== land-boards ODATTESTER Files ==
+== land-boards ODAS Card Test Software (ODATTESTER) Files ==
 
 * These are Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Test Code.
 
@@ -6,16 +6,16 @@
 
 <img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
 
-* [[Open_Data_Acquisition_System#ODAS_Card_Test_Software|ODAS Card Test Software]] runs on Arduino Nano [[NANO-BKOUT]] with [[I2C-RPT]] card
+* ODAS Card Test Software runs on Arduino Nano [[NANO-BKOUT]] with [[I2C-RPT]] card
 * USB running puTTY
 ** 9600 baud
 
 === Program Function ===
 
 * Menu driven
-* Auto-detects card
-* Uses the Configuration EEPROM contents (if there is one) if test has been run before 
-* Allows EEPROM to be written
+* 
+* Uses the Configuration EEPROM contents to auto-detects card (if EEPROM has already been programmed)
+* Allows EEPROM to be written using card types
 * Use to run Loopback Tests
 * Use to run Bouncing LEDs
 
