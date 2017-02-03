@@ -1,0 +1,19 @@
+== land-boards DisplayProc Card Source Code ==
+
+<img src="http://land-boards.com/blwiki/images/f/f2/DISPLAYPROC-01-640pxY.jpg"></img>
+
+* These are the [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 DisplayProc-01] source code files.
+* This code is [http://searle.hostei.com/grant/MonitorKeyboard/index.html#SourceCode Grant Searle's code]
+* Used in conjunction with [http://land-boards.com/blwiki/index.php?title=SIOProc-01 Grant Searle's Serial I/O Processor]
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
