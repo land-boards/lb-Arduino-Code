@@ -1,8 +1,9 @@
-== Land Boards Cards Arduino Code Example Files ==
+== Land Boards Arduino Code Example Files ==
 
-<img src="http://land-boards.com/blwiki/images/0/0e/NANO-BKOUT-P1010078-800px.jpg" alt=""></img>
+<img src="http://land-boards.com/blwiki/images/0/0e/NANO-BKOUT-P1010078-800px.jpg" alt="NANO Breakout card Image"></img>
 
 * These are the [http://land-boards.com/blwiki/index.php?title=Main_Page#Arduino_Compatible Land Boards Cards] Arduino code libraries and example files.
+* There is also other code here.
 
 === Ownership ===
 
@@ -14,4 +15,4 @@
 === Warning ===
 
 * Use at your own risk.
-** If you brick your part or it melt to a puddle, it's on you not me.
+** If you brick your part or melt it to a puddle, it's on you not me.
