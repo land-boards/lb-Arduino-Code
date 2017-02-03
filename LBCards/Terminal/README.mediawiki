@@ -1,10 +1,11 @@
-== land-boards DisplayProc Card Source Code ==
+== land-boards Serial Terminal Cards Source Code ==
 
-<img src="http://land-boards.com/blwiki/images/f/f2/DISPLAYPROC-01-640pxY.jpg"></img>
+<img src="http://land-boards.com/blwiki/images/a/a3/SerialTerminal-P1010506-720px.jpg" alt="Serial Terminal"></img>
 
-* These are the [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 DisplayProc-01] source code files.
+* Consists of two cards with two sets of files
+** [http://land-boards.com/blwiki/index.php?title=Serial_Terminal Serial Terminal Source files folders
+** [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 Display Processor] source code files.
 * This code is [http://searle.hostei.com/grant/MonitorKeyboard/index.html#SourceCode Grant Searle's code]
-* Used in conjunction with [http://land-boards.com/blwiki/index.php?title=SIOProc-01 Grant Searle's Serial I/O Processor]
 
 === Ownership ===
 
