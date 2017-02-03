@@ -1,6 +1,8 @@
 == Land Boards Cards Arduino Code Example Files ==
 
-* These are the [http://land-boards.com/blwiki/index.php?title=Main_Page Land Boards Cards] Arduino code example files.
+<img src="http://land-boards.com/blwiki/images/0/0e/NANO-BKOUT-P1010078-800px.jpg" alt=""></img>
+
+* These are the [http://land-boards.com/blwiki/index.php?title=Main_Page#Arduino_Compatible Land Boards Cards] Arduino code libraries and example files.
 
 === Ownership ===
 
