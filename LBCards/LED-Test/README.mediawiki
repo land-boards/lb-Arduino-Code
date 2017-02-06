@@ -1,6 +1,6 @@
 == LED-TEST-2 Software ==
 
-<img src="http://land-boards.com/blwiki/images/5/50/LED-TEST-2-MyMenu-P1010248-640px.jpg" alt="LED-TEST-2 Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/6/68/LED-Test-2-5291-512px.jpg" alt="LED-TEST-2 Card Image"></img>
 
 === Documentation ===
 
