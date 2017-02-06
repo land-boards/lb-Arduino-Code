@@ -7,6 +7,7 @@
 ==== LandBoards_I2CTEMP01 ====
 
 * Library code
+* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
 
 ==== Examples ====
 

@@ -4,6 +4,8 @@ These are the files needed to use the I2C-RPT-01 card with the Arduino.
 
 [The Wiki page for this card is here.](http://land-boards.com/blwiki/index.php?title=I2C-RPT)
 
+[How to install a ZIP library](https://www.arduino.cc/en/Guide/Libraries#toc4)
+
 ##Ownership
 
 Some of these files (particularly libraries) were created by others. There may be newer versions of these libraries "out there". Some libraries even have the same names but don't work the same. Many of these files were created by me based on the work of others.

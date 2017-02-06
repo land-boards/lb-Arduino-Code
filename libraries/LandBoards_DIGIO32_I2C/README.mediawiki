@@ -3,6 +3,7 @@
 <img src="http://land-boards.com/blwiki/images/a/a2/DigIO32-I2C-P1010486-720px.jpg" alt="DIGIO32-I2C Card image"></img>
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card library] files.
+* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
 
 === LandBoards_DIGIO32_I2C - Arduino library Code ===
 
