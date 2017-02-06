@@ -1,5 +1,7 @@
 == land-boards ODAS Card Software Files ==
 
+<img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="ODAS card example"></img>
+
 * These are Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Code.
 * Individual card details are in their own GitHub folders or under the library folder
 * There are two Testers in these folders.
@@ -24,7 +26,7 @@
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
-* Many of these files were created by me based on the work of others.
+* Many of these files were created by us based on the work of others.
 
 === Warning ===
 
