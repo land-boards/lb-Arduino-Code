@@ -1,10 +1,10 @@
-== land-boards NewPot2 Card Example Arduino Source Code Files ==
+== land-boards Demos Arduino Source Code Files ==
 
 Replace a multi-turn pot with a rotary encoder. 
 
-<img src="http://land-boards.com/blwiki/images/d/d7/NewPot2-6111-640px.JPG" alt="NewPot2 Card photo"></img>
+<img src="http://land-boards.com/blwiki/images/d/d7/Demos-6111-640px.JPG" alt="Demos Card photo"></img>
 
-* These are the [http://land-boards.com/blwiki/index.php?title=NewPot2 NewPot2 card] example files.
+* These are the Demos example files.
 
 === Ownership ===
 
