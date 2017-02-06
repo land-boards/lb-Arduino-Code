@@ -9,7 +9,7 @@
 == Demo Files ==
 
 * LBLED7Segment
-* NeoPixels
+* NeoPixels\NeoCylon
 
 === Ownership ===
 
