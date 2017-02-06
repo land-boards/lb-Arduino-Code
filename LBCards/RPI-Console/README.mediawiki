@@ -1,0 +1,19 @@
+== RPI-CONSOLE Software ==
+
+<img src="http://land-boards.com/blwiki/images/f/f4/RP-Console-CCA-X1-4953-640px.jpg" alt="RPI-CONSOLE Card Image"></img>
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=RPI-CONSOLE Wiki page for the RPI-CONSOLE] test software.
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
