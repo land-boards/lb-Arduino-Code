@@ -1,0 +1,19 @@
+== LED-TEST-2 Software ==
+
+<img src="http://land-boards.com/blwiki/images/5/50/LED-TEST-2-MyMenu-P1010248-640px.jpg" alt="LED-TEST-2 Card Image"></img>
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=LED-TEST-2 Wiki page for the LED-TEST-2].
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
