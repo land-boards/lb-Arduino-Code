@@ -1,0 +1,19 @@
+== I2C-TEMP Software ==
+
+<img src="http://land-boards.com/blwiki/images/1/16/I2C-TEMP-640px.jpg" alt="I2C-TEMP Card Image"></img>
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=I2C-TEMP Wiki page for the I2C-TEMP].
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
