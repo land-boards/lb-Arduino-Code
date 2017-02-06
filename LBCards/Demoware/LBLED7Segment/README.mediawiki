@@ -1,0 +1,21 @@
+== Demos Scrolling Land-boards.com Show Source Code Files (Arduino) ==
+
+<img src="http://land-boards.com/blwiki/images/c/c6/LBLED7Seg-720px.jpg" alt="7-Segment LED Demo Card photo"></img>
+
+* These are the Land Boards Show Demos files.
+
+== Demo Files ==
+
+* LBLED7Segment - Scroll land-boards.com message
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
