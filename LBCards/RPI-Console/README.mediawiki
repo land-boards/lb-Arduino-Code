@@ -1,6 +1,6 @@
 == RPI-CONSOLE Software ==
 
-<img src="http://land-boards.com/blwiki/images/f/f4/RP-Console-CCA-X1-4953-640px.jpg" alt="RPI-CONSOLE Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/5/54/RPI-Console-Test-5459-cropped-640px.jpg" alt="RPI-CONSOLE Card Image"></img>
 
 === Documentation ===
 
