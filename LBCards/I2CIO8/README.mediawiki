@@ -3,7 +3,7 @@
 <img src="http://land-boards.com/blwiki/images/e/ee/I2CIO-8_X2-6000-640px.jpg" alt="I2CIO-8 Card Image"></img>
 
 === Description ===
-* The I2CIO-8 is an Arduino Leonardo compatible board.
+* The I2CIO-8 is an I2C card with 4 LEDs and 4 Switches(headers) board.
 
 === Documentation ===
 
