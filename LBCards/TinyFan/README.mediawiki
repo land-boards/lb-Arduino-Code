@@ -1,6 +1,6 @@
 == TinyFan Code ==
 
-<img src="http://land-boards.com/blwiki/images/7/75/ITheremin-2.jpghttp://land-boards.com/blwiki/images/2/26/TinyFan85_Controller.JPG
+<img src="http://land-boards.com/blwiki/images/2/26/TinyFan85_Controller.JPG" alt="TinyFanController Image"></img>
 === Documentation ===
 
 [http://land-boards.com/blwiki/index.php?title=Fan_Controller Fan_Controller Wiki Page]
