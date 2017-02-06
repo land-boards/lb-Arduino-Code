@@ -1,12 +1,8 @@
-== Screwduino README ==
+== Screwduino Card ==
 
-[[File:http://dougspcbdesigns.pbworks.com/f/ScrewduinoX3.png]]
+<img src="http://land-boards.com/blwiki/images/7/7a/ScrewduinoX4-5493-640x310px.jpg" alt="Screwduino"></img>
 
-* The [http://myarduino.pbworks.com/w/page/51198530/Screwduino Screwduino] is an Arduino compatible microcontroller board. 
+* The [http://land-boards.com/blwiki/index.php?title=Screwduino Screwduino] is an Arduino compatible microcontroller board. 
 ** It is based on the Arduino UNO but with some improvements. 
 ** The Screwduino adds screw terminals for outputs and an I2C jack for displays. 
 ** It has greatly improved mounting holes.
-
-* The files in this folder are the ExpressPCB schematic and layout files. 
-** The board is layed out to work with the miniboard option and has two Screwduinos per board for a total of 6 board at around $85 or around $14 a board.
-** OSHPark is less expensive at about $25 for three boards.
