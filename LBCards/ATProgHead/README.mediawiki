@@ -10,9 +10,9 @@
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
-* Many of these files were created by me based on the work of others.
+* Many of these files were created by us based on the work of others.
 
 === Warning ===
 
 * Use at your own risk.
-** If you brick your part or melt it to a puddle, it's on you not me.
+** If you brick your part or melt it to a puddle, it's on you not us.

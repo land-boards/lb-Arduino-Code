@@ -1,6 +1,7 @@
 == land-boards DigIO-128 Card Example Arduino Source Code Files ==
 
 <img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
+
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card] example files.
 * The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128 Library for the DIGIO-128 card is here]
 
@@ -32,7 +33,7 @@
 * D128eep - EEPROM test portion isolated
 ** Programs the EEPROM in the DigIO-128 Card
 ** Uses an Arduino UNO with a Host USB connection
-** Standalone version of the eeprom code contained in the D128FAT
+** Standalone version of the EEPROM code contained in the D128FAT
 ** Write, read and check functions
 * D128Loop - Loopback test portion isolated
 * D128mcp - MCP23017 expansion from single chip to 8 chips
@@ -42,9 +43,9 @@
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
-* Many of these files were created by me based on the work of others.
+* Many of these files were created by us based on the work of others.
 
 === Warning ===
 
 * Use at your own risk.
-** If you brick your part or it melt to a puddle, it's on you not me.
+** If you brick your part or it melt to a puddle, it's on you not us.
