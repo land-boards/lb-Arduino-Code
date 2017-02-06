@@ -1,7 +1,10 @@
-== Dougs Arduino Files README ==
+== land-boards USBGPS Files ==
 
-* These are my [http://arduino.cc Arduino] files.
-** Most of these files were created to exercise my [http://land-boards.com Arduino related hardware].
+<img src="http://land-boards.com/blwiki/images/2/2d/USB-GPS-X2-sn4.JPG" alt="USB-GPS Card Image"></img>
+
+<img src="http://land-boards.com/blwiki/images/8/87/Usb-hammond-gps-x2.png" alt="USB-Hammond-GPS Card Image"></img>
+
+* These are our [http://land-boards.com/blwiki/index.php?title=USB-GPS USB-GPS related] files.
 
 === Ownership ===
 
@@ -14,4 +17,3 @@
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not me.
-
