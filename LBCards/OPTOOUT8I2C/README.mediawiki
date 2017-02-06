@@ -1,0 +1,19 @@
+== OptoOut8-I2C Software ==
+
+<img src="http://land-boards.com/blwiki/images/b/be/OptoOut8-I2C-X3-CCA-5452-640px.jpg" alt="OptoOut8-I2C Card Image"></img>
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=OptoOut8-I2C Wiki page for the OptoOut8-I2C].
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
