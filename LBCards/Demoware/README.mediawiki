@@ -1,10 +1,15 @@
 == land-boards Demos Arduino Source Code Files ==
 
-Replace a multi-turn pot with a rotary encoder. 
+Land Boards, LLC Show Demos
 
-<img src="http://land-boards.com/blwiki/images/d/d7/Demos-6111-640px.JPG" alt="Demos Card photo"></img>
+<img src="http://land-boards.com/blwiki/images/c/c6/LBLED7Seg-720px.jpg" alt="7-Segment LED Demo Card photo"></img>
 
-* These are the Demos example files.
+* These are the Land Boards Show Demos files.
+
+== Demo Files ==
+
+* LBLED7Segment
+* NeoPixels
 
 === Ownership ===
 
