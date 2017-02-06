@@ -1,4 +1,10 @@
-== Theremin Code ==
+== IntegTheremin Code ==
+
+<img src="http://land-boards.com/blwiki/images/7/75/ITheremin-2.jpg" alt="IntegTheremin Card Image"></img>
+
+=== Documentation ===
+
+[http://land-boards.com/blwiki/index.php?title=IntegTheremin IntegTheremin Wiki Page]
 
 === Ownership ===
 
