@@ -1,0 +1,19 @@
+== Sw5Way Software ==
+
+<img src="http://land-boards.com/blwiki/images/6/67/2013-01-04-185826.jpg" alt="Sw5Way Card Image"></img>
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=Sw5Way Wiki page for the Sw5Way].
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
