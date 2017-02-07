@@ -1,0 +1,15 @@
+== Adafruit Motor Shield (V1) Arduino Library Code ==
+
+<img src="https://cdn-learn.adafruit.com/assets/assets/000/001/664/medium640/adafruit_products_2237983028_b0b7144507_b.jpg?1396774867" alt="GVSDuino card"></img>
+
+== Ownership ==
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.

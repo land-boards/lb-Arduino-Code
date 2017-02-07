@@ -9,7 +9,7 @@
 //
 //////////////////////////////////////////////////////////////
 
-byte joystick(void)
+ROBOT_DIR joystick(void)
 {
   int UD = 0;
   int LR = 0;
