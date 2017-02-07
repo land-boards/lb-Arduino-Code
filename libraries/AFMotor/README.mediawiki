@@ -2,6 +2,8 @@
 
 <img src="https://cdn-learn.adafruit.com/assets/assets/000/001/664/medium640/adafruit_products_2237983028_b0b7144507_b.jpg?1396774867" alt="GVSDuino card"></img>
 
+* [https://learn.adafruit.com/adafruit-motor-shield Adafruit's Motor Shield Learning Page]
+
 == Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
