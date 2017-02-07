@@ -1,0 +1,20 @@
+== Land Boards, LLC - I2C-RPT-01 Library ==
+
+<img src="http://land-boards.com/blwiki/images/5/54/I2C-RPT-01-X2-CCA_6031-640px.jpg" alt="I2C-RPT-01 Card Image"></img>
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=I2C-RPT-01 Wiki page for the I2C-RPT-01].
+* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
