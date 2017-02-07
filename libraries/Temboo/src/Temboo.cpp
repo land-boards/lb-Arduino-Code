@@ -3,7 +3,7 @@
 #
 # Temboo Arduino library
 #
-# Copyright 2015, Temboo Inc.
+# Copyright 2017, Temboo Inc.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -121,6 +121,21 @@ void TembooChoreo::setProfile(const char* profileName) {
     m_preset.put(profileName);
 }
 
+void TembooChoreo::setDeviceType(const String& deviceType) {
+    m_deviceType.put(deviceType.c_str());
+}
+
+void TembooChoreo::setDeviceType(const char* deviceType) {
+    m_deviceType.put(deviceType);
+}
+
+void TembooChoreo::setDeviceName(const String& deviceName) {
+    m_deviceName.put(deviceName.c_str());
+}
+
+void TembooChoreo::setDeviceName(const char* deviceName) {
+    m_deviceName.put(deviceName);
+}
 
 void TembooChoreo::addInput(const String& inputName, const String& inputValue) {
     m_inputs.put(inputName.c_str(), inputValue.c_str());
@@ -141,6 +156,33 @@ void TembooChoreo::addInput(const String& inputName, const char* inputValue) {
     m_inputs.put(inputName.c_str(), inputValue);
 }
 
+void TembooChoreo::addInputExpression(const String& inputName, const String& inputValue) {
+    m_expressions.put(inputName.c_str(), inputValue.c_str());
+}
+
+void TembooChoreo::addInputExpression(const char* inputName, const String& inputValue) {
+    m_expressions.put(inputName, inputValue.c_str());
+}
+
+void TembooChoreo::addInputExpression(const char* inputName, const char* inputValue) {
+    m_expressions.put(inputName, inputValue);
+}
+
+void TembooChoreo::addSensorInput(const char* sensorName, int sensorValue, const char* conversion) {
+    m_sensors.put(sensorName, sensorValue, conversion, NULL, NULL, NULL, NULL, NULL);
+}
+
+void TembooChoreo::addSensorInput(const char* sensorName, int sensorValue) {
+    m_sensors.put(sensorName, sensorValue, NULL, NULL, NULL, NULL, NULL, NULL);
+}
+
+void TembooChoreo::addSensorInput(const char* sensorName, int sensorValue, const char* conversion, const char* calibrationValue) {
+    m_sensors.put(sensorName, sensorValue, conversion, NULL, NULL, NULL, NULL, calibrationValue);
+}
+        
+void TembooChoreo::addSensorInput(const char* sensorName, int sensorValue, const char* rawLow, const char* rawHigh, const char* scaleLow, const char* scaleHigh) {
+    m_sensors.put(sensorName, sensorValue, NULL, rawLow, rawHigh, scaleLow, scaleHigh, NULL);
+}
 
 void TembooChoreo::addOutputFilter(const char* outputName, const char* filterPath, const char* variableName) {
     m_outputs.put(outputName, filterPath, variableName);
@@ -219,7 +261,7 @@ int TembooChoreo::run(IPAddress addr, uint16_t port, uint16_t timeoutSecs) {
     
     for (int i = 0; i < 2; i++) {
         unsigned long timeoutBeginSecs = session.getTime();
-        if (0 != session.executeChoreo(m_accountName, m_appKeyName, m_appKeyValue, m_path, m_inputs, m_outputs, m_preset)) {
+        if (0 != session.executeChoreo(m_accountName, m_appKeyName, m_appKeyValue, m_path, m_inputs, m_expressions, m_sensors, m_outputs, m_preset, m_deviceType, m_deviceName)) {
             httpCode = 0;
             break;
         }

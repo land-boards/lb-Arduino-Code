@@ -3,7 +3,7 @@
 #
 # Temboo Arduino library
 #
-# Copyright 2015, Temboo Inc.
+# Copyright 2017, Temboo Inc.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,8 +41,11 @@
 #endif
 
 class ChoreoInputSet;
+class ChoreoInputExpressionSet;
+class ChoreoSensorInputSet;
 class ChoreoOutputSet;
 class ChoreoPreset;
+class ChoreoDevice;
 class DataFormatter;
 
 class TembooSession {
@@ -74,8 +77,12 @@ class TembooSession {
                 const char* appKeyValue, 
                 const char* path, 
                 const ChoreoInputSet& inputSet, 
+                const ChoreoInputExpressionSet& expressionSet,
+                const ChoreoSensorInputSet& sensorSet,
                 const ChoreoOutputSet& outputSet, 
-                const ChoreoPreset& preset);
+                const ChoreoPreset& preset,
+                const ChoreoDevice& deviceType,
+                const ChoreoDevice& deviceName);
 
         // setTime sets the current time in Unix timestamp format.  Needed for execution request authentication.
         //         NOTE: This method is usually called by TembooChoreo.run() with the current time returned by 

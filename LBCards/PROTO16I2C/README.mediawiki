@@ -5,6 +5,11 @@
 * These are our [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C card].
 
+=== Example Code ===
+
+* PROTO16I2CBlink - Attach an LED to bit 0 and blink the LED
+* PROTO16I2CLEDS16 - Blinks 16 lines one at a time
+
 === Ownership ===
 
 * Some of these files (particularly libraries) were created by others.

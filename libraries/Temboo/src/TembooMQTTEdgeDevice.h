@@ -3,7 +3,7 @@
 #
 # Temboo MQTT edge device library
 #
-# Copyright (C) 2015, Temboo Inc.
+# Copyright (C) 2017, Temboo Inc.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,10 @@
 #ifndef TEMBOOMQTT_H_
 #define TEMBOOMQTT_H_
 
+#ifndef TEMBOO_LIBRARY_VERSION
+#define TEMBOO_LIBRARY_VERSION 2
+#endif
+
 #include <Arduino.h>
 
 
@@ -37,8 +41,11 @@
 
 #include "utility/TembooMQTTIPStack.h"
 #include "utility/ChoreoInputSet.h"
+#include "utility/ChoreoInputExpressionSet.h"
+#include "utility/ChoreoSensorInputSet.h"
 #include "utility/ChoreoOutputSet.h"
 #include "utility/ChoreoPreset.h"
+#include "utility/ChoreoDevice.h"
 
 #define IS_EMPTY(s) (NULL == s || '\0' == *s)
 
@@ -197,8 +204,12 @@ class TembooMQTTChoreo : public Stream {
         const char* m_path;
 
         ChoreoInputSet m_inputs;
+        ChoreoInputExpressionSet m_expressions;
+        ChoreoSensorInputSet m_sensors;
         ChoreoOutputSet m_outputs;
         ChoreoPreset m_preset;
+        ChoreoDevice m_deviceType;
+        ChoreoDevice m_deviceName;
 
         char m_httpCodeStr[4];
         volatile bool m_haveHttpCode;

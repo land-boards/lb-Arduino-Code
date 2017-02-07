@@ -3,6 +3,10 @@
 
 #include <inttypes.h>
 
+#if defined(__AVR__)
+#include <util/crc16.h>
+#endif
+
 #if ARDUINO >= 100
 #include "Arduino.h"       // for delayMicroseconds, digitalPinToBitMask, etc
 #else
@@ -87,7 +91,7 @@
 #define DIRECT_WRITE_LOW(base, mask)    (*((base)+8) = (mask))
 #define DIRECT_WRITE_HIGH(base, mask)   (*((base)+4) = (mask))
 
-#elif defined(__SAM3X8E__)
+#elif defined(__SAM3X8E__) || defined(__SAM3A8C__) || defined(__SAM3A4C__)
 // Arduino 1.5.1 may have a bug in delayMicroseconds() on Arduino Due.
 // http://arduino.cc/forum/index.php/topic,141030.msg1076268.html#msg1076268
 // If you have trouble with OneWire on Arduino Due, please check the
@@ -120,6 +124,11 @@
 #define DIRECT_WRITE_HIGH(base, mask)   ((*(base+8+2)) = (mask))          //LATXSET + 0x28
 
 #elif defined(ARDUINO_ARCH_ESP8266)
+// Special note: I depend on the ESP community to maintain these definitions and
+// submit good pull requests.  I can not answer any ESP questions or help you
+// resolve any problems related to ESP chips.  Please do not contact me and please
+// DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
+// on ESP community forums.
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1 << pin)
 #define IO_REG_TYPE uint32_t

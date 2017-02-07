@@ -3,7 +3,7 @@
 #
 # Temboo MQTT Edge Device library
 #
-# Copyright (C) 2015, Temboo Inc.
+# Copyright (C) 2017, Temboo Inc.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -714,7 +714,7 @@ int TembooMQTTChoreo::run(uint16_t timeoutSecs) {
 
     ArduinoTimer timer(timeoutSecs * 1000L);
 
-    int rc = session.executeChoreo( m_requestId, m_accountName, m_appKeyName, m_appKeyValue, m_path, m_inputs, m_outputs, m_preset);
+    int rc = session.executeChoreo( m_requestId, m_accountName, m_appKeyName, m_appKeyValue, m_path, m_inputs, m_expressions, m_sensors, m_outputs, m_preset, m_deviceType, m_deviceName);
     if (TEMBOO_ERROR_OK != rc) {
         goto ErrorExit;
     }

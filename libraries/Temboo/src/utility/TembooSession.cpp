@@ -3,7 +3,7 @@
 #
 # Temboo Arduino library
 #
-# Copyright 2015, Temboo Inc.
+# Copyright 2017, Temboo Inc.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ static const char BASE_CHOREO_URI[]        PROGMEM = "/arcturus-web/api-1.0/ar";
 static const char HEADER_AUTH[]            PROGMEM = "x-temboo-authentication: ";
 static const char HEADER_CONTENT_TYPE[]    PROGMEM = "Content-Type: text/plain";
 static const char TEMBOO_DOMAIN[]          PROGMEM = ".temboolive.com";
-static const char SDK_ID[]                 PROGMEM = "?source_id=arduinoSDK1";
+static const char SDK_ID[]                 PROGMEM = "?source_id=";
+static const char SDK_ID_DEFAULT[]         PROGMEM = "ArduinoSDK1.2.0";
 static const char HTTP[]                   PROGMEM = "http://";
 
 unsigned long TembooSession::s_timeOffset = 0;
@@ -71,10 +72,14 @@ int TembooSession::executeChoreo(
         const char* appKeyValue, 
         const char* path, 
         const ChoreoInputSet& inputSet, 
+        const ChoreoInputExpressionSet& expressionSet,
+        const ChoreoSensorInputSet& sensorSet,
         const ChoreoOutputSet& outputSet, 
-        const ChoreoPreset& preset) {
+        const ChoreoPreset& preset,
+        const ChoreoDevice& deviceType,
+        const ChoreoDevice& deviceName) {
 
-    DataFormatter fmt(&inputSet, &outputSet, &preset);
+    DataFormatter fmt(&inputSet, &expressionSet, &sensorSet,&outputSet, &preset, &deviceType, &deviceName);
     char auth[HMAC_HEX_SIZE_BYTES + 1];
     char buffer[11];
     
@@ -128,6 +133,11 @@ int TembooSession::executeChoreo(
         qsendProgmem(BASE_CHOREO_URI);
         qsend(path);
         qsendProgmem(SDK_ID);
+        if (deviceType.isEmpty()) {
+            qsendProgmem(SDK_ID_DEFAULT);
+        } else {
+            qsend(deviceType.getName());
+        }
         qsendlnProgmem(POSTAMBLE);
         
         // Send our custom authentication header

@@ -3,7 +3,7 @@
 #
 # Temboo Arduino library
 #
-# Copyright 2015, Temboo Inc.
+# Copyright 2017, Temboo Inc.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,10 @@
 
 #ifndef TEMBOO_H_
 #define TEMBOO_H_
+
+#ifndef TEMBOO_LIBRARY_VERSION
+#define TEMBOO_LIBRARY_VERSION 2
+#endif
 
 #include <Arduino.h>
 
@@ -67,8 +71,11 @@ class TembooChoreo : public Process {
 #include <Client.h>
 #include <IPAddress.h>
 #include "utility/ChoreoInputSet.h"
+#include "utility/ChoreoInputExpressionSet.h"
+#include "utility/ChoreoSensorInputSet.h"
 #include "utility/ChoreoOutputSet.h"
 #include "utility/ChoreoPreset.h"
+#include "utility/ChoreoDevice.h"
 
 #define TEMBOO_ERROR_OK                   (0)
 #define TEMBOO_ERROR_ACCOUNT_MISSING      (201)
@@ -121,12 +128,29 @@ class TembooChoreo : public Stream {
         void setProfile(const String& profileName);
         void setProfile(const char* profileName);
 
+        void setDeviceType(const String& deviceType);
+        void setDeviceType(const char* deviceType);
+
+        void setDeviceName(const String& deviceName);
+        void setDeviceName(const char* deviceName);
+
         // sets an input to be used when executing a choreo.
         // (optional or required, depending on the choreo being executed.)
         void addInput(const String& inputName, const String& inputValue);
         void addInput(const char* inputName, const char* inputValue);
         void addInput(const char* inputName, const String& inputValue);
         void addInput(const String& inputName, const char* inputValue);
+
+        void addInputExpression(const String& inputName, const String& inputValue);
+        void addInputExpression(const char* inputName, const String& inputValue);
+        void addInputExpression(const char* inputName, const char* inputValue);
+
+        // sets in input that is using a sensor value. Different parameters are needed depending
+        // on the type of sensor being used.
+        void addSensorInput(const char* sensorName, int sensorValue, const char* conversion);
+        void addSensorInput(const char* sensorName, int sensorValue);
+        void addSensorInput(const char* sensorName, int sensorValue, const char* conversion, const char* calibrationValue);
+        void addSensorInput(const char* sensorName, int sensorValue, const char* rawLow, const char* rawHigh, const char* scaleLow, const char* scaleHigh);
         
         // sets an output filter to be used to process the choreo output
         // (optional)
@@ -162,8 +186,12 @@ class TembooChoreo : public Stream {
 
     protected:
         ChoreoInputSet m_inputs;
+        ChoreoInputExpressionSet m_expressions;
+        ChoreoSensorInputSet m_sensors;
         ChoreoOutputSet m_outputs;
         ChoreoPreset m_preset;
+        ChoreoDevice m_deviceType;
+        ChoreoDevice m_deviceName;
 
         const char* m_accountName;
         const char* m_appKeyValue;

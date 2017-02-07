@@ -1,57 +1,20 @@
 //////////////////////////////////////////////////////////
-// DIGIO32-I2C Factory Test code
+// DIGIO32I2CFAT : DIGIO32-I2C Factory Test code
 // Test each channel
 // Read/write EEPROM
+// Tested in Arduino Uno/Arduino NANO cards
+// Use Serial Port for menu/test results
 //////////////////////////////////////////////////////////
 
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
-#include <I2C_eeprom.h>
 
-//////////////////////////////////////////////////////////
-// defines follow
-
-#define EE24LC024MAXBYTES 2048/8
-
-// EEPROM base address
-#define DEVICEADDRESS (0x50)
-
-#define TEST_ADDR 16
-
-// this must start on a page boundary!
-#define TEST_PAGE_ADDR 0
-#define SHORT_BUFFER_LEN 4
-
-// this tests multi-page writes
-#define LONG_BUFFER_LEN 64
-// make sure it's aligned on a page boundary
-#define LONG_TEST_PAGE_ADDR (max(16, TEST_PAGE_ADDR + SHORT_BUFFER_LEN))
-
-#define SERIAL_DEBUG Serial
-
-Adafruit_MCP23017 mcp0;
+Adafruit_MCP23017 mcp0;   // Uses the Adafruit MCP23017 library - globals
 Adafruit_MCP23017 mcp1;
 
-uint32_t failCount;
+uint32_t failCount;       // Globals used in the below code
 uint32_t passCount;
 int looping;
-
-I2C_eeprom eeprom(DEVICEADDRESS, EE24LC024MAXBYTES);
-
-struct eep_vals
-{
-  char signature[4];
-  byte fmt_version;
-  byte rsvd;
-  short numatoms;
-  long eeplen;
-  char uuid[16];
-  short pid;
-  char vslen;
-  char pslen;
-  char vstr[32];
-  char pstr[32];
-};
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -59,12 +22,12 @@ struct eep_vals
 
 void setup()
 {
-  Serial.begin(9600);
-  mcp0.begin(0);
+  Serial.begin(9600);     // 9600 baud serial connection
+  mcp0.begin(0);          // Instantate two MCP23017 chips
   mcp1.begin(1);
   //  TWBR = 12;    // go to 400 KHz I2C speed mode
 
-  for (uint8_t chip = 0; chip < 2; chip++)
+  for (uint8_t chip = 0; chip < 2; chip++)  // Set all of the ports to inputs with pullups on
   {
     for (uint8_t port = 0; port < 16; port++)
     {
@@ -72,7 +35,7 @@ void setup()
       mcpPinMode(chip, port, INPUT);
     }
   }
-  failCount = 0;
+  failCount = 0;  // Initialize the test variables
   passCount = 0;
   looping = 0;
   Serial.print("Running loopback test...");
@@ -80,19 +43,19 @@ void setup()
     Serial.println("Failed loopback test");
   else
     Serial.println("Passed loopback test");
-  if (eepromCheck() != 0)
+  if (eepromCheck() != 0)   // Check to see if the EEPROM was already programmed
   {
     Serial.println("Failed eeprom check test");
     Serial.println("Writing EEPROM");
-    eepromWrite();
-    if (eepromCheck() != 0)
+    eepromWrite();          // Program EEPROM for the first time
+    if (eepromCheck() != 0) // Check EEPROM was successfully programmed
     {
       Serial.println("Failed eeprom check test");
     }
   }
   else
     Serial.println("Passed eeprom check test");
-  Serial.println("R=Read EEPROM, W=Write EEPROM, T=Test DIGIOs, L=Loop Test");
+  Serial.println("R=Read EEPROM, W=Write EEPROM, T=Test DIGIOs, L=Loop Mode, B=Blink LEDs");  // Test menu
 }
 
 //////////////////////////////////////////////////////////
@@ -102,10 +65,9 @@ void setup()
 void loop()
 {
   int incomingByte = 0;   // for incoming serial data
-  if (Serial.available() > 0)
+  if (Serial.available() > 0) // If there is serial data present
   {
-    // read the incoming byte:
-    incomingByte = Serial.read();
+    incomingByte = Serial.read();     // read the incoming byte:
     if ((incomingByte == 'R') || (incomingByte == 'r'))
     {
       eepromRead();
@@ -120,7 +82,6 @@ void loop()
         passCount++;
       else
         failCount++;
-
       Serial.print("Loopback Test PASS = ");
       Serial.print(passCount);
       Serial.print(", FAIL = ");
@@ -162,7 +123,7 @@ void loop()
     }
   }
 
-  while (Serial.available() > 0)
+  while (Serial.available() > 0)    // Flush extra read data (CR-LF extras)
     Serial.read();
 
   while ((looping == 1) && (Serial.available() == 0))
@@ -178,6 +139,7 @@ void loop()
     Serial.println(failCount);
   }
 }
+
 /* mcpPinMode(chipNum, chNum, val)
   Set the pin to be an input or output.
   chipNum is from 0-7
@@ -218,6 +180,9 @@ void mcpPullUp(uint8_t chipNum, uint8_t chNum, uint8_t val)
 
 /*
   uint8_t loopBackTest()
+  Set up the first chip as outputs and the second chip as inputs
+  First and second chips are wired bit-to-bit
+  High and low values are bounced across the 16-bits and checked
 */
 
 uint8_t loopBackTest(void)
@@ -300,163 +265,4 @@ void mcpWrite(uint8_t chipNum, uint8_t chNum, uint8_t val)
       break;
   }
 }
-
-//////////////////////////////////////////////////////////
-// void eepromRead(void)
-//////////////////////////////////////////////////////////
-
-void eepromRead(void)
-{
-  char readBuff[97];
-  Serial.println("Reading EEPROM");
-  delay(10);
-
-  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
-  readBuff[96] = 0;
-
-  Serial.print("Family=");
-  for (int loopv = 0; loopv < 4; loopv++)
-    Serial.print(readBuff[loopv]);
-  Serial.println("");
-  Serial.print("Company=");
-  for (int loopv = 32; loopv < 48; loopv++)
-    Serial.print(readBuff[loopv]);
-  Serial.println("");
-  Serial.print("Product=");
-  int loopv = 64;
-  do
-  {
-    Serial.print(readBuff[loopv++]);
-  }
-  while ((readBuff[loopv] != 0) && (loopv < 128));
-  Serial.println("");
-}
-
-//////////////////////////////////////////////////////////
-// void eepromCheck(void)
-//////////////////////////////////////////////////////////
-
-uint8_t eepromCheck(void)
-{
-  char testStr[33];
-  char readBuff[97];
-  readBuff[96] = 0;
-  Serial.print("Checking EEPROM...");
-
-  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
-
-  //  Serial.print("Testing Family...");
-  for (int loopv = 0; loopv < 4; loopv++)
-  {
-    testStr[loopv] = readBuff[loopv];
-  }
-  testStr[4] = 0;
-  if (strcmp(testStr, "ODAS") != 0)
-  {
-    //    Serial.println("Family Mismatch");
-    return 1;
-  }
-  //  else
-  //    Serial.println("Family match");
-  //  Serial.print("Testing Company...");
-  for (int loopv = 32; loopv < 48; loopv++)
-    testStr[loopv - 32] = readBuff[loopv];
-  testStr[32] = 0;
-  if (strcmp(testStr, "land-boards.com") != 0)
-  {
-    //    Serial.println("Company Mismatch");
-    return 1;
-  }
-  //  else
-  //    Serial.println("Company match");
-  //  Serial.print("Testing Product ID...");
-  int loopv = 64;
-  do
-  {
-    testStr[loopv - 64] = readBuff[loopv];
-    loopv++;
-  }
-  while ((readBuff[loopv] != 0) && (loopv < 128));
-  testStr[loopv - 64] = 0;
-  if (strcmp(testStr, "DIGIO32-I2C") != 0)
-  {
-    //    Serial.println(testStr);
-    //    Serial.println("ProductID Mismatch");
-    return 1;
-  }
-  //  else
-  //    Serial.println("Match");
-  return 0;
-}
-
-//////////////////////////////////////////////////////////
-// eepromWrite()
-//////////////////////////////////////////////////////////
-
-void eepromWrite(void)
-{
-  char readBuff[97];
-  readBuff[96] = 0;
-  Serial.println("Writing EEPROM");
-  eeprom.begin();
-  eep_vals myEep;
-
-  Serial.println("Initializing eep buffer");
-  myEep.signature[0] = 'O';
-  myEep.signature[1] = 'D';
-  myEep.signature[2] = 'A';
-  myEep.signature[3] = 'S';
-  myEep.fmt_version = 0x01;
-  myEep.rsvd = 0;
-  myEep.numatoms = 0x2;
-  myEep.eeplen = 96;
-  myEep.uuid[0] = '0';  // Serial number
-  myEep.uuid[1] = '0';
-  myEep.uuid[2] = '0';
-  myEep.uuid[3] = '0';
-  myEep.uuid[4] = '0';
-  myEep.uuid[5] = '0';
-  myEep.uuid[6] = '0';
-  myEep.uuid[7] = '0';
-  myEep.uuid[8] = '0';
-  myEep.uuid[9] = '0';
-  myEep.uuid[10] = '0';
-  myEep.uuid[11] = '0';
-  myEep.uuid[12] = '0';
-  myEep.uuid[13] = '0';
-  myEep.uuid[14] = '0';
-  myEep.uuid[15] = '0';
-  myEep.pid = 0x02;
-  myEep.vslen = 32;
-  myEep.pslen = 32;
-  strcpy(myEep.vstr, "land-boards.com");
-  strcpy(myEep.pstr, "DIGIO32-I2C");
-
-  Serial.print("len of buffer=");
-  Serial.println(sizeof(myEep));
-
-  eeprom.writeBlock(0, (const uint8_t*) myEep.signature, 96);
-  Serial.println("reading block");
-  delay(10);
-
-  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
-
-  Serial.print("Family=");
-  for (int loopv = 0; loopv < 4; loopv++)
-    Serial.print(readBuff[loopv]);
-  Serial.println("");
-  Serial.print("Company=");
-  for (int loopv = 32; loopv < 48; loopv++)
-    Serial.print(readBuff[loopv]);
-  Serial.println("");
-  Serial.print("Product=");
-  int loopv = 64;
-  do
-  {
-    Serial.print(readBuff[loopv++]);
-  }
-  while ((readBuff[loopv] != 0) && (loopv < 128));
-  Serial.println("");
-}
-
 

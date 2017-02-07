@@ -3,7 +3,7 @@
  #
  # Temboo MQTT edge device library
  #
- # Copyright (C) 2015, Temboo Inc.
+ # Copyright (C) 2017, Temboo Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -54,10 +54,14 @@ int TembooMQTTSession::executeChoreo(
         const char* appKeyValue, 
         const char* path, 
         const ChoreoInputSet& inputSet, 
+        const ChoreoInputExpressionSet& expressionSet,
+        const ChoreoSensorInputSet& sensorSet,
         const ChoreoOutputSet& outputSet, 
-        const ChoreoPreset& preset) {
+        const ChoreoPreset& preset,
+        const ChoreoDevice& deviceType,
+        const ChoreoDevice& deviceName) {
 
-    DataFormatter fmt(&inputSet, &outputSet, &preset);
+    DataFormatter fmt(&inputSet, &expressionSet, &sensorSet,&outputSet, &preset, &deviceType, &deviceName);
     char auth[HMAC_HEX_SIZE_BYTES + 1];
     char timeStr[11];
     char requestIdStr[5];

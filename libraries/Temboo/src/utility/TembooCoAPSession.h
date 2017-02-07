@@ -3,7 +3,7 @@
  #
  # Temboo CoAP Edge Device library
  #
- # Copyright (C) 2015, Temboo Inc.
+ # Copyright (C) 2017, Temboo Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -65,10 +65,14 @@ class TembooCoAPSession {
                           const char* appKeyName,
                           const char* appKeyValue,
                           const char* path,
-                          const ChoreoInputSet& inputSet,
-                          const ChoreoOutputSet& outputSet,
-                          const ChoreoPreset& preset);
-        
+                          const ChoreoInputSet& inputSet, 
+                          const ChoreoInputExpressionSet& expressionSet,
+                          const ChoreoSensorInputSet& sensorSet,
+                          const ChoreoOutputSet& outputSet, 
+                          const ChoreoPreset& preset,
+                          const ChoreoDevice& deviceType,
+                          const ChoreoDevice& deviceName);
+            
         // setTime sets the current time in Unix timestamp format.  Needed for execution request authentication.
         //         NOTE: This method is usually called by TembooChoreo.run() with the current time returned by
         //         an error response from the Temboo system, thus automatically setting the time.  However, it

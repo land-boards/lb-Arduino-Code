@@ -3,7 +3,7 @@
  #
  # Temboo CoAP Edge Device library
  #
- # Copyright (C) 2015, Temboo Inc.
+ # Copyright (C) 2017, Temboo Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@
 #ifndef TEMBOOCOAP_H_
 #define TEMBOOCOAP_H_
 
+#ifndef TEMBOO_LIBRARY_VERSION
+#define TEMBOO_LIBRARY_VERSION 2
+#endif
 
 ///////////////////////////////////////////////////////
 //  BEGIN ARDUINO NON-YUN SUPPORT
@@ -34,8 +37,11 @@
 
 #include "utility/TembooCoAPIPStack.h"
 #include "utility/ChoreoInputSet.h"
+#include "utility/ChoreoInputExpressionSet.h"
+#include "utility/ChoreoSensorInputSet.h"
 #include "utility/ChoreoOutputSet.h"
 #include "utility/ChoreoPreset.h"
+#include "utility/ChoreoDevice.h"
 #include "utility/CoapMsg.h"
 #include "utility/CoapMessageLayer.h"
 #include "utility/CoapRRLayer.h"
@@ -278,8 +284,12 @@ class TembooCoAPChoreo : public Stream {
         const char* m_path;
         
         ChoreoInputSet m_inputs;
+        ChoreoInputExpressionSet m_expressions;
+        ChoreoSensorInputSet m_sensors;
         ChoreoOutputSet m_outputs;
         ChoreoPreset m_preset;
+        ChoreoDevice m_deviceType;
+        ChoreoDevice m_deviceName;
         
         char m_httpCodeStr[4];
         char* m_respData;
