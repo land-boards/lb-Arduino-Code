@@ -1,0 +1,18 @@
+== Arduino Based Keto Meter Software ==
+
+* Meter shows the level of ketones in the breath
+* Uses the Land Boards [http://land-boards.com/blwiki/index.php?title=MyMenu]MyMenu] card and a [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino]
+* Sensor is an MQ2 gas sensor
+** The MQ2 is suitable for detecting H2, LPG, CH4, CO, Alcohol, Smoke or Propane.
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
