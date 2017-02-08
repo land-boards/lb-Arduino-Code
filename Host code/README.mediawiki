@@ -1,0 +1,28 @@
+== land-boards Host Applications Code ==
+
+* This is not Arduino code, per se, but it is the code that runs on a Host Computer for applications which are connected to Arduino based devices
+
+== Host Applications ==
+
+* Adafruit Camera - python code for interfacing to Adafruit VC0706 cameras and grabbing a photo
+* CdS Host Code python - Capture data from a serial port
+
+=== GPS Related Code ===
+
+* [http://land-boards.com/blwiki/index.php?title=GPS-as-DataLogger_as_a_DataLogger GPS as DataLogger]
+* Geocaching - Download geocache waypoints to [http://land-boards.com/blwiki/index.php?title=USB-GPS-Hammond USB-Hammond-GPS]
+* USB-GPS - Adafruit python code for interfacing to USB-GPS9 
+* XMLtoKML - Converts a waypoint XML file to a KML file
+* parseLOCUS - Parse GPS LOCUS data
+
+== Ownership ==
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.

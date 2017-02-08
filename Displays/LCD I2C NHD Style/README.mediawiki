@@ -1,6 +1,4 @@
-== LCD Display Examples using DFRobot style Shield ==
-
-* The DFRobot style shield can be distinguished from other LCD shields by the misspelling of RIGTH.
+== LCD Display Examples using NHD Display ==
 
 === Ownership ===
 
@@ -13,4 +11,3 @@
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not me.
-
