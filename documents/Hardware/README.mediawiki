@@ -1,9 +1,7 @@
-== land-boards Arduino Displays Code ==
+== land-boards Arduino Hardware ==
 
-<img src="http://land-boards.com/blwiki/images/1/15/Lcd-key-1620r640.JPG" alt="I2C LCD Display Card"></img>
-
-* This is a collection of all of the Arduino Displays code
-* See the individual folders for each type/configuration
+* These are our [http://arduino.cc Arduino] related Hardware files.
+* [http://land-boards.com/blwiki/index.php?title=Board_Designs_by_Function#Arduino_Compatible_Boards Arduino compatible cards] and [http://land-boards.com/blwiki/index.php?title=Open_Data_Acquisition_System Open Data Acquisition System cards]
 
 == Ownership ==
 

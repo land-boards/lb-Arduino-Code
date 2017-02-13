@@ -1,6 +1,6 @@
 == LCD Display Examples using DFRobot style Shield ==
 
-[[File:http://myarduino.pbworks.com/w/file/fetch/51076045/lcd-key-1620r640-2wpins.JPG]]
+<img src="http://land-boards.com/blwiki/images/1/15/Lcd-key-1620r640.JPG" alt="I2C LCD Display Card"></img>
 
 * The DFRobot style shield can be distinguished from other LCD shields by the misspelling of RIGTH.
 

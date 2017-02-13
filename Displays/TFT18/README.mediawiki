@@ -1,6 +1,6 @@
 == land-boards Arduino Displays Code ==
 
-<img src="http://land-boards.com/blwiki/images/1/15/Lcd-key-1620r640.JPG" alt="I2C LCD Display Card"></img>
+<img src="http://land-boards.com/blwiki/images/d/dc/TFT_LCD_1P8IN.JPG" alt="I2C LCD Display Card"></img>
 
 * This is a collection of all of the Arduino Displays code
 * See the individual folders for each type/configuration
