@@ -1,6 +1,6 @@
 == land-boards Arduino Code ==
 
-<video src="https://youtu.be/wjrXU_rH05E" width="320" height="200" controls preload></video>
+<iframe width="854" height="480" src="https://youtu.be/wjrXU_rH05E" frameborder="0" allowfullscreen></iframe>
 
 <img src="http://land-boards.com/blwiki/images/a/af/GVSDuino-X5-5936-640px.jpg" alt="GVSDuino card"></img>
 
