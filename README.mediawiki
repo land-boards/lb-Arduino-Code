@@ -1,5 +1,7 @@
 == land-boards Arduino Code ==
 
+<video src="https://youtu.be/wjrXU_rH05E?list=PLn__0BqzWEWOQ4DI8nQQKZKw0TKNSNLCS" width="320" height="200" controls preload></video>
+
 <img src="http://land-boards.com/blwiki/images/a/af/GVSDuino-X5-5936-640px.jpg" alt="GVSDuino card"></img>
 
 * These are our [http://arduino.cc Arduino] Source Code/Library files.
