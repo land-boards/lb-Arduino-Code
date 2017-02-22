@@ -6,8 +6,8 @@
 // 
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef IReflow_h
-#define IReflow_h
+#ifndef LANDBOARDS_IReflow_h
+#define LANDBOARDS_IReflow_h
 
 #include "Arduino.h"
 
