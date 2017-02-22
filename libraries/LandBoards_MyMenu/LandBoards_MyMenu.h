@@ -13,8 +13,8 @@
 //	7 = LEFT
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef MyMenu_h
-#define MyMenu_h
+#ifndef LANDBOARDS_MyMenu_h
+#define LANDBOARDS_MyMenu_h
 
 #include <inttypes.h>
 #include <Adafruit_MCP23008.h>

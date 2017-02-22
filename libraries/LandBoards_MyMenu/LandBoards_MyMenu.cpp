@@ -10,7 +10,7 @@
 //	http://land-boards.com/blwiki/index.php?title=MyMenu
 ////////////////////////////////////////////////////////////////////////////
 
-#include "MyMenu.h"
+#include "LandBoards_MyMenu.h"
 
 #include <inttypes.h>
 
