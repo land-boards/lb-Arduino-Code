@@ -1,5 +1,23 @@
-Ultrasonic	KEYWORD1
-Timing	KEYWORD2
-Ranging	KEYWORD2
+#######################################
+# Syntax Coloring Map Ultrasonic
+# by Erick Simões
+# 	github: @ErickSimoes
+#	twitter: @AloErickSimoes
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Ultrasonic		KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+distanceRead	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
 CM	LITERAL1	Constants
 INC	LITERAL1	Constants
