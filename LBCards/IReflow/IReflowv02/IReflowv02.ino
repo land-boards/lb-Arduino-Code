@@ -11,7 +11,7 @@
 #include "LandBoards_IReflow.h"
 #include "LandBoards_MyMenu_g2.h"
 
-#include <U8g2lib.h>
+//#include <U8g2lib.h>
 #include <U8x8lib.h>
 
 #include "Adafruit_MAX31855.h"
@@ -51,7 +51,6 @@ uint8_t menuState;              // Menu State variable
 
 IReflow myIReflow;
 
-//u8x82lib_SH1106_128X64 u8x8(u8x8_I2C_OPT_NO_ACK);
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(SCL, SDA, U8X8_PIN_NONE);   // OLEDs without Reset of the Display
 
 MyMenu menuCard;
