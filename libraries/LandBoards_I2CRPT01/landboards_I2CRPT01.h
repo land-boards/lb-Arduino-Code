@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////
-//  landboards_pca9544a.h - I2C Bridge PCA9544A Library 
+//  LandBoards_I2CRPT01.h - I2C Bridge PCA9544A Library 
 //  Created by Douglas Gilliland. 2015-09-05
 //	http://land-boards.com/blwiki/index.php?title=I2C-RPT
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef _landboards_pca9544a_h
-#define _landboards_pca9544a_h
+#ifndef _LandBoards_I2CRPT01_h
+#define _LandBoards_I2CRPT01_h
 
 #include <inttypes.h>
 #include "Arduino.h"
@@ -22,12 +22,12 @@
 #define PCA9544A_ADDRESS 0x70
 #define PCA9544A_CTRLREG 0x00
 
-class landboards_pca9544a
+class LandBoards_I2CRPT01
 {
   public:
 	void begin(uint8_t addr);
 	void begin();
-    landboards_pca9544a(void);
+    LandBoards_I2CRPT01(void);
     void setI2CChannel(uint8_t);
 	uint8_t getI2CChannel(void);
     uint8_t getIntStatus(void);

@@ -1,16 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////
-//  landboards_pca9544a.cpp - I2C Bridge PCA9544A Library 
+//  LandBoards_I2CRPT01.cpp - I2C Bridge PCA9544A Library 
 //  Created by Douglas Gilliland. 2015-09-05
-//  landboards_pca9544a
+//  LandBoards_I2CRPT01
 //	http://land-boards.com/blwiki/index.php?title=I2C-RPT
 ////////////////////////////////////////////////////////////////////////////
 
-#include "landboards_pca9544a.h"
+#include "LandBoards_I2CRPT01.h"
 #include <Wire.h>
 #include <avr/pgmspace.h>
 #include <inttypes.h>
 
-landboards_pca9544a::landboards_pca9544a()
+LandBoards_I2CRPT01::LandBoards_I2CRPT01()
 {
 	
 }
@@ -19,7 +19,7 @@ landboards_pca9544a::landboards_pca9544a()
 // begin(uint8_t addr) - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::begin(uint8_t addr) 
+void LandBoards_I2CRPT01::begin(uint8_t addr) 
 {
 	i2caddr = addr & 0x7;
 	Wire.begin();
@@ -33,7 +33,7 @@ void landboards_pca9544a::begin(uint8_t addr)
 // begin(void) - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::begin(void)
+void LandBoards_I2CRPT01::begin(void)
 {	
 	begin(0);
 }
@@ -42,7 +42,7 @@ void landboards_pca9544a::begin(void)
 // setI2CChannel() - 
 ////////////////////////////////////////////////////////////////////////////
 
-void landboards_pca9544a::setI2CChannel(uint8_t chNum)
+void LandBoards_I2CRPT01::setI2CChannel(uint8_t chNum)
 {
 	if (chNum > 3)
 		return;
@@ -57,7 +57,7 @@ void landboards_pca9544a::setI2CChannel(uint8_t chNum)
 // getCurrentChannel(void) 
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t landboards_pca9544a::getI2CChannel(void)
+uint8_t LandBoards_I2CRPT01::getI2CChannel(void)
 {
 	Wire.requestFrom(PCA9544A_ADDRESS | i2caddr, 1);
 	return (Wire.read() & 0x3);
@@ -67,7 +67,7 @@ uint8_t landboards_pca9544a::getI2CChannel(void)
 // getIntStatus
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t landboards_pca9544a::getIntStatus(void)
+uint8_t LandBoards_I2CRPT01::getIntStatus(void)
 {
 	Wire.requestFrom(PCA9544A_ADDRESS | i2caddr, 1);
 	return ((Wire.read() >> 4) & 0xf);

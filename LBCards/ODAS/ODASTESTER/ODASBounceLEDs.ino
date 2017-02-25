@@ -90,9 +90,8 @@ void bounceLedsDigio32(void)
     {
       Dio32.pinMode(port, OUTPUT);
       Dio32.digitalWrite(port, HIGH);
-      delay(2);
+      delay(100);
       Dio32.digitalWrite(port, LOW);
-      delay(2);
     }
     if (Serial.available() > 0)
     {
