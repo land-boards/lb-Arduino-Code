@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  MyMenu.h - Library for MyMenu Shield
+//  LandBoards_MyMenu.h - Library for LandBoards_MyMenu Shield
 //  Created by Douglas Gilliland. 2015-04-21
 ////////////////////////////////////////////////////////////////////////////
 // MCP23008 expander pin assignments are -
@@ -13,8 +13,8 @@
 //	7 = LEFT
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef LANDBOARDS_MyMenu_g2_h
-#define LANDBOARDS_MyMenu_g2_h
+#ifndef LandBoards_MyMenu_g2_h
+#define LandBoards_MyMenu_g2_h
 
 #include <inttypes.h>
 #include <Adafruit_MCP23008.h>
@@ -40,10 +40,10 @@ enum KEY_PRESSES
 //	MCP23008 0x20
 ////////////////////////////////////////////////////////////////////////////
 
-class MyMenu
+class LandBoards_MyMenu
 {
   public:
-    MyMenu(void);
+    LandBoards_MyMenu(void);
     uint8_t pollKeypad(void);
     void waitForKeyRelease(void);
     uint8_t getKeyPressed(void);
