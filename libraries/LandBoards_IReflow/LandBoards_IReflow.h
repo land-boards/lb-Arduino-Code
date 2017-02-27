@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////
-//  IReflow.h - Library for IReflow Shield
+//  LandBoards_IReflow.h - Library for LandBoards_IReflow Shield
 //  Created by Douglas Gilliland. 2012-07-27
 ////////////////////////////////////////////////////////////////////////////
-// Pin assignments as referenced to the IReflow Board
+// Pin assignments as referenced to the LandBoards_IReflow Board
 // 
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef LANDBOARDS_IReflow_h
-#define LANDBOARDS_IReflow_h
+#ifndef LandBoards_IReflow_h
+#define LandBoards_IReflow_h
 
 #include "Arduino.h"
 
@@ -47,10 +47,10 @@
 #define LED_ON LOW
 #define LED_OFF HIGH
 
-class IReflow
+class LandBoards_IReflow
 {
   public:
-    IReflow(void);
+    LandBoards_IReflow(void);
     // uint8_t pollKeypad(void);
     // void waitForKeyRelease(void);
     // uint8_t getKeyPressed(void);

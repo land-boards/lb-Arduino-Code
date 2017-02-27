@@ -1,17 +1,17 @@
 ////////////////////////////////////////////////////////////////////////////
-//  IReflow.cpp - Library for IReflow
+//  LandBoards_IReflow.cpp - Library for LandBoards_IReflow
 //  Created by Douglas Gilliland. 2013-08-29
-//  IReflow is an Leonardo compatible
+//  LandBoards_IReflow is an Leonardo compatible
 ////////////////////////////////////////////////////////////////////////////
 
 #include "Arduino.h"
 #include "LandBoards_IReflow.h"
  
 ////////////////////////////////////////////////////////////////////////////
-// IReflow constructor
+// LandBoards_IReflow constructor
 ////////////////////////////////////////////////////////////////////////////
 
-IReflow::IReflow(void)
+LandBoards_IReflow::LandBoards_IReflow(void)
 {
   initPins();
   return;
@@ -21,7 +21,7 @@ IReflow::IReflow(void)
 // initPins() - Initialize the pins on the part
 ////////////////////////////////////////////////////////////////////////////
 
-void IReflow::initPins(void)
+void LandBoards_IReflow::initPins(void)
 {
   digitalWrite(SSR, LOW);    // turn the LED off by making the voltage LOW
   pinMode(SSR, OUTPUT);
@@ -34,12 +34,12 @@ void IReflow::initPins(void)
   return;
 }
 
-void IReflow::redLED(int ledVal)
+void LandBoards_IReflow::redLED(int ledVal)
 {
 	digitalWrite(RED_LITE, ledVal);    // turn the LED off by making the voltage LOW
 }
 
-void IReflow::greenLED(int ledVal)
+void LandBoards_IReflow::greenLED(int ledVal)
 {
 	digitalWrite(GRN_LITE, ledVal);    // turn the LED off by making the voltage LOW
 }
@@ -48,7 +48,7 @@ void IReflow::greenLED(int ledVal)
 // pollKeypad() - Returns the value of the instantenously pressed keys
 ////////////////////////////////////////////////////////////////////////////
 
-/* uint8_t IReflow::pollKeypad(void)
+/* uint8_t LandBoards_IReflow::pollKeypad(void)
 {
   unsigned int sensorValue = analogRead(KEYPAD);
   if (sensorValue > 871)    // quick if none is pressed
@@ -69,7 +69,7 @@ void IReflow::greenLED(int ledVal)
 // waitForKeyRelease() - Stick in the routine as long as the key is pressed
 ////////////////////////////////////////////////////////////////////////////
 
-/* void IReflow::waitForKeyRelease(void)
+/* void LandBoards_IReflow::waitForKeyRelease(void)
 {
   while (analogRead(KEYPAD) <= 871)
     delay(5);
@@ -82,7 +82,7 @@ void IReflow::greenLED(int ledVal)
 // Returns the value of the key that was pressed.
 ////////////////////////////////////////////////////////////////////////////
 
-/* uint8_t IReflow::getKeyPressed(void)
+/* uint8_t LandBoards_IReflow::getKeyPressed(void)
 {
   signed char keyPadVal2;
   keyPadVal2 = pollKeypad();
@@ -96,7 +96,7 @@ void IReflow::greenLED(int ledVal)
 // waitKeyPressed()
 ////////////////////////////////////////////////////////////////////////////
 
-/* uint8_t IReflow::waitKeyPressed(void)
+/* uint8_t LandBoards_IReflow::waitKeyPressed(void)
 {
   signed char keyPadVal3;
   do
@@ -115,7 +115,7 @@ void IReflow::greenLED(int ledVal)
 //  there is a reason to break into the delay for serial input.
 ////////////////////////////////////////////////////////////////////////////
 
-/* uint8_t IReflow::delayAvailable(int delayTime)
+/* uint8_t LandBoards_IReflow::delayAvailable(int delayTime)
 {  
   int delayTimeDiv4;
   delayTimeDiv4 = delayTime >> 2;
