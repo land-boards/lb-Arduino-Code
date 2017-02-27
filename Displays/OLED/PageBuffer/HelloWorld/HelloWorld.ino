@@ -55,33 +55,11 @@ Global variables use 558 bytes (27%) of dynamic memory, leaving 1490 bytes for l
   This is a page buffer example.    
 */
 
-U8G2_SSD1306_128X32_UNIVISION_1_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);   // Adafruit Feather ESP8266/32u4 Boards + FeatherWing OLED
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0,SCL, SDA, U8X8_PIN_NONE);   // All Boards without Reset of the Display
 
 // End of constructor list
 
 void setup(void) {
-
-  /* U8g2 Project: SSD1306 Test Board */
-  //pinMode(10, OUTPUT);
-  //pinMode(9, OUTPUT);
-  //digitalWrite(10, 0);
-  //digitalWrite(9, 0);		
-
-  /* U8g2 Project: T6963 Test Board */
-  //pinMode(18, OUTPUT);
-  //digitalWrite(18, 1);	
-
-  /* U8g2 Project: KS0108 Test Board */
-  //pinMode(16, OUTPUT);
-  //digitalWrite(16, 0);	
-
-  /* U8g2 Project: LC7981 Test Board, connect RW to GND */
-  //pinMode(17, OUTPUT);
-  //digitalWrite(17, 0);	
-
-  /* U8g2 Project: Pax Instruments Shield: Enable Backlight */
-  //pinMode(6, OUTPUT);
-  //digitalWrite(6, 0);	
 
   u8g2.begin();  
 }

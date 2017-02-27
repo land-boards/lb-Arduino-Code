@@ -66,4 +66,3 @@ void loop(void) {
   u8g2.sendBuffer();					// transfer internal memory to the display
   delay(1000);  
 }
-

@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_MyMenu.cpp - Library for LandBoards_MyMenu
+//  LandBoards_MyMenu_g2.cpp - Library for LandBoards_MyMenu_g2
 //  Created by Douglas Gilliland. 2015-04-23
-//  LandBoards_MyMenu is a card which has all of the menu parts
+//  LandBoards_MyMenu_g2 is a card which has all of the menu parts
 //		I2C Two-wire interface
 //		OLED pass-thru connector
 //      MCP23008 I2C Port Expander GPIO
 //			Keypad (Up, Down, Left, Right, Select)
 //			(3) LEDs
-//	http://land-boards.com/blwiki/index.php?title=LandBoards_MyMenu
+//	http://land-boards.com/blwiki/index.php?title=LandBoards_MyMenu_g2
 ////////////////////////////////////////////////////////////////////////////
 
 #include "LandBoards_MyMenu_g2.h"
@@ -15,36 +15,36 @@
 #include <inttypes.h>
 
 ////////////////////////////////////////////////////////////////////////////
-// LandBoards_MyMenu constructor - As I learned by looking at the Adafruit LiquidCrystal 
-// 	I2C library, can't can't call begin from the constructor. 
+// LandBoards_MyMenu_g2 constructor - As I learned by looking at the Adafruit LiquidCrystal 
+// 	I2C library, you can't call begin() from the constructor. 
 //	This probably has something to do with the constructor being a global.
 //	The begin gets called from the setup code.
 ////////////////////////////////////////////////////////////////////////////
 
-LandBoards_MyMenu::LandBoards_MyMenu(void)
+LandBoards_MyMenu_g2::LandBoards_MyMenu_g2(void)
 {
 	return;
 }
 
-void LandBoards_MyMenu::begin(int portNum)
+void LandBoards_MyMenu_g2::begin(int portNum)
 {
 	mcp.begin(portNum);   	// use default address 0	
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
 	initPins();
 }
 
-void LandBoards_MyMenu::begin(void)
+/* void LandBoards_MyMenu_g2::begin(void)
 {
 	mcp.begin();   	// use default address 0	
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
 	initPins();
 }
-
+ */
 ////////////////////////////////////////////////////////////////////////////
-// initPins() - Initialize the pins on LandBoards_MyMenu card
+// initPins() - Initialize the pins on LandBoards_MyMenu_g2 card
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_MyMenu::initPins(void)
+void LandBoards_MyMenu_g2::initPins(void)
 {
 	mcp.pinMode(0, OUTPUT);
 	mcp.pinMode(1, OUTPUT);
@@ -60,7 +60,7 @@ void LandBoards_MyMenu::initPins(void)
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_MyMenu::setLED(int ledNum, int val)
+void LandBoards_MyMenu_g2::setLED(int ledNum, int val)
 {
 	mcp.digitalWrite(ledNum, val);
 }
@@ -69,7 +69,7 @@ void LandBoards_MyMenu::setLED(int ledNum, int val)
 // pollKeypad() - Returns the value of the instantaneously pressed keys
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_MyMenu::pollKeypad(void)
+uint8_t LandBoards_MyMenu_g2::pollKeypad(void)
 {
 	uint8_t readVal;
 	readVal = mcp.readGPIO();
@@ -93,7 +93,7 @@ uint8_t LandBoards_MyMenu::pollKeypad(void)
 // waitForKeyRelease() - Stick in the routine as long as the key is pressed
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_MyMenu::waitForKeyRelease(void)
+void LandBoards_MyMenu_g2::waitForKeyRelease(void)
 {
 	while (pollKeypad() != NONE)
 	delay(5);
@@ -107,7 +107,7 @@ void LandBoards_MyMenu::waitForKeyRelease(void)
 // Returns the value of the key that was pressed.
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_MyMenu::getKeyPressed(void)
+uint8_t LandBoards_MyMenu_g2::getKeyPressed(void)
 {
 	signed char keyPadVal2;
 	keyPadVal2 = pollKeypad();
@@ -121,7 +121,7 @@ uint8_t LandBoards_MyMenu::getKeyPressed(void)
 // waitKeyPressed()
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_MyMenu::waitKeyPressed(void)
+uint8_t LandBoards_MyMenu_g2::waitKeyPressed(void)
 {
 	uint8_t keyPadVal3;
 	do
@@ -140,7 +140,7 @@ uint8_t LandBoards_MyMenu::waitKeyPressed(void)
 //  there is a reason to break into the delay for serial input.
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_MyMenu::delayAvailable(int delayTime)
+uint8_t LandBoards_MyMenu_g2::delayAvailable(int delayTime)
 {  
 	int delayTimeDiv4;
 	delayTimeDiv4 = delayTime >> 2;

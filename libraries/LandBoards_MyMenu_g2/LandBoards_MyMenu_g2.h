@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_MyMenu.h - Library for LandBoards_MyMenu Shield
+//  LandBoards_MyMenu_g2.h - Library for LandBoards_MyMenu_g2 Shield
 //  Created by Douglas Gilliland. 2015-04-21
 ////////////////////////////////////////////////////////////////////////////
 // MCP23008 expander pin assignments are -
@@ -40,10 +40,10 @@ enum KEY_PRESSES
 //	MCP23008 0x20
 ////////////////////////////////////////////////////////////////////////////
 
-class LandBoards_MyMenu
+class LandBoards_MyMenu_g2
 {
   public:
-    LandBoards_MyMenu(void);
+    LandBoards_MyMenu_g2(void);
     uint8_t pollKeypad(void);
     void waitForKeyRelease(void);
     uint8_t getKeyPressed(void);
@@ -51,7 +51,7 @@ class LandBoards_MyMenu
     uint8_t delayAvailable(int delayTime);
 	void setLED(int ledNum, int val);
 	void begin(int);
-	void begin();
+//	void begin();
   private:
     void initPins(void);
 	Adafruit_MCP23008 mcp;

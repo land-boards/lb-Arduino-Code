@@ -12,9 +12,10 @@
   Original Author: Land Boards, LLC
 */
 
-#include "Wire.h"      // Arduino I2C library
-#include "LandBoards_MyMenu.h"    // MyMenu card library handles switches and LEDs
-#include "U8glib.h"    // OLED library
+#include <Arduino.h>
+#include "Wire.h"                 // Arduino I2C library
+#include "LandBoards_MyMenu_g2.h" // MyMenu card library handles switches and LEDs
+#include "U8x8lib.h"              // Direct 8x8 buffer-less mode
 
 //////////////////////////////////////////////////////////////////////////////
 // enums for the menu system follow
@@ -37,7 +38,7 @@ enum MENUITEMS              // MenuCode Customizable section
 };
 
 #define LCD_COLUMNS 14      // Specific value to the OLED card selected and the font
-                            // Also defines the maximum line length for each displayed line
+// Also defines the maximum line length for each displayed line
 
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
@@ -45,16 +46,21 @@ enum MENUITEMS              // MenuCode Customizable section
 
 uint8_t menuState;           // Menu State variable which holds the currently selected menu lin
 
-U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NO_ACK);    // OLED Library
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // OLEDs without Reset of the Display
 
-LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
+LandBoards_MyMenu_g2 menuCard;                // MyMenu card by Land Boards, LLC
 
-void setup(void) 
+void setup(void)
 {
   menuState = FIRST_LINE_MENU;  // Set up the init menu state - Menu should show the first line selected
-  displayInit();                // Hardware specific function to set up the display
   menuCard.begin(1);            // pass the address of the mcp23008 on the menu card
+  u8x8.setI2CAddress(0x78);
+  u8x8.begin();
   TWBR = 12;                    // 400 KHz I2C
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.drawString(0,0,"MyMenu999!");
+  delay(2000);
+  u8x8.drawString(0,1,"MyMenu456!");
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -63,15 +69,9 @@ void setup(void)
 // The other function for button presses and navigates the screens.
 //////////////////////////////////////////////////////////////////////////////
 
-void loop(void) 
+void loop(void)
 {
-  u8g.firstPage();      // This is the way that the u8g library works. Seems strange
-  do 
-  {
-    menuRefresh();      // Refresh the screen
-  } 
-  while( u8g.nextPage() );
-
-  menuNav();            // Check the buttons and navigate the screens
+//  menuRefresh();      // Refresh the screen
+//  menuNav();            // Check the buttons and navigate the screens
 }
 

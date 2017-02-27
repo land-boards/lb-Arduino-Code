@@ -39,33 +39,24 @@ Global variables use 375 bytes (18%) of dynamic memory, leaving 1673 bytes for l
 
 #include <Arduino.h>
 #include <U8x8lib.h>
+#include "Wire.h"                 // Arduino I2C library
 
-#ifdef U8X8_HAVE_HW_SPI
-#include <SPI.h>
-#endif
-
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);   // OLEDs without Reset of the Display
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(SCL, SDA, U8X8_PIN_NONE);   // OLEDs without Reset of the Display
 
 // End of constructor list
 
 void setup(void)
 {
-  
-  u8x8.setI2CAddress(0x078);
+  u8x8.setI2CAddress(0x78);
   u8x8.begin();
-  u8x8.setPowerSave(0);
-  
-  
+  TWBR = 12;                    // 400 KHz I2C
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.drawString(0,1,"888!");
 }
 
 void loop(void)
 {
-  u8x8.setFont(u8x8_font_chroma48medium8_r);
-//  u8x8.setFont(u8x8_font_amstrad_cpc_extended_u);
-//  u8x8.drawString(0,1,"Hello Shamona!");
-  u8x8.drawString(0,1,"Hello World!");
-//  u8x8.drawString(0,2,"Yo, momma!");
-  u8x8.refreshDisplay();		// for SSD1606/7  
   delay(2000);
-  
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.drawString(0,1,"999!");
 }
