@@ -10,7 +10,7 @@
 
 void setDisplayCursor(uint8_t row, uint8_t col)
 {
-  u8g.setPrintPos( col*9, row*13+13);
+//  u8x8.setPrintPos( col*9, row*13+13);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -23,12 +23,7 @@ void setDisplayCursor(uint8_t row, uint8_t col)
 
 void clearDisplay(void)
 {
-//  u8g.firstPage();  
-//  do 
-//  {
-//  } 
-//  while( u8g.nextPage() );
-    }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 // setUnselectedTextColor() - Sets the color of the text for non-selected text
@@ -52,8 +47,8 @@ void setSelectedTextColor(void)
 
 void displayInit(void)
 {
-  u8g.setColorIndex(1);  // default color
-  u8g.setFont(u8g_font_9x15B);
+//  u8x8.setColorIndex(1);  // default color
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
 
 }
 

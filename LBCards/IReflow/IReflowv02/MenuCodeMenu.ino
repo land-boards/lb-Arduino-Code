@@ -13,6 +13,8 @@
 // The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
 
+void clearDisplay(void);
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - The format of the menu system
 // Memory size could be improved if the menuString was variable size and 
@@ -63,9 +65,9 @@ void menuRefresh(void)
   clearDisplay();
   setDisplayCursor((menus[menuState].rowNumber)-1,0); // Print the currently selected line
   setSelectedTextColor();
-  u8g.print("*");
-  u8g.print(menus[menuState].menuString);     
-  u8g.print("*");
+  u8x8.print("*");
+  u8x8.print(menus[menuState].menuString);     
+  u8x8.print("*");
   setUnselectedTextColor();  // Return to "normal" text color
   lastLine = menuState;
   // display the lines above the selected line first
@@ -73,7 +75,7 @@ void menuRefresh(void)
   {
     lastLine = menus[lastLine].UP_MENU_PTR;
     setDisplayCursor(menus[lastLine].rowNumber-1,0);
-    u8g.print(menus[lastLine].menuString);
+    u8x8.print(menus[lastLine].menuString);
   }
   nextLine = menuState;
   // next display the lines below the selected line
@@ -81,7 +83,7 @@ void menuRefresh(void)
   {
     nextLine = menus[nextLine].DOWN_MENU_PTR;
     setDisplayCursor(menus[nextLine].rowNumber-1,0);
-    u8g.print(menus[nextLine].menuString);
+    u8x8.print(menus[nextLine].menuString);
   }
 }
 

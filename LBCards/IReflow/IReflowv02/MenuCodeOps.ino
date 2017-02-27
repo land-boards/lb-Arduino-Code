@@ -12,46 +12,41 @@ void runProfileFcn(void)
   time_t t = now();
   do
   {
-    u8g.firstPage();
-    do
+    myTemp = thermocouple.readCelsius();
+    setDisplayCursor(0, 0);
+    u8x8.print(F("Meas="));
+    u8x8.print(myTemp);
+    if (profileSelected == LEAD_FREE)
     {
-      myTemp = thermocouple.readCelsius();
-      setDisplayCursor(0, 0);
-      u8g.print(F("Meas="));
-      u8g.print(myTemp);
-      if (profileSelected == LEAD_FREE)
-      {
-        goalTemp = getDesiredTempLeadFree(60 * minute(t) + second(t));
-      }
-      else if (profileSelected == LEADED)
-      {
-        goalTemp = getDesiredTempLeaded(60 * minute(t) + second(t));
-      }
-      else
-      {
-        goalTemp = -10.0;
-      }
-      setDisplayCursor(1, 0);
-      u8g.print(F("Goal="));
-      u8g.print(goalTemp);
-      setDisplayCursor(2, 0);
-      if (myTemp > goalTemp)
-      {
-        u8g.print(F("SSR=Off"));
-        digitalWrite(SSR, LOW);
-        menuCard.setLED(2, LOW);
-      }
-      else
-      {
-        u8g.print(F("SSR=On"));
-        digitalWrite(SSR, HIGH);
-        menuCard.setLED(2, HIGH);
-      }
-      setDisplayCursor(3, 0);
-      u8g.print(F("Time="));
-      u8g.print((60 * minute(t)) + second(t));
+      goalTemp = getDesiredTempLeadFree(60 * minute(t) + second(t));
     }
-    while ( u8g.nextPage() );
+    else if (profileSelected == LEADED)
+    {
+      goalTemp = getDesiredTempLeaded(60 * minute(t) + second(t));
+    }
+    else
+    {
+      goalTemp = -10.0;
+    }
+    setDisplayCursor(1, 0);
+    u8x8.print(F("Goal="));
+    u8x8.print(goalTemp);
+    setDisplayCursor(2, 0);
+    if (myTemp > goalTemp)
+    {
+      u8x8.print(F("SSR=Off"));
+      digitalWrite(SSR, LOW);
+      menuCard.setLED(2, LOW);
+    }
+    else
+    {
+      u8x8.print(F("SSR=On"));
+      digitalWrite(SSR, HIGH);
+      menuCard.setLED(2, HIGH);
+    }
+    setDisplayCursor(3, 0);
+    u8x8.print(F("Time="));
+    u8x8.print((60 * minute(t)) + second(t));
     delay(100);
     t = now();
     keyState = menuCard.pollKeypad();
@@ -71,17 +66,12 @@ void monTempFcn(void)
   time_t t = now();
   do
   {
-    u8g.firstPage();
-    do
-    {
       myTemp = thermocouple.readCelsius();
       setDisplayCursor(0, 0);
-      u8g.print(F("Temp="));
-      u8g.print(myTemp);
+      u8x8.print(F("Temp="));
+      u8x8.print(myTemp);
       setDisplayCursor(1, 0);
-      u8g.print((60 * minute(t)) + second(t));
-    }
-    while ( u8g.nextPage() );
+      u8x8.print((60 * minute(t)) + second(t));
     delay(100);
     t = now();
     keyState = menuCard.pollKeypad();
@@ -94,17 +84,12 @@ void LeadFreeFcn(void)
 {
   profileSelected = LEAD_FREE;
   digitalWrite(GRN_LITE, LOW);
-  u8g.firstPage();
-  do
-  {
     setDisplayCursor(1, 0);
-    u8g.print(F("Lead free"));
+    u8x8.print(F("Lead free"));
     setDisplayCursor(2, 0);
-    u8g.print(F("profile"));
+    u8x8.print(F("profile"));
     setDisplayCursor(3, 0);
-    u8g.print(F("selected"));
-  }
-  while ( u8g.nextPage() );
+    u8x8.print(F("selected"));
   delay(2000);
   delay(500);
   digitalWrite(GRN_LITE, HIGH);
@@ -114,15 +99,10 @@ void LeadFcn(void)
 {
   profileSelected = LEADED;
   digitalWrite(GRN_LITE, LOW);
-  u8g.firstPage();
-  do
-  {
     setDisplayCursor(1, 0);
-    u8g.print(F("Lead profile"));
+    u8x8.print(F("Lead profile"));
     setDisplayCursor(2, 0);
-    u8g.print(F("selected"));
-  }
-  while ( u8g.nextPage() );
+    u8x8.print(F("selected"));
   delay(2000);
   delay(500);
   digitalWrite(GRN_LITE, HIGH);
@@ -131,17 +111,12 @@ void LeadFcn(void)
 void testButtons(void)
 {
   uint8_t keyState;
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(0, 0);
-    u8g.print(F("Button tests"));
-    setDisplayCursor(1, 0);
-    u8g.print(F("Press button"));
-    setDisplayCursor(2, 0);
-    u8g.print(F("Select=exit"));
-  }
-  while ( u8g.nextPage() );
+  setDisplayCursor(0, 0);
+  u8x8.print(F("Button tests"));
+  setDisplayCursor(1, 0);
+  u8x8.print(F("Press button"));
+  setDisplayCursor(2, 0);
+  u8x8.print(F("Select=exit"));
   do
   {
     delay(100);
@@ -167,26 +142,16 @@ void testButtons(void)
 
 void printString(char * myString)
 {
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(0, 0);
-    u8g.print(myString);
-  }
-  while ( u8g.nextPage() );
+  setDisplayCursor(0, 0);
+  u8x8.print(myString);
 }
 
 void testLEDsFcn(void)
 {
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(0, 0);
-    u8g.print(F("Running"));
-    setDisplayCursor(1, 0);
-    u8g.print(F("LED Tests"));
-  }
-  while ( u8g.nextPage() );
+  setDisplayCursor(0, 0);
+  u8x8.print(F("Running"));
+  setDisplayCursor(1, 0);
+  u8x8.print(F("LED Tests"));
   menuCard.setLED(0, HIGH);
   delay(500);
   menuCard.setLED(0, LOW);

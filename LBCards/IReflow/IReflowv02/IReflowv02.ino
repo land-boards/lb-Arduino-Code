@@ -11,7 +11,6 @@
 #include "LandBoards_IReflow.h"
 #include "LandBoards_MyMenu_g2.h"
 
-//#include <U8g2lib.h>
 #include <U8x8lib.h>
 
 #include "Adafruit_MAX31855.h"
@@ -49,11 +48,11 @@ typedef enum PROFILES
 
 uint8_t menuState;              // Menu State variable
 
-IReflow myIReflow;
+LandBoards_IReflow myIReflow;
 
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(SCL, SDA, U8X8_PIN_NONE);   // OLEDs without Reset of the Display
 
-MyMenu menuCard;
+LandBoards_MyMenu menuCard;
 
 myRprfiles profileSelected;
 
@@ -79,13 +78,7 @@ void setup(void)
 
 void loop(void) 
 {
-  u8x8.firstPage();  
-  do 
-  {
-    menuRefresh();
-  } 
-  while( u8x8.nextPage() );
-
+  menuRefresh();
   menuNav();
 }
 
