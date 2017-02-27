@@ -1,10 +1,10 @@
-== land-boards I2C-TEMP-01 Library Files ==
+== land-boards MyMenu Library Files ==
 
-<img src="http://land-boards.com/blwiki/images/5/50/IReflow-Myusnu-P1010248-640px.jpg" alt="IReflow" title="IReflow" />
+<img src="http://land-boards.com/blwiki/images/5/50/IReflow-MyMenu-P1010248-640px.jpg" alt="IReflow" title="IReflow" />
 
 === Files ===
 
-==== LandBoards_I2CTEMP01 ====
+==== LandBoards_MyMenu ====
 
 * [http://land-boards.com/blwiki/index.php?title=IReflow IReflow Wiki Page]
 * [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
