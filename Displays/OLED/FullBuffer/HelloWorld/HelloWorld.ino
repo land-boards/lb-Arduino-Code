@@ -1,8 +1,6 @@
 /*
 
   HelloWorld.ino
-  
-  "Hello World" version for U8x8 API
 
   Universal 8bit Graphics Library (https://github.com/olikraus/u8g2/)
 
@@ -33,39 +31,39 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
 
-Sketch uses 5700 bytes (17%) of program storage space. Maximum is 32256 bytes.
-Global variables use 375 bytes (18%) of dynamic memory, leaving 1673 bytes for local variables. Maximum is 2048 bytes.
+Sketch uses 9170 bytes (28%) of program storage space. Maximum is 32256 bytes.
+Global variables use 1454 bytes (70%) of dynamic memory, leaving 594 bytes for local variables. Maximum is 2048 bytes.
 */
 
 #include <Arduino.h>
-#include <U8x8lib.h>
+#include <U8g2lib.h>
 
 #ifdef U8X8_HAVE_HW_SPI
 #include <SPI.h>
 #endif
+#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+#endif
 
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);   // OLEDs without Reset of the Display
+/*
+  U8glib Example Overview:
+    Frame Buffer Examples: clearBuffer/sendBuffer. Fast, but may not work with all Arduino boards because of RAM consumption
+    Page Buffer Examples: firstPage/nextPage. Less RAM usage, should work with all Arduino boards.
+    U8x8 Text Only Example: No RAM usage, direct communication with display controller. No graphics, 8x8 Text only.
+    
+*/
 
-// End of constructor list
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SDA, /* reset=*/ U8X8_PIN_NONE);   // All Boards without Reset of the Display
 
-void setup(void)
-{
-  
-  u8x8.setI2CAddress(0x078);
-  u8x8.begin();
-  u8x8.setPowerSave(0);
-  
-  
+void setup(void) {
+  u8g2.begin();
 }
 
-void loop(void)
-{
-  u8x8.setFont(u8x8_font_chroma48medium8_r);
-//  u8x8.setFont(u8x8_font_amstrad_cpc_extended_u);
-//  u8x8.drawString(0,1,"Hello Shamona!");
-  u8x8.drawString(0,1,"Hello World!");
-//  u8x8.drawString(0,2,"Yo, momma!");
-  u8x8.refreshDisplay();		// for SSD1606/7  
-  delay(2000);
-  
+void loop(void) {
+  u8g2.clearBuffer();					// clear the internal memory
+  u8g2.setFont(u8g2_font_ncenB14_tr);	// choose a suitable font
+  u8g2.drawStr(0,20,"Hello World!");	// write something to the internal memory
+  u8g2.sendBuffer();					// transfer internal memory to the display
+  delay(1000);  
 }
+
