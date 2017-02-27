@@ -12,9 +12,9 @@
   Original Author: Land Boards, LLC
 */
 
-#include "Wire.h"      // Arduino I2C library
-#include "MyMenu.h"    // MyMenu card library handles switches and LEDs
-#include "U8glib.h"    // OLED library
+#include "Wire.h"                 // Arduino I2C library
+#include "LandBoards_MyMenu.h"    // MyMenu card library handles switches and LEDs
+#include "U8glib.h"               // OLED library
 
 //////////////////////////////////////////////////////////////////////////////
 // enums for the menu system follow
@@ -47,7 +47,7 @@ uint8_t menuState;           // Menu State variable which holds the currently se
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);    // OLED Library
 
-MyMenu menuCard;                // MyMenu card by Land Boards, LLC
+LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
 void setup(void) 
 {
