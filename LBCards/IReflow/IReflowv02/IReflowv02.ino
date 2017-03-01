@@ -9,7 +9,7 @@
 #include <SPI.h>
 
 #include "LandBoards_IReflow.h"
-#include "LandBoards_MyMenu_g2.h"
+#include "LandBoards_MyMenu.h"
 
 #include <U8x8lib.h>
 
@@ -50,7 +50,7 @@ uint8_t menuState;              // Menu State variable
 
 LandBoards_IReflow myIReflow;
 
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(SCL, SDA, U8X8_PIN_NONE);   // OLEDs without Reset of the Display
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // OLEDs without Reset of the Display
 
 LandBoards_MyMenu menuCard;
 
@@ -66,13 +66,17 @@ void setup(void)
   myIReflow.greenLED(LED_ON);
   delay(100);
   myIReflow.greenLED(LED_OFF);
-  displayInit();                // Hardware specific function to set up the display
   menuCard.begin();
   TWBR = 12;
   Serial.begin(9600);
   time_t t = now();
   delay(100);
-  Serial.println("Hey");
+//  Serial.println("Hey");
+  u8x8.setI2CAddress(0x78);
+  u8x8.begin();
+  TWBR = 12;                    // 400 KHz I2C
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.drawString(0,1,"888!");
 
 }
 

@@ -13,6 +13,9 @@
 // The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
 
+#define LCD_COLUMNS 14      // Specific value to the OLED card selected and the font
+// Also defines the maximum line length for each displayed line
+
 void clearDisplay(void);
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -58,34 +61,28 @@ menuStruc menus[] =
 // The special thing about this is that it prints the lines above the selected line first
 // then it prints the lines below the selected lines. For some reason this feels natural.
 ////////////////////////////////////////////////////////////////////////////////////
-
 void menuRefresh(void)
 {
   uint8_t nextLine, lastLine;
-  clearDisplay();
-  setDisplayCursor((menus[menuState].rowNumber)-1,0); // Print the currently selected line
-  setSelectedTextColor();
-  u8x8.print("*");
-  u8x8.print(menus[menuState].menuString);     
-  u8x8.print("*");
-  setUnselectedTextColor();  // Return to "normal" text color
+  u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
+  u8x8.drawString(0,menus[menuState].rowNumber - 1,menus[menuState].menuString);
   lastLine = menuState;
   // display the lines above the selected line first
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
   {
     lastLine = menus[lastLine].UP_MENU_PTR;
-    setDisplayCursor(menus[lastLine].rowNumber-1,0);
-    u8x8.print(menus[lastLine].menuString);
+    u8x8.drawString(0,menus[lastLine].rowNumber - 1, menus[lastLine].menuString);
   }
   nextLine = menuState;
   // next display the lines below the selected line
   while (menus[nextLine].DOWN_MENU_PTR != menus[nextLine].CURRENT_MENU_PTR)
   {
     nextLine = menus[nextLine].DOWN_MENU_PTR;
-    setDisplayCursor(menus[nextLine].rowNumber-1,0);
-    u8x8.print(menus[nextLine].menuString);
+    u8x8.drawString(0, menus[nextLine].rowNumber - 1, menus[nextLine].menuString);
   }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // menuNav - Uses the joystick switch to move around the menu
