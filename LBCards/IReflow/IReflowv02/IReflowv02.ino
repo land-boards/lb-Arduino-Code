@@ -55,7 +55,7 @@ LandBoards_IReflow myIReflow;
 
 U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE, SCL, SDA);   // OLEDs without Reset of the Display
 
-LandBoards_MyMenu menuCard;
+LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
 myProfiles profileSelected;
 
