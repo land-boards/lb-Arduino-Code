@@ -13,10 +13,8 @@
 // The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
 
-#define LCD_COLUMNS 14      // Specific value to the OLED card selected and the font
+#define LCD_COLUMNS 16      // Specific value to the OLED card selected and the font
 // Also defines the maximum line length for each displayed line
-
-void clearDisplay(void);
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - The format of the menu system
@@ -65,10 +63,12 @@ void menuRefresh(void)
 {
   uint8_t nextLine, lastLine;
   u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
+  u8x8.setInverseFont(1);
   u8x8.drawString(0,menus[menuState].rowNumber - 1,menus[menuState].menuString);
+  u8x8.setInverseFont(0);
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
   lastLine = menuState;
   // display the lines above the selected line first
-  u8x8.setFont(u8x8_font_chroma48medium8_r);
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
   {
     lastLine = menus[lastLine].UP_MENU_PTR;

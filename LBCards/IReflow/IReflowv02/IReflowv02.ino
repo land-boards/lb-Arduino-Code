@@ -2,9 +2,9 @@
  IReflowv01.ino
 */
 
+#include <Arduino.h>
 #include <Time.h>
 #include <TimeLib.h>
-
 #include "Wire.h"
 #include <SPI.h>
 
@@ -17,6 +17,9 @@
 
 #define CS   9
 Adafruit_MAX31855 thermocouple(CS);
+
+double getDesiredTempLeadFree(int);
+double getDesiredTempLeaded(int);
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
@@ -39,7 +42,7 @@ typedef enum PROFILES
   NO_PROFILE,
   LEAD_FREE,
   LEADED
-} myRprfiles;
+} myProfiles;
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -50,40 +53,47 @@ uint8_t menuState;              // Menu State variable
 
 LandBoards_IReflow myIReflow;
 
-U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // OLEDs without Reset of the Display
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE, SCL, SDA);   // OLEDs without Reset of the Display
 
 LandBoards_MyMenu menuCard;
 
-myRprfiles profileSelected;
+myProfiles profileSelected;
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////
 
 void setup(void) 
 {
   profileSelected = NO_PROFILE;
-  menuState = FIRST_LINE_MENU;  // Set up the init menu state
+  menuState = FIRST_SUB_MENU;  // Pick profile first
   myIReflow.redLED(LOW);
   delay(250);
   myIReflow.redLED(HIGH);
   myIReflow.greenLED(LED_ON);
   delay(100);
   myIReflow.greenLED(LED_OFF);
-  menuCard.begin();
+  menuCard.begin(1);
   TWBR = 12;
-  Serial.begin(9600);
   time_t t = now();
-  delay(100);
-//  Serial.println("Hey");
   u8x8.setI2CAddress(0x78);
   u8x8.begin();
   TWBR = 12;                    // 400 KHz I2C
   u8x8.setFont(u8x8_font_chroma48medium8_r);
-  u8x8.drawString(0,1,"888!");
+  u8x8.draw2x2String(0, 2, "IReflow");
+  u8x8.draw2x2String(0, 4, "   v2");
+  delay(2000);
 
 }
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////
 
 void loop(void) 
 {
+  u8x8.clear();
   menuRefresh();
   menuNav();
 }
-
 

@@ -42,7 +42,7 @@ double getDesiredTempLeadFree(int currTime)
 double getDesiredTempLeaded(int currTime)
 {
   if (currTime < TIMET1_LEADED)
-    return (TEMPT0_LEADED + ((double)currTime                   * ((TEMPT1_LEADED-TEMPT0_LEADED)/(float)(TIMET1_LEADED-TIME0_LEADED))));
+    return (TEMPT0_LEADED + ((double)currTime                 * ((TEMPT1_LEADED-TEMPT0_LEADED)/(float)(TIMET1_LEADED-TIME0_LEADED))));
   else if (currTime < TIMET2_LEADED)
     return (TEMPT1_LEADED + ((double)(currTime-TIMET1_LEADED) * ((TEMPT2_LEADED-TEMPT1_LEADED)/(float)(TIMET2_LEADED-TIMET1_LEADED))));
   else if (currTime < TIMET3_LEADED)

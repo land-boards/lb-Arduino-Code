@@ -44,7 +44,7 @@ enum MENUITEMS              // MenuCode Customizable section
 
 uint8_t menuState;           // Menu State variable which holds the currently selected menu lin
 
-U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // OLEDs without Reset of the Display
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE, SCL, SDA);   // OLEDs without Reset of the Display
 
 LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
@@ -75,4 +75,3 @@ void loop(void)
   menuRefresh();      // Refresh the screen
   menuNav();            // Check the buttons and navigate the screens
 }
-
