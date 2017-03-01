@@ -14,7 +14,7 @@
 // The ENUMs need to be ordered in the same order as they appear in the menu structure.
 ////////////////////////////////////////////////////////////////////////////////////
 
-#define LCD_COLUMNS 14      // Specific value to the OLED card selected and the font
+#define LCD_COLUMNS 16      // Specific value to the OLED card selected and the font
 // Also defines the maximum line length for each displayed line
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -57,20 +57,21 @@ menuStruc menus[] =
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Refresh the menu
+// Refresh the menu 
 // The special thing about this is that it prints the lines above the selected line first
-// then it prints the lines below the selected lines
-// This feels natural since the eye is naturally drawn to the selected line
+// then it prints the lines below the selected lines. For some reason this feels natural.
 ////////////////////////////////////////////////////////////////////////////////////
 
 void menuRefresh(void)
 {
   uint8_t nextLine, lastLine;
   u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
+  u8x8.setInverseFont(1);
   u8x8.drawString(0,menus[menuState].rowNumber - 1,menus[menuState].menuString);
+  u8x8.setInverseFont(0);
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
   lastLine = menuState;
   // display the lines above the selected line first
-  u8x8.setFont(u8x8_font_chroma48medium8_r);
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
   {
     lastLine = menus[lastLine].UP_MENU_PTR;
@@ -85,52 +86,47 @@ void menuRefresh(void)
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////
-// menuNav - Uses the navigation buttons to move around the menus
-// This function is relatively simple.
-// It reads the keys and moves through the menu based on the key selection.
-// Up, down, left, right are all menu navigation buttons.
-// The interesting part is the function pointer which calls the selected function
-// when the select button is pressed.
+// menuNav - Uses the joystick switch to move around the menu
 ////////////////////////////////////////////////////////////////////////////////////
 
 void menuNav(void)
 {
   uint8_t keyState;
+//  keyState = myIReflow.waitKeyPressed();
   keyState = menuCard.waitKeyPressed();
-  switch (keyState)
+  switch(keyState)
   {
-    case UP:
-      menuState = menus[menuState].UP_MENU_PTR;
-      while (menuCard.pollKeypad() == UP);
-      break;
-    case DOWN:
-      menuState = menus[menuState].DOWN_MENU_PTR;
-      while (menuCard.pollKeypad() == DOWN);
-      break;
-    case LEFT:
-      menuState = menus[menuState].LEFT_MENU_PTR;
-      while (menuCard.pollKeypad() == LEFT);
-      break;
-    case RIGHT:
-      menuState = menus[menuState].RIGHT_MENU_PTR;
-      while (menuCard.pollKeypad() == RIGHT);
-      break;
-    case SELECT:
-      // run the selected function
-      void (*foo)(void);
-      foo = menus[menuState].pt2Function;
-      foo();
-      menuState = menus[menuState].SEL_MENU_PTR;
-      while (menuCard.pollKeypad() == SELECT);
-      break;
+  case UP:
+    menuState = menus[menuState].UP_MENU_PTR;
+    while(menuCard.pollKeypad() == UP);
+    break;
+  case DOWN:
+    menuState = menus[menuState].DOWN_MENU_PTR;
+    while(menuCard.pollKeypad() == DOWN);
+    break;
+  case LEFT:
+    menuState = menus[menuState].LEFT_MENU_PTR;
+    while(menuCard.pollKeypad() == LEFT);
+    break;
+  case RIGHT:
+    menuState = menus[menuState].RIGHT_MENU_PTR;
+    while(menuCard.pollKeypad() == RIGHT);
+    break;
+  case SELECT:
+    // run the selected function
+    void (*foo)(void);
+    foo = menus[menuState].pt2Function;
+    foo();
+    menuState = menus[menuState].SEL_MENU_PTR;
+    while(menuCard.pollKeypad() == SELECT);
+    break;
   }
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // void nullFcn(void) - Special function which does nothing
-// This function gets called for times when the select button is pressed but
-// no function needs to be called.
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }

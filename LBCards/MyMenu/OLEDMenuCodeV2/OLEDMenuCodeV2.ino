@@ -48,6 +48,10 @@ U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE, SCL, SDA);   // OLEDs with
 
 LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////////////////////////
+
 void setup(void)
 {
   menuState = FIRST_LINE_MENU;  // Set up the init menu state - Menu should show the first line selected
@@ -55,13 +59,11 @@ void setup(void)
   u8x8.setI2CAddress(0x78);
   u8x8.begin();
   TWBR = 12;                    // 400 KHz I2C
-  u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
-  u8x8.drawString(0,1,"MyMenu V2!");
   u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.draw2x2String(0,2,"MyMenu");
+  u8x8.draw2x2String(0, 4, "   v2");
   delay(2000);
 }
-
-void clearDisplay(void);
 
 //////////////////////////////////////////////////////////////////////////////
 // With the MyMenu system the loop gets simplified to two basic functions
@@ -71,7 +73,7 @@ void clearDisplay(void);
 
 void loop(void)
 {
-  u8x8.clearDisplay();
+  u8x8.clear();
   menuRefresh();      // Refresh the screen
   menuNav();            // Check the buttons and navigate the screens
 }
