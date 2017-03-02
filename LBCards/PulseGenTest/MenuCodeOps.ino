@@ -92,7 +92,7 @@ int waitForLow(void)
 
 int countHigh(void)
 {
-  int sampleCount;
+  int sampleCount = 0;
   while (analogRead(A0) > 100)  // pause while high
   {
     sampleCount++;
@@ -108,7 +108,7 @@ int countHigh(void)
 
 int countLow(void)
 {
-  int sampleCount;
+  int sampleCount = 0;
   while (analogRead(A0) < 100)  // pause while high
   {
     sampleCount++;
@@ -141,9 +141,11 @@ void testPulseGen(void)
       caughtError = 0;
       if (waitForLow() == -1)
         caughtError = 1;
+      sensorLoValue = analogRead(A0);
       loCount = countLow();
       if (waitForHigh() == -1)
         caughtError = 1;
+      sensorHiValue = analogRead(A0);
       hiCount = countHigh();
       if (caughtError == 0)
       {
