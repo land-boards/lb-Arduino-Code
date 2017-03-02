@@ -54,51 +54,44 @@ menuStruc menus[] =
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Refresh the menu
+// Refresh the menu 
 // The special thing about this is that it prints the lines above the selected line first
-// then it prints the lines below the selected lines
-// This feels natural since the eye is naturally drawn to the selected line
+// then it prints the lines below the selected lines. For some reason this feels natural.
 ////////////////////////////////////////////////////////////////////////////////////
 
 void menuRefresh(void)
 {
   uint8_t nextLine, lastLine;
-  setDisplayCursor((menus[menuState].rowNumber)-1,0); // Print the currently selected line
-  u8g.setColorIndex(1);
-  u8g.drawBox(0,((menus[menuState].rowNumber-1)*13)+1,127,13);
-  u8g.setColorIndex(0);
-  u8g.print(menus[menuState].menuString);     
-  u8g.setColorIndex(1);
+  u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
+  u8x8.setInverseFont(1);
+  u8x8.drawString(0,menus[menuState].rowNumber - 1,menus[menuState].menuString);
+  u8x8.setInverseFont(0);
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
   lastLine = menuState;
   // display the lines above the selected line first
   while ((menus[lastLine].UP_MENU_PTR != menus[lastLine].CURRENT_MENU_PTR) && (menus[menuState].rowNumber != 1))
   {
     lastLine = menus[lastLine].UP_MENU_PTR;
-    setDisplayCursor(menus[lastLine].rowNumber-1,0);
-    u8g.print(menus[lastLine].menuString);
+    u8x8.drawString(0,menus[lastLine].rowNumber - 1, menus[lastLine].menuString);
   }
   nextLine = menuState;
   // next display the lines below the selected line
   while (menus[nextLine].DOWN_MENU_PTR != menus[nextLine].CURRENT_MENU_PTR)
   {
     nextLine = menus[nextLine].DOWN_MENU_PTR;
-    setDisplayCursor(menus[nextLine].rowNumber-1,0);
-    u8g.print(menus[nextLine].menuString);
+    u8x8.drawString(0, menus[nextLine].rowNumber - 1, menus[nextLine].menuString);
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////
-// menuNav - Uses the navigation buttons to move around the menus
-// This function is relatively simple. 
-// It reads the keys and moves through the menu based on the key selection.
-// Up, down, left, right are all menu navigation buttons.
-// The interesting part is the function pointer which calls the selected function
-// when the select button is pressed.
+// menuNav - Uses the joystick switch to move around the menu
 ////////////////////////////////////////////////////////////////////////////////////
 
 void menuNav(void)
 {
   uint8_t keyState;
+//  keyState = myIReflow.waitKeyPressed();
   keyState = menuCard.waitKeyPressed();
   switch(keyState)
   {
@@ -131,9 +124,8 @@ void menuNav(void)
 
 //////////////////////////////////////////////////////////////////////////////
 // void nullFcn(void) - Special function which does nothing
-// This function gets called for times when the select button is pressed but
-// no function needs to be called.
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }
+
 

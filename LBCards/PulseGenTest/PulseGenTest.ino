@@ -1,5 +1,7 @@
 /*
-  PulseGenTest.ino - This code is the Land Boards, LLC menu system.
+  PulseGenTest.ino - Test the PulseGen card
+  
+  This code use the Land Boards, LLC menu system.
   This code runs on a standard Arduino or Arduino compatible card.
   This code uses the MyMenu card by Land Boards, LLC.
   MyMenu card is I2C based and has 5 buttons, 3 LEDs and an OLED display.
@@ -12,9 +14,10 @@
   Original Author: Land Boards, LLC
 */
 
+#include <Arduino.h>
 #include "Wire.h"      // Arduino I2C library
-#include "MyMenu.h"    // MyMenu card library handles switches and LEDs
-#include "U8glib.h"    // OLED library
+#include "LandBoards_MyMenu.h" // MyMenu card library handles switches and LEDs
+#include "U8x8lib.h"              // Direct 8x8 buffer-less mode
 
 //////////////////////////////////////////////////////////////////////////////
 // enums for the menu system follow
@@ -45,16 +48,24 @@ enum MENUITEMS              // MenuCode Customizable section
 
 uint8_t menuState;           // Menu State variable which holds the currently selected menu lin
 
-U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);    // OLED Library
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE, SCL, SDA);   // OLEDs without Reset of the Display
 
-MyMenu menuCard;                // MyMenu card by Land Boards, LLC
+LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
 void setup(void) 
 {
   menuState = FIRST_LINE_MENU;  // Set up the init menu state - Menu should show the first line selected
-  displayInit();                // Hardware specific function to set up the display
   menuCard.begin(1);            // pass the address of the mcp23008 on the menu card
   TWBR = 12;                    // 400 KHz I2C
+  menuCard.begin(1);            // pass the address of the mcp23008 on the menu card
+  u8x8.setI2CAddress(0x78);
+  u8x8.begin();
+  TWBR = 12;                    // 400 KHz I2C
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.draw2x2String(0,1,"PulseGen");
+  u8x8.draw2x2String(0,3," Tester");
+  u8x8.draw2x2String(0,5, "   v2");
+  delay(2000);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -65,13 +76,8 @@ void setup(void)
 
 void loop(void) 
 {
-  u8g.firstPage();      // This is the way that the u8g library works. Seems strange
-  do 
-  {
-    menuRefresh();      // Refresh the screen
-  } 
-  while( u8g.nextPage() );
-
+  u8x8.clear();
+  menuRefresh();      // Refresh the screen
   menuNav();            // Check the buttons and navigate the screens
 }
 

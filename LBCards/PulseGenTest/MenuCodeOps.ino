@@ -4,14 +4,118 @@
 
 void errorScreen(void)
 {
-  u8g.firstPage();
-  do
+  u8x8.draw2x2String(0, 2, "CONNECT"); // write something to the internal memory
+  u8x8.draw2x2String(0, 4, "ERROR!"); // write something to the internal memory
+  delay(50);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// checkStuck(void)
+//////////////////////////////////////////////////////////////////////////////
+
+int checkStuck(void)
+{
+  int readVal, highVal, lowVal;
+  lowVal = analogRead(A0);
+  highVal = lowVal;
+  for (int loopCount = 0; loopCount < 20; loopCount++)
   {
-    setDisplayCursor(0, 0);
-    u8g.print(F("ERROR"));
+    readVal = analogRead(A0);
+    if (readVal> highVal)
+      highVal = readVal;
+    else if (readVal < lowVal)
+      lowVal = readVal;
   }
-  while ( u8g.nextPage() );
-  delay(250);
+  if ((lowVal < 300) && (highVal > 300))
+    return(0);
+  else
+  {
+    errorScreen();
+    delay(50);
+    return(1);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// int waitForHigh(void)
+// Returns 0 if High is detected
+// Returns -1 if High was not detected
+//////////////////////////////////////////////////////////////////////////////
+
+int waitForHigh(void)
+{
+  int sampleCount;
+  sampleCount = 0;
+  while (analogRead(A0) > 200)    // If it starts high wait till it goes low
+  {
+    sampleCount++;
+    if (sampleCount > 20)
+      return(-1);
+  }
+  sampleCount = 0;
+  while (analogRead(A0) < 100)  // pause while low
+  {
+    sampleCount++;
+    if (sampleCount > 20)
+      return(-1);
+  }
+  return(0);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// int waitForLow(void)
+//////////////////////////////////////////////////////////////////////////////
+
+int waitForLow(void)
+{
+  int sampleCount;
+  sampleCount = 0;
+  while (analogRead(A0) < 100)  // Pause if starts High
+  {
+    sampleCount++;
+    if (sampleCount > 20)
+      return(-1);
+  }
+  sampleCount = 0;
+  while (analogRead(A0) > 100)  // pause while high
+  {
+    sampleCount++;
+    if (sampleCount > 20)
+      return(-1);
+  }
+  return(0);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// int countHigh(void)
+//////////////////////////////////////////////////////////////////////////////
+
+int countHigh(void)
+{
+  int sampleCount;
+  while (analogRead(A0) > 100)  // pause while high
+  {
+    sampleCount++;
+    if (sampleCount > 20)
+      return(-1);
+  }
+  return(sampleCount);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// int countLow(void)
+//////////////////////////////////////////////////////////////////////////////
+
+int countLow(void)
+{
+  int sampleCount;
+  while (analogRead(A0) < 100)  // pause while high
+  {
+    sampleCount++;
+    if (sampleCount > 20)
+      return(-1);
+  }
+  return(sampleCount);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -22,71 +126,46 @@ void testPulseGen(void)
 {
   uint8_t keyState;
   int keyLev;
-  menuCard.setLED(2, HIGH);
   int sensorLoValue;
   int sensorHiValue;
   int hiCount = 0;
   int loCount = 0;
   int caughtError = 0;
 
+  menuCard.setLED(2, HIGH);
   do
   {
-    hiCount = 0;
-    loCount = 0;
-    caughtError = 0;
-    while (analogRead(A0) < 100)
+    u8x8.clear();
+    if (checkStuck() != 1)
     {
-      hiCount++;
-      if (hiCount > 100)
+      caughtError = 0;
+      if (waitForLow() == -1)
         caughtError = 1;
-    }
-    hiCount = 0;
-    while (analogRead(A0) > 350)
-    {
-      hiCount++;
-      if (hiCount > 100)
+      loCount = countLow();
+      if (waitForHigh() == -1)
         caughtError = 1;
-    }
-    hiCount = 0;
-    sensorLoValue = analogRead(A0);
-    while (analogRead(A0) < 100)
-    {
-      loCount++;
-      if ((loCount > 100) || (loCount == 0))
-        caughtError = 1;
-    }
-    sensorHiValue = analogRead(A0);
-    while (analogRead(A0) > 350)
-    {
-      hiCount++;
-      if ((hiCount > 100) || (hiCount == 0)) 
-        caughtError = 1;
-    }
-    if ((caughtError == 0) && (loCount>0) && (hiCount>0))
-    {
-      u8g.firstPage();
-      do
+      hiCount = countHigh();
+      if (caughtError == 0)
       {
-        setDisplayCursor(0, 0);
-        u8g.print(F("Low Count="));
-        u8g.print(loCount);
-        setDisplayCursor(1, 0);
-        u8g.print(F("High Count="));
-        u8g.print(hiCount);
-        setDisplayCursor(2, 0);
-        u8g.print(F("Low V="));
-        u8g.print(sensorLoValue);
-        setDisplayCursor(3, 0);
-        u8g.print(F("High V="));
-        u8g.print(sensorHiValue);
+        u8x8.setCursor(0, 0);
+        u8x8.print(F("Low Count="));
+        u8x8.print(loCount);
+        u8x8.print("   ");
+        u8x8.setCursor(0, 1);
+        u8x8.print(F("High Count="));
+        u8x8.print(hiCount);
+        u8x8.print("   ");
+        u8x8.setCursor(0, 2);
+        u8x8.print(F("Low V="));
+        u8x8.print(sensorLoValue);
+        u8x8.print("   ");
+        u8x8.setCursor(0, 3);
+        u8x8.print(F("High V="));
+        u8x8.print(sensorHiValue);
+        u8x8.print("   ");
       }
-      while ( u8g.nextPage() );
+      delay(250);
     }
-    else
-    {
-      errorScreen();
-    }
-    delay(100);
     keyState = menuCard.pollKeypad();
   }
   while (keyState != SELECT);
@@ -101,16 +180,12 @@ void runMonFcn(void)
 {
   double myTemp;
   uint8_t keyState;
+  u8x8.clear();
   menuCard.setLED(0, HIGH);
   do
   {
-    u8g.firstPage();
-    do
-    {
-      setDisplayCursor(0, 0);
-      u8g.print(F("Monitoring"));
-    }
-    while ( u8g.nextPage() );
+    u8x8.setCursor(0, 0);
+    u8x8.print(F("Monitoring"));
     delay(10);
     keyState = menuCard.pollKeypad();
   }
@@ -124,15 +199,9 @@ void runMonFcn(void)
 
 void Opt1Fcn(void)
 {
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(1, 0);
-    u8g.print(F("Selected"));
-    setDisplayCursor(2, 0);
-    u8g.print(F("Option1"));
-  }
-  while ( u8g.nextPage() );
+  u8x8.clear();
+  u8x8.drawString(0, 1, "Selected"); // write something to the internal memory
+  u8x8.drawString(0, 2, "Option1"); // write something to the internal memory
   delay(2000);
 }
 
@@ -142,15 +211,9 @@ void Opt1Fcn(void)
 
 void Opt2Fcn(void)
 {
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(1, 0);
-    u8g.print(F("Selected"));
-    setDisplayCursor(2, 0);
-    u8g.print(F("Option2"));
-  }
-  while ( u8g.nextPage() );
+  u8x8.clear();
+  u8x8.drawString(0, 1, "Selected"); // write something to the internal memory
+  u8x8.drawString(0, 2, "Option2"); // write something to the internal memory
   delay(2000);
 }
 
@@ -160,18 +223,12 @@ void Opt2Fcn(void)
 
 void testButtons(void)
 {
+  u8x8.clear();
   uint8_t keyState;
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(0, 0);
-    u8g.print(F("Button tests"));
-    setDisplayCursor(1, 0);
-    u8g.print(F("Press button"));
-    setDisplayCursor(2, 0);
-    u8g.print(F("Select=exit"));
-  }
-  while ( u8g.nextPage() );
+  u8x8.drawString(0, 1, "Button tests"); // write something to the internal memory
+  u8x8.drawString(0, 2, "Press button"); // write something to the internal memory
+  u8x8.drawString(0, 3, "Select=exit"); // write something to the internal memory
+
   do
   {
     delay(100);
@@ -179,37 +236,20 @@ void testButtons(void)
     switch (keyState)
     {
       case RIGHT:
-        printString("Right button");
+        u8x8.drawString(0, 4, "Right button"); // write something to the internal memory
         break;
       case LEFT:
-        printString("Left Button");
+        u8x8.drawString(0, 4, "Left Button "); // write something to the internal memory
         break;
       case UP:
-        printString("Up button");
+        u8x8.drawString(0, 4, "Up Button   "); // write something to the internal memory
         break;
       case DOWN:
-        printString("Down button");
+        u8x8.drawString(0, 4, "Down Button "); // write something to the internal memory
         break;
     }
   }
   while (keyState != SELECT);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// printString() - Specific function to print a single status string
-// Used by the testButtons function specifically
-// Clears screen before printing the string
-//////////////////////////////////////////////////////////////////////////////
-
-void printString(char * myString)
-{
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(0, 0);
-    u8g.print(myString);
-  }
-  while ( u8g.nextPage() );
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -218,15 +258,10 @@ void printString(char * myString)
 
 void testLEDsFcn(void)
 {
-  u8g.firstPage();
-  do
-  {
-    setDisplayCursor(0, 0);
-    u8g.print(F("Running"));
-    setDisplayCursor(1, 0);
-    u8g.print(F("LED Tests"));
-  }
-  while ( u8g.nextPage() );
+  u8x8.clear();
+  u8x8.drawString(0, 1, "Running"); // write something to the internal memory
+  u8x8.drawString(0, 2, "LED Tests"); // write something to the internal memory
+  u8x8.drawString(0, 3, "Select=exit"); // write something to the internal memory
   menuCard.setLED(0, HIGH);
   delay(500);
   menuCard.setLED(0, LOW);
@@ -237,4 +272,5 @@ void testLEDsFcn(void)
   delay(500);
   menuCard.setLED(2, LOW);
 }
+
 
