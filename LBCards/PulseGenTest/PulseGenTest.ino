@@ -1,15 +1,11 @@
 /*
   PulseGenTest.ino - Test the PulseGen card
   
-  This code use the Land Boards, LLC menu system.
+  This code uses the Land Boards, LLC menu system.
   This code runs on a standard Arduino or Arduino compatible card.
   This code uses the MyMenu card by Land Boards, LLC.
   MyMenu card is I2C based and has 5 buttons, 3 LEDs and an OLED display.
   http://land-boards.com/blwiki/index.php?title=MyMenu
-
-  Menu code with "small" menu plus MyMenu library plus U8Glib (OLED library) uses
-    11,990 bytes of program space (37% of Arduino UNO space)
-    682 bytes of data RAM space (33% of Arduino UNO space)
 
   Original Author: Land Boards, LLC
 */
@@ -30,17 +26,10 @@
 enum MENUITEMS              // MenuCode Customizable section
 {
   FIRST_LINE_MENU,
-  SECOND_LINE_MENU,
-  THIRD_LINE_MENU,
   FOURTH_LINE_MENU,
-  FIRST_SUB_MENU,
-  SECOND_SUB_MENU,
   FSTL_TESTS_MENU,
   SCND_TESTS_MENU
 };
-
-#define LCD_COLUMNS 14      // Specific value to the OLED card selected and the font
-                            // Also defines the maximum line length for each displayed line
 
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
@@ -64,8 +53,8 @@ void setup(void)
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.draw2x2String(0,1,"PulseGen");
   u8x8.draw2x2String(0,3," Tester");
-  u8x8.draw2x2String(0,5, "   v2");
-  delay(2000);
+  u8x8.draw2x2String(0,5,"   v2");
+  delay(1000);
 }
 
 //////////////////////////////////////////////////////////////////////////////

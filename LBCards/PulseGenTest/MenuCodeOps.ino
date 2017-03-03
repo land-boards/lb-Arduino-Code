@@ -1,16 +1,20 @@
 //////////////////////////////////////////////////////////////////////////////
-// MenuCodeOps() - Customize this code for the specific operations
+// MenuCodeOps() - PulseGen Testers Operations
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// void errorScreen() - Connection error message
 //////////////////////////////////////////////////////////////////////////////
 
 void errorScreen(void)
 {
   u8x8.draw2x2String(0, 2, "CONNECT"); // write something to the internal memory
-  u8x8.draw2x2String(0, 4, "ERROR!"); // write something to the internal memory
+  u8x8.draw2x2String(0, 4, " ERROR!"); // write something to the internal memory
   delay(50);
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// checkStuck(void)
+// checkStuck(void) - Check to see if the input is stuck high or low
 //////////////////////////////////////////////////////////////////////////////
 
 int checkStuck(void)
@@ -37,16 +41,16 @@ int checkStuck(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// int waitForHigh(void)
+// int waitForHigh(void) - Wait for input to go high
 // Returns 0 if High is detected
-// Returns -1 if High was not detected
+// Returns -1 if High was not detected (after timeout)
 //////////////////////////////////////////////////////////////////////////////
 
 int waitForHigh(void)
 {
   int sampleCount;
   sampleCount = 0;
-  while (analogRead(A0) > 200)    // If it starts high wait till it goes low
+  while (analogRead(A0) > 200)    // pause while high (could have started in the middle of a high)
   {
     sampleCount++;
     if (sampleCount > 20)
@@ -63,14 +67,16 @@ int waitForHigh(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// int waitForLow(void)
+// int waitForLow(void) - Wait for input to go low
+// Returns 0 if Low is detected
+// Returns -1 if Low was not detected (after timeout)
 //////////////////////////////////////////////////////////////////////////////
 
 int waitForLow(void)
 {
   int sampleCount;
   sampleCount = 0;
-  while (analogRead(A0) < 100)  // Pause if starts High
+  while (analogRead(A0) < 100)  // Pause while low
   {
     sampleCount++;
     if (sampleCount > 20)
@@ -87,7 +93,7 @@ int waitForLow(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// int countHigh(void)
+// int countHigh(void) - Count the number of A/D samples for high level
 //////////////////////////////////////////////////////////////////////////////
 
 int countHigh(void)
@@ -103,7 +109,7 @@ int countHigh(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// int countLow(void)
+// int countLow(void) - Count the number of A/D samples for low level
 //////////////////////////////////////////////////////////////////////////////
 
 int countLow(void)
@@ -172,51 +178,6 @@ void testPulseGen(void)
   }
   while (keyState != SELECT);
   menuCard.setLED(2, LOW);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// runMonFcn() - Run the monitoring function
-//////////////////////////////////////////////////////////////////////////////
-
-void runMonFcn(void)
-{
-  double myTemp;
-  uint8_t keyState;
-  u8x8.clear();
-  menuCard.setLED(0, HIGH);
-  do
-  {
-    u8x8.setCursor(0, 0);
-    u8x8.print(F("Monitoring"));
-    delay(10);
-    keyState = menuCard.pollKeypad();
-  }
-  while (keyState != SELECT);
-  menuCard.setLED(0, LOW);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Opt1Fcn() - Example of setting an option flag
-//////////////////////////////////////////////////////////////////////////////
-
-void Opt1Fcn(void)
-{
-  u8x8.clear();
-  u8x8.drawString(0, 1, "Selected"); // write something to the internal memory
-  u8x8.drawString(0, 2, "Option1"); // write something to the internal memory
-  delay(2000);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-// Opt2Fcn() - Example of setting a second option flag
-//////////////////////////////////////////////////////////////////////////////
-
-void Opt2Fcn(void)
-{
-  u8x8.clear();
-  u8x8.drawString(0, 1, "Selected"); // write something to the internal memory
-  u8x8.drawString(0, 2, "Option2"); // write something to the internal memory
-  delay(2000);
 }
 
 //////////////////////////////////////////////////////////////////////////////

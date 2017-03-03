@@ -1,18 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////////
-// MenuCodeMenu() - Display the example Menu.
-// Hardware items required are five buttons (Up, Down, Left, Right and Select) plus a Display.
-// The five buttons can be a 5-way switch or 5 individual buttons.
-// The five buttons are aggregated into a single variable representing button state.
-// The menu operations are typically to have up/down movement through the displayed items.
-// Right or select can call submenus (for items which have submenus).
-// Left can return to the previous menu.
-// Select can execute the selected item.
-// Use left and right arrows to indicate submenu availability.
-// This menu system is fairly lightweight and is strongly geared towards LCDs.
-// This menu system allows for submenus to be called.
-// There are corresponding ENUM values for each of the xxx_MENU_PTR values.
-// The ENUMs need to be ordered in the same order as they appear in the menu structure.
+// MenuCodeMenu() - PulseGenerator Tester Menu
+// Uses MyMenu with an OLED card
 ////////////////////////////////////////////////////////////////////////////////////
+
+#define LCD_COLUMNS 14      // Specific value to the OLED card selected and the font
+                            // Also defines the maximum line length for each displayed line
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Menu structure - The format of the menu system structure
@@ -42,15 +34,10 @@ struct menuStruc                      // The ENUMs for the *_MENU_PTR values mus
 
 menuStruc menus[] = 
 {
-  //MENUITEMS enum,  "string",    LINE, UP enum,          DOWN enum,        Left enum,        right enum,      function,     menu selection after function,
-  FIRST_LINE_MENU,   "Test Pulse", 1, FIRST_LINE_MENU,  SECOND_LINE_MENU, FIRST_LINE_MENU,  FIRST_LINE_MENU, &testPulseGen,   FIRST_LINE_MENU,
-  SECOND_LINE_MENU,  "Options",      2, FIRST_LINE_MENU,  THIRD_LINE_MENU,  SECOND_LINE_MENU, FIRST_SUB_MENU,  &nullFcn,       FIRST_SUB_MENU,
-  THIRD_LINE_MENU,   "Monitor",      3, SECOND_LINE_MENU, FOURTH_LINE_MENU, THIRD_LINE_MENU,  THIRD_LINE_MENU, &runMonFcn,     FIRST_LINE_MENU,
-  FOURTH_LINE_MENU,  "Tests",        4, THIRD_LINE_MENU,  FOURTH_LINE_MENU, FOURTH_LINE_MENU, FSTL_TESTS_MENU, &nullFcn,       FSTL_TESTS_MENU,
-  FIRST_SUB_MENU,    "Option1",      1, FIRST_SUB_MENU,   SECOND_SUB_MENU,  FIRST_LINE_MENU,  FIRST_SUB_MENU,  &Opt1Fcn,       FIRST_LINE_MENU,
-  SECOND_SUB_MENU,   "Option2",      2, FIRST_SUB_MENU,   SECOND_SUB_MENU,  SECOND_SUB_MENU,  SECOND_SUB_MENU, &Opt2Fcn,       FIRST_LINE_MENU,
-  FSTL_TESTS_MENU,   "Test LEDs",    1, FSTL_TESTS_MENU,  SCND_TESTS_MENU,  FIRST_LINE_MENU,  FSTL_TESTS_MENU, &testLEDsFcn,   FIRST_LINE_MENU,
-  SCND_TESTS_MENU,   "Test Buttons", 2, FSTL_TESTS_MENU,  SCND_TESTS_MENU, SCND_TESTS_MENU,  SCND_TESTS_MENU, &testButtons, FIRST_LINE_MENU
+  FIRST_LINE_MENU,  "Test PulseGen", 1, FIRST_LINE_MENU,  FOURTH_LINE_MENU, FIRST_LINE_MENU,  FIRST_LINE_MENU, &testPulseGen, FIRST_LINE_MENU,
+  FOURTH_LINE_MENU, "Check Tester",  2, FIRST_LINE_MENU,  FOURTH_LINE_MENU, FOURTH_LINE_MENU, FSTL_TESTS_MENU, &nullFcn,      FSTL_TESTS_MENU,
+  FSTL_TESTS_MENU,  "Test LEDs",     1, FSTL_TESTS_MENU,  SCND_TESTS_MENU,  FIRST_LINE_MENU,  FSTL_TESTS_MENU, &testLEDsFcn,  FIRST_LINE_MENU,
+  SCND_TESTS_MENU,  "Test Buttons",  2, FSTL_TESTS_MENU,  SCND_TESTS_MENU,  SCND_TESTS_MENU,  SCND_TESTS_MENU, &testButtons,  FIRST_LINE_MENU
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +70,6 @@ void menuRefresh(void)
   }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 // menuNav - Uses the joystick switch to move around the menu
 ////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +77,6 @@ void menuRefresh(void)
 void menuNav(void)
 {
   uint8_t keyState;
-//  keyState = myIReflow.waitKeyPressed();
   keyState = menuCard.waitKeyPressed();
   switch(keyState)
   {
@@ -127,5 +112,4 @@ void menuNav(void)
 //////////////////////////////////////////////////////////////////////////////
 
 void nullFcn(void) {  }
-
 
