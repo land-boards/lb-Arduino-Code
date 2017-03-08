@@ -11,11 +11,11 @@
 #include <I2C_eeprom.h>
 
 #include "Adafruit_MCP23017.h"
-#include "LandBoards_I2CRPT01.h"
+#include "LandBoards_I2CRPT08.h"
 
 Adafruit_MCP23017 mcp0;
 
-LandBoards_I2CRPT01 mux;
+LandBoards_I2CRPT08 mux;
 
 #define LCD_COLUMNS 13
 #define EE24LC024MAXBYTES 2048/8

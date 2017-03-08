@@ -4,10 +4,10 @@
 
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
-#include "LandBoards_I2CRPT01.h"
+#include "LandBoards_I2CRPT08.h"
 
 I2CIO8 myI2CIO8;
-LandBoards_I2CRPT01 mux;
+LandBoards_I2CRPT08 mux;
 
 void setup() 
 {

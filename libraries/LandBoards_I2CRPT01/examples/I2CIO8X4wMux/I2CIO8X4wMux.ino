@@ -6,14 +6,14 @@
 
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
-#include "landboards_pca9544a.h"
+#include "LandBoards_I2CRPT01.h"
 
 I2CIO8 myI2CIO80;
 I2CIO8 myI2CIO81;
 I2CIO8 myI2CIO82;
 I2CIO8 myI2CIO83;
 
-landboards_pca9544a mux;
+LandBoards_I2CRPT01 mux;
 
 void setup()
 {

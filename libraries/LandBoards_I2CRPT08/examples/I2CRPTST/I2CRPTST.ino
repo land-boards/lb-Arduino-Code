@@ -12,14 +12,14 @@
 
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
-#include "LandBoards_I2CRPT01.h"
+#include "LandBoards_I2CRPT08.h"
 
 I2CIO8 myI2CIO80;
 I2CIO8 myI2CIO81;
 I2CIO8 myI2CIO82;
 I2CIO8 myI2CIO83;
 
-LandBoards_I2CRPT01 mux;
+LandBoards_I2CRPT08 mux;
 
 #define INTRPIN 9
 #define INTRLED 8

@@ -4,11 +4,11 @@
 
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
-#include "LandBoards_I2CRPT01.h"
+#include "LandBoards_I2CRPT08.h"
 
 Adafruit_MCP23017 mcp0;
 
-LandBoards_I2CRPT01 mux;
+LandBoards_I2CRPT08 mux;
 
 void setup() {
   mux.begin(0);

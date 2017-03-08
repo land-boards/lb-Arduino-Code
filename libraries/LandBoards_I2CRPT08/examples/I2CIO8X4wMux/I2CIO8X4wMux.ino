@@ -1,16 +1,19 @@
-// I2CIO8wMux Example code
+// I2CIO8X4wMux Example code
+// Uses GVSDuino (Arduino UNO compatible)
+// 4x I2CIO-8 cards
+// I2C-RPI-01 as UUT
 // Blink each line, one at a time
 
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
-#include "LandBoards_I2CRPT01.h"
+#include "LandBoards_I2CRPT08.h"
 
 I2CIO8 myI2CIO80;
 I2CIO8 myI2CIO81;
 I2CIO8 myI2CIO82;
 I2CIO8 myI2CIO83;
 
-LandBoards_I2CRPT01 mux;
+LandBoards_I2CRPT08 mux;
 
 void setup()
 {
