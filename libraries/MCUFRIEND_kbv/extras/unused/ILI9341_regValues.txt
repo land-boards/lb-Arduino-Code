@@ -1,0 +1,307 @@
+    case 0x9341:
+        _lcd_capable = AUTO_READINC | TWO_PARM_WINDOW | MV_AXIS;
+        static const uint8_t ILI9341_regValues_kbv[] PROGMEM = {  //.kbv MCUFRIEND_kbv
+            0x01, 0,            // software reset
+            TFTLCD_DELAY, 150,  // 5ms if awake,  125ms if asleep.
+            0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
+            0xCF, 3, 0x00, 0xC1, 0x30,  //Power Control B [00 81 30]
+            0xE8, 3, 0x85, 0x00, 0x78,  //Driver Timing A [04 11 7A]
+            0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
+            0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
+            0xF7, 1, 0x20,      //Pump Ratio [10]
+            0xC0, 1, 0x23,      //Power Control 1 [26]
+            0xC1, 1, 0x10,      //Power Control 2 [00]
+            0xC5, 2, 0x3E, 0x28,        //VCOM 1 [31 3C]
+            0xC7, 1, 0x86,      //VCOM 2 [C0]
+            0x36, 1, 0x48,      //Memory Access [00]
+            0xB1, 2, 0x00, 0x18,        //Frame Control [00 1B]
+            0xB6, 3, 0x08, 0x82, 0x27,  //Display Function [0A 82 27 XX]
+            0xF2, 1, 0x00,      //Enable 3G [02]
+            0x26, 1, 0x01,      //Gamma Set [01]
+            0xE0, 15, 0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e, 0xf1, 0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
+            0xE1, 15, 0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel Format [66]
+        };
+        static const uint8_t ILI9341_regValues_2_6[] PROGMEM = {   // LG 2.6" from AN
+            0x01, 0,            // software reset
+            0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
+            0xCF, 3, 0x00, 0xC1, 0x30,  //Power Control B [00 81 30]
+            0xE8, 3, 0x85, 0x00, 0x78,  //Driver Timing A [04 11 7A]
+            0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
+            0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
+            0xF7, 1, 0x20,      //Pump Ratio [10]
+            0xC0, 1, 0x23,      //Power Control 1 [26]
+            0xC1, 1, 0x10,      //Power Control 2 [00]
+            0xC5, 2, 0x2B, 0x2B,        //VCOM 1 [31 3C]
+            0xC7, 1, 0xC0,      //VCOM 2 [C0]
+            0x36, 1, 0x48,      //Memory Access [00]
+            0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
+//            0xB6, 3, 0x0A, 0x02, 0x27,  //Display Function [0A 82 27 XX]  .kbv  REV=0
+            0xF2, 1, 0x00,      //Enable 3G [02]
+            0x26, 1, 0x01,      //Gamma Set [01]
+            0xE0, 15, 0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e, 0xf1, 0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
+            0xE1, 15, 0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel Format [66]
+        };
+        static const uint8_t ILI9341_regValues_2_0[] PROGMEM = {   // BOE 2.0"
+            0x01, 0,            // software reset
+            0xCF, 3, 0x00, 0x99, 0x30,  //Power Control B [00 81 30]
+            0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
+            0xE8, 3, 0x85, 0x10, 0x78,  //Driver Timing A [04 11 7A]
+            0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
+            0xF7, 1, 0x20,      //Pump Ratio [10]
+            0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
+            0xC0, 1, 0x26,      //Power Control 1 [26]
+            0xC1, 1, 0x12,      //Power Control 2 [00]
+            0xC5, 2, 0x2B, 0x2C,        //VCOM 1 [31 3C]
+            0xC7, 1, 0xC4,      //VCOM 2 [C0]
+            0x36, 1, 0x08,      //Memory Access [00]
+            0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
+//            0xB6, 3, 0x0A, 0xA2, 0x27, //?? Display Function [0A 82 27 XX]   .kbv SS=1
+            0xF2, 1, 0x00,      //Enable 3G [02]
+            0x26, 1, 0x01,      //Gamma Set [01]
+            0xE0, 15, 0x0f, 0x24, 0x21, 0x0a, 0x0e, 0x09, 0x51, 0xa9, 0x44, 0x07, 0x10, 0x03, 0x2c, 0x0b, 0x00,
+            0xE1, 15, 0x00, 0x1b, 0x1e, 0x05, 0x11, 0x06, 0x2e, 0x56, 0x3b, 0x08, 0x0f, 0x0c, 0x13, 0x14, 0x0f,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel Format [66]
+        };
+		static const uint8_t ILI9341_regValues_2_4[] PROGMEM = {   // BOE 2.4"
+            0x01, 0,            // software reset
+            TFTLCD_DELAY, 50,   // .kbv
+            0xCF, 3, 0x00, 0x81, 0x30,  //Power Control B [00 81 30]
+            0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
+            0xE8, 3, 0x85, 0x10, 0x78,  //Driver Timing A [04 11 7A]
+            0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
+            0xF7, 1, 0x20,      //Pump Ratio [10]
+            0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
+            0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
+//            0xB6, 2, 0x0A, 0xA2, 0x27, //Display Function [0A 82 27 XX]    .kbv SS=1  
+            0xC0, 1, 0x21,      //Power Control 1 [26]
+            0xC1, 1, 0x11,      //Power Control 2 [00]
+            0xC5, 2, 0x3F, 0x3C,        //VCOM 1 [31 3C]
+            0xC7, 1, 0xB5,      //VCOM 2 [C0]
+            0x36, 1, 0x48,      //Memory Access [00]
+            0xF2, 1, 0x00,      //Enable 3G [02]
+            0x26, 1, 0x01,      //Gamma Set [01]
+            0xE0, 15, 0x0f, 0x26, 0x24, 0x0b, 0x0e, 0x09, 0x54, 0xa8, 0x46, 0x0c, 0x17, 0x09, 0x0f, 0x07, 0x00,
+            0xE1, 15, 0x00, 0x19, 0x1b, 0x04, 0x10, 0x07, 0x2a, 0x47, 0x39, 0x03, 0x06, 0x06, 0x30, 0x38, 0x0f,
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel Format [66]
+        };
+		static const uint8_t ILI9341_regValues_ada[] PROGMEM = {   // Adafruit_TFTLCD only works with EXTC=0
+            0x01, 0,            // software reset
+            TFTLCD_DELAY, 50,
+            0x28, 0,            //Display Off
+            0xC0, 1, 0x23,      //Power Control 1 [26]
+            0xC1, 1, 0x10,      //Power Control 2 [00]
+            0xC5, 2, 0x2B, 0x2B,        //VCOM 1 [31 3C]
+            0xC7, 1, 0xC0,      //VCOM 2 [C0]
+            0x36, 1, 0x88,      //Memory Access [00]
+            0xB1, 2, 0x00, 0x1B,        //Frame Control [00 1B]
+            0xB7, 1, 0x07,      //Entry Mode [00]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel Format [66]
+        };
+		static const uint8_t ILI9341_regValues_ada9341[] PROGMEM = {   // Adafruit_ILI9341
+            0xEF, 3, 0x03, 0x80, 0x02,            //
+            0xCF, 3, 0x00, 0xC1, 0x30,  //Power Control B [00 81 30]
+            0xED, 4, 0x64, 0x03, 0x12, 0x81,    //Power On Seq [55 01 23 01]
+            0xE8, 3, 0x85, 0x00, 0x78,  //Driver Timing A [04 11 7A]
+            0xCB, 5, 0x39, 0x2C, 0x00, 0x34, 0x02,      //Power Control A [39 2C 00 34 02]
+            0xF7, 1, 0x20,      //Pump Ratio [10]
+            0xEA, 2, 0x00, 0x00,        //Driver Timing B [66 00]
+            0xC0, 1, 0x23,      //Power Control 1 [26]
+            0xC1, 1, 0x11,      //Power Control 2 [00]
+            0xC5, 2, 0x3E, 0x28,        //VCOM 1 [31 3C]
+            0xC7, 1, 0x86,      //VCOM 2 [C0]
+            0x36, 1, 0x48,      //Memory Access [00]
+            0xB1, 2, 0x00, 0x18,        //Frame Control [00 1B]
+            0xB6, 3, 0x0A, 0x82, 0x27,  //?? Display Function [0A 82 27 XX]
+            0xF2, 1, 0x00,      //Enable 3G [02]
+            0x26, 1, 0x01,      //Gamma Set [01]
+            0xE0, 15, 0x0f, 0x31, 0x2b, 0x0c, 0x0e, 0x08, 0x4e, 0xf1, 0x37, 0x07, 0x10, 0x03, 0x0e, 0x09, 0x00,
+            0xE1, 15, 0x00, 0x0e, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0f, 0x0c, 0x31, 0x36, 0x0f,
+
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            0x3A, 1, 0x55,      //Pixel Format [66]
+        };
+//        init_table(ILI9341_regValues_kbv, sizeof(ILI9341_regValues_kbv));   //ok for me
+//        init_table(ILI9341_regValues_2_0, sizeof(ILI9341_regValues_2_0));   //wrong direction
+        init_table(ILI9341_regValues_2_4, sizeof(ILI9341_regValues_2_4));   //wrong direction
+//        init_table(ILI9341_regValues_2_6, sizeof(ILI9341_regValues_2_6));   //inverted
+//        init_table(ILI9341_regValues_ada, sizeof(ILI9341_regValues_ada));   //white screen
+//        init_table(ILI9341_regValues_ada9341, sizeof(ILI9341_regValues_ada9341));   //ok for me
+        break;
+
+    case 0x9486:
+        _lcd_capable = AUTO_READINC | TWO_PARM_WINDOW | MV_AXIS;
+        static const uint8_t ILI9486_regValues[] PROGMEM = {
+            0x01, 0,            //Soft Reset
+            0x28, 0,            //Display Off
+            0xC0, 2, 0x0d, 0x0d,        //Power Control 1 [0x0E0E]
+            0xC1, 2, 0x43, 0x00,        //Power Control 2 [0x4300]
+            0xC2, 1, 0x00,      //Power Control 3
+            0xC5, 4, 0x00, 0x48, 0x00, 0x48,    //VCOM  Control 1 [0x00400040]
+            0xB6, 3, 0x00, 0x22, 0x3B,  // Display Function Control  .kbv SS=1
+            //      0xE0,15, 0x0f,0x31,0x2b,0x0c,0x0e,0x08,0x4e,0xf1,0x37,0x07,0x10,0x03,0x0e,0x09,0x00,
+            //      0xE1,15, 0x00,0x0e,0x14,0x03,0x11,0x07,0x31,0xC1,0x48,0x08,0x0f,0x0c,0x31,0x36,0x0f,
+            0x20, 0,            // Display Inversion OFF
+            0x36, 1, 0x0A,      //Memory Access
+            0x3A, 1, 0x55,      //Interlace Pixel
+//            0x21, 0,            //Invert display !!!
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 50,
+            0x29, 0,            //Display On
+        };
+        init_table(ILI9486_regValues, sizeof(ILI9486_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+
+	case 0x9488:
+        _lcd_capable = AUTO_READINC | TWO_PARM_WINDOW | MV_AXIS;
+        static const uint8_t ILI9488_regValues[] PROGMEM = {
+            0x01, 0,            //Soft Reset
+            0x28, 0,            //Display Off
+            0xC0, 2, 0x0E, 0x0E,        //Power Control 1 [0E 0E]
+            0xC1, 1, 0x43,      //Power Control 2 [43]
+            0xC5, 4, 0x00, 0x22, 0x80, 0x40,    //VCOM  Control 1 [00 40 00 40]
+            0x36, 1, 0x08,      //Memory Access   [00]
+            0x3A, 1, 0x55,      //Interlace Pixel [XX]
+            0xB1, 2, 0xB0, 0x11,        //Frame Rate Control [B0 11]
+            0xB6, 3, 0x02, 0x02, 0x3B,  //Display Function [02 02 3B] .kbv SS=0
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+            //      0x2C, 0,
+        };
+        static const uint8_t ILI9488_regValues_max[] PROGMEM = {   // Atmel MaxTouch
+            0x01, 0,            //Soft Reset
+            TFTLCD_DELAY, 50,
+            0x28, 0,            //Display Off
+            0xC0, 2, 0x10, 0x10,        //Power Control 1 [0E 0E]
+            0xC1, 1, 0x41,      //Power Control 2 [43]
+            0xC5, 4, 0x00, 0x22, 0x80, 0x40,    //VCOM  Control 1 [00 40 00 40]
+            0x36, 1, 0x68,      //Memory Access [00]
+            0xB0, 1, 0x00,      //Interface     [00]
+            0xB1, 2, 0xB0, 0x11,        //Frame Rate Control [B0 11]
+            0xB4, 1, 0x02,      //Inversion Control [02]
+            0xB7, 1, 0xC6,             //Entry Mode      [06]
+            0x3A, 1, 0x55,      //Interlace Pixel Format [XX]
+            0xF7, 4, 0xA9, 0x51, 0x2C, 0x82,    //Adjustment Control 3 [A9 51 2C 82]
+            0x11, 0,            //Sleep Out
+            TFTLCD_DELAY, 150,
+            0x29, 0,            //Display On
+        };
+//        init_table(ILI9488_regValues, sizeof(ILI9488_regValues));
+        init_table(ILI9488_regValues_max, sizeof(ILI9488_regValues_max));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+// ###################################################################################
+      case 0x7789:
+      case 0x8552:
+        _lcd_capable = AUTO_READINC | TWO_PARM_WINDOW | MV_AXIS;
+        static const uint8_t ST7789_regValues[] PROGMEM = {
+        (0x0011); //exit SLEEP mode
+        TFTLCD_DELAY, 10,
+        (0x0036), 1, 0x80,      //MADCTL: memory data access control
+        (0x003A), 1, 0x66,      //COLMOD: Interface Pixel format *** I use 262K-colors in 18bit/pixel format when using 8-bit interface to allow 3-bytes per pixel
+//        (0x003A), 1, 0x0055,      //COLMOD: Interface Pixel format  *** I use 65K-colors in 16bit/pixel (5-6-5) format when using 16-bit interface to allow 1-byte per pixel
+        (0x00B2), 5, 0x0C, 0x0C, 0x00, 0x33, 0x33,      //PORCTRK: Porch setting
+        (0x00B7), 1, 0x35,      //GCTRL: Gate Control
+        (0x00BB), 1, 0x2B,      //VCOMS: VCOM setting
+        (0x00C0), 1, 0x2C,      //LCMCTRL: LCM Control
+        (0x00C2), 2, 0x01, 0xFF,      //VDVVRHEN: VDV and VRH Command Enable
+        (0x00C3), 1, 0x11,      //VRHS: VRH Set
+        (0x00C4), 1, 0x20,      //VDVS: VDV Set
+        (0x00C6), 1, 0x0F,      //FRCTRL2: Frame Rate control in normal mode
+        (0x00D0), 2, 0xA4, 0xA1,      //PWCTRL1: Power Control 1
+        (0x00E0), 14, 0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19,      //PVGAMCTRL: Positive Voltage Gamma control	
+        (0x00E1), 14, 0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19,      //NVGAMCTRL: Negative Voltage Gamma control
+        (0x002A), 4, 0x00, 0x00, 0x00, 0xEF,      //X address set
+        (0x002B), 4, 0x00, 0x00, 0x01, 0x3F,      //Y address set
+        TFTLCD_DELAY, 10,
+		};
+        init_table(ST7789_regValues, sizeof(ST7789_regValues));   //
+        break;
+
+// ####################################################################################
+        static const uint16_t ILI9225_regValues[] PROGMEM = {
+	/* Start Initial Sequence */
+	/* Set SS bit and direction output from S528 to S1 */
+	ILI9225_POWER_CTRL1, 0x0000, // Set SAP,DSTB,STB
+	ILI9225_POWER_CTRL2, 0x0000, // Set APON,PON,AON,VCI1EN,VC
+	ILI9225_POWER_CTRL3, 0x0000, // Set BT,DC1,DC2,DC3
+	ILI9225_POWER_CTRL4, 0x0000, // Set GVDD
+	ILI9225_POWER_CTRL5, 0x0000, // Set VCOMH/VCOML voltage
+	TFTLCD_DELAY, 40, 
+
+	// Power-on sequence
+	ILI9225_POWER_CTRL2, 0x0018, // Set APON,PON,AON,VCI1EN,VC
+	ILI9225_POWER_CTRL3, 0x6121, // Set BT,DC1,DC2,DC3
+	ILI9225_POWER_CTRL4, 0x006F, // Set GVDD   /*007F 0088 */
+	ILI9225_POWER_CTRL5, 0x495F, // Set VCOMH/VCOML voltage
+	ILI9225_POWER_CTRL1, 0x0800, // Set SAP,DSTB,STB
+	TFTLCD_DELAY, 10,
+	ILI9225_POWER_CTRL2, 0x103B, // Set APON,PON,AON,VCI1EN,VC
+	TFTLCD_DELAY, 50,
+
+	ILI9225_DRIVER_OUTPUT_CTRL, 0x011C, // set the display line number and display direction
+	ILI9225_LCD_AC_DRIVING_CTRL, 0x0100, // set 1 line inversion
+	ILI9225_ENTRY_MODE, 0x1030, // set GRAM write direction and BGR=1.
+	ILI9225_DISP_CTRL1, 0x0000, // Display off
+	ILI9225_BLANK_PERIOD_CTRL1, 0x0808, // set the back porch and front porch
+	ILI9225_FRAME_CYCLE_CTRL, 0x1100, // set the clocks number per line
+	ILI9225_INTERFACE_CTRL, 0x0000, // CPU interface
+	ILI9225_OSC_CTRL, 0x0D01, // Set Osc  /*0e01*/
+	ILI9225_VCI_RECYCLING, 0x0020, // Set VCI recycling
+	ILI9225_RAM_ADDR_SET1, 0x0000, // RAM Address
+	ILI9225_RAM_ADDR_SET2, 0x0000, // RAM Address
+
+	/* Set GRAM area */
+	ILI9225_GATE_SCAN_CTRL, 0x0000, 
+	ILI9225_VERTICAL_SCROLL_CTRL1, 0x00DB, 
+	ILI9225_VERTICAL_SCROLL_CTRL2, 0x0000, 
+	ILI9225_VERTICAL_SCROLL_CTRL3, 0x0000, 
+	ILI9225_PARTIAL_DRIVING_POS1, 0x00DB, 
+	ILI9225_PARTIAL_DRIVING_POS2, 0x0000, 
+	ILI9225_HORIZONTAL_WINDOW_ADDR1, 0x00AF, 
+	ILI9225_HORIZONTAL_WINDOW_ADDR2, 0x0000, 
+	ILI9225_VERTICAL_WINDOW_ADDR1, 0x00DB, 
+	ILI9225_VERTICAL_WINDOW_ADDR2, 0x0000, 
+
+	/* Set GAMMA curve */
+	ILI9225_GAMMA_CTRL1, 0x0000, 
+	ILI9225_GAMMA_CTRL2, 0x0808, 
+	ILI9225_GAMMA_CTRL3, 0x080A, 
+	ILI9225_GAMMA_CTRL4, 0x000A, 
+	ILI9225_GAMMA_CTRL5, 0x0A08, 
+	ILI9225_GAMMA_CTRL6, 0x0808, 
+	ILI9225_GAMMA_CTRL7, 0x0000, 
+	ILI9225_GAMMA_CTRL8, 0x0A00, 
+	ILI9225_GAMMA_CTRL9, 0x0710, 
+	ILI9225_GAMMA_CTRL10, 0x0710, 
+
+	ILI9225_DISP_CTRL1, 0x0012, 
+	TFTLCD_DELAY, 50, 
+	ILI9225_DISP_CTRL1, 0x1017,
+};

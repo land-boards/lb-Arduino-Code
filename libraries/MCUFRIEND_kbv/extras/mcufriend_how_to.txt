@@ -1,0 +1,92 @@
+1. The Arduino Library Manager should find and install MCUFRIEND_kbv library
+
+2. Install the Adafruit_GFX library if not already in your User libraries.
+
+3. Insert your Mcufriend style display shield into UNO.   Only 28-pin shields are supported.
+
+4. Build any of the Examples from the File->Examples->Mcufriend_kbv menu.  e.g. graphictest_kbv.ino
+
+5. Most of them will write some text to the Serial window (9600 baud).   The BMP examples require you to copy the pictures from the bitmaps/ folder to your microSD (root directory)
+
+6. This library is only intended for UNO and these specific Shields.   It will work on a MEGA2560 but not very fast.
+
+7. The constructor takes no arguments (because it only works with these shields)
+
+8. The examples are the standard Adafruit ones.   You can see my edits by searching for "kbv"
+
+9. Any Adafruit sketch should work with the MCUFRIEND_kbv constructor() but should allow extra ID values
+An Adafruit constructor(cs, rs, wr, rd, rst) IGNORES any arguments.   i.e. it only uses the shield control pins
+
+10. It currently supports UNO shields with "mcufriend.com" pcbs with controllers:
+HX8347-A 240x320  ID=0x8347 #define SUPPORT_8347A *** Untested ***
+HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
+HX8347-G 240x320  ID=0x7575 #define SUPPORT_8347D
+HX8347-I 240x320  ID=0x9595 #define SUPPORT_8347D
+HX8352-A 240x400  ID=0x5252 #define SUPPORT_8352A
+HX8357-D 320x480  ID=0x8357
+HX8367-A 240x320  ID=0x6767 #define SUPPORT_8347D
+ILI9302  240x320  ID=0x9302 
+ILI9320  240x320  ID=0x9320
+ILI9325  240x320  ID=0x9325
+ILI9326  240x400  ID=0x9326 #define SUPPORT_9326_5420
+ILI9327  240x400  ID=0x9327
+ILI9328  240x320  ID=0x9328 
+ILI9329  240x320  ID=0x9329 
+ILI9331  240x320  ID=0x9331 
+ILI9335  240x320  ID=0x9335 
+ILI9338  240x320  ID=0x9338 
+ILI9340  240x320  ID=0x9340 
+ILI9341  240x320  ID=0x9341 
+ILI9481  320x480  ID=0x9481  
+ILI9486  320x480  ID=0x9486
+ILI9487  320x480  ID=0x9488
+ILI9488  320x480  ID=0x9488
+LGDP4532 240x320  ID=0x4532 #define SUPPORT_4532
+LGDP4535 240x320  ID=0x4535 #define SUPPORT_4535
+R61505   240x320  ID=0x1505 (not working)
+R61505V  240x320  ID=0xB505
+R61505W  240x320  ID=0xC505 
+R61509V  240x400  ID=0xB509 #define SUPPORT_B509_7793
+R61520   240x320  ID=0x1520 (no Vertical Scroll)
+R61526A  240x320  ID=0x1526 (no Vertical Scroll) configure NVM with sketch
+R61581   320x480  ID=0x1581
+RM68090  240x320  ID=0x6809
+RM68140  320x480  ID=0x6814 #define SUPPORT_68140
+S6D0139  240x320  ID=0x0139 #define SUPPORT_0139 *** Untested ***
+S6D0154  240x320  ID=0x0154 #define SUPPORT_0154
+SPFD5408 240x320  ID=0x5408
+SPFD5420 240x400  ID=0x5420 #define SUPPORT_9326_5420
+SSD1963  800x480  ID=0x1963
+SSD1289  240x320  ID=0x1289 #define SUPPORT_1289
+ST7781   240x320  ID=0x7783 #define SUPPORT_7781 (no Vertical Scroll)
+ST7789V  240x320  ID=0x7789
+ST7793   240x400  ID=0x7793 #define SUPPORT_B509_7793
+ST7796   320x480  ID=0x7796
+UC8230   240x320  ID=0x8230 #define SUPPORT_8230
+UNKNOWN  320x480  ID=0x1511 (scroll directions not correct)
+UNKNOWN  240x320  ID=0x1602
+UNKNOWN  240x320  ID=0xAC11
+
+Most of these controllers are #define SUPPORT_xxxx by default.
+You can save Flash memory on a Uno by commenting out the macro(s).
+
+11. It should run on a UNO, MEGA2560, LEONARDO, DUE, ZERO, M0-PRO, 
+It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
+
+12. These Mcufriend-style shields tend to have a resistive TouchScreen on A1, 7, A2, 6 but are not always the same rotation of direction.
+Run the diagnose_Touchpins.ino sketch to detect which pins are used
+Run the TouchScreen_Calibr_kbv.ino sketch to diagnose your model and then scale the result from TouchScreen.h methods()
+The Resistive TouchScreen does not work on the Due.   It seems to be upset by sharing pins.  I have discovered why.   
+(You need a new Touch library.)
+
+13. The aspect_kbv.ino sketch should show the 4 different rotations.   Please report the results for an ILI9335, ILI9327. 
+
+14. The scroll_kbv.ino sketch should scroll a window or subwindow for most chips.   Not all chips can scroll.
+
+15. The readpixel_kbv.ino sketch should display memory in each aspect. 
+
+16. The GLUE_Demo_320x240.ino sketch uses a "GLUE" class to display a UTFT sketch on supported mcufriend shields.   
+    It is NOT perfect.   Please report any problems.    It is designed as a CONVENIENCE for legacy UTFT code.   
+    Please use MCUFRIEND_kbv method()s in new code. 
+
+CHANGE HISTORY: is now in "mcufriend_history.txt"
