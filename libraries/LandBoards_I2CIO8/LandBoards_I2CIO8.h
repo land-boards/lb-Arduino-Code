@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  landboards_I2CIO8.h - Library for Land Boards I2CIO-8 card
+//  LandBoards_I2CIO8.h - Library for Land Boards I2CIO-8 card
 //  Created by Douglas Gilliland. 2015-11-23
 ////////////////////////////////////////////////////////////////////////////
 // Card has an MCP23008 chip
@@ -48,10 +48,10 @@
 //	MCP23017 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-class I2CIO8
+class LandBoards_I2CIO8
 {
   public:
-    I2CIO8(void);
+    LandBoards_I2CIO8(void);
 	void begin(void);
 	void begin(uint8_t);
 	void writeLED(uint8_t,uint8_t);			// Writes to a single LED

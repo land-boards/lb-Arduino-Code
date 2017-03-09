@@ -42,10 +42,15 @@ void LandBoards_I2CRPT08::begin(void)
 // setI2CChannel() - 
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_I2CRPT08::setI2CChannel(uint8_t chNum, uint_8 enableFlag)
+void LandBoards_I2CRPT08::setI2CChannel(uint8_t chNum, uint8_t enableFlag)
 {
+	uint8_t bitToWrite;
 	chNum &= 0x07;
-	ctrl_copy = chNum;
+	bitToWrite = 1 << chNum;
+	if (enableFlag == 1)
+		ctrl_copy |= bitToWrite;
+	else
+		ctrl_copy &= ~bitToWrite;
 	Wire.beginTransmission(PCA9544A_ADDRESS | i2caddr);
 	Wire.write((byte)ctrl_copy);
 	Wire.endTransmission();
