@@ -93,7 +93,7 @@ uint8_t testProto16(void)
 
 uint8_t testI2CIO8(void)
 {
-  I2CIO8 i2cio8Card;
+  LandBoards_I2CIO8 i2cio8Card;
   i2cio8Card.begin(0);
   Serial.println(F("I2CIO8 card tests"));
   Serial.println(F("Move jumper across H5-H8, observe LEDs D0-D3"));
@@ -121,7 +121,7 @@ uint8_t testI2CIO8(void)
 uint8_t testI2CIO8X(void)
 {
   uint8_t jumpers;
-  I2CIO8X i2cio8Card;
+  LandBoards_I2CIO8X i2cio8Card;
   i2cio8Card.begin(0);
 //  Serial.println(F("I2CIO8X card"));
 //  Serial.println(F("Install test jumper"));

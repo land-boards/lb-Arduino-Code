@@ -48,10 +48,10 @@
 //	MCP23017 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-class I2CIO8X
+class LandBoards_I2CIO8X
 {
   public:
-    I2CIO8X(void);
+    LandBoards_I2CIO8X(void);
 	void begin(void);
 	void begin(uint8_t);
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper

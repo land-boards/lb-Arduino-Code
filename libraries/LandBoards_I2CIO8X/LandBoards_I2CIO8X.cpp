@@ -18,7 +18,7 @@
 // I2CIO8 constructor
 ////////////////////////////////////////////////////////////////////////////
 
-I2CIO8X::I2CIO8X(void)
+LandBoards_I2CIO8X::LandBoards_I2CIO8X(void)
 {
 	return;
 }
@@ -27,7 +27,7 @@ I2CIO8X::I2CIO8X(void)
 // begin(addr) - Initialize the card
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8X::begin(uint8_t addr)
+void LandBoards_I2CIO8X::begin(uint8_t addr)
 {
 	i2caddr = addr;
 
@@ -46,7 +46,7 @@ void I2CIO8X::begin(uint8_t addr)
 // begin(void) - Initialize the card
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8X::begin(void)
+void LandBoards_I2CIO8X::begin(void)
 {
 	begin(0);
 	return;
@@ -56,7 +56,7 @@ void I2CIO8X::begin(void)
 // readAllJumpers()
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t I2CIO8X::readAllJumpers(void)
+uint8_t LandBoards_I2CIO8X::readAllJumpers(void)
 {
 	return ((read8(MCP23008_GPIO) & 0xf0) >> 4);
 }
@@ -65,7 +65,7 @@ uint8_t I2CIO8X::readAllJumpers(void)
 // readJumper(uint8_t)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t I2CIO8X::readJumper(uint8_t bit)
+uint8_t LandBoards_I2CIO8X::readJumper(uint8_t bit)
 {
 	return digitalRead(bit);
 }
@@ -79,7 +79,7 @@ uint8_t I2CIO8X::readJumper(uint8_t bit)
 // This eliminates the separate pullup function
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8X::pinMode(uint8_t bit, uint8_t d)
+void LandBoards_I2CIO8X::pinMode(uint8_t bit, uint8_t d)
 {
 	uint8_t iodir;
 	bit &= 7;
@@ -107,7 +107,7 @@ void I2CIO8X::pinMode(uint8_t bit, uint8_t d)
 //  uint8_t pullUp(bit, d) 
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8X::pullUp(uint8_t bit, uint8_t d) 
+void LandBoards_I2CIO8X::pullUp(uint8_t bit, uint8_t d) 
 {
 	uint8_t gppuCopy;
 	bit &= 7;
@@ -127,7 +127,7 @@ void I2CIO8X::pullUp(uint8_t bit, uint8_t d)
 //  uint8_t digitalWrite(uint8_t, uint8_t)
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8X::digitalWrite(uint8_t bit, uint8_t d) 
+void LandBoards_I2CIO8X::digitalWrite(uint8_t bit, uint8_t d) 
 {
 	uint8_t gpioCopy;
 
@@ -145,7 +145,7 @@ void I2CIO8X::digitalWrite(uint8_t bit, uint8_t d)
 //  uint8_t digitalRead(bit)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t I2CIO8X::digitalRead(uint8_t bit)
+uint8_t LandBoards_I2CIO8X::digitalRead(uint8_t bit)
 {
 	bit &= 7;
 	return (read8(MCP23008_GPIO) >> bit) & 0x1;
@@ -155,7 +155,7 @@ uint8_t I2CIO8X::digitalRead(uint8_t bit)
 // uint8_t read8(addr) 
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t I2CIO8X::read8(uint8_t addr) 
+uint8_t LandBoards_I2CIO8X::read8(uint8_t addr) 
 {
 	Wire.beginTransmission(MCP23008_ADDRESS | i2caddr);
 	Wire.write((uint8_t)addr);	
@@ -168,7 +168,7 @@ uint8_t I2CIO8X::read8(uint8_t addr)
 // void I2CIO8::write8(addr, data) 
 ////////////////////////////////////////////////////////////////////////////
 
-void I2CIO8X::write8(uint8_t addr, uint8_t data) 
+void LandBoards_I2CIO8X::write8(uint8_t addr, uint8_t data) 
 {
 	Wire.beginTransmission(MCP23008_ADDRESS | i2caddr);
 	Wire.write((uint8_t)addr);
