@@ -41,7 +41,7 @@ void eepromRead(void)
 {
   char readBuff[97];
   eeprom.begin();
-  Serial.println(F("Reading EEPROM"));
+//  Serial.println(F("Reading EEPROM"));
   delay(10);
 
   eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
@@ -62,7 +62,7 @@ void eepromRead(void)
     Serial.print(readBuff[loopv++]);
   }
   while ((readBuff[loopv] != 0) && (loopv < 128));
-  Serial.println("");
+//  Serial.println("\n\rDone reading EPROM");
 }
 
 //////////////////////////////////////////////////////////

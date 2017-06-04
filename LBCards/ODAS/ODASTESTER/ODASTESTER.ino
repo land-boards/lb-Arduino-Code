@@ -42,11 +42,11 @@ boardType_t boardType;
 
 uint32_t failCount;
 uint32_t passCount;
-int looping;
+uint8_t single0loop1;
 
 typedef enum {
-  UUT_CARD_MUX_CH=0,
-  TEST_STN_INT_MUX_CH=1,
+  UUT_CARD_MUX_CH = 0,
+  TEST_STN_INT_MUX_CH = 1,
 } muxChannel_t;
 
 LandBoards_I2CRPT01 myI2CMux;
@@ -64,14 +64,14 @@ void setup()
 
   failCount = 0;
   passCount = 0;
-  looping = 0;
+  single0loop1 = 0;
   boardType = NEW_CARD;
   if (detectBoardInEeprom() == 1)
   {
     selectBoardType();
     eepromWrite();
   }
-  Serial.println(F("R=Read EEPROM, W=Write EEPROM, T=Test DIGIOs, L=Loop Test, B=Bounce LEDs"));
+  Serial.println(F("E=EEPROM Access, C=Card Test Menu, D=Direct Access Menu"));
 }
 
 //////////////////////////////////////////////////////////
@@ -80,82 +80,11 @@ void setup()
 
 void loop()
 {
-  int incomingByte = 0;   // for incoming serial data
-  if (Serial.available() > 0)
+  while (1)
   {
-    // read the incoming byte:
-    incomingByte = Serial.read();
-    switch (incomingByte)
-    {
-      case 'R':
-      case 'r':
-        {
-          eepromRead();
-          break;
-        }
-      case 'W':
-      case 'w':
-        {
-          selectBoardType();
-          eepromWrite();
-          break;
-        }
-      case 'T':
-      case 't':
-        {
-          if (loopBackTestCard() == 0)
-            passCount++;
-          else
-            failCount++;
-
-          Serial.print(F("Loopback Test PASS = "));
-          Serial.print(passCount);
-          Serial.print(F(", FAIL = "));
-          Serial.println(failCount);
-          break;
-        }
-      case 'L':
-      case 'l':
-        {
-          looping = 1;
-          break;
-        }
-      case 'B':
-      case 'b':
-        {
-          bounceLedsCard();
-          break;
-        }
-      default:
-        {
-          if (looping == 1)
-            looping = 0;
-          else
-            Serial.println(F("Unrecognized command"));
-          Serial.println(F("\nR=Read EEPROM, W=Write EEPROM, T=Test DIGIOs, L=Loop Test, B=Bounce LEDs"));
-          break;
-        }
-    }
-    while (Serial.available() > 0)
-      Serial.read();
-
-    if (looping == 1)
-      Serial.println("Looping, hit a key to stop");
-    while ((looping == 1) && (Serial.available() == 0))
-    {
-      if (loopBackTestCard() == 0)
-        passCount++;
-      else
-        failCount++;
-
-      Serial.print("Loopback Test PASS = ");
-      Serial.print(passCount);
-      Serial.print(", FAIL = ");
-      Serial.println(failCount);
-    }
+    topLevelMenu();
   }
 }
-
 
 //////////////////////////////////////////////////////////
 // void setMuxChannel(muxChannel_t)
@@ -165,7 +94,7 @@ void loop()
 
 void setMuxChannel(muxChannel_t newMuxChannel)
 {
-    myI2CMux.setI2CChannel(newMuxChannel);
+  myI2CMux.setI2CChannel(newMuxChannel);
 
 }
 

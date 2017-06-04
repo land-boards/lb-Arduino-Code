@@ -1,12 +1,12 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// ODAS card loopback test code
+// ODAS card internal loopback test code
 //////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestCard(void) -
+// uint8_t internalLoopBackTestCard(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestCard(void)
+uint8_t internalLoopBackTestCard(void)
 {
   setMuxChannel(UUT_CARD_MUX_CH);
   switch (boardType)
@@ -15,28 +15,28 @@ uint8_t loopBackTestCard(void)
       Serial.println(F("Not supported at present"));
       break;
     case DIGIO128_CARD:
-      return (loopBackTestDIGIO128_CARD());
-      break;
-    case OPTOIN8I2C_CARD:
-      return (loopBackTestOptoIn8());
-      break;
-    case OPTOOUT8I2C_CARD:
-      return (loopBackTestOptoOut8());
+      return (internalLoopBackTestDIGIO128_CARD());
       break;
     case DIGIO32I2C_CARD:
-      return (loopBackTestDigio32());
+      return (internalLoopBackTestDigio32());
       break;
     case PROTO16I2C_CARD:
-      return (testProto16());
+      return (internalLoopBackTestProto16());
+      break;
+    case OPTOIN8I2C_CARD:
+      return (internalLoopBackTestOptoIn8());
+      break;
+    case OPTOOUT8I2C_CARD:
+      return (internalLoopBackTestOptoOut8());
+      break;
+    case I2CIO8_CARD:
+      return (internalLoopBackTestI2CIO8());
+      break;
+    case I2CIO8X_CARD:
+      return (internalLoopBackTestI2CIO8X());
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
-      break;
-    case I2CIO8_CARD:
-      return (testI2CIO8());
-      break;
-    case I2CIO8X_CARD:
-      return (testI2CIO8X());
       break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
@@ -51,10 +51,42 @@ uint8_t loopBackTestCard(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t testProto16(void) - Test the PROTO16-I2C card
+// uint8_t internalLoopBackTestDigio32()
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t testProto16(void)
+uint8_t internalLoopBackTestDigio32(void)
+{
+  uint8_t port;
+  uint8_t pass0fail1 = 0;
+  uint32_t wrBit;
+  uint32_t rback32;
+  uint8_t bit;
+  Digio32 Dio32;
+  Dio32.begin(0);
+//  Serial.println(F("internalLoopBackTestDigio32() - reached function"));
+  for (wrBit = 1; wrBit != 0; wrBit <<=1)
+  {
+    Dio32.write32(wrBit);
+    rback32 = Dio32.readGPIOAB(1);
+    rback32 <<= 16;
+    rback32 |= Dio32.readGPIOAB(0);
+    if (rback32 != wrBit)
+    {
+      Serial.print("Got back: ");
+      Serial.println(rback32,HEX);
+      return 1;
+    }
+  }
+//  Serial.print("Upper Half");
+//  Serial.println(rback32,HEX);
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t internalLoopBackTestProto16(void) - Test the PROTO16-I2C card
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t internalLoopBackTestProto16(void)
 {
   uint8_t failed = 0;
   uint8_t loopCnt;
@@ -88,10 +120,10 @@ uint8_t testProto16(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t testI2CIO8(void) - Test the I2CIO8 card
+// uint8_t internalLoopBackTestI2CIO8(void) - Test the I2CIO8 card
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t testI2CIO8(void)
+uint8_t internalLoopBackTestI2CIO8(void)
 {
   LandBoards_I2CIO8 i2cio8Card;
   i2cio8Card.begin(0);
@@ -115,10 +147,10 @@ uint8_t testI2CIO8(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t testI2CIO8X(void)
+// uint8_t internalLoopBackTestI2CIO8X(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t testI2CIO8X(void)
+uint8_t internalLoopBackTestI2CIO8X(void)
 {
   uint8_t jumpers;
   LandBoards_I2CIO8X i2cio8Card;
@@ -149,97 +181,17 @@ uint8_t testI2CIO8X(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestDigio32()
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t loopBackTestDigio32(void)
-{
-  uint8_t port;
-  uint8_t pass0fail1 = 0;
-  Digio32 Dio32;
-  Dio32.begin(0);
-  Serial.println(F("loopBackTestDigio32() - reached function"));
-  for (port = 0; port < 16; port++)
-  {
-    Dio32.pinMode(port, OUTPUT);
-    Dio32.pinMode(port+16, INPUT_PULLUP);
-
-    delay(2);
-    Dio32.digitalWrite(port, HIGH);
-    delay(2);
-    if (Dio32.digitalRead(port + 16) != HIGH)
-    {
-      
-      Serial.print(F("Error on chip 0"));
-      Serial.print(F(" and port "));
-      Serial.print(port + 16);
-      Serial.println(F(" Expected High"));
-      pass0fail1 = 1;
-    }
-    Dio32.digitalWrite(port, LOW);
-    delay(2);
-    if (Dio32.digitalRead(port + 16) != LOW)
-    {
-      Serial.print(F("Error on chip 0"));
-      Serial.print(F(" and port "));
-      Serial.print(port);
-      Serial.println(F(" Expected LOW"));
-      pass0fail1 = 1;
-    }
-    Dio32.pinMode(port, INPUT_PULLUP);
-    delay(2);
-  }
-
-  return pass0fail1;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
 // OptoIn8-I2C card test code
 //////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////
-// initOI8pins - Init the OptoIn8-I2C card to all Inputs
-//////////////////////////////////////////////////////////////////////////////////////
-
-void initOI8pins(void)
-{
-  Adafruit_MCP23008 mcpOI8;
-  mcpOI8.begin();               // use default address 0
-
-  int loopCnt;
-  for (loopCnt = 0; loopCnt < 8; loopCnt++)
-  {
-    mcpOI8.pinMode(loopCnt, INPUT);
-    mcpOI8.pullUp(loopCnt, HIGH);  // turn on a 100K pullup internally
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// Read a bit from the OptoIn8-I2C card
-//////////////////////////////////////////////////////////////////////////////////////
-
-unsigned char readOptoIn8(void)
-{
-  Adafruit_MCP23008 mcpOI8;
-  mcpOI8.begin();               // use default address 0
-  int loopVal;
-  unsigned int rval = 0;
-  for (loopVal = 0; loopVal < 8; loopVal++)
-  {
-    rval |= mcpOI8.digitalRead(loopVal) & 0x1;
-    rval <<= 1;
-  }
-  return rval >> 1;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestOptoIn8(void) - Test the OptoIn8-I2C card
+// uint8_t internalLoopBackTestOptoIn8(void) - Test the OptoIn8-I2C card
 // Puts out 8 bit test vector on Arduino pins
 //  Arduino Output lines aew D2-D5, D7, D8, D14(A0), D15(A1)
 // Looks at the returned values on the OptoIn8-I2C
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestOptoIn8(void)
+uint8_t internalLoopBackTestOptoIn8(void)
 {
   unsigned char readVal;
   int testPass = 1;
@@ -329,36 +281,14 @@ uint8_t loopBackTestOptoIn8(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// OptoOut8-I2C card
-//////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////////
-// void initOO8pins(void)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void initOO8pins(void)
-{
-  Adafruit_MCP23008 mcpOO8;
-  mcpOO8.begin();               // use default address 0
-  int loopCnt;
-  for (loopCnt = 0; loopCnt < 8; loopCnt++)
-  {
-    mcpOO8.digitalWrite(loopCnt, HIGH);
-    mcpOO8.pinMode(loopCnt, OUTPUT);
-  }
-  for (loopCnt = 2; loopCnt < 16; loopCnt++)
-    pinMode(loopCnt, INPUT);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestOptoOut8(void) - Test the OptoOut8-I2C card
+// uint8_t internalLoopBackTestOptoOut8(void) - Test the OptoOut8-I2C card
 // Puts out 8 bits on OptoOut8-I2C card
 // Reads the 8 bits on Arduino pins
 // Arduino Input lines are D2-D5, D7, D8, D14(A0), D15(A1)
 // Looks at the returned values on the OptoIn8-I2C
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestOptoOut8(void)
+uint8_t internalLoopBackTestOptoOut8(void)
 {
   //  Serial.println(F("Testing OptoOut8-I2C card"));
 
@@ -446,10 +376,10 @@ uint8_t loopBackTestOptoOut8(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestDIGIO128_CARD(void) -
+// uint8_t internalLoopBackTestDIGIO128_CARD(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestDIGIO128_CARD(void)
+uint8_t internalLoopBackTestDIGIO128_CARD(void)
 {
   Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
   Dio128.begin();      // connects to the 8 MCP23017 parts
@@ -499,4 +429,5 @@ uint8_t loopBackTestDIGIO128_CARD(void)
   else
     return 1;
 }
+
 

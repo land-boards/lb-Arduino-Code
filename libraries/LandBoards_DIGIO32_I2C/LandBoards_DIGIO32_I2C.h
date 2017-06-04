@@ -35,7 +35,7 @@ class Digio32
 	void writeGPIOAB(uint8_t,uint16_t);		// Write to a 16-bit chip
 	uint16_t readGPIOAB(uint8_t);			// Read from a 16-bit chip
 	void write32(uint32_t);					// Write 32-bits
-	uint32_t readGPIO32();					// Read 32-bits
+	uint32_t read32();						// Read 32-bits
 
   private:
 	Adafruit_MCP23017 mcp0;

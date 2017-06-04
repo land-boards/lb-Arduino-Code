@@ -136,7 +136,7 @@ void Adafruit_MCP23017::pinMode(uint8_t p, uint8_t d) {
  */
 uint16_t Adafruit_MCP23017::readGPIOAB() {
 	uint16_t ba = 0;
-	uint8_t a;
+	uint16_t a;
 
 	// read the current GPIO output latches
 	Wire.beginTransmission(MCP23017_ADDRESS | i2caddr);
@@ -175,8 +175,10 @@ uint8_t Adafruit_MCP23017::readGPIO(uint8_t b) {
  * Writes all the pins in one go. This method is very useful if you are implementing a multiplexed matrix and want to get a decent refresh rate.
  */
 void Adafruit_MCP23017::writeGPIOAB(uint16_t ba) {
+	writeRegister(MCP23017_IODIRA,0x00);
+	writeRegister(MCP23017_IODIRB,0x00);
 	Wire.beginTransmission(MCP23017_ADDRESS | i2caddr);
-	wiresend(MCP23017_GPIOA);
+	wiresend(MCP23017_OLATA);
 	wiresend(ba & 0xFF);
 	wiresend(ba >> 8);
 	Wire.endTransmission();

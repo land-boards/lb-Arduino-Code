@@ -34,11 +34,11 @@ void Digio32::begin(uint8_t baseAddr)
 	mcp0.begin((baseAddr&7));
 	mcp1.begin((baseAddr&7)+1);
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-    for (uint8_t port = 0; port < 16; port++)
-    {
-      mcp0.pinMode(port, INPUT);
-      mcp1.pinMode(port, INPUT);
-    }
+    // for (uint8_t port = 0; port < 16; port++)
+    // {
+      // mcp0.pinMode(port, INPUT);
+      // mcp1.pinMode(port, INPUT);
+    // }
 	return;
 }
 
@@ -49,7 +49,7 @@ void Digio32::begin(uint8_t baseAddr)
 void Digio32::digitalWrite(uint8_t bit, uint8_t value)
 {
 	int chip;
-	chip = bit >> 4;
+	chip = (bit >> 4) & 0x1;
 	switch (chip)
 	{
 		case 0:
@@ -68,7 +68,7 @@ void Digio32::digitalWrite(uint8_t bit, uint8_t value)
 uint8_t Digio32::digitalRead(uint8_t p)
 {
 	int chip, bit;
-	chip = bit >> 4;
+	chip = (bit >> 4) & 0x1;
 	bit = p & 0xf;
 	switch (chip)
 	{
@@ -92,7 +92,7 @@ uint8_t Digio32::digitalRead(uint8_t p)
 void Digio32::pinMode(uint8_t p, uint8_t d)
 {
 	int chip, bit;
-	chip = p >> 4;
+	chip = (bit >> 4) & 0x1;
 	bit = p & 0xf;
 	switch (chip)
 	{
@@ -179,8 +179,9 @@ void Digio32::write32(uint32_t longVal)
 // uint32_t readGPIO32(void) - Read 32-bits
 ////////////////////////////////////////////////////////////////////////////
 
-uint32_t Digio32::readGPIO32(void)
+uint32_t Digio32::read32(void)
 {
 	uint32_t longReadVal = 0;
 	longReadVal = (mcp1.readGPIOAB() << 16) | mcp0.readGPIOAB();
+	return longReadVal;
 }
