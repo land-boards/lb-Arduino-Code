@@ -1,45 +1,38 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_DIGIO32_I2C.cpp - Library for DIGIO32_I2C card
+//  LandBoards_Digio128V2.cpp - Library for Land Boards DigIO-128 card
 //  Created by Douglas Gilliland. 2017-06-05
-//  DIGIO32_I2C is a card which has 2 of MCP23017 16-bit port expanders
+//  Digio-128 is a card which has 8 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
 //  This library allows for both bit access and chip access to the card
-//  	Bit access (32 bits) via digitalWrite, digitalRead, pinMode
-//		Chip access (16-bits) via writeOLATAB, readGPIOAB
+//  	Bit access (128 bits) via digitalWrite, digitalRead, pinMode
+//		Chip access (16-bits) via writeGPIOAB, readGPIOAB
 //  Webpage for the card is at:
-//	http://land-boards.com/blwiki/index.php?title=DIGIO32_I2C
-//	Base address of the card is set by jumpers to one of four addresses
-////////////////////////////////////////////////////////////////////////////
-//	Library class supports multiple types of access:
-//		Arduino-ish (bit) oriented
-//      Byte oriented
-//      I2C Low Level Driver (I2C register access)oriented
+//	http://land-boards.com/blwiki/index.php?title=DIGIO-128
 ////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
 #include <Arduino.h>
 #include <inttypes.h>
 
-#include <LandBoards_DIGIO32_I2C.h>
+#include "LandBoards_digio128V2.h"
 
 ////////////////////////////////////////////////////////////////////////////
-// Digio32 constructor - has no address since the card uses all 0x20-0x27
+// Digio128 constructor - has no address since the card uses all 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-Digio32::Digio32(void)
+Digio128::Digio128(void)
 {
 	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// begin(baseAddr) - Initialize the card
+// begin(void) - Initialize the card
 // Sets all bits to inputs
-// Sets the global baseAddress - board base address register
+// Consumes 8 of I2C Addresses (no selection)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::begin(uint8_t baseAddr)
+void Digio128::begin(void)
 {
-	boardBaseAddr = MCP23017_ADDRESS + baseAddr;	// baseAddr set by jumpers
+	boardBaseAddr = MCP23017_ADDRESS;
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT; chipNum++)	// Set all pins to input by default
 	{
@@ -53,10 +46,10 @@ void Digio32::begin(uint8_t baseAddr)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void digitalWrite(uint8_t bit, uint8_t wrVal) - write to a bit
+// void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::digitalWrite(uint8_t bit, uint8_t wrVal)
+void Digio128::digitalWrite(uint8_t bit, uint8_t wrVal)
 {
 	uint8_t regAdr;
 	uint8_t chipAddr;
@@ -75,10 +68,10 @@ void Digio32::digitalWrite(uint8_t bit, uint8_t wrVal)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t digitalRead(uint8_t p) - read back a bit
+// uint8_t digitalRead(uint8_t bit)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio32::digitalRead(uint8_t bit)
+uint8_t Digio128::digitalRead(uint8_t bit)
 {
 	uint8_t regAdr;
 	uint8_t chipAddr;
@@ -93,7 +86,7 @@ uint8_t Digio32::digitalRead(uint8_t bit)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void PinMode(port, direction)- Set the direction of a bit (INPUT, OUTPUT, INPUT_PULLUP)
+// void PinMode(port, direction) - Set the direction of a bit (INPUT, OUTPUT, INPUT_PULLUP)
 // Arduino.h defines for direction are:
 //	#define INPUT 0x0
 //	#define OUTPUT 0x1
@@ -104,7 +97,7 @@ uint8_t Digio32::digitalRead(uint8_t bit)
 // Direction bit - 1=Input, 0=Output
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::pinMode(uint8_t bit, uint8_t value)
+void Digio128::pinMode(uint8_t bit, uint8_t value)
 {
 	uint8_t puRegAdr;	// Pull-up register address
 	uint8_t dirRegAdr;	// Direction register address
@@ -145,54 +138,33 @@ void Digio32::pinMode(uint8_t bit, uint8_t value)
 		rdDirVal &= ~changeBit;
 		writeRegister(chipAddr,dirRegAdr,rdDirVal);
 	}
-} 
-
-////////////////////////////////////////////////////////////////////////////
-// void writeOLATAB(chip,baData) - Write 16-bits of data at a time
-// There are two chips on the card
-////////////////////////////////////////////////////////////////////////////
-
-void Digio32::writeOLATAB(uint8_t chip, uint16_t baData)
-{
-	writeRegister(chip,MCP23017_OLATB,(baData>>8)&0xff);
-	writeRegister(chip,MCP23017_OLATA,baData&0xff);
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint16_t readGPIOAB(chip) - Read 16-bits at a time
+// void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
+// There are eight chips on the card
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t Digio32::readGPIOAB(uint8_t chip)
+void Digio128::writeGPIOAB(uint8_t chip, uint16_t baData)
+{
+	writeRegister(chip,MCP23017_OLATA,((baData>>8)&0xff));
+	writeRegister(chip,MCP23017_OLATB,(baData&0xff));
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint16_t readGPIOAB(chip)
+////////////////////////////////////////////////////////////////////////////
+
+uint16_t Digio128::readGPIOAB(uint8_t chip)
 {
 	return ((readRegister(chip,(MCP23017_GPIOB))<<8)|(readRegister(chip,MCP23017_GPIOA)));
-}
-
-////////////////////////////////////////////////////////////////////////////
-// void write32(uint8_t,uint32_t) - Write 32-bits
-////////////////////////////////////////////////////////////////////////////
-
-void Digio32::write32(uint32_t longVal)
-{
-	writeOLATAB(0,(uint16_t)(longVal&0xffff));
-	writeOLATAB(1,(uint16_t)(longVal>>16));
-}
-
-////////////////////////////////////////////////////////////////////////////
-// uint32_t readGPIO32(void) - Read 32-bits
-////////////////////////////////////////////////////////////////////////////
-
-uint32_t Digio32::read32(void)
-{
-	uint32_t longReadVal = 0;
-	longReadVal = ((readGPIOAB(1) << 16) | readGPIOAB(0));
-	return longReadVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
+uint8_t Digio128::readRegister(uint8_t chipAddr, uint8_t regAddr)
 {
 	Wire.beginTransmission(boardBaseAddr + chipAddr);
 	Wire.write(regAddr);
@@ -205,7 +177,7 @@ uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
 // void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+void Digio128::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 {
 	Wire.beginTransmission(boardBaseAddr + chipAddr);
 	Wire.write(regAddr);

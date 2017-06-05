@@ -1,19 +1,23 @@
-#ifndef LandBoards_DIGIO32_I2C_h
-#define LandBoards_DIGIO32_I2C_h
+#ifndef LANDBOARDS_DIGIO128_h
+#define LANDBOARDS_DIGIO128_h
 
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_DIGIO32_I2C - Library for Land Boards DigIO32-I2C card
-//  DIGIO32_I2C is a card which has 2 of MCP23017 16-bit port expanders
+//  LandBoards_Digio128V2.h - Library for Land Boards DigIO-128 card
+//  Created by Douglas Gilliland. 2017-06-05
+//  Digio-128 is a card which has 8 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
 //  This library allows for both bit access and chip access to the card
-//  	Bit access (32 bits) via digitalWrite, digitalRead, pinMode
+//  	Bit access (128 bits) via digitalWrite, digitalRead, pinMode
 //		Chip access (16-bits) via writeGPIOAB, readGPIOAB
 //  Webpage for the card is at:
-//	http://land-boards.com/blwiki/index.php?title=DIGIO32_I2C
+//	http://land-boards.com/blwiki/index.php?title=DIGIO-128
+////////////////////////////////////////////////////////////////////////////
+// Card has 8x MCP23017 chips
 ////////////////////////////////////////////////////////////////////////////
 
+#include <Wire.h>
 #include <inttypes.h>
-#include "Arduino.h"
+#include <Arduino.h>
 
 #define MCP23017_ADDRESS 0x20
 
@@ -44,32 +48,31 @@
 #define MCP23017_OLATB 0x15
 
 #define CHIP_SHIFT 0x04
-#define CHIP_MASK 0x10
-#define CHIP_COUNT 2
+#define CHIP_MASK 0x70
+#define CHIP_COUNT 8
 
 ////////////////////////////////////////////////////////////////////////////////////
 // enums follow
 ////////////////////////////////////////////////////////////////////////////////////
 
+
 ////////////////////////////////////////////////////////////////////////////
 // I2C Ports
-//	MCP23017 0x20-0x21 (or any offset of 2)
+//	MCP23017 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-class Digio32
+class Digio128
 {
   public:
-    Digio32(void);
-	void begin(uint8_t);					// Set the base address
+    Digio128(void);
+	void begin();
 	void digitalWrite(uint8_t,uint8_t);		// Writes to a single bit
 	uint8_t digitalRead(uint8_t);			// Reads a single bit
 	void pinMode(uint8_t,uint8_t);			// Set the single bit direction (INPUT, INPUT_PULLUP, OUTPUT)
-	void writeOLATAB(uint8_t,uint16_t);		// Write to a 16-bit chip
+	void writeGPIOAB(uint8_t,uint16_t);		// Write to a 16-bit chip
 	uint16_t readGPIOAB(uint8_t);			// Read from a 16-bit chip
-	void write32(uint32_t);					// Write 32-bits
-	uint32_t read32();						// Read 32-bits
   private:
-	uint8_t boardBaseAddr;
+  	uint8_t boardBaseAddr;
 	uint8_t readRegister(uint8_t chipAddr, uint8_t addr);
 	void writeRegister(uint8_t chipAddr, uint8_t addr, uint8_t value);
 };
