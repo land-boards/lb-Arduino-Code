@@ -10,6 +10,7 @@
 //	http://land-boards.com/blwiki/index.php?title=DIGIO32_I2C
 ////////////////////////////////////////////////////////////////////////////
 
+#include <Wire.h>
 #include <Arduino.h>
 #include <inttypes.h>
 
@@ -31,14 +32,10 @@ Digio32::Digio32(void)
 
 void Digio32::begin(uint8_t baseAddr)
 {
-	mcp0.begin((baseAddr&7));
-	mcp1.begin((baseAddr&7)+1);
+	boardBaseAddr = MCP23017_ADDRESS + baseAddr;
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-    // for (uint8_t port = 0; port < 16; port++)
-    // {
-      // mcp0.pinMode(port, INPUT);
-      // mcp1.pinMode(port, INPUT);
-    // }
+   	for (uint8_t port = 0; port < 32; port++)
+      pinMode(port, INPUT);
 	return;
 }
 
@@ -48,37 +45,44 @@ void Digio32::begin(uint8_t baseAddr)
 
 void Digio32::digitalWrite(uint8_t bit, uint8_t value)
 {
-	int chip;
-	chip = (bit >> 4) & 0x1;
-	switch (chip)
-	{
-		case 0:
-			mcp0.digitalWrite(bit & 0xf, value);
-			break;
-		case 1:
-			mcp1.digitalWrite(bit & 0xf, value);
-			break;
-	}
+	uint8_t regAdr;
+	uint8_t chipAddr;
+	uint8_t rdVal;
+	if ((bit & 0x10) == 0x00)
+		chipAddr = 0x00;
+	else
+		chipAddr = 0x01;
+	if (bit & 0x08 == 0)
+		regAdr = MCP23017_OLATA;
+	else
+		regAdr = MCP23017_OLATB;
+	rdVal = readRegister(chipAddr,regAdr);
+	if (value == 0)
+		rdVal &= (~1 << bit);
+	else
+		rdVal |= (1 << bit);
+	writeRegister(chipAddr, regAdr, rdVal);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // uint8_t digitalRead(uint8_t p) - read back a bit
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio32::digitalRead(uint8_t p)
+uint8_t Digio32::digitalRead(uint8_t bit)
 {
-	int chip, bit;
-	chip = (bit >> 4) & 0x1;
-	bit = p & 0xf;
-	switch (chip)
-	{
-		case 0:
-			return mcp0.digitalRead(bit);
-			break;
-		case 1:
-			return mcp1.digitalRead(bit);
-			break;
-	}
+	uint8_t regAdr;
+	uint8_t chipAddr;
+	uint8_t rdVal;
+	if ((bit & 0x10) == 0x00)
+		chipAddr = 0x00;
+	else
+		chipAddr = 0x01;
+	if (bit & 0x08 == 0)
+		regAdr = MCP23017_GPIOA;
+	else
+		regAdr = MCP23017_GPIOB;
+	rdVal = readRegister(chipAddr,regAdr);
+	return rdVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -89,46 +93,46 @@ uint8_t Digio32::digitalRead(uint8_t p)
 //	#define INPUT_PULLUP 0x2
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::pinMode(uint8_t p, uint8_t d)
+void Digio32::pinMode(uint8_t bit, uint8_t value)
 {
-	int chip, bit;
-	chip = (bit >> 4) & 0x1;
-	bit = p & 0xf;
-	switch (chip)
+	uint8_t puRegAdr;
+	uint8_t dirRegAdr;
+	uint8_t chipAddr;
+	uint8_t rdPuVal;
+	uint8_t rdDirVal;
+	if ((bit & 0x10) == 0x00)
+		chipAddr = boardBaseAddr + 0x00;
+	else
+		chipAddr = boardBaseAddr + 0x01;
+	if (bit & 0x08 == 0)
 	{
-		case 0:
-			if (d == INPUT_PULLUP)
-			{
-				mcp0.pullUp(bit,1);			// Pullup enabled
-				mcp0.pinMode(bit,INPUT);
-			}
-			else if (d == INPUT)
-			{
-				mcp0.pinMode(bit,0);		// Pullup disabled
-				mcp0.pinMode(bit,INPUT);
-			}
-			else
-			{
-				mcp0.pinMode(bit,OUTPUT);
-			}
-			break;
-		case 1:
-			if (d == INPUT_PULLUP)
-			{
-				mcp1.pullUp(bit,1);
-				mcp1.pinMode(bit,INPUT);
-			}
-			else if (d == INPUT)
-			{
-				mcp1.pinMode(bit,0);
-				mcp1.pinMode(bit,INPUT);
-			}
-			else
-			{
-				mcp1.pinMode(bit,OUTPUT);
-			}
-			break;
+		puRegAdr = MCP23017_GPPUA;
+		dirRegAdr = MCP23017_IODIRA;
 	}
+	else
+	{
+		puRegAdr = MCP23017_GPPUB;
+		dirRegAdr = MCP23017_IODIRB;
+	}
+	rdPuVal = readRegister(chipAddr,puRegAdr);
+	rdDirVal = readRegister(chipAddr,dirRegAdr);
+	if (value == INPUT_PULLUP)
+	{
+		rdPuVal |= (1 << bit);
+		rdDirVal |= (1 << bit);
+	}
+	else if (value == INPUT)
+	{
+		rdPuVal &= (~1 << bit);
+		rdDirVal |= (1 << bit);
+	}
+	else if (value == OUTPUT)
+	{
+		rdPuVal &= (~1 << bit);
+		rdDirVal &= (~1 << bit);
+	}
+	writeRegister(chipAddr,puRegAdr,rdPuVal);
+	writeRegister(chipAddr,dirRegAdr,rdDirVal);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -140,10 +144,12 @@ void Digio32::writeGPIOAB(uint8_t chip, uint16_t baData)
 	switch (chip)
 	{
 		case 0:
-			mcp0.writeGPIOAB(baData);
+			writeRegister(0,MCP23017_GPIOA,baData>>8);
+			writeRegister(0,MCP23017_GPIOB,baData&0xff);
 			break;
 		case 1:
-			mcp1.writeGPIOAB(baData);
+			writeRegister(1,MCP23017_GPIOA,baData>>8);
+			writeRegister(1,MCP23017_GPIOB,baData&0xff);
 			break;
 	}
 }
@@ -157,10 +163,10 @@ uint16_t Digio32::readGPIOAB(uint8_t chip)
 	switch (chip)
 	{
 		case 0:
-			return mcp0.readGPIOAB();
+			return ((readRegister(0,MCP23017_GPIOA)<<8)|readRegister(0,MCP23017_GPIOA));
 			break;
 		case 1:
-			return mcp1.readGPIOAB();
+			return ((readRegister(1,MCP23017_GPIOA)<<8)|readRegister(1,MCP23017_GPIOA));
 			break;
 	}
 }
@@ -171,8 +177,8 @@ uint16_t Digio32::readGPIOAB(uint8_t chip)
 
 void Digio32::write32(uint32_t longVal)
 {
-	mcp0.writeGPIOAB((uint16_t)(longVal&0xffff));
-	mcp1.writeGPIOAB((uint16_t)(longVal>>16));
+	writeGPIOAB(0,(uint16_t)(longVal&0xffff));
+	writeGPIOAB(1,(uint16_t)(longVal>>16));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -182,6 +188,31 @@ void Digio32::write32(uint32_t longVal)
 uint32_t Digio32::read32(void)
 {
 	uint32_t longReadVal = 0;
-	longReadVal = (mcp1.readGPIOAB() << 16) | mcp0.readGPIOAB();
+	longReadVal = (readGPIOAB(1) << 16) | readGPIOAB(0);
 	return longReadVal;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
+{
+	Wire.beginTransmission(MCP23017_ADDRESS + boardBaseAddr + chipAddr);
+	Wire.write(regAddr);
+	Wire.endTransmission();
+	Wire.requestFrom(MCP23017_ADDRESS + boardBaseAddr + chipAddr, 1);
+	return Wire.read();
+}
+	
+////////////////////////////////////////////////////////////////////////////
+// void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+////////////////////////////////////////////////////////////////////////////
+
+void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+{
+	Wire.beginTransmission(MCP23017_ADDRESS + boardBaseAddr + chipAddr);
+	Wire.write(regAddr);
+	Wire.write(value);
+	Wire.endTransmission();
 }
