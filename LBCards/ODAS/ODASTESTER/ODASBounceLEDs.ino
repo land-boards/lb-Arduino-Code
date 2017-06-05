@@ -44,6 +44,7 @@ void bounceLedsCard(void)
     if (Serial.available() > 0)
     {
       Serial.read();
+      return;
     }
 }
 

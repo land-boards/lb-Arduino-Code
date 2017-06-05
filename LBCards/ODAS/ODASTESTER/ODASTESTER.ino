@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////
 
 #include <LandBoards_DIGIO32_I2C.h>
-#include <LandBoards_Digio128.h>
+#include <LandBoards_Digio128V2.h>
 #include <LandBoards_I2CIO8.h>
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>

@@ -58,23 +58,33 @@ uint8_t internalLoopBackTestDigio32(void)
 {
   uint8_t port;
   uint8_t pass0fail1 = 0;
-  uint32_t wrBit;
-  uint32_t rback32;
+  uint16_t wrBit;
+  uint16_t rback16;
   uint8_t bit;
+  uint8_t chip;
   Digio32 Dio32;
   Dio32.begin(0);
 //  Serial.println(F("internalLoopBackTestDigio32() - reached function"));
-  for (wrBit = 1; wrBit != 0; wrBit <<=1)
+  for (chip = 0; chip < 2; chip++)
   {
-    Dio32.write32(wrBit);
-    rback32 = Dio32.readGPIOAB(1);
-    rback32 <<= 16;
-    rback32 |= Dio32.readGPIOAB(0);
-    if (rback32 != wrBit)
+    for (wrBit = 0; wrBit < 32; wrBit++)
     {
-      Serial.print("Got back: ");
-      Serial.println(rback32,HEX);
-      return 1;
+      Dio32.pinMode(wrBit,OUTPUT);
+    }
+    for (wrBit = 1; wrBit != 0; wrBit <<=1)
+    {
+      Dio32.writeOLATAB(chip,wrBit);
+      rback16 = Dio32.readGPIOAB(chip);
+      if (rback16 != wrBit)
+      {
+        Serial.print("internalLoopBackTestDigio32(): Got back: ");
+        Serial.println(rback16,HEX);
+        return 1;
+      }
+    }
+    for (wrBit = 0; wrBit < 32; wrBit++)
+    {
+      Dio32.pinMode(wrBit,INPUT);
     }
   }
 //  Serial.print("Upper Half");
