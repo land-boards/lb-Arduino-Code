@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "LandBoards_I2CRPT01.h"
-#include <Wire.h>
 #include <avr/pgmspace.h>
 #include <inttypes.h>
 
