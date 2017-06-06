@@ -7,6 +7,7 @@
 #ifndef _LandBoards_I2CRPT01_h
 #define _LandBoards_I2CRPT01_h
 
+#include <Wire.h>
 #include <inttypes.h>
 #include "Arduino.h"
 
