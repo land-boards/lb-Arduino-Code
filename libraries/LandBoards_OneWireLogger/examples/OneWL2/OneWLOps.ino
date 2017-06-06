@@ -62,7 +62,7 @@ char readNext1Wire(void)
   for( i = 0; i < 8; i++) 
   {
     tft.print(addr[7-i], HEX);
-    tft.print(" ");
+    tft.print(F(" "));
   }
   if (OneWire::crc8(addr, 7) != addr[7]) 
   {
@@ -84,9 +84,9 @@ char readNext1Wire(void)
     return(0);
   } 
     setDisplayCursor(3,0);
-    tft.print("type_s=");
+    tft.print(F("type_s="));
     tft.print(type_s);       
-    tft.print("   ");
+    tft.print(F("   "));
 
   ds.reset();
 //  ds.select(addr);
@@ -108,11 +108,11 @@ char readNext1Wire(void)
   {           // we need 9 bytes
     data[i] = ds.read();
     setDisplayCursor(4+i,0);
-    tft.print("data[");
+    tft.print(F("data["));
     tft.print(i,HEX);     
-    tft.print("]=");
+    tft.print(F("]="));
     tft.print(data[i],HEX);       
-    tft.print("   ");
+    tft.print(F("   "));
   }
   // convert the data to actual temperature
 
@@ -136,7 +136,7 @@ char readNext1Wire(void)
   fahrenheit = ((float)raw / 16.0) * 1.8 + 32.0;
 #ifdef SERIAL_OUT
   Serial.print(fahrenheit);
-  Serial.print(",");
+  Serial.print(F(","));
 #endif
   temps1Wire[sensorNumber] = fahrenheit;
   sensorAddr = addr[7];

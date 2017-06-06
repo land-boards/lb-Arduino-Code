@@ -6,8 +6,8 @@
 // 
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef OneWireLogger_h
-#define OneWireLogger_h
+#ifndef LANDBOARDS_ONEWIRELOGGER_h
+#define LANDBOARDS_ONEWIRELOGGER_h
 
 #include "Arduino.h"
 

@@ -104,7 +104,7 @@ void boil(void)
       }
       setDisplayCursor(sensorNumber+8,0);
       if (temps1Wire[sensorNumber-1] < 100.0)
-        tft.print(" ");
+        tft.print(F(" "));
       tft.print(temps1Wire[sensorNumber-1]);
       tft.print(F("F "));
     }
@@ -126,39 +126,39 @@ void serLog(void)
   tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
   setDisplayCursor(1, 0);
-  tft.print("Serial Log: ");
+  tft.print(F("Serial Log: "));
   setDisplayCursor(2, 0);
-  tft.print("Sel=Save,Up/Dn=Chng");
+  tft.print(F("Sel=Save,Up/Dn=Chng"));
   setDisplayCursor(3, 0);
-  tft.print("rt/lf=Exit w/o Save");
+  tft.print(F("rt/lf=Exit w/o Save"));
   while(1)
   {
     setDisplayCursor(1, 12);
     if (IZConfigs.enableSerLog == 0)
     {
-      tft.print("Off");
+      tft.print(F("Off"));
     }
     else
     {
-      tft.print("On ");
+      tft.print(F("On "));
     }
     key = myOneWireLogger.pollKeypad();
     if (key == SELECT)
     {
       EEPROM_writeAnything(0, IZConfigs);
       setDisplayCursor(2, 0);
-      tft.print("Saving.............");
+      tft.print(F("Saving............."));
       setDisplayCursor(3, 0);
-      tft.print("                   ");
+      tft.print(F("                   "));
       delay(1500);
       return;
     }
     else if ((key == LEFT) || (key == RIGHT))
     {
       setDisplayCursor(2, 0);
-      tft.print("Exiting w/o Saving.");
+      tft.print(F("Exiting w/o Saving."));
       setDisplayCursor(3, 0);
-      tft.print("                   ");
+      tft.print(F("                   "));
       delay(1500);
       return;
     }
@@ -213,14 +213,14 @@ void cfg18b20(void)
   
   tft.fillScreen(ST7735_BLACK);
   tft.setTextColor(ST7735_WHITE,ST7735_BLACK);
-  tft.print("Dump scratchpad");
+  tft.print(F("Dump scratchpad"));
   for ( i = 0; i < 9; i++) 
   {           // dump the scratchpad
     setDisplayCursor(i+1, 0);
     if ((data[i] & 0xf0) == 0)
-      tft.print("0");
+      tft.print(F("0"));
     tft.print(data[i],HEX);
-    tft.print(" ");
+    tft.print(F(" "));
   }
   while (myOneWireLogger.pollKeypad() == NONE);  
 }

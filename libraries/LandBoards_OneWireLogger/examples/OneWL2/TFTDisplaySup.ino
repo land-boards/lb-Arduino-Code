@@ -27,10 +27,10 @@ void setBLt(void)
       IZConfigs.bll -= 5;
     analogWrite(BACKLIGHT, IZConfigs.bll);
     setDisplayCursor(0,14);
-    tft.print("    ");
+    tft.print(F("    "));
     setDisplayCursor(0,14);
     tft.print((100*(250-IZConfigs.bll))/250);
-    tft.print("%");
+    tft.print(F("%"));
   }
   while (key != SELECT);
 }
