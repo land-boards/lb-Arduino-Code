@@ -22,25 +22,25 @@ int showTimeOnLine(uint8_t highlightPosition)
 
   setDisplayCursor(1, 0);
   tft.print(currYear);
-  tft.print("/");
+  tft.print(F("/"));
   printLeadingZero(currMonth);
   tft.print(currMonth);
-  tft.print("/");
+  tft.print(F("/"));
   printLeadingZero(currDay);
   tft.print(currDay);
-  tft.print("/");
+  tft.print(F("/"));
   printLeadingZero(currHour);
   tft.print(currHour);
-  tft.print(":");
+  tft.print(F(":"));
   printLeadingZero(currMin);
   tft.print(currMin);
-  tft.print(":");
+  tft.print(F(":"));
   printLeadingZero(currSec);
   tft.print(currSec);
   setDisplayCursor(2, 0);
-  tft.print("SAVE");
+  tft.print(F("SAVE"));
   setDisplayCursor(3, 0);
-  tft.print("EXIT");
+  tft.print(F("EXIT"));
   switch (highlightPosition)
   {
     case VIEW_YEAR:

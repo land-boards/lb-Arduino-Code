@@ -9,7 +9,7 @@
 #include <LandBoards_I2CIO8.h>
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
-#include <landboards_pca9544a.h>
+#include <LandBoards_I2CRPT01.h>
 #include <Adafruit_MCP23008.h>
 #include <Adafruit_MCP23017.h>
 
@@ -49,7 +49,7 @@ typedef enum {
   TEST_STN_INT_MUX_CH=1,
 } muxChannel_t;
 
-landboards_pca9544a myI2CMux;
+LandBoards_I2CRPT01 myI2CMux;
 
 //////////////////////////////////////////////////////////
 // setup()

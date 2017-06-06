@@ -11,7 +11,7 @@
 #include <EEPROM.h>
 #include <OneWire.h>
 #include <SD.h>
-#include <OneWireLogger.h>
+#include <LandBoards_OneWireLogger.h>
 #include "RTClib.h"
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library

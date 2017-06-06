@@ -136,7 +136,7 @@ void bounceLedsDIGIO128_CARD(void)
 
 void bounceLedsI2CIO8(void)
 {
-  I2CIO8 i2cio8Card;
+  LandBoards_I2CIO8 i2cio8Card;
   i2cio8Card.begin();
   Serial.println(F("Bouncing LEDs I2CIO8 - any key to stop"));
   while (1)
@@ -167,22 +167,18 @@ void bounceLedsI2CIO8(void)
 
 void bounceLedsI2CIO8X(void)
 {
-  I2CIO8 i2cio8Card;
-  i2cio8Card.begin();
+  LandBoards_I2CIO8X i2cio8XCard;
+  i2cio8XCard.begin();
   Serial.println(F("Bouncing LEDs I2CIO8X - any key to stop"));
+  for (int port = 0; port < 8; port++)
+    i2cio8XCard.pinMode(port,OUTPUT);
   while (1)
   {
-    for (uint8_t port = 0; port < 4; port++)
+    for (uint8_t port = 0; port < 8; port++)
     {
-      i2cio8Card.writeLED(port, HIGH);
+      i2cio8XCard.digitalWrite(port, HIGH);
       delay(250);
-      i2cio8Card.writeLED(port, LOW);
-    }
-    for (uint8_t port = 2; port > 0; port--)
-    {
-      i2cio8Card.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card.writeLED(port, LOW);
+      i2cio8XCard.digitalWrite(port, LOW);
     }
     if (Serial.available() > 0)
     {

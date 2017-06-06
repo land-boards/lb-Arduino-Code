@@ -159,7 +159,7 @@ void writeMateCard8(uint8_t value)
   tmpVal = mateDigio32.readGPIOAB(0);
   tmpVal &= 0xff00;
   tmpVal |= value;
-  mateDigio32.writeGPIOAB(0,tmpVal);
+  mateDigio32.writeOLATAB(0,tmpVal);
   setMuxChannel(UUT_CARD_MUX_CH);
   return;
 }
@@ -172,7 +172,7 @@ void writeMateCard8(uint8_t value)
 void writeMateCard16(uint8_t value)
 {
   setMuxChannel(TEST_STN_INT_MUX_CH);
-  mateDigio32.writeGPIOAB(0,value);
+  mateDigio32.writeOLATAB(0,value);
   setMuxChannel(UUT_CARD_MUX_CH);
   return;
 }
@@ -185,8 +185,7 @@ void writeMateCard16(uint8_t value)
 void writeMateCard32(uint32_t value)
 {
   setMuxChannel(TEST_STN_INT_MUX_CH);
-  mateDigio32.writeGPIOAB(0,value&0xffff);
-  mateDigio32.writeGPIOAB(0,((value>> 16) & 0xffff));
+  mateDigio32.write32(value);
   setMuxChannel(UUT_CARD_MUX_CH);
   return;
 }
