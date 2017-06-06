@@ -1,0 +1,36 @@
+////////////////////////////////////////////////////////////////////////////
+//  I2CIO8XExample.cpp - Example code for I2CIO8-8X card
+//  Created by Douglas Gilliland. 2017-06-06
+//  I2CIO8-8X is a card which has an MCP23008 8-bit port expander
+//	Communication with the card is via I2C Two-wire interface
+//  Webpage for the card is at:
+//	http://land-boards.com/blwiki/index.php?title=I2CIO-8X
+////////////////////////////////////////////////////////////////////////////
+
+#include <Wire.h>
+#include <LandBoards_I2CIO8X.h>
+
+LandBoards_I2CIO8X MyI2CIO8X;
+
+////////////////////////////////////////////////////////////////////////////
+// setup() - 
+////////////////////////////////////////////////////////////////////////////
+
+void setup()
+{
+  MyI2CIO8X.begin(0);     // use default address 0
+}
+
+////////////////////////////////////////////////////////////////////////////
+// loop() - 
+////////////////////////////////////////////////////////////////////////////
+
+void loop()
+{
+  for (int jumper = 0; jumper < 8; jumper++)
+  {
+    Serial.print("Jumper ");
+    Serial.print(jumper);
+    Serial.println(MyI2CIO8X.readJumper(H4JUMPER));
+  }
+}
