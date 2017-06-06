@@ -86,15 +86,4 @@ void loop()
   }
 }
 
-//////////////////////////////////////////////////////////
-// void setMuxChannel(muxChannel_t)
-//  UUT_Card = 0,
-//  TEST_STN_DIGIO32_I2C=1,
-//////////////////////////////////////////////////////////
-
-void setMuxChannel(muxChannel_t newMuxChannel)
-{
-  myI2CMux.setI2CChannel(newMuxChannel);
-
-}
 
