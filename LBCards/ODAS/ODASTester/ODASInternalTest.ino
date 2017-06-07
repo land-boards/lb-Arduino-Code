@@ -62,7 +62,7 @@ uint8_t internalLoopBackTestDigio32(void)
   uint8_t pass0fail1=0;
   Digio32 Dio32;
   Dio32.begin(0);
-  Serial.println(F("internalLoopBackTestDigio32() - reached function"));
+//  Serial.println(F("internalLoopBackTestDigio32() - reached function"));
   for (wrBit = 0; wrBit < 32; wrBit++)
   {
     Dio32.pinMode(wrBit,OUTPUT);
