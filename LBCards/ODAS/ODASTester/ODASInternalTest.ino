@@ -56,40 +56,54 @@ uint8_t internalLoopBackTestCard(void)
 
 uint8_t internalLoopBackTestDigio32(void)
 {
-  uint8_t port;
-  uint8_t pass0fail1 = 0;
+//  uint8_t port;
   uint16_t wrBit;
   uint16_t rback16;
-  uint8_t bit;
-  uint8_t chip;
+  uint8_t pass0fail1=0;
   Digio32 Dio32;
   Dio32.begin(0);
-//  Serial.println(F("internalLoopBackTestDigio32() - reached function"));
-  for (chip = 0; chip < 2; chip++)
+  Serial.println(F("internalLoopBackTestDigio32() - reached function"));
+  for (wrBit = 0; wrBit < 32; wrBit++)
   {
-    for (wrBit = 0; wrBit < 32; wrBit++)
+    Dio32.pinMode(wrBit,OUTPUT);
+    delay(2);
+  }
+  for (wrBit = 1; wrBit != 0; wrBit <<= 1)
+  {
+    Dio32.writeOLATAB(0,wrBit);
+    delay(2);
+    rback16 = Dio32.readOLATAB(0);
+    delay(2);
+    if (rback16 != wrBit)
     {
-      Dio32.pinMode(wrBit,OUTPUT);
-    }
-    for (wrBit = 1; wrBit != 0; wrBit <<=1)
-    {
-      Dio32.writeOLATAB(chip,wrBit);
-      rback16 = Dio32.readGPIOAB(chip);
-      if (rback16 != wrBit)
-      {
-        Serial.print("internalLoopBackTestDigio32(): Got back: ");
-        Serial.println(rback16,HEX);
-        return 1;
-      }
-    }
-    for (wrBit = 0; wrBit < 32; wrBit++)
-    {
-      Dio32.pinMode(wrBit,INPUT);
+      pass0fail1 = 1;
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 Wrote bit: "));
+      Serial.println(wrBit,HEX);
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 Got back: "));
+      Serial.println(rback16,HEX);
     }
   }
-//  Serial.print("Upper Half");
-//  Serial.println(rback32,HEX);
-  return 0;
+  for (wrBit = 1; wrBit != 0; wrBit <<= 1)
+  {
+    Dio32.writeOLATAB(1,wrBit);
+    delay(2);
+    rback16 = Dio32.readOLATAB(1);
+    delay(2);
+    if (rback16 != wrBit)
+    {
+      pass0fail1 = 1;
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Wrote bit: "));
+      Serial.println(wrBit,HEX);
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Got back: "));
+      Serial.println(rback16,HEX);
+  }
+  }
+  for (wrBit = 0; wrBit < 32; wrBit++)
+  {
+    Dio32.pinMode(wrBit,INPUT);
+    delay(2);
+  }
+  return pass0fail1;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

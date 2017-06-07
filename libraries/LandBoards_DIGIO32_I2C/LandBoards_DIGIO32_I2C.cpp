@@ -164,7 +164,16 @@ void Digio32::writeOLATAB(uint8_t chip, uint16_t baData)
 
 uint16_t Digio32::readGPIOAB(uint8_t chip)
 {
-	return ((readRegister(chip,(MCP23017_GPIOB))<<8)|(readRegister(chip,MCP23017_GPIOA)));
+	return (((readRegister(chip,MCP23017_GPIOB)<<8)&0xff)|(readRegister(chip,MCP23017_GPIOA)&0xff));
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint16_t readOLATAB(chip) - Read 16-bits at a time
+////////////////////////////////////////////////////////////////////////////
+
+uint16_t Digio32::readOLATAB(uint8_t chip)
+{
+	return (((readRegister(chip,MCP23017_OLATB)<<8)&0xff00)|(readRegister(chip,MCP23017_OLATA)&0xff));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -210,5 +219,5 @@ void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 	Wire.beginTransmission(boardBaseAddr + chipAddr);
 	Wire.write(regAddr);
 	Wire.write(value);
-	Wire.endTransmission();
+	Wire.endTransmission(1);
 }

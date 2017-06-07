@@ -60,7 +60,7 @@ void setup()
   Serial.begin(9600);
   myI2CMux.begin();
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-  TWBR = 12;    // go to 400 KHz I2C speed mode
+//  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   failCount = 0;
   passCount = 0;

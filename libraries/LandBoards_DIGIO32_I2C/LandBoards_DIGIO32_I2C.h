@@ -66,6 +66,7 @@ class Digio32
 	void pinMode(uint8_t,uint8_t);			// Set the single bit direction (INPUT, INPUT_PULLUP, OUTPUT)
 	void writeOLATAB(uint8_t,uint16_t);		// Write to a 16-bit chip
 	uint16_t readGPIOAB(uint8_t);			// Read from a 16-bit chip
+	uint16_t readOLATAB(uint8_t);			// Read from a 16-bit chip
 	void write32(uint32_t);					// Write 32-bits
 	uint32_t read32();						// Read 32-bits
   private:
