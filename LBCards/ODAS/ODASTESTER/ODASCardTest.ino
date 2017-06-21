@@ -52,6 +52,7 @@ uint8_t loopBackTestCard(void)
 
 //////////////////////////////////////////////////////////////////////////////////////
 // uint8_t testProto16(void) - Test the PROTO16-I2C card
+// This test is an internal loopback test since the pins are dependent on the wiring.
 //////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t testProto16(void)
@@ -60,8 +61,6 @@ uint8_t testProto16(void)
   uint8_t loopCnt;
   uint16_t readBackVal;
 //  Serial.println(F("Testing PROTO16-I2C card"));
-  Adafruit_MCP23017 mcp;
-  mcp.begin(0);      // use default address
   for (loopCnt = 0; loopCnt < 16; loopCnt++)
     mcp.pinMode(loopCnt,OUTPUT);
   mcp.writeGPIOAB(0x55aa);
@@ -83,7 +82,7 @@ uint8_t testProto16(void)
   }
   for (loopCnt = 0; loopCnt < 16; loopCnt++)
     mcp.pinMode(loopCnt,INPUT);
-  delay(10);
+  delay(1);
   return(failed);
 }
 
@@ -93,8 +92,6 @@ uint8_t testProto16(void)
 
 uint8_t testI2CIO8(void)
 {
-  LandBoards_I2CIO8 i2cio8Card;
-  i2cio8Card.begin(0);
   Serial.println(F("I2CIO8 card tests"));
   Serial.println(F("Move jumper across H5-H8, observe LEDs D0-D3"));
   Serial.println(F("Verify Int LED blinks"));
@@ -121,25 +118,23 @@ uint8_t testI2CIO8(void)
 uint8_t testI2CIO8X(void)
 {
   uint8_t jumpers;
-  LandBoards_I2CIO8X i2cio8Card;
-  i2cio8Card.begin(0);
 //  Serial.println(F("I2CIO8X card"));
 //  Serial.println(F("Install test jumper"));
 //  Serial.println(F("Hit a key to stop test"));
   for (jumpers = 0; jumpers < 4; jumpers++)
-    i2cio8Card.pinMode(jumpers, INPUT);
+    i2cio8xCard.pinMode(jumpers, INPUT);
   for (jumpers = 4; jumpers < 8; jumpers++)
-    i2cio8Card.pinMode(jumpers, OUTPUT);
+    i2cio8xCard.pinMode(jumpers, OUTPUT);
   for (jumpers = 0; jumpers < 4; jumpers++)
   {
-    i2cio8Card.digitalWrite(jumpers + H4JUMPER, LOW);
-    if (i2cio8Card.digitalRead(jumpers) != LOW)
+    i2cio8xCard.digitalWrite(jumpers + H4JUMPER, LOW);
+    if (i2cio8xCard.digitalRead(jumpers) != LOW)
     {
       Serial.println(F("Failed LOW"));
       return 1;
     }
-    i2cio8Card.digitalWrite(jumpers + H4JUMPER, HIGH);
-    if (i2cio8Card.digitalRead(jumpers) != HIGH)
+    i2cio8xCard.digitalWrite(jumpers + H4JUMPER, HIGH);
+    if (i2cio8xCard.digitalRead(jumpers) != HIGH)
     {
       Serial.println(F("Failed HIGH"));
       return 1;
@@ -156,8 +151,6 @@ uint8_t loopBackTestDigio32(void)
 {
   uint8_t port;
   uint8_t pass0fail1 = 0;
-  Digio32 Dio32;
-  Dio32.begin(0);
   Serial.println(F("loopBackTestDigio32() - reached function"));
   for (port = 0; port < 16; port++)
   {
@@ -170,8 +163,7 @@ uint8_t loopBackTestDigio32(void)
     if (Dio32.digitalRead(port + 16) != HIGH)
     {
       
-      Serial.print(F("Error on chip 0"));
-      Serial.print(F(" and port "));
+      Serial.print(F("Error on port "));
       Serial.print(port + 16);
       Serial.println(F(" Expected High"));
       pass0fail1 = 1;
@@ -180,8 +172,7 @@ uint8_t loopBackTestDigio32(void)
     delay(2);
     if (Dio32.digitalRead(port + 16) != LOW)
     {
-      Serial.print(F("Error on chip 0"));
-      Serial.print(F(" and port "));
+      Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected LOW"));
       pass0fail1 = 1;
@@ -203,9 +194,6 @@ uint8_t loopBackTestDigio32(void)
 
 void initOI8pins(void)
 {
-  Adafruit_MCP23008 mcpOI8;
-  mcpOI8.begin();               // use default address 0
-
   int loopCnt;
   for (loopCnt = 0; loopCnt < 8; loopCnt++)
   {
@@ -220,8 +208,6 @@ void initOI8pins(void)
 
 unsigned char readOptoIn8(void)
 {
-  Adafruit_MCP23008 mcpOI8;
-  mcpOI8.begin();               // use default address 0
   int loopVal;
   unsigned int rval = 0;
   for (loopVal = 0; loopVal < 8; loopVal++)
@@ -338,8 +324,6 @@ uint8_t loopBackTestOptoIn8(void)
 
 void initOO8pins(void)
 {
-  Adafruit_MCP23008 mcpOO8;
-  mcpOO8.begin();               // use default address 0
   int loopCnt;
   for (loopCnt = 0; loopCnt < 8; loopCnt++)
   {
@@ -361,9 +345,6 @@ void initOO8pins(void)
 uint8_t loopBackTestOptoOut8(void)
 {
   //  Serial.println(F("Testing OptoOut8-I2C card"));
-
-  Adafruit_MCP23008 mcpOO8;
-  mcpOO8.begin();               // use default address 0
   initOO8pins();
   uint8_t readVal;
   int testPass = 1;;
@@ -451,46 +432,44 @@ uint8_t loopBackTestOptoOut8(void)
 
 uint8_t loopBackTestDIGIO128_CARD(void)
 {
-  Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
-  Dio128.begin();      // connects to the 8 MCP23017 parts
-
+  uint8_t testPass = 1;
+//  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (uint8_t port = 0; port < 128; port++)
   {
     Dio128.pinMode(port, INPUT_PULLUP);
   }
-  uint8_t testPass = 1;
   for (uint8_t chip = 0; chip < 8; chip += 2)
   {
     for (uint8_t port = 0; port < 16; port++)
     {
 
-      Dio128.pinMode((chip * 16) + port, OUTPUT);
-      Dio128.pinMode(((chip + 1) * 16) + 15 - port, INPUT);
+      Dio128.pinMode((chip << 4) + port, OUTPUT);
+      Dio128.pinMode(((chip + 1) << 4) + 15 - port, INPUT_PULLUP);
 
       delay(2);
-      Dio128.digitalWrite((chip * 16) + port, HIGH);
+      Dio128.digitalWrite((chip << 4) + port, HIGH);
       delay(2);
-      if (Dio128.digitalRead(((chip + 1) * 16) + 15 - port) != HIGH)
+      if (Dio128.digitalRead(((chip + 1) << 4) + 15 - port) != HIGH)
       {
-        Serial.print(F("Error on chip "));
+        Serial.print(F("loopBackTestDIGIO128_CARD() 1: Error on chip "));
         Serial.print(chip);
         Serial.print(F(" and port "));
         Serial.print(port);
         Serial.println(F(" Expected High"));
         testPass = 0;
       }
-      Dio128.digitalWrite((chip * 16) + port, LOW);
+      Dio128.digitalWrite((chip << 4) + port, LOW);
       delay(2);
-      if (Dio128.digitalRead(((chip + 1) * 16) + 15 - port) != LOW)
+      if (Dio128.digitalRead(((chip + 1) << 4) + 15 - port) != LOW)
       {
-        Serial.print(F("Error on chip "));
+        Serial.print(F("loopBackTestDIGIO128_CARD() 2: Error on chip "));
         Serial.print(chip);
         Serial.print(F(" and port "));
         Serial.print(port);
         Serial.println(F(" Expected LOW"));
         testPass = 0;
       }
-      Dio128.pinMode((chip * 16) + port, INPUT);
+      Dio128.pinMode((chip << 4) + port, INPUT);
       delay(2);
     }
   }

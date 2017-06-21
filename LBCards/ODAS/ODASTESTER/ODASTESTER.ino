@@ -50,6 +50,13 @@ typedef enum {
 } muxChannel_t;
 
 LandBoards_I2CRPT01 myI2CMux;
+Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
+Digio32 Dio32;
+LandBoards_I2CIO8 i2cio8Card;
+LandBoards_I2CIO8X i2cio8xCard;
+Adafruit_MCP23008 mcpOI8;
+Adafruit_MCP23008 mcpOO8;
+Adafruit_MCP23017 mcp;
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -71,7 +78,31 @@ void setup()
     selectBoardType();
     eepromWrite();
   }
-  Serial.println(F("E=EEPROM Access, C=Card Test Menu, D=Direct Access Menu"));
+  switch (boardType)    // Instantiate the classes here for the boards
+  {
+    case DIGIO128_CARD:
+      Dio128.begin();
+      break;
+    case PROTO16I2C_CARD:
+      mcp.begin(0);      // use default address
+      break;
+    case DIGIO32I2C_CARD:
+      Dio32.begin(0);
+      break;
+    case I2CIO8_CARD:
+      i2cio8Card.begin();
+      break;
+    case I2CIO8X_CARD:
+      i2cio8Card.begin();
+      break;
+    case OPTOIN8I2C_CARD:
+      mcpOI8.begin();               // use default address 0
+      break;
+    case OPTOOUT8I2C_CARD:
+      mcpOO8.begin();               // use default address 0
+      break;
+  }
+  Serial.println(F("C=Card Test Menu, D=Direct Access Menu, E=EEPROM Access"));
 }
 
 //////////////////////////////////////////////////////////

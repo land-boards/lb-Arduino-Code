@@ -56,9 +56,6 @@ void bounceLedsCard(void)
 void bounceLedsPROTO16I2C_CARD(void)
 {
   Serial.println(F("Bouncing LEDs - any key to stop"));
-  Adafruit_MCP23017 mcp;
-  mcp.begin(0);      // use default address
-
   while (1)
   {
     for (uint8_t port = 0; port < 16; port++)
@@ -83,8 +80,6 @@ void bounceLedsPROTO16I2C_CARD(void)
 
 void bounceLedsDigio32(void)
 {
-  Digio32 Dio32;
-  Dio32.begin(0);
   Serial.println(F("Bouncing LEDs - any key to stop"));
   while (1)
   {
@@ -92,7 +87,7 @@ void bounceLedsDigio32(void)
     {
       Dio32.pinMode(port, OUTPUT);
       Dio32.digitalWrite(port, HIGH);
-      delay(100);
+      delay(250);
       Dio32.digitalWrite(port, LOW);
     }
     if (Serial.available() > 0)
@@ -109,8 +104,6 @@ void bounceLedsDigio32(void)
 
 void bounceLedsDIGIO128_CARD(void)
 {
-  Digio128 Dio128;
-  Dio128.begin();
   Serial.println(F("Bouncing LEDs DIGIO-128 - any key to stop"));
   while (1)
   {
@@ -137,8 +130,6 @@ void bounceLedsDIGIO128_CARD(void)
 
 void bounceLedsI2CIO8(void)
 {
-  LandBoards_I2CIO8 i2cio8Card;
-  i2cio8Card.begin();
   Serial.println(F("Bouncing LEDs I2CIO8 - any key to stop"));
   while (1)
   {
@@ -168,22 +159,20 @@ void bounceLedsI2CIO8(void)
 
 void bounceLedsI2CIO8X(void)
 {
-  LandBoards_I2CIO8X i2cio8Card;
-  i2cio8Card.begin();
   Serial.println(F("Bouncing LEDs I2CIO8X - any key to stop"));
   while (1)
   {
     for (uint8_t port = 0; port < 4; port++)
     {
-      i2cio8Card.digitalWrite(port, HIGH);
+      i2cio8xCard.digitalWrite(port, HIGH);
       delay(250);
-      i2cio8Card.digitalWrite(port, LOW);
+      i2cio8xCard.digitalWrite(port, LOW);
     }
     for (uint8_t port = 2; port > 0; port--)
     {
-      i2cio8Card.digitalWrite(port, HIGH);
+      i2cio8xCard.digitalWrite(port, HIGH);
       delay(250);
-      i2cio8Card.digitalWrite(port, LOW);
+      i2cio8xCard.digitalWrite(port, LOW);
     }
     if (Serial.available() > 0)
     {

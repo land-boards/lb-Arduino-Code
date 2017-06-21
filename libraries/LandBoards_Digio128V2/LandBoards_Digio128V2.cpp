@@ -82,7 +82,7 @@ uint8_t Digio128::digitalRead(uint8_t bit)
 	else
 		regAdr = MCP23017_GPIOB;
 	rdVal = readRegister(chipAddr,regAdr);
-	return ((rdVal>>bit)&0x01);
+	return ((rdVal>>(bit&0x7))&0x1);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -107,6 +107,15 @@ void Digio128::pinMode(uint8_t bit, uint8_t value)
 	uint8_t changeBit;	// The bit that changes in the register
 	changeBit = 1 << (bit & 0x7);
 	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	// Serial.print("chipAddr: 0x");
+	// Serial.print(chipAddr,HEX);
+	// Serial.println("");
+	// Serial.print("bit: 0x");
+	// Serial.print(bit,HEX);
+	// Serial.println("");
+	// Serial.print("value: 0x");
+	// Serial.print(value,HEX);
+	// Serial.println("");
 	if ((bit & 0x08) == 0)	// A registers
 	{
 		puRegAdr = MCP23017_GPPUA;
