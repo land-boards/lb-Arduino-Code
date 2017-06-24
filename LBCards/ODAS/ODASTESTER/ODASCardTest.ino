@@ -38,6 +38,9 @@ uint8_t loopBackTestCard(void)
     case I2CIO8X_CARD:
       return (testI2CIO8X());
       break;
+    case SWLEDX8_I2C_CARD:
+      return(testSwLedX8());
+      break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
       break;
@@ -48,6 +51,29 @@ uint8_t loopBackTestCard(void)
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   return 1; // fail
+}
+
+uint8_t testSwLedX8(void)
+{
+  uint8_t loopCnt;
+  Serial.println(F("Testing SWLEDX8-I2C card"));
+  Serial.println(F("Slide switches verify lights"));
+  Serial.println(F("Hit any key to exit"));
+  for (loopCnt = 0; loopCnt < 8; loopCnt++)
+    mcp.pinMode(loopCnt,INPUT);
+  for (loopCnt = 8; loopCnt < 16; loopCnt++)
+  {
+    mcp.digitalWrite(loopCnt,LOW);
+    mcp.pinMode(loopCnt,OUTPUT);
+  }
+  while(Serial.available() == 0)
+  {
+    for (loopCnt=0;loopCnt<8;loopCnt++)
+    {
+      mcp.digitalWrite(loopCnt+8,mcp.digitalRead(loopCnt));
+    }
+  }
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

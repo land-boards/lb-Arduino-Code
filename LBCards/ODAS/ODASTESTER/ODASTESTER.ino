@@ -33,6 +33,7 @@ typedef enum {
   I2CIO8X_CARD,
   OPTOSMALL_CARD,
   OPTOFAST_CARD,
+  SWLEDX8_I2C_CARD,
 } boardType_t;
 
 //////////////////////////////////////////////////////////
@@ -86,6 +87,8 @@ void setup()
     case PROTO16I2C_CARD:
       mcp.begin(0);      // use default address
       break;
+    case SWLEDX8_I2C_CARD:
+      mcp.begin(0);
     case DIGIO32I2C_CARD:
       Dio32.begin(0);
       break;

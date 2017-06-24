@@ -349,7 +349,7 @@ void otherBoardType(void)
   Serial.println(F("Select the board type"));
   Serial.println(F("1 - I2CIO8 board"));
   Serial.println(F("2 - I2CIO8X board"));
-  Serial.println(F("3 - TBD board"));
+  Serial.println(F("3 - SWLEDX8-I2C board"));
   Serial.println(F("4 - TBD board"));
   Serial.println(F("5 - TBD board"));
   Serial.println(F("6 - TBD board"));
@@ -375,6 +375,11 @@ void otherBoardType(void)
       case '2':
         {
           boardType = I2CIO8X_CARD;
+          break;
+        }
+      case '3':
+        {
+          boardType = SWLEDX8_I2C_CARD;
           break;
         }
       default:

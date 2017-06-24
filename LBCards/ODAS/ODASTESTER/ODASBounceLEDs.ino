@@ -14,6 +14,9 @@ void bounceLedsCard(void)
     case DIGIO128_CARD:
       bounceLedsDIGIO128_CARD();
       break;
+    case SWLEDX8_I2C_CARD:
+      bounceLedsSwLedX8();
+      break;
     case OPTOIN8I2C_CARD:
       Serial.println(F("Can't bounce LEDs on an input only card"));
       break;
@@ -97,6 +100,40 @@ void bounceLedsDigio32(void)
     }
   }
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+// void bounceLedsSwLedX8(void)
+//////////////////////////////////////////////////////////////////////////////////////
+
+void bounceLedsSwLedX8(void)
+{
+  Serial.println(F("Bouncing LEDs - any key to stop"));
+  while (1)
+  {
+    for (uint8_t port = 8; port < 16; port++)
+    {
+      mcp.pinMode(port, OUTPUT);
+      mcp.digitalWrite(port, HIGH);
+      delay(250);
+      mcp.digitalWrite(port, LOW);
+    }
+    for (uint8_t port = 14; port > 8; port--)
+    {
+      mcp.pinMode(port, OUTPUT);
+      mcp.digitalWrite(port, HIGH);
+      delay(250);
+      mcp.digitalWrite(port, LOW);
+    }
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
+  }
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////
 // void bounceLedsDIGIO128_CARD(void)
