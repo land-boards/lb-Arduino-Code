@@ -14,17 +14,33 @@ void testUUTFcn(void)
     pass1Fail0 = 1;
     for (loopCnt = 0; loopCnt < 4; loopCnt++)
     {
-      digitalWrite(loopCnt+7,LOW);
+      digitalWrite(loopCnt + 7, LOW);
       delay(2);
       digRdVal = digitalRead(loopCnt + 3);
-      if (digRdVal != HIGH)
-        pass1Fail0 = 0;
-      digitalWrite(loopCnt+7,HIGH);
+      if (invertFlag == 0)
+      {
+        if (digRdVal != HIGH)
+          pass1Fail0 = 0;
+      }
+      else
+      {
+        if (digRdVal != LOW)
+          pass1Fail0 = 0;
+      }
+      digitalWrite(loopCnt + 7, HIGH);
       delay(2);
       digRdVal = digitalRead(loopCnt + 3);
-      if (digRdVal != LOW)
-        pass1Fail0 = 0;
-      digitalWrite(loopCnt+7,LOW);
+      if (invertFlag == 0)
+      {
+        if (digRdVal != LOW)
+          pass1Fail0 = 0;
+      }
+      else
+      {
+        if (digRdVal != HIGH)
+          pass1Fail0 = 0;
+      }
+      digitalWrite(loopCnt + 7, invertFlag);
     }
     if (pass1Fail0 == 1)
       passCount++;
@@ -76,21 +92,45 @@ void monitorFcn(void)
   menuCard.setLED(0, LOW);
 }
 
-void Option1Fcn(void)
+void PullupsOn(void)
 {
+  uint8_t loopCnt;
   u8g.firstPage();
   do
   {
     setDisplayCursor(1, 0);
     u8g.print(F("Selected"));
     setDisplayCursor(2, 0);
-    u8g.print(F("Option1"));
+    u8g.print(F("Pullups On"));
   }
   while ( u8g.nextPage() );
+  for (loopCnt = 3; loopCnt < 7; loopCnt++)
+    pinMode(loopCnt, INPUT_PULLUP);  delay(2000);
+  for (loopCnt = 7; loopCnt < 11; loopCnt++)
+    digitalWrite(loopCnt, HIGH);
   delay(2000);
 }
 
-void Option2Fcn(void)
+void PullupsOff(void)
+{
+  uint8_t loopCnt;
+  u8g.firstPage();
+  do
+  {
+    setDisplayCursor(1, 0);
+    u8g.print(F("Selected"));
+    setDisplayCursor(2, 0);
+    u8g.print(F("Pullups Off"));
+  }
+  while ( u8g.nextPage() );
+  for (loopCnt = 3; loopCnt < 7; loopCnt++)
+    pinMode(loopCnt, INPUT);  delay(2000);
+  for (loopCnt = 7; loopCnt < 11; loopCnt++)
+    digitalWrite(loopCnt, LOW);
+  delay(2000);
+}
+
+void DontInvert(void)
 {
   u8g.firstPage();
   do
@@ -98,9 +138,25 @@ void Option2Fcn(void)
     setDisplayCursor(1, 0);
     u8g.print(F("Selected"));
     setDisplayCursor(2, 0);
-    u8g.print(F("Option2"));
+    u8g.print(F("Don't Invert"));
   }
   while ( u8g.nextPage() );
+  invertFlag = 0;
+  delay(2000);
+}
+
+void DoInvert(void)
+{
+  u8g.firstPage();
+  do
+  {
+    setDisplayCursor(1, 0);
+    u8g.print(F("Selected"));
+    setDisplayCursor(2, 0);
+    u8g.print(F("Invert"));
+  }
+  while ( u8g.nextPage() );
+  invertFlag = 1;
   delay(2000);
 }
 
