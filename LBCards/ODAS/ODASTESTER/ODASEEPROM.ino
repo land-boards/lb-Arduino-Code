@@ -135,6 +135,9 @@ void eepromWrite(void)
     case ODASPSOC5_CARD:
       strcpy(myEep.pstr, "ODAS-PSOC5");
       break;
+    case ODASRELAY16_CARD:
+      strcpy(myEep.pstr, "ODAS-RELAY16");
+      break;
     case NEW_CARD:
       strcpy(myEep.pstr, "TBD");
       break;
@@ -253,6 +256,12 @@ uint8_t detectBoardInEeprom(void)
     Serial.println(F("Detected ODAS-PSOC5 board"));
     return 0;
   }
+  else if (strcmp(testStr, "ODAS-RELAY16") == 0)
+  {
+    boardType = ODASRELAY16_CARD;
+    Serial.println(F("Detected ODAS-RELAY16 board"));
+    return 0;
+  }
   Serial.print(F("Did not find board match"));
   Serial.println((char*)testStr);
   return 1;
@@ -268,7 +277,7 @@ void selectBoardType(void)
   Serial.println(F("5 - DIGIO32-I2C board"));
   Serial.println(F("6 - PROTO16-I2C board"));
   Serial.println(F("7 - ODAS-PSOC5 board"));
-  Serial.println(F("8 - TBD board"));
+  Serial.println(F("8 - ODAS-RELAY16 board"));
   Serial.println(F("9 - TBD board"));
   Serial.println(F("X - Boards without EEPROMs"));
   Serial.print(F("Select board > "));
@@ -322,7 +331,7 @@ void selectBoardType(void)
         }
       case '8':
         {
-          boardType = NEW_CARD;
+          boardType = ODASRELAY16_CARD;
           break;
         }
       case '9':

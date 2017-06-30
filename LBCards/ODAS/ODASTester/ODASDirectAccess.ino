@@ -20,6 +20,8 @@ uint8_t readBitValue(uint8_t bitToCheck)
       break;
     case PROTO16I2C_CARD:
       break;
+    case ODASRELAY16_CARD:
+       break;
     case ODASPSOC5_CARD:
       break;
     case I2CIO8_CARD:

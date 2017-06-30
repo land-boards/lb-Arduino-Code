@@ -27,7 +27,10 @@ void bounceLedsCard(void)
       bounceLedsDigio32();
       break;
     case PROTO16I2C_CARD:
-      bounceLedsPROTO16I2C_CARD();
+      bounceLedsSingleMCP23017_CARD();
+      break;
+    case ODASRELAY16_CARD:
+      bounceLedsSingleMCP23017_CARD();
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
@@ -53,10 +56,10 @@ void bounceLedsCard(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// void bounceLedsPROTO16I2C_CARD(void)
+// void bounceLedsSingleMCP23017_CARD(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void bounceLedsPROTO16I2C_CARD(void)
+void bounceLedsSingleMCP23017_CARD(void)
 {
   Serial.println(F("Bouncing LEDs - any key to stop"));
   while (1)

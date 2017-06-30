@@ -27,6 +27,7 @@ typedef enum {
   DIGIO32I2C_CARD,
   PROTO16I2C_CARD,
   ODASPSOC5_CARD,
+  ODASRELAY16_CARD,
   NEW_CARD = 499,
   NOEEPROMAFTER = 500,
   I2CIO8_CARD,
@@ -85,6 +86,9 @@ void setup()
       Dio128.begin();
       break;
     case PROTO16I2C_CARD:
+      mcp.begin(0);      // use default address
+      break;
+    case ODASRELAY16_CARD:
       mcp.begin(0);      // use default address
       break;
     case SWLEDX8_I2C_CARD:

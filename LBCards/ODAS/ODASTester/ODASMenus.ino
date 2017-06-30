@@ -255,7 +255,7 @@ void eepromAccessMenu(void)
         case 'r':
           Serial.println(F("Reading EEPROM"));
           eepromRead();
-          //          Serial.println(F("\neepromAccessMenu() - Finished reading EEPROM"));
+          Serial.println(F("\neepromAccessMenu() - Finished reading EEPROM"));
           break;
         case 'W':
         case 'w':

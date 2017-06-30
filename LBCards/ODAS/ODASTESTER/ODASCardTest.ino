@@ -29,6 +29,9 @@ uint8_t loopBackTestCard(void)
     case PROTO16I2C_CARD:
       return (testProto16());
       break;
+    case ODASRELAY16_CARD:
+      return (testProto16());
+      break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
       break;

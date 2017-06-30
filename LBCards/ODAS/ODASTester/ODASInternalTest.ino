@@ -21,7 +21,10 @@ uint8_t internalLoopBackTestCard(void)
       return (internalLoopBackTestDigio32());
       break;
     case PROTO16I2C_CARD:
-      return (internalLoopBackTestProto16());
+      return (intLBTstSingleMCP23017());
+      break;
+    case ODASRELAY16_CARD:
+      return (intLBTstSingleMCP23017());
       break;
     case OPTOIN8I2C_CARD:
       return (internalLoopBackTestOptoIn8());
@@ -93,10 +96,10 @@ uint8_t internalLoopBackTestDigio32(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestProto16(void) - Test the PROTO16-I2C card
+// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t internalLoopBackTestProto16(void)
+uint8_t intLBTstSingleMCP23017(void)
 {
   uint8_t failed = 0;
   uint8_t loopCnt;
