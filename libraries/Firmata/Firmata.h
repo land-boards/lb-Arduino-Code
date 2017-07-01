@@ -1,7 +1,7 @@
 /*
-  Firmata.h - Firmata library v2.5.5 - 2017-03-06
+  Firmata.h - Firmata library v2.5.6 - 2017-03-18
   Copyright (c) 2006-2008 Hans-Christoph Steiner.  All rights reserved.
-  Copyright (C) 2009-2016 Jeff Hoefs.  All rights reserved.
+  Copyright (C) 2009-2017 Jeff Hoefs.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -128,7 +128,7 @@ class FirmataClass
 
     /* private methods ------------------------------ */
     void strobeBlinkPin(byte pin, int count, int onInterval, int offInterval);
-    friend void FirmataMarshaller::transformByteStreamToMessageBytes (size_t bytec, uint8_t * bytev, size_t max_bytes = 0) const;
+    friend void FirmataMarshaller::encodeByteStream (size_t bytec, uint8_t * bytev, size_t max_bytes = 0) const;
 
     /* callback functions */
     static callbackFunction currentAnalogCallback;
@@ -148,9 +148,9 @@ class FirmataClass
     inline static void staticPinValueCallback (void *, uint8_t command, uint16_t value) { if ( currentPinValueCallback ) { currentPinValueCallback(command, (int)value); } }
     inline static void staticReportAnalogCallback (void *, uint8_t command, uint16_t value) { if ( currentReportAnalogCallback ) { currentReportAnalogCallback(command, (int)value); } }
     inline static void staticReportDigitalCallback (void *, uint8_t command, uint16_t value) { if ( currentReportDigitalCallback ) { currentReportDigitalCallback(command, (int)value); } }
-    inline static void staticStringCallback (void *, char * c_str) { if ( currentStringCallback ) { currentStringCallback(c_str); } }
+    inline static void staticStringCallback (void *, const char * c_str) { if ( currentStringCallback ) { currentStringCallback((char *)c_str); } }
     inline static void staticSysexCallback (void *, uint8_t command, size_t argc, uint8_t *argv) { if ( currentSysexCallback ) { currentSysexCallback(command, (uint8_t)argc, argv); } }
-    inline static void staticReportFirmwareCallback (void * context) { if ( context ) { ((FirmataClass *)context)->printFirmwareVersion(); } }
+    inline static void staticReportFirmwareCallback (void * context, size_t, size_t, const char *) { if ( context ) { ((FirmataClass *)context)->printFirmwareVersion(); } }
     inline static void staticReportVersionCallback (void * context) { if ( context ) { ((FirmataClass *)context)->printVersion(); } }
     inline static void staticSystemResetCallback (void *) { if ( currentSystemResetCallback ) { currentSystemResetCallback(); } }
 };

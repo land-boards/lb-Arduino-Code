@@ -156,6 +156,18 @@ void TembooChoreo::addInput(const String& inputName, const char* inputValue) {
     m_inputs.put(inputName.c_str(), inputValue);
 }
 
+void TembooChoreo::addInputWithSensor(const String& inputName, const String& inputValue) {
+    m_expressions.put(inputName.c_str(), inputValue.c_str());
+}
+
+void TembooChoreo::addInputWithSensor(const char* inputName, const String& inputValue) {
+    m_expressions.put(inputName, inputValue.c_str());
+}
+
+void TembooChoreo::addInputWithSensor(const char* inputName, const char* inputValue) {
+    m_expressions.put(inputName, inputValue);
+}
+
 void TembooChoreo::addInputExpression(const String& inputName, const String& inputValue) {
     m_expressions.put(inputName.c_str(), inputValue.c_str());
 }
@@ -166,6 +178,22 @@ void TembooChoreo::addInputExpression(const char* inputName, const String& input
 
 void TembooChoreo::addInputExpression(const char* inputName, const char* inputValue) {
     m_expressions.put(inputName, inputValue);
+}
+
+void TembooChoreo::addSensorValue(const char* sensorName, int sensorValue, const char* conversion) {
+    m_sensors.put(sensorName, sensorValue, conversion, NULL, NULL, NULL, NULL, NULL);
+}
+
+void TembooChoreo::addSensorValue(const char* sensorName, int sensorValue) {
+    m_sensors.put(sensorName, sensorValue, NULL, NULL, NULL, NULL, NULL, NULL);
+}
+
+void TembooChoreo::addSensorValue(const char* sensorName, int sensorValue, const char* conversion, const char* calibrationValue) {
+    m_sensors.put(sensorName, sensorValue, conversion, NULL, NULL, NULL, NULL, calibrationValue);
+}
+        
+void TembooChoreo::addSensorValue(const char* sensorName, int sensorValue, const char* rawLow, const char* rawHigh, const char* scaleLow, const char* scaleHigh) {
+    m_sensors.put(sensorName, sensorValue, NULL, rawLow, rawHigh, scaleLow, scaleHigh, NULL);
 }
 
 void TembooChoreo::addSensorInput(const char* sensorName, int sensorValue, const char* conversion) {

@@ -102,3 +102,20 @@ https://github.com/olikraus/u8g2 ChangeLog
   * Support for hardware pin remapping on the ESP8266 (issue 158)
   * Bugfix for the KS0108 support (issue 168)
   * More fonts: https://github.com/olikraus/u8g2/wiki/fntgrpnbp (issue 174)
+2017-03-11	v2.14.7	  olikraus@gmail.com
+  * Bugfix: setFont does no longer resets the reference position (issue 195)
+  * Support for ST7565 NHD C12864 (issue 186)
+  * Support for SSD1329 128x96 OLED (issue 208)
+  * Support for LC7981 240x128 (issue 193)
+  * Performance improvement for the ST7920 (issue 200)
+ 2017-05-22	v2.15.2	  olikraus@gmail.com
+  * Added setBitmapMode (pull request 220)
+     Warning: Default behavior of drawXBM has changed in this release.
+  * Increased SPI speed to 8MHz for SSD1306, SH1106 and SSD1322 (issue 215)
+  * Added some more examples (issue 216)
+  * Added Urdu, Bengali, Hebrew and Polish language fonts (issues 221, 246 and 266)
+  * Added more examples (issue 216)
+  * Updated code for NHD C12864 (issues 219 and 241)
+  * Improved speed for HW SPI with SSD13xx OLEDs (issue 215)
+  
+  

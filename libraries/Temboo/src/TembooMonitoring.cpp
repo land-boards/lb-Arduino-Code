@@ -23,7 +23,7 @@
 
 #include <Arduino.h>
 #include <Mailbox.h>
-#ifdef ARDUINO_ARCH_SAMD 
+#if defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_SAM)
 #include "avr/dtostrf.h"
 #endif
 #include "utility/TembooGlobal.h"

@@ -4,7 +4,7 @@ This library allows an Arduino to connect to the Temboo service.
 
 == License ==
 
-Copyright 2015, Temboo Inc.
+Copyright 2017, Temboo Inc.
  
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

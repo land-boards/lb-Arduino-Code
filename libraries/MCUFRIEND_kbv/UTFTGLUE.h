@@ -51,12 +51,14 @@ class UTFTGLUE : public MCUFRIEND_kbv
 		 uint16_t ID = MCUFRIEND_kbv::readID();
 		 if (ID == 0) ID = 0x9341;        //DealExtreme with EXTC=0
 //		 if (ID == 0x0089 || ID == 0x8989) ID = 0x1289;
-		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9481;   //write-only controller
+//		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9481;   //write-only controller
 //		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9486;   //write-only controller
+		 if (ID == 0x00D3 || ID == 0xD3D3) ID = 0x9090;   //write-only controller HX8357-D
 //         if (ID == 0x9327 && orientation == LANDSCAPE) orientation = 3;
 		 MCUFRIEND_kbv::begin(ID);
 		 MCUFRIEND_kbv::setRotation(_orient = orientation);
 		 _radius = 4;
+		 _fontsize = 1;
     }
 	void clrScr() { MCUFRIEND_kbv::fillScreen(0x0000);}
 	void drawPixel(int x, int y) { MCUFRIEND_kbv::drawPixel(x, y, _fcolor);}
@@ -99,12 +101,29 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	void print(String st, int x, int y, int deg=0) {
 		 MCUFRIEND_kbv::print(st);}
 	void printNumI(long num, int x, int y, int length=0, char filler=' ') {
-		 char buf[16]; ltoa(num, buf, 10); 
-		 settextcursor(buf, x, y); MCUFRIEND_kbv::print(buf);}
+//		 char buf[17]; ltoa(num, buf, 10); 
+//		 settextcursor(buf, x, y); MCUFRIEND_kbv::print(buf);
+//		 settextcursor((char*)"", x, y); MCUFRIEND_kbv::print(num);
+         char buf[17], len = 0, *p = buf + 17, sign = num < 0;
+		 if (sign) num = -num;
+		 *--p = '\0';
+         if (num == 0) *--p = '0';
+		 else while (num > 0 && len < 10) {  //int32_t -2147483648 i.e. 10 digits + sign
+             *--p = '0' + num % 10;
+             num /= 10;
+             len++;
+         }
+		 if (sign) *--p = '-';
+		 while (len++ < length) *--p = filler;
+		 settextcursor(p, x, y);     //calculates where to start cursor for CENTER, RIGHT etc
+         MCUFRIEND_kbv::print(p);    //actually print the data
+    }
 	void printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char filler=' ') {
-		 settextcursor((char*)"", x, y); MCUFRIEND_kbv::print(num, dec);}
+//		 settextcursor((char*)"", x, y); MCUFRIEND_kbv::print(num, dec);
+		 char buf[20]; dtostrf(num, length, dec, buf); settextcursor(buf, x, y); MCUFRIEND_kbv::print(buf);
+		 }
 #if !defined(_GFXFONT_H_)
-	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(1);}
+	void setFont(uint8_t* font) { MCUFRIEND_kbv::setTextSize(_fontsize = 1);}
 #endif
 	void drawBitmap(int x, int y, int sx, int sy, const uint16_t *data, int scale=1) {
 		 uint16_t color;
@@ -130,6 +149,7 @@ class UTFTGLUE : public MCUFRIEND_kbv
 	protected:
 	uint16_t _fcolor;
 	uint16_t _bcolor;
+	uint8_t _fontsize;
 	uint8_t _radius;
 	uint8_t _orient;
     void settextcursor(char *st, int x, int y) {
@@ -146,11 +166,11 @@ class UTFTGLUE : public MCUFRIEND_kbv
 		if (x == CENTER || x == RIGHT) {
 #endif
 			{
-			    len = strlen(st) * 6;
+			    len = strlen(st) * 6 * _fontsize;
 			}
 			pos = (MCUFRIEND_kbv::width() - len);
 			if (x == CENTER) x = pos/2;
-			else x = pos;
+			else x = pos - 1;
 		}			
         MCUFRIEND_kbv::setCursor(x, y);
 	}

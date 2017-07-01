@@ -1,7 +1,7 @@
 /*
-  Firmata.cpp - Firmata library v2.5.5 - 2017-03-06
+  Firmata.cpp - Firmata library v2.5.6 - 2017-03-18
   Copyright (c) 2006-2008 Hans-Christoph Steiner.  All rights reserved.
-  Copyright (C) 2009-2016 Jeff Hoefs.  All rights reserved.
+  Copyright (C) 2009-2017 Jeff Hoefs.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ systemCallbackFunction FirmataClass::currentSystemResetCallback = (systemCallbac
  */
 void FirmataClass::sendValueAsTwo7bitBytes(int value)
 {
-  marshaller.transformByteStreamToMessageBytes(sizeof(value), reinterpret_cast<uint8_t *>(&value), sizeof(value));
+  marshaller.encodeByteStream(sizeof(value), reinterpret_cast<uint8_t *>(&value), sizeof(value));
 }
 
 /**
@@ -94,7 +94,7 @@ FirmataClass::FirmataClass()
   parser.attach(SET_DIGITAL_PIN_VALUE, (FirmataParser::callbackFunction)staticPinValueCallback, (void *)NULL);
   parser.attach(STRING_DATA, (FirmataParser::stringCallbackFunction)staticStringCallback, (void *)NULL);
   parser.attach(START_SYSEX, (FirmataParser::sysexCallbackFunction)staticSysexCallback, (void *)NULL);
-  parser.attach(REPORT_FIRMWARE, (FirmataParser::systemCallbackFunction)staticReportFirmwareCallback, this);
+  parser.attach(REPORT_FIRMWARE, (FirmataParser::versionCallbackFunction)staticReportFirmwareCallback, this);
   parser.attach(REPORT_VERSION, (FirmataParser::systemCallbackFunction)staticReportVersionCallback, this);
   parser.attach(SYSTEM_RESET, (FirmataParser::systemCallbackFunction)staticSystemResetCallback, (void *)NULL);
 }

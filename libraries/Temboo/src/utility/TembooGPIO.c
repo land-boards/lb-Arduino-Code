@@ -76,8 +76,6 @@ void tembooDigitalGPIOInit(TembooGPIOConfig* sensorConfig, TembooSensor* tembooS
 		tembooDigitalWrite(sensorConfig, defaultValue);
 		tembooSensor->write = tembooDigitalWrite;
 	} else {
-		// probably don't need to do this, but best go on and set it
-		// TODO: remove /comment after review
 		sensorConfig->currentValue = tembooDigitalRead(sensorConfig);
 		tembooSensor->write = NULL;
 	}
@@ -99,8 +97,6 @@ void tembooAnalogGPIOInit(TembooGPIOConfig* sensorConfig, TembooSensor* tembooSe
 		tembooAnalogWrite(sensorConfig, defaultValue);
 		tembooSensor->write = tembooAnalogWrite;
 	} else {
-		// probably don't need to do this, but best go on and set it
-		// TODO: remove /comment after review
 		sensorConfig->currentValue = tembooAnalogRead(sensorConfig);
 		tembooSensor->write = NULL;
 	}

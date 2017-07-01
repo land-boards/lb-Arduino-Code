@@ -40,7 +40,7 @@
 #define WR_STROBE { WR_ACTIVE; WR_IDLE; }         //PWLW=TWRL=50ns
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE   //PWLR=TRDL=150ns
 #if defined(TEENSY) || defined(__ARM_ARCH_7EM__) // || defined(STM32L476xx)
-#define write8(d) { write_8(d); WR_ACTIVE; WR_ACTIVE; WR_STROBE; } // STROBEs are defined later
+#define write8(d) { write_8(d); WR_ACTIVE; WR_ACTIVE; WR_STROBE; WR_IDLE; } // STROBEs are defined later
 // read 250ns after RD_ACTIVE goes low
 #define read8() ( RD_STROBE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, read_8() )
 #else

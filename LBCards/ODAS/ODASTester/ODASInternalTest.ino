@@ -3,7 +3,11 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestCard(void) -
+// uint8_t internalLoopBackTestCard(void) - 
+//  Set all pins to inputs
+//  Write to OLATAB registers
+//  Read-back from OLATAB registers
+//  Bounce a 1 across all the output lines
 //////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t internalLoopBackTestCard(void)
@@ -63,7 +67,7 @@ uint8_t internalLoopBackTestDigio32(void)
   uint16_t rback16;
   uint8_t pass0fail1 = 0;
   for (wrBit = 0; wrBit < 32; wrBit++)
-    Dio32.pinMode(wrBit, INPUT_PULLUP);
+    Dio32.pinMode(wrBit, INPUT);
   for (wrBit = 1; wrBit != 0; wrBit <<= 1)
   {
     Dio32.writeOLATAB(0, wrBit);
@@ -74,6 +78,19 @@ uint8_t internalLoopBackTestDigio32(void)
       Serial.print(F("internalLoopBackTestDigio32(): Chip 0 Wrote bit: 0x"));
       Serial.println(wrBit, HEX);
       Serial.print(F("internalLoopBackTestDigio32(): Chip 0 Got back: 0x"));
+      Serial.println(rback16, HEX);
+    }
+  }
+  for (wrBit = 0xfffe; wrBit != 0; wrBit <<= 1)
+  {
+    Dio32.writeOLATAB(0, wrBit);
+    rback16 = Dio32.readOLATAB(0);
+    if (rback16 != wrBit)
+    {
+      pass0fail1 = 1;
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 (High) Wrote bit: 0x"));
+      Serial.println(wrBit, HEX);
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 (High) Got back: 0x"));
       Serial.println(rback16, HEX);
     }
   }
@@ -90,8 +107,19 @@ uint8_t internalLoopBackTestDigio32(void)
       Serial.println(rback16, HEX);
     }
   }
-  for (wrBit = 0; wrBit < 32; wrBit++)
-    Dio32.pinMode(wrBit, INPUT);
+  for (wrBit = 0xfffe; wrBit != 0; wrBit <<= 1)
+  {
+    Dio32.writeOLATAB(1, wrBit);
+    rback16 = Dio32.readOLATAB(1);
+    if (rback16 != wrBit)
+    {
+      pass0fail1 = 1;
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Wrote bit: 0x"));
+      Serial.println(wrBit, HEX);
+      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Got back: 0x"));
+      Serial.println(rback16, HEX);
+    }
+  }
   return pass0fail1;
 }
 
