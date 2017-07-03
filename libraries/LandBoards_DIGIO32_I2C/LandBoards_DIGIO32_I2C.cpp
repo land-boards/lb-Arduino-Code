@@ -89,7 +89,7 @@ uint8_t Digio32::digitalRead(uint8_t bit)
 	else
 		regAdr = MCP23017_GPIOB;
 	rdVal = readRegister(chipAddr,regAdr);
-	return ((rdVal>>bit)&0x01);
+	return ((rdVal>>(bit&7))&0x01);
 }
 
 ////////////////////////////////////////////////////////////////////////////

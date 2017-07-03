@@ -44,7 +44,6 @@ uint8_t readBitValue(uint8_t bitToCheck)
 
 uint8_t readBitDIGIO128(uint8_t bitToCheck)
 {
-//  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   uint32_t rdVal;
   Serial.println(F("\nreadBitDIGIO128() - reached function"));
   Dio128.pinMode(bitToCheck,INPUT_PULLUP);
@@ -58,7 +57,6 @@ uint8_t readBitDIGIO128(uint8_t bitToCheck)
 
 uint8_t readBitDIGIO32(uint8_t bitToCheck)
 {
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   uint32_t rdVal;
 //  Serial.println(F("\nreadBitDIGIO32() - reached function"));
   rdVal = Dio32.digitalRead(bitToCheck);
@@ -107,23 +105,21 @@ void writeBitValue(uint8_t bitToCheck, uint8_t bitToWrite)
 // void writeBitDIGIO32(uint8_t bitToCheck, uint8_t bitWeiteValue)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void writeBitDIGIO32(uint8_t bitToCheck, uint8_t bitToWrite)
+void writeBitDIGIO32(uint8_t bitNumber, uint8_t bitValue)
 {
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 //  Serial.println(F("\writeBitDIGIO32() - reached function"));
-  Dio32.pinMode(bitToCheck,OUTPUT);
-  Dio32.digitalWrite(bitToCheck,bitToWrite);
+  Dio32.pinMode(bitNumber,OUTPUT);
+  Dio32.digitalWrite(bitNumber,bitValue);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// void writeBitDIGIO128(uint8_t bitToWrite, uint8_t bitValue)
+// void writeBitDIGIO128(uint8_t bitNumber, uint8_t bitValue)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void writeBitDIGIO128(uint8_t bitToWrite, uint8_t bitValue)
+void writeBitDIGIO128(uint8_t bitNumber, uint8_t bitValue)
 {
-//  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 //  Serial.println(F("\writeBitDIGIO128() - reached function"));
-  Dio128.pinMode(bitToWrite,OUTPUT);
-  Dio128.digitalWrite(bitToWrite,bitValue);
+  Dio128.pinMode(bitNumber,OUTPUT);
+  Dio128.digitalWrite(bitNumber,bitValue);
 }
 

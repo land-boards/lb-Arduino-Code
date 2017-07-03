@@ -22,13 +22,13 @@ uint8_t internalLoopBackTestCard(void)
       return (internalLoopBackTestDIGIO128_CARD());
       break;
     case DIGIO32I2C_CARD:
-      return (internalLoopBackTestDigio32());
+      return (internaltestDigio32Card());
       break;
     case PROTO16I2C_CARD:
-      return (intLBTstSingleMCP23017());
+      return (intLBTstSinglesingleMCP2301723017());
       break;
     case ODASRELAY16_CARD:
-      return (intLBTstSingleMCP23017());
+      return (intLBTstSinglesingleMCP2301723017());
       break;
     case OPTOIN8I2C_CARD:
       return (internalLoopBackTestOptoIn8());
@@ -58,10 +58,10 @@ uint8_t internalLoopBackTestCard(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestDigio32()
+// uint8_t internaltestDigio32Card()
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t internalLoopBackTestDigio32(void)
+uint8_t internaltestDigio32Card(void)
 {
   uint16_t wrBit;
   uint16_t rback16;
@@ -75,9 +75,9 @@ uint8_t internalLoopBackTestDigio32(void)
     if (rback16 != wrBit)
     {
       pass0fail1 = 1;
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 Wrote bit: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 0 Wrote bit: 0x"));
       Serial.println(wrBit, HEX);
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 Got back: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 0 Got back: 0x"));
       Serial.println(rback16, HEX);
     }
   }
@@ -88,9 +88,9 @@ uint8_t internalLoopBackTestDigio32(void)
     if (rback16 != wrBit)
     {
       pass0fail1 = 1;
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 (High) Wrote bit: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 0 (High) Wrote bit: 0x"));
       Serial.println(wrBit, HEX);
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 0 (High) Got back: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 0 (High) Got back: 0x"));
       Serial.println(rback16, HEX);
     }
   }
@@ -101,9 +101,9 @@ uint8_t internalLoopBackTestDigio32(void)
     if (rback16 != wrBit)
     {
       pass0fail1 = 1;
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Wrote bit: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 1 Wrote bit: 0x"));
       Serial.println(wrBit, HEX);
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Got back: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 1 Got back: 0x"));
       Serial.println(rback16, HEX);
     }
   }
@@ -114,9 +114,9 @@ uint8_t internalLoopBackTestDigio32(void)
     if (rback16 != wrBit)
     {
       pass0fail1 = 1;
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Wrote bit: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 1 Wrote bit: 0x"));
       Serial.println(wrBit, HEX);
-      Serial.print(F("internalLoopBackTestDigio32(): Chip 1 Got back: 0x"));
+      Serial.print(F("internaltestDigio32Card(): Chip 1 Got back: 0x"));
       Serial.println(rback16, HEX);
     }
   }
@@ -124,19 +124,19 @@ uint8_t internalLoopBackTestDigio32(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card
+// uint8_t intLBTstSinglesingleMCP2301723017(void) - Test the PROTO16-I2C card
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t intLBTstSingleMCP23017(void)
+uint8_t intLBTstSinglesingleMCP2301723017(void)
 {
   uint8_t failed = 0;
   uint8_t loopCnt;
   uint16_t readBackVal;
   //  Serial.println(F("Testing PROTO16-I2C card"));
   for (loopCnt = 0; loopCnt < 16; loopCnt++)
-    mcp.pinMode(loopCnt, OUTPUT);
-  mcp.writeGPIOAB(0x55aa);
-  readBackVal = mcp.readGPIOAB();
+    singleMCP23017.pinMode(loopCnt, OUTPUT);
+  singleMCP23017.writeGPIOAB(0x55aa);
+  readBackVal = singleMCP23017.readGPIOAB();
   if (readBackVal != 0x55aa)
   {
     Serial.print(F("Readback="));
@@ -144,8 +144,8 @@ uint8_t intLBTstSingleMCP23017(void)
     failed = 1;
   }
   delay(10);
-  mcp.writeGPIOAB(0xaa55);
-  readBackVal = mcp.readGPIOAB();
+  singleMCP23017.writeGPIOAB(0xaa55);
+  readBackVal = singleMCP23017.readGPIOAB();
   if (readBackVal != 0xaa55)
   {
     Serial.print(F("Readback="));
@@ -153,7 +153,7 @@ uint8_t intLBTstSingleMCP23017(void)
     failed = 1;
   }
   for (loopCnt = 0; loopCnt < 16; loopCnt++)
-    mcp.pinMode(loopCnt, INPUT);
+    singleMCP23017.pinMode(loopCnt, INPUT);
   delay(10);
   return (failed);
 }
@@ -335,7 +335,7 @@ uint8_t internalLoopBackTestOptoOut8(void)
   delay(2);
   for (uint8_t loopVal = 2; loopVal < 6; loopVal++)
   {
-    mcpOO8.digitalWrite(testChannel, HIGH);
+    singleMCP23008.digitalWrite(testChannel, HIGH);
     delayMicroseconds(15);
     readVal = digitalRead(loopVal);
     if (readVal != HIGH)
@@ -344,7 +344,7 @@ uint8_t internalLoopBackTestOptoOut8(void)
       Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
-    mcpOO8.digitalWrite(testChannel, LOW);
+    singleMCP23008.digitalWrite(testChannel, LOW);
     delayMicroseconds(15);
     readVal = digitalRead(loopVal);
     if (readVal != LOW)
@@ -358,7 +358,7 @@ uint8_t internalLoopBackTestOptoOut8(void)
   }
   for (uint8_t loopVal = 7; loopVal < 9; loopVal++)
   {
-    mcpOO8.digitalWrite(testChannel, HIGH);
+    singleMCP23008.digitalWrite(testChannel, HIGH);
     delayMicroseconds(15);
     readVal = digitalRead(loopVal);
     if (readVal != HIGH)
@@ -367,7 +367,7 @@ uint8_t internalLoopBackTestOptoOut8(void)
       Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
-    mcpOO8.digitalWrite(testChannel, LOW);
+    singleMCP23008.digitalWrite(testChannel, LOW);
     delayMicroseconds(15);
     readVal = digitalRead(loopVal);
     if (readVal != LOW)
@@ -381,7 +381,7 @@ uint8_t internalLoopBackTestOptoOut8(void)
   }
   for (uint8_t loopVal = 14; loopVal < 16; loopVal++)
   {
-    mcpOO8.digitalWrite(testChannel, HIGH);
+    singleMCP23008.digitalWrite(testChannel, HIGH);
     delayMicroseconds(15);
     readVal = digitalRead(loopVal);
     if (readVal != HIGH)
@@ -390,7 +390,7 @@ uint8_t internalLoopBackTestOptoOut8(void)
       Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
-    mcpOO8.digitalWrite(testChannel, LOW);
+    singleMCP23008.digitalWrite(testChannel, LOW);
     delayMicroseconds(15);
     readVal = digitalRead(loopVal);
     if (readVal != LOW)

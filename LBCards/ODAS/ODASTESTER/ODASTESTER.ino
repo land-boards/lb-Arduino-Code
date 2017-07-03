@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////
 // ODASTESTER Factory Test code
 // Test each card and channel
-// Read/write EEPROM
+// Read/write EEPROM if there is one
 //////////////////////////////////////////////////////////
 
 #include <LandBoards_DIGIO32_I2C.h>
@@ -32,8 +32,8 @@ typedef enum {
   NOEEPROMAFTER = 500,
   I2CIO8_CARD,
   I2CIO8X_CARD,
-  OPTOSMALL_CARD,
-  OPTOFAST_CARD,
+  OPTOFST_SML_NON_INVERTING_CARD,
+  OPTOFST_SML_INVERTING_CARD,
   SWLEDX8_I2C_CARD,
 } boardType_t;
 
@@ -48,7 +48,7 @@ uint8_t single0loop1;
 
 typedef enum {
   UUT_CARD_MUX_CH = 0,
-  TEST_STN_INT_MUX_CH = 1,
+  TEST_STN_INT_MUX_CH = 3,
 } muxChannel_t;
 
 LandBoards_I2CRPT01 myI2CMux;
@@ -56,9 +56,8 @@ Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
 Digio32 Dio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8X i2cio8xCard;
-Adafruit_MCP23008 mcpOI8;
-Adafruit_MCP23008 mcpOO8;
-Adafruit_MCP23017 mcp;
+Adafruit_MCP23008 singleMCP23008;
+Adafruit_MCP23017 singleMCP23017;
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -68,6 +67,8 @@ void setup()
 {
   Serial.begin(9600);
   myI2CMux.begin();
+  myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  Dio32.begin(0);
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 //  TWBR = 12;    // go to 400 KHz I2C speed mode
 
@@ -86,13 +87,13 @@ void setup()
       Dio128.begin();
       break;
     case PROTO16I2C_CARD:
-      mcp.begin(0);      // use default address
+      singleMCP23017.begin(0);      // use default address
       break;
     case ODASRELAY16_CARD:
-      mcp.begin(0);      // use default address
+      singleMCP23017.begin(0);      // use default address
       break;
     case SWLEDX8_I2C_CARD:
-      mcp.begin(0);
+      singleMCP23017.begin(0);
     case DIGIO32I2C_CARD:
       Dio32.begin(0);
       break;
@@ -103,13 +104,13 @@ void setup()
       i2cio8Card.begin();
       break;
     case OPTOIN8I2C_CARD:
-      mcpOI8.begin();               // use default address 0
+      singleMCP23008.begin();               // use default address 0
       break;
     case OPTOOUT8I2C_CARD:
-      mcpOO8.begin();               // use default address 0
+      singleMCP23008.begin();               // use default address 0
       break;
   }
-  Serial.println(F("C=Card Test Menu, D=Direct Access Menu, E=EEPROM Access"));
+  Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));
 }
 
 //////////////////////////////////////////////////////////

@@ -27,10 +27,10 @@ void bounceLedsCard(void)
       bounceLedsDigio32();
       break;
     case PROTO16I2C_CARD:
-      bounceLedsSingleMCP23017_CARD();
+      bounceLedsSinglesingleMCP2301723017_CARD();
       break;
     case ODASRELAY16_CARD:
-      bounceLedsSingleMCP23017_CARD();
+      bounceLedsSinglesingleMCP2301723017_CARD();
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
@@ -56,20 +56,20 @@ void bounceLedsCard(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// void bounceLedsSingleMCP23017_CARD(void)
+// void bounceLedsSinglesingleMCP2301723017_CARD(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void bounceLedsSingleMCP23017_CARD(void)
+void bounceLedsSinglesingleMCP2301723017_CARD(void)
 {
   Serial.println(F("Bouncing LEDs - any key to stop"));
   while (1)
   {
     for (uint8_t port = 0; port < 16; port++)
     {
-      mcp.pinMode(port, OUTPUT);
-      mcp.digitalWrite(port, HIGH);
+      singleMCP23017.pinMode(port, OUTPUT);
+      singleMCP23017.digitalWrite(port, HIGH);
       delay(250);
-      mcp.digitalWrite(port, LOW);
+      singleMCP23017.digitalWrite(port, LOW);
     }
     if (Serial.available() > 0)
     {
@@ -117,17 +117,17 @@ void bounceLedsSwLedX8(void)
   {
     for (uint8_t port = 8; port < 16; port++)
     {
-      mcp.pinMode(port, OUTPUT);
-      mcp.digitalWrite(port, HIGH);
+      singleMCP23017.pinMode(port, OUTPUT);
+      singleMCP23017.digitalWrite(port, HIGH);
       delay(250);
-      mcp.digitalWrite(port, LOW);
+      singleMCP23017.digitalWrite(port, LOW);
     }
     for (uint8_t port = 14; port > 8; port--)
     {
-      mcp.pinMode(port, OUTPUT);
-      mcp.digitalWrite(port, HIGH);
+      singleMCP23017.pinMode(port, OUTPUT);
+      singleMCP23017.digitalWrite(port, HIGH);
       delay(250);
-      mcp.digitalWrite(port, LOW);
+      singleMCP23017.digitalWrite(port, LOW);
     }
     if (Serial.available() > 0)
     {

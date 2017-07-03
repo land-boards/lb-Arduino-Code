@@ -1,3 +1,7 @@
+enum {INTERNAL_DIGIO,EXTERNAL_DIGIO};
+
+enum {NO_TEST, LOOPBACK_TEST, INTERNAL_TEST, BOUNCE_LEDS};
+
 //////////////////////////////////////////////////////////
 // void topLevelMenu(void) - The top level menu.
 //////////////////////////////////////////////////////////
@@ -23,13 +27,18 @@ void topLevelMenu(void)
       case 'e':
         eepromAccessMenu();
         break;
+      case 'I':
+      case 'i':
+        directAccessInternalDIGIO32Menu();
+        break;
       case '?':
-        Serial.println(F("\nC=Card Test Sub-Menu (Bounce LEDs, External loopback, Internal Tests)"));
-        Serial.println(F("D=Direct Access Menu (Read or Write memory)"));
+        Serial.println(F("\nC=Card Tests (Bounce LEDs, External loopback, Internal Tests)"));
+        Serial.println(F("D=Direct Access (Read or Write memory)"));
         Serial.println(F("E=EEPROM Access (Read/Write EEPROM)"));
+        Serial.println(F("I=Set/clear or read test internal DIGIO32 bits"));
         break;
       default:
-        Serial.println(F("\nC=Card Test Menu, D=Direct Access Menu, E=EEPROM Access"));
+        Serial.println(F("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));
         break;
     }
     flushSerial();
@@ -39,8 +48,6 @@ void topLevelMenu(void)
 //////////////////////////////////////////////////////////
 // void cardTestMenu()
 //////////////////////////////////////////////////////////
-
-enum {NO_TEST, LOOPBACK_TEST, INTERNAL_TEST, BOUNCE_LEDS};
 
 void cardTestMenu(void)
 {
@@ -91,7 +98,7 @@ void cardTestMenu(void)
         case 'X':
         case 'x':
           {
-            Serial.println(F("\nC=Card Test Menu, D=Direct Access Menu, E=EEPROM Access"));
+            Serial.println(F("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));
             return;
             break;
           }
@@ -162,7 +169,8 @@ void directAccessMenu(void)
   uint8_t bitToWrite;
   uint8_t readValue;
   flushSerial();
-  Serial.println("Direct Access Hardware");
+  Serial.println("Direct Access UUT Hardware");
+  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   Serial.println(F("H=Write High, L=Write Low, R=Read a bit, X=eXit"));
   while (1)
   {
@@ -208,10 +216,97 @@ void directAccessMenu(void)
             //            Serial.println("Completed write");
             break;
           }
-        case 'X':   // write a bit
+        case 'X':   // Exit
         case 'x':
           {
-            Serial.println("\nC=Card Test Menu, D=Direct Access Menu, E=EEPROM Access");
+            myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+            Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
+            return;
+            break;
+          }
+        case '?':
+          {
+            Serial.println(F("\nH=Set a DIGIO pin High"));
+            Serial.println(F("L=Clear a DIGIO pin to Low"));
+            Serial.println(F("R=Read a DIGIO bit"));
+            Serial.println(F("X=eXit up a level to higher menu"));
+            break;
+          }
+        default:
+          {
+            Serial.println(F("\nH=Write High, R=Read a bit, L=Write Low, X=eXit"));
+            break;
+          }
+      }
+      while (Serial.available() > 0)
+        Serial.read();
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////
+// void directAccessMenu(void)
+//////////////////////////////////////////////////////////
+
+void directAccessInternalDIGIO32Menu(void)
+{
+  int incomingByte = 0;   // for incoming serial data
+  uint8_t bitToCheck;
+  uint8_t bitToWrite;
+  uint8_t readValue;
+  flushSerial();
+  Serial.println("Direct Access Test Station DIGIO32 Hardware");
+  myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  Serial.println(F("H=Write High, L=Write Low, R=Read a bit, X=eXit"));
+  while (1)
+  {
+    if (Serial.available() > 0)
+    {
+      // read the incoming byte:
+      incomingByte = Serial.read();
+      switch (incomingByte)
+      {
+        case 'R':   // read a bit
+        case 'r':
+          {
+            Serial.print("Bit to read (HEX): 0x");
+            flushSerial();
+            bitToCheck = getHexSerial();
+            Serial.println("");
+            readValue = readBitValue(bitToCheck);
+            Serial.print("Read value: ");
+            Serial.println(readValue, HEX);
+            break;
+          }
+        case 'H':   // Set a bit
+        case 'h':
+          {
+            flushSerial();
+            Serial.print("Bit to set High (HEX): 0x");
+            bitToCheck = getHexSerial();
+            Serial.println("");
+            flushSerial();
+            writeBitValue(bitToCheck, 1);
+            //            Serial.println("Completed write");
+            break;
+          }
+        case 'L':   // Clear a bit
+        case 'l':
+          {
+            flushSerial();
+            Serial.print("Bit to clear Low  (HEX): 0x");
+            bitToCheck = getHexSerial();
+            Serial.println("");
+            flushSerial();
+            writeBitValue(bitToCheck, 0);
+            //            Serial.println("Completed write");
+            break;
+          }
+        case 'X':   // Exit
+        case 'x':
+          {
+            myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+            Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
             return;
             break;
           }
@@ -265,7 +360,7 @@ void eepromAccessMenu(void)
           break;
         case 'X':
         case 'x':
-          Serial.println("\nC=Card Test Menu, D=Direct Access Menu, E=EEPROM Access");
+          Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
           return;
           break;
         case '?':
