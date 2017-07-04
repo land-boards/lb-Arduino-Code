@@ -15,32 +15,26 @@ uint8_t internalLoopBackTestCard(void)
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
+    // Cards with single MCP23008 parts
+    case OPTOIN8I2C_CARD:
+    case OPTOOUT8I2C_CARD:
+    case I2CIO8_CARD:
+    case I2CIO8X_CARD:
+      return (internalLoopbackTestSingleMCP23008());
+      break;
+    // Cards with single MCP23017 parts
     case DIGIO16I2C_CARD:
-      return (intLBTstSingleMCP23017());
-      break;
-    case DIGIO128_CARD:
-      return (internalLoopBackTestDIGIO128_CARD());
-      break;
-    case DIGIO32I2C_CARD:
-      return (internaltestDigio32Card());
-      break;
     case PROTO16I2C_CARD:
-      return (intLBTstSingleMCP23017());
-      break;
     case ODASRELAY16_CARD:
       return (intLBTstSingleMCP23017());
       break;
-    case OPTOIN8I2C_CARD:
-      return (internalLoopBackTestOptoIn8());
+    // Cards with two MCP23017 parts
+    case DIGIO32I2C_CARD:
+      return (internaltestDigio32Card());
       break;
-    case OPTOOUT8I2C_CARD:
-      return (internalLoopBackTestOptoOut8());
-      break;
-    case I2CIO8_CARD:
-      return (internalLoopBackTestI2CIO8());
-      break;
-    case I2CIO8X_CARD:
-      return (internalLoopBackTestI2CIO8X());
+    // Cards with 8 MCP23017 parts
+    case DIGIO128_CARD:
+      return (internalLoopBackTestDIGIO128_CARD());
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
@@ -55,6 +49,63 @@ uint8_t internalLoopBackTestCard(void)
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   return 1; // fail
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t internalLoopbackTestSingleMCP23008(void) - Test the OptoIn8-I2C card
+// Puts out 8 bit test vector on DIGIO32 pins
+// Looks at the returned values on the OptoIn8-I2C
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t internalLoopbackTestSingleMCP23008(void)
+{
+  unsigned char readVal;
+  int testPass = 1;
+  //  Serial.println(F("Internal tests OptoIn8-I2C card"));
+  for (int loopVal = 0; loopVal < 8; loopVal++)
+    singleMCP23008.pinMode(loopVal,INPUT);
+  singleMCP23008.writeOLAT(0x5a);
+  if (singleMCP23008.readOLAT() != 0x5a)
+    testPass = 0;
+  if (testPass)
+    return 0;
+  else
+    return 1;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t intLBTstSingleMCP23017(void)
+{
+  uint8_t failed = 0;
+  uint8_t loopCnt;
+  uint16_t readBackVal;
+  //  Serial.println(F("Testing single MCP23017 card"));
+  for (loopCnt = 0; loopCnt < 16; loopCnt++)
+    singleMCP23017.pinMode(loopCnt, OUTPUT);
+  singleMCP23017.writeGPIOAB(0x55aa);
+  readBackVal = singleMCP23017.readGPIOAB();
+  if (readBackVal != 0x55aa)
+  {
+    Serial.print(F("Readback="));
+    Serial.println(readBackVal);
+    failed = 1;
+  }
+  delay(10);
+  singleMCP23017.writeGPIOAB(0xaa55);
+  readBackVal = singleMCP23017.readGPIOAB();
+  if (readBackVal != 0xaa55)
+  {
+    Serial.print(F("Readback="));
+    Serial.println(readBackVal);
+    failed = 1;
+  }
+  for (loopCnt = 0; loopCnt < 16; loopCnt++)
+    singleMCP23017.pinMode(loopCnt, INPUT);
+  delay(10);
+  return (failed);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -124,220 +175,6 @@ uint8_t internaltestDigio32Card(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t intLBTstSingleMCP23017(void)
-{
-  uint8_t failed = 0;
-  uint8_t loopCnt;
-  uint16_t readBackVal;
-  //  Serial.println(F("Testing single MCP23017 card"));
-  for (loopCnt = 0; loopCnt < 16; loopCnt++)
-    singleMCP23017.pinMode(loopCnt, OUTPUT);
-  singleMCP23017.writeGPIOAB(0x55aa);
-  readBackVal = singleMCP23017.readGPIOAB();
-  if (readBackVal != 0x55aa)
-  {
-    Serial.print(F("Readback="));
-    Serial.println(readBackVal);
-    failed = 1;
-  }
-  delay(10);
-  singleMCP23017.writeGPIOAB(0xaa55);
-  readBackVal = singleMCP23017.readGPIOAB();
-  if (readBackVal != 0xaa55)
-  {
-    Serial.print(F("Readback="));
-    Serial.println(readBackVal);
-    failed = 1;
-  }
-  for (loopCnt = 0; loopCnt < 16; loopCnt++)
-    singleMCP23017.pinMode(loopCnt, INPUT);
-  delay(10);
-  return (failed);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestI2CIO8(void) - Test the I2CIO8 card
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t internalLoopBackTestI2CIO8(void)
-{
-  Serial.println(F("I2CIO8 card tests"));
-  Serial.println(F("Move jumper across H5-H8, observe LEDs D0-D3"));
-  Serial.println(F("Verify Int LED blinks"));
-  Serial.println(F("Hit a key to stop test"));
-  while (1)
-  {
-    i2cio8Card.writeLED(LED0, !i2cio8Card.readJumper(H4JUMPER));
-    i2cio8Card.writeLED(LED1, !i2cio8Card.readJumper(H5JUMPER));
-    i2cio8Card.writeLED(LED2, !i2cio8Card.readJumper(H6JUMPER));
-    i2cio8Card.writeLED(LED3, !i2cio8Card.readJumper(H7JUMPER));
-    delay(250);
-    if (Serial.available() > 0)
-    {
-      Serial.read();
-      return 0;
-    }
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestI2CIO8X(void)
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t internalLoopBackTestI2CIO8X(void)
-{
-  uint8_t jumpers;
-  //  Serial.println(F("I2CIO8X card"));
-  //  Serial.println(F("Install test jumper"));
-  //  Serial.println(F("Hit a key to stop test"));
-  for (jumpers = 0; jumpers < 4; jumpers++)
-    i2cio8xCard.pinMode(jumpers, INPUT);
-  for (jumpers = 4; jumpers < 8; jumpers++)
-    i2cio8xCard.pinMode(jumpers, OUTPUT);
-  for (jumpers = 0; jumpers < 4; jumpers++)
-  {
-    i2cio8xCard.digitalWrite(jumpers + H4JUMPER, LOW);
-    if (i2cio8xCard.digitalRead(jumpers) != LOW)
-    {
-      Serial.println(F("Failed LOW"));
-      return 1;
-    }
-    i2cio8xCard.digitalWrite(jumpers + H4JUMPER, HIGH);
-    if (i2cio8xCard.digitalRead(jumpers) != HIGH)
-    {
-      Serial.println(F("Failed HIGH"));
-      return 1;
-    }
-  }
-  return 0;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// OptoIn8-I2C card test code
-//////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestOptoIn8(void) - Test the OptoIn8-I2C card
-// Puts out 8 bit test vector on Arduino pins
-//  Arduino Output lines aew D2-D5, D7, D8, D14(A0), D15(A1)
-// Looks at the returned values on the OptoIn8-I2C
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t internalLoopBackTestOptoIn8(void)
-{
-  unsigned char readVal;
-  int testPass = 1;
-  //  Serial.println(F("Internal tests OptoIn8-I2C card"));
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-  for (int loopVal = 0; loopVal < 8; loopVal++)
-    singleMCP23008.pinMode(loopVal,INPUT);
-  for (int loopVal = 0; loopVal < 8; loopVal++)
-  {
-//    singleMCP23008.
-  }
-  if (testPass)
-    return 0;
-  else
-    return 1;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalLoopBackTestOptoOut8(void) - Test the OptoOut8-I2C card
-// Puts out 8 bits on OptoOut8-I2C card
-// Reads the 8 bits on Arduino pins
-// Arduino Input lines are D2-D5, D7, D8, D14(A0), D15(A1)
-// Looks at the returned values on the OptoIn8-I2C
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t internalLoopBackTestOptoOut8(void)
-{
-  //  Serial.println(F("Testing OptoOut8-I2C card"));
-
-  initOO8pins();
-  uint8_t readVal;
-  int testPass = 1;;
-  uint8_t testChannel = 0;
-  int testBit = 0x1;
-  delay(2);
-  for (uint8_t loopVal = 2; loopVal < 6; loopVal++)
-  {
-    singleMCP23008.digitalWrite(testChannel, HIGH);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != HIGH)
-    {
-      testPass = 0;
-      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
-      Serial.println(testChannel);
-    }
-    singleMCP23008.digitalWrite(testChannel, LOW);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != LOW)
-    {
-      testPass = 0;
-      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
-      Serial.println(testChannel);
-    }
-    testBit <<= 1;
-    testChannel++;
-  }
-  for (uint8_t loopVal = 7; loopVal < 9; loopVal++)
-  {
-    singleMCP23008.digitalWrite(testChannel, HIGH);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != HIGH)
-    {
-      testPass = 0;
-      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
-      Serial.println(testChannel);
-    }
-    singleMCP23008.digitalWrite(testChannel, LOW);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != LOW)
-    {
-      testPass = 0;
-      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
-      Serial.println(testChannel);
-    }
-    testBit <<= 1;
-    testChannel++;
-  }
-  for (uint8_t loopVal = 14; loopVal < 16; loopVal++)
-  {
-    singleMCP23008.digitalWrite(testChannel, HIGH);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != HIGH)
-    {
-      testPass = 0;
-      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
-      Serial.println(testChannel);
-    }
-    singleMCP23008.digitalWrite(testChannel, LOW);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != LOW)
-    {
-      testPass = 0;
-      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
-      Serial.println(testChannel);
-    }
-    testBit <<= 1;
-    testChannel++;
-  }
-  if (testPass)
-    return 0;
-  else
-    return 1;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
 // uint8_t internalLoopBackTestDIGIO128_CARD(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -386,5 +223,4 @@ uint8_t internalLoopBackTestDIGIO128_CARD(void)
   else
     return 1;
 }
-
 

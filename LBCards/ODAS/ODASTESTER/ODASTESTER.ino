@@ -12,6 +12,7 @@
 #include <LandBoards_I2CRPT01.h>
 #include <Adafruit_MCP23008.h>
 #include <Adafruit_MCP23017.h>
+#include <LandBoards_MCP23008.h>
 
 //////////////////////////////////////////////////////////
 // defines follow
@@ -56,7 +57,7 @@ Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
 Digio32 Dio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8X i2cio8xCard;
-Adafruit_MCP23008 singleMCP23008;
+LandBoards_MCP23008 singleMCP23008;
 Adafruit_MCP23017 singleMCP23017;
 
 //////////////////////////////////////////////////////////
