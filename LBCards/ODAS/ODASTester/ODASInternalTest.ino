@@ -16,7 +16,7 @@ uint8_t internalLoopBackTestCard(void)
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
-      Serial.println(F("Not supported at present"));
+      return (intLBTstSingleMCP23017());
       break;
     case DIGIO128_CARD:
       return (internalLoopBackTestDIGIO128_CARD());
@@ -25,10 +25,10 @@ uint8_t internalLoopBackTestCard(void)
       return (internaltestDigio32Card());
       break;
     case PROTO16I2C_CARD:
-      return (intLBTstSinglesingleMCP2301723017());
+      return (intLBTstSingleMCP23017());
       break;
     case ODASRELAY16_CARD:
-      return (intLBTstSinglesingleMCP2301723017());
+      return (intLBTstSingleMCP23017());
       break;
     case OPTOIN8I2C_CARD:
       return (internalLoopBackTestOptoIn8());
@@ -124,15 +124,15 @@ uint8_t internaltestDigio32Card(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t intLBTstSinglesingleMCP2301723017(void) - Test the PROTO16-I2C card
+// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t intLBTstSinglesingleMCP2301723017(void)
+uint8_t intLBTstSingleMCP23017(void)
 {
   uint8_t failed = 0;
   uint8_t loopCnt;
   uint16_t readBackVal;
-  //  Serial.println(F("Testing PROTO16-I2C card"));
+  //  Serial.println(F("Testing single MCP23017 card"));
   for (loopCnt = 0; loopCnt < 16; loopCnt++)
     singleMCP23017.pinMode(loopCnt, OUTPUT);
   singleMCP23017.writeGPIOAB(0x55aa);
@@ -230,84 +230,13 @@ uint8_t internalLoopBackTestOptoIn8(void)
 {
   unsigned char readVal;
   int testPass = 1;
-  int testBit = 0x1;
-  //  Serial.println(F("Testing OptoIn8-I2C card"));
-
-  initOI8pins();
-  for (int loopVal = 2; loopVal < 6; loopVal++)
+  //  Serial.println(F("Internal tests OptoIn8-I2C card"));
+  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  for (int loopVal = 0; loopVal < 8; loopVal++)
+    singleMCP23008.pinMode(loopVal,INPUT);
+  for (int loopVal = 0; loopVal < 8; loopVal++)
   {
-    digitalWrite(loopVal, LOW);
-    pinMode(loopVal, OUTPUT);
-    digitalWrite(loopVal, LOW);
-    readVal = readOptoIn8();
-    if ((readVal & testBit) != testBit)
-    {
-      testPass = 0;
-      Serial.print(F("OptoIn8-I2C failed LOW on bit "));
-      Serial.println(testBit);
-    }
-    digitalWrite(loopVal, HIGH);
-    delay(10);
-    readVal = readOptoIn8();
-    if ((readVal & testBit) == testBit)
-    {
-      testPass = 0;
-      Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
-      Serial.println(testBit);
-      Serial.print(F("Read back on  "));
-      Serial.println(testBit);
-    }
-    testBit <<= 1;
-  }
-  for (int loopVal = 7; loopVal < 9; loopVal++)
-  {
-    digitalWrite(loopVal, LOW);
-    pinMode(loopVal, OUTPUT);
-    digitalWrite(loopVal, LOW);
-    readVal = readOptoIn8();
-    if ((readVal & testBit) != testBit)
-    {
-      testPass = 0;
-      Serial.print(F("OptoIn8-I2C failed LOW on bit "));
-      Serial.println(testBit);
-    }
-    digitalWrite(loopVal, HIGH);
-    delay(10);
-    readVal = readOptoIn8();
-    if ((readVal & testBit) == testBit)
-    {
-      testPass = 0;
-      Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
-      Serial.println(testBit);
-      Serial.print(F("Read back on  "));
-      Serial.println(testBit);
-    }
-    testBit <<= 1;
-  }
-  for (int loopVal = 14; loopVal < 16; loopVal++) // Uses A0, A1
-  {
-    digitalWrite(loopVal, LOW);
-    pinMode(loopVal, OUTPUT);
-    digitalWrite(loopVal, LOW);
-    readVal = readOptoIn8();
-    if ((readVal & testBit) != testBit)
-    {
-      testPass = 0;
-      Serial.print(F("OptoIn8-I2C failed LOW on bit "));
-      Serial.println(testBit);
-    }
-    digitalWrite(loopVal, HIGH);
-    delay(10);
-    readVal = readOptoIn8();
-    if ((readVal & testBit) == testBit)
-    {
-      testPass = 0;
-      Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
-      Serial.println(testBit);
-      Serial.print(F("Read back on  "));
-      Serial.println(testBit);
-    }
-    testBit <<= 1;
+//    singleMCP23008.
   }
   if (testPass)
     return 0;

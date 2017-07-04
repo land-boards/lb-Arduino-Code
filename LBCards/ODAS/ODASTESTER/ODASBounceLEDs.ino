@@ -9,7 +9,7 @@ void bounceLedsCard(void)
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
-      Serial.println(F("Not supported at present"));
+      bounceLedsSinglesingleMCP2301723017_CARD();
       break;
     case DIGIO128_CARD:
       bounceLedsDIGIO128_CARD();
