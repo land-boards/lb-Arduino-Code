@@ -369,8 +369,8 @@ uint8_t extLBTestOptoIn8(void)
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 8; port < 16; port++)   // Set all Test Station DIGIO32 inputs to Pullup 
   {
-    Dio32.digitalWrite(port,LOW);
     Dio32.pinMode(port, OUTPUT);
+    Dio32.digitalWrite(port,LOW);
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (port = 0; port < 8; port++)   // Set all inputs to Pullup 
@@ -380,7 +380,7 @@ uint8_t extLBTestOptoIn8(void)
     myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     Dio32.digitalWrite(port, LOW);
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-    readVal = singleMCP23008.digitalRead(7-port);
+    readVal = singleMCP23008.digitalRead(port);
     if (readVal != HIGH)
     {
       testResults = TEST_FAILED;
@@ -391,7 +391,7 @@ uint8_t extLBTestOptoIn8(void)
     Dio32.digitalWrite(port, HIGH);
     delay(2);
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-    readVal = singleMCP23008.digitalRead(7-port);
+    readVal = singleMCP23008.digitalRead(port);
     if (readVal != LOW)
     {
       testResults = TEST_FAILED;
@@ -412,92 +412,7 @@ uint8_t extLBTestOptoIn8(void)
 
 uint8_t extLBTestOptoOut8(void)
 {
-  //  Serial.println(F("Testing OptoOut8-I2C card"));
-  int loopCnt;
-  uint8_t readVal;
-  int testResults = TEST_PASSED;
-  uint8_t testChannel = 0;
-  for (loopCnt = 0; loopCnt < 8; loopCnt++)
-  {
-    singleMCP23008.digitalWrite(loopCnt, HIGH);
-    singleMCP23008.pinMode(loopCnt, OUTPUT);
-  }
-  for (loopCnt = 2; loopCnt < 16; loopCnt++)
-    pinMode(loopCnt, INPUT);
-  int testBit = 0x1;
-  delay(2);
-  for (uint8_t loopVal = 2; loopVal < 6; loopVal++)
-  {
-    singleMCP23008.digitalWrite(testChannel, HIGH);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != HIGH)
-    {
-      testResults = TEST_FAILED;
-      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
-      Serial.println(testChannel);
-    }
-    singleMCP23008.digitalWrite(testChannel, LOW);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != LOW)
-    {
-      testResults = TEST_FAILED;
-      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
-      Serial.println(testChannel);
-    }
-    testBit <<= 1;
-    testChannel++;
-  }
-  for (uint8_t loopVal = 7; loopVal < 9; loopVal++)
-  {
-    singleMCP23008.digitalWrite(testChannel, HIGH);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != HIGH)
-    {
-      testResults = TEST_FAILED;
-      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
-      Serial.println(testChannel);
-    }
-    singleMCP23008.digitalWrite(testChannel, LOW);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != LOW)
-    {
-      testResults = TEST_FAILED;
-      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
-      Serial.println(testChannel);
-    }
-    testBit <<= 1;
-    testChannel++;
-  }
-  for (uint8_t loopVal = 14; loopVal < 16; loopVal++)
-  {
-    singleMCP23008.digitalWrite(testChannel, HIGH);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != HIGH)
-    {
-      testResults = TEST_FAILED;
-      Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
-      Serial.println(testChannel);
-    }
-    singleMCP23008.digitalWrite(testChannel, LOW);
-    delayMicroseconds(15);
-    readVal = digitalRead(loopVal);
-    if (readVal != LOW)
-    {
-      testResults = TEST_FAILED;
-      Serial.print(F("OptoOut8-I2C failed LOW on bit "));
-      Serial.println(testChannel);
-    }
-    testBit <<= 1;
-    testChannel++;
-  }
-  if (testResults)
-    return TEST_PASSED;
-  return TEST_FAILED;
+  return TEST_PASSED;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
