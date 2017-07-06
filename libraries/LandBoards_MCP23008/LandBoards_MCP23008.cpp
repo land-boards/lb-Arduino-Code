@@ -30,11 +30,11 @@ void LandBoards_MCP23008::begin(uint8_t addr)
 
 	Wire.begin();
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-	write8(MCP23008_IODIR,0xf0);
+	write8(MCP23008_IODIR,0xff);
 	write8(MCP23008_GPIO, 0x00);
 	write8(MCP23008_INTCON,0x00);
-	write8(MCP23008_IPOL,0xf0);
-	write8(MCP23008_GPINTEN,0xf0);
+	write8(MCP23008_IPOL,0x00);
+	write8(MCP23008_GPINTEN,0x00);
 	read8(MCP23008_GPIO);
 	return;
 }
@@ -63,25 +63,20 @@ void LandBoards_MCP23008::begin(void)
 void LandBoards_MCP23008::pinMode(uint8_t bit, uint8_t d)
 {
 	uint8_t iodir;
+	uint8_t dupIodir;
 	bit &= 7;
 	iodir = read8(MCP23008_IODIR);
-	if (d == INPUT) 
-	{
-		iodir |= 1 << bit; 
-	} 
+	dupIodir = iodir;
+	if ((d == INPUT)   || (d == INPUT_PULLUP))
+		iodir |= (1 << bit); 
 	else 
-	{
 		iodir &= ~(1 << bit);
-	}
-	write8(MCP23008_IODIR, iodir);
+	if (iodir != dupIodir)		// Only do the write if there was a change
+		write8(MCP23008_IODIR, iodir);
 	if (d == INPUT)
-	{
 		pullUp(bit,LOW);		// Pullup disabled
-	}
 	else if (d == INPUT_PULLUP)
-	{
 		pullUp(bit,HIGH);			// Pullup enabled
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -91,10 +86,8 @@ void LandBoards_MCP23008::pinMode(uint8_t bit, uint8_t d)
 void LandBoards_MCP23008::pullUp(uint8_t bit, uint8_t d) 
 {
 	uint8_t gppuCopy;
+	uint8_t dupGppu;
 	bit &= 7;
-
-	bit &= 7;
-
 	gppuCopy = read8(MCP23008_GPPU);
 	// set the pin and direction
 	if (d == HIGH) {
@@ -102,8 +95,9 @@ void LandBoards_MCP23008::pullUp(uint8_t bit, uint8_t d)
 	} else {
 		gppuCopy &= ~(1 << bit);
 	}
-	// write the new GPIO
-	write8(MCP23008_GPPU, gppuCopy);
+	// write the new pullup value only if there was a change
+	if (gppuCopy != dupGppu)
+		write8(MCP23008_GPPU, gppuCopy);
 }
 
 ////////////////////////////////////////////////////////////////////////////

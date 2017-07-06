@@ -19,9 +19,11 @@ void bounceLedsCard(void)
       break;
     case OPTOIN8I2C_CARD:
       Serial.println(F("Can't bounce LEDs on an input only card"));
+      return;
       break;
     case OPTOOUT8I2C_CARD:
       Serial.println(F("Not supported at present"));
+      return;
       break;
     case DIGIO32I2C_CARD:
       bounceLedsDigio32();
@@ -34,9 +36,11 @@ void bounceLedsCard(void)
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
+      return;
       break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
+      return;
       break;
     case I2CIO8_CARD:
       bounceLedsI2CIO8();

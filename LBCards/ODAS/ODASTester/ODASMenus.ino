@@ -121,7 +121,7 @@ void cardTestMenu(void)
         {
           case LOOPBACK_TEST:
             {
-              if (loopBackTestCard() == 0)
+              if (extLBTestCard() == TEST_PASSED)
                 passCount++;
               else
                 failCount++;
@@ -133,7 +133,7 @@ void cardTestMenu(void)
             }
           case INTERNAL_TEST:
             {
-              if (internalLoopBackTestCard() == 0)
+              if (internalextLBTestCard() == TEST_PASSED)
                 passCount++;
               else
                 failCount++;
@@ -273,7 +273,7 @@ void directAccessInternalDIGIO32Menu(void)
             flushSerial();
             bitToCheck = getHexSerial();
             Serial.println("");
-            readValue = readBitValue(bitToCheck);
+            readValue = readBitDIGIO32(bitToCheck);
             Serial.print("Read value: ");
             Serial.println(readValue, HEX);
             break;
@@ -286,7 +286,7 @@ void directAccessInternalDIGIO32Menu(void)
             bitToCheck = getHexSerial();
             Serial.println("");
             flushSerial();
-            writeBitValue(bitToCheck, 1);
+            writeBitDIGIO32(bitToCheck, 1);
             //            Serial.println("Completed write");
             break;
           }
@@ -298,7 +298,7 @@ void directAccessInternalDIGIO32Menu(void)
             bitToCheck = getHexSerial();
             Serial.println("");
             flushSerial();
-            writeBitValue(bitToCheck, 0);
+            writeBitDIGIO32(bitToCheck, 0);
             //            Serial.println("Completed write");
             break;
           }

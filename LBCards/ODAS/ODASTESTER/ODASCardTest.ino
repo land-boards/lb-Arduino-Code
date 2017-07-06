@@ -3,10 +3,10 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestCard(void) -
+// uint8_t extLBTestCard(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestCard(void)
+uint8_t extLBTestCard(void)
 {
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
@@ -15,13 +15,13 @@ uint8_t loopBackTestCard(void)
       return (testDigio16Card());
       break;
     case DIGIO128_CARD:
-      return (loopBackTestDIGIO128_CARD());
+      return (extLBTestDIGIO128_CARD());
       break;
     case OPTOIN8I2C_CARD:
-      return (loopBackTestOptoIn8());
+      return (extLBTestOptoIn8());
       break;
     case OPTOOUT8I2C_CARD:
-      return (loopBackTestOptoOut8());
+      return (extLBTestOptoOut8());
       break;
     case DIGIO32I2C_CARD:
       return (testDigio32Card());
@@ -59,7 +59,7 @@ uint8_t loopBackTestCard(void)
       break;
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-  return 1; // fail
+  return TEST_FAILED; // fail
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ uint8_t loopBackTestCard(void)
 uint8_t testOptoFastSmallInverting(void)
 {
   uint8_t port;
-  uint8_t pass0fail1 = 0;
+  uint8_t testResults = TEST_PASSED;
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup 
     Dio32.pinMode(port, OUTPUT);
@@ -83,7 +83,7 @@ uint8_t testOptoFastSmallInverting(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected High"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
     Dio32.digitalWrite(port,HIGH);
     if (Dio32.digitalRead(port+8) != LOW)
@@ -91,10 +91,10 @@ uint8_t testOptoFastSmallInverting(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected Low"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
   }
-  return pass0fail1;
+  return testResults;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +104,7 @@ uint8_t testOptoFastSmallInverting(void)
 uint8_t testOptoFastSmallNonInverting(void)
 {
   uint8_t port;
-  uint8_t pass0fail1 = 0;
+  uint8_t testResults = TEST_PASSED;
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup 
     Dio32.pinMode(port, OUTPUT);
@@ -118,7 +118,7 @@ uint8_t testOptoFastSmallNonInverting(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected Low"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
     Dio32.digitalWrite(port,HIGH);
     if (Dio32.digitalRead(port+8) != HIGH)
@@ -126,10 +126,10 @@ uint8_t testOptoFastSmallNonInverting(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected High"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
   }
-  return pass0fail1;
+  return testResults;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ uint8_t testSwLedX8(void)
       singleMCP23017.digitalWrite(loopCnt+8,singleMCP23017.digitalRead(loopCnt));
     }
   }
-  return 0;
+  return TEST_PASSED;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ uint8_t testSwLedX8(void)
 
 uint8_t testProto16(void)
 {
-  uint8_t failed = 0;
+  uint8_t failed = TEST_PASSED;
   uint8_t loopCnt;
   uint16_t readBackVal;
 //  Serial.println(F("Testing PROTO16-I2C card"));
@@ -178,7 +178,7 @@ uint8_t testProto16(void)
   {
     Serial.print(F("Readback="));
     Serial.println(readBackVal);
-    failed = 1;
+    failed = TEST_FAILED;
   }
   delay(10);
   singleMCP23017.writeGPIOAB(0xaa55);
@@ -187,7 +187,7 @@ uint8_t testProto16(void)
   {
     Serial.print(F("Readback="));
     Serial.println(readBackVal);
-    failed = 1;
+    failed = TEST_FAILED;
   }
   for (loopCnt = 0; loopCnt < 16; loopCnt++)
     singleMCP23017.pinMode(loopCnt,INPUT);
@@ -215,7 +215,7 @@ uint8_t testI2CIO8(void)
     if (Serial.available() > 0)
     {
       Serial.read();
-      return 0;
+      return TEST_PASSED;
     }
   }
 }
@@ -240,16 +240,16 @@ uint8_t testI2CIO8X(void)
     if (i2cio8xCard.digitalRead(jumpers) != LOW)
     {
       Serial.println(F("Failed LOW"));
-      return 1;
+      return TEST_FAILED;
     }
     i2cio8xCard.digitalWrite(jumpers + H4JUMPER, HIGH);
     if (i2cio8xCard.digitalRead(jumpers) != HIGH)
     {
       Serial.println(F("Failed HIGH"));
-      return 1;
+      return TEST_FAILED;
     }
   }
-  return 0;
+  return TEST_PASSED;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +260,7 @@ uint8_t testI2CIO8X(void)
 uint8_t testDigio32Card(void)
 {
   uint8_t port;
-  uint8_t pass0fail1 = 0;
+  uint8_t testResults = TEST_PASSED;
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 32; port++)   // Set all inputs to Pullup 
     Dio32.pinMode(port, INPUT_PULLUP);
@@ -277,7 +277,7 @@ uint8_t testDigio32Card(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected Low"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   }
@@ -292,14 +292,14 @@ uint8_t testDigio32Card(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected High"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (port = 0; port < 32; port++)
     Dio32.pinMode(port, INPUT);
-  return pass0fail1;
+  return testResults;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +310,7 @@ uint8_t testDigio32Card(void)
 uint8_t testDigio16Card(void)
 {
   uint8_t port;
-  uint8_t pass0fail1 = 0;
+  uint8_t testResults = TEST_PASSED;
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 32; port++)   // Set all inputs to Pullup 
     Dio32.pinMode(port, INPUT_PULLUP);
@@ -327,7 +327,7 @@ uint8_t testDigio16Card(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected Low"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   }
@@ -342,118 +342,81 @@ uint8_t testDigio16Card(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected High"));
-      pass0fail1 = 1;
+      testResults = TEST_FAILED;
     }
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (port = 0; port < 16; port++)
     singleMCP23017.pinMode(port, INPUT);
-  return pass0fail1;
+  return testResults;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// OptoIn8-I2C card test code
-//////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////////
-// initOI8pins - Init the OptoIn8-I2C card to all Inputs
-//////////////////////////////////////////////////////////////////////////////////////
-
-void initOI8pins(void)
-{
-  int loopCnt;
-  for (loopCnt = 0; loopCnt < 8; loopCnt++)
-  {
-    singleMCP23008.pinMode(loopCnt, INPUT);
-    singleMCP23008.pullUp(loopCnt, HIGH);  // turn on a 100K pullup internally
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// Read a bit from the OptoIn8-I2C card
-//////////////////////////////////////////////////////////////////////////////////////
-
-unsigned char readOptoIn8(void)
-{
-  int loopVal;
-  unsigned int rval = 0;
-  for (loopVal = 0; loopVal < 8; loopVal++)
-  {
-    rval |= singleMCP23008.digitalRead(loopVal) & 0x1;
-    rval <<= 1;
-  }
-  return rval >> 1;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestOptoIn8(void) - Test the OptoIn8-I2C card
-// Puts out 8 bit test vector on Arduino pins
-//  Arduino Output lines aew D2-D5, D7, D8, D14(A0), D15(A1)
+// uint8_t extLBTestOptoIn8(void) - Test the OptoIn8-I2C card
+// Puts out 8 bit test vector on DIGIO32 pins
+//  D0 is LED1+
+//  D8 is LED1-
 // Looks at the returned values on the OptoIn8-I2C
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestOptoIn8(void)
+uint8_t extLBTestOptoIn8(void)
 {
-  unsigned char readVal;
-  int port;
-  int testPass = 1;
-  int testBit = 0x1;
+  uint8_t readVal;
+  uint8_t port;
+  uint8_t testResults = TEST_PASSED;
   //  Serial.println(F("Testing OptoIn8-I2C card"));
-
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
-  for (port = 0; port < 32; port++)   // Set all Test Station DIGIO32 inputs to Pullup 
+  for (port = 8; port < 16; port++)   // Set all Test Station DIGIO32 inputs to Pullup 
   {
-    Dio32.pinMode(port, OUTPUT);
     Dio32.digitalWrite(port,LOW);
+    Dio32.pinMode(port, OUTPUT);
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (port = 0; port < 8; port++)   // Set all inputs to Pullup 
-    singleMCP23008.pinMode(port, INPUT);
-  for (int port = 0; port < 8; port++)
+    singleMCP23008.pinMode(port, INPUT_PULLUP);
+  for (port = 0; port < 8; port++)
   {
     myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     Dio32.digitalWrite(port, LOW);
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-    readVal = singleMCP23008.digitalRead(port);
+    readVal = singleMCP23008.digitalRead(7-port);
     if (readVal != HIGH)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoIn8-I2C failed LOW on bit "));
-      Serial.println(testBit);
+      Serial.println(port);
     }
     myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     Dio32.digitalWrite(port, HIGH);
-    delay(10);
+    delay(2);
     myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-    readVal = singleMCP23008.digitalRead(port);
+    readVal = singleMCP23008.digitalRead(7-port);
     if (readVal != LOW)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoIn8-I2C failed HIGH on bit "));
-      Serial.println(testBit);
-      Serial.print(F("Read back on  "));
-      Serial.println(testBit);
+      Serial.println(port);
     }
-    testBit <<= 1;
+    myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+    Dio32.digitalWrite(port, LOW);
   }
-  if (testPass)
-    return 0;
-  else
-    return 1;
+  return (testResults);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// OptoOut8-I2C card
+// uint8_t extLBTestOptoOut8(void) - Test the OptoOut8-I2C card
+// Puts out 8 bits on OptoOut8-I2C card
+// Reads the 8 bits on DIGIO32 card
 //////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////////
-// void initOO8pins(void)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void initOO8pins(void)
+uint8_t extLBTestOptoOut8(void)
 {
+  //  Serial.println(F("Testing OptoOut8-I2C card"));
   int loopCnt;
+  uint8_t readVal;
+  int testResults = TEST_PASSED;
+  uint8_t testChannel = 0;
   for (loopCnt = 0; loopCnt < 8; loopCnt++)
   {
     singleMCP23008.digitalWrite(loopCnt, HIGH);
@@ -461,23 +424,6 @@ void initOO8pins(void)
   }
   for (loopCnt = 2; loopCnt < 16; loopCnt++)
     pinMode(loopCnt, INPUT);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestOptoOut8(void) - Test the OptoOut8-I2C card
-// Puts out 8 bits on OptoOut8-I2C card
-// Reads the 8 bits on Arduino pins
-// Arduino Input lines are D2-D5, D7, D8, D14(A0), D15(A1)
-// Looks at the returned values on the OptoIn8-I2C
-//////////////////////////////////////////////////////////////////////////////////////
-
-uint8_t loopBackTestOptoOut8(void)
-{
-  //  Serial.println(F("Testing OptoOut8-I2C card"));
-  initOO8pins();
-  uint8_t readVal;
-  int testPass = 1;;
-  uint8_t testChannel = 0;
   int testBit = 0x1;
   delay(2);
   for (uint8_t loopVal = 2; loopVal < 6; loopVal++)
@@ -487,7 +433,7 @@ uint8_t loopBackTestOptoOut8(void)
     readVal = digitalRead(loopVal);
     if (readVal != HIGH)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
@@ -496,7 +442,7 @@ uint8_t loopBackTestOptoOut8(void)
     readVal = digitalRead(loopVal);
     if (readVal != LOW)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed LOW on bit "));
       Serial.println(testChannel);
     }
@@ -510,7 +456,7 @@ uint8_t loopBackTestOptoOut8(void)
     readVal = digitalRead(loopVal);
     if (readVal != HIGH)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
@@ -519,7 +465,7 @@ uint8_t loopBackTestOptoOut8(void)
     readVal = digitalRead(loopVal);
     if (readVal != LOW)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed LOW on bit "));
       Serial.println(testChannel);
     }
@@ -533,7 +479,7 @@ uint8_t loopBackTestOptoOut8(void)
     readVal = digitalRead(loopVal);
     if (readVal != HIGH)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed HIGH on bit "));
       Serial.println(testChannel);
     }
@@ -542,26 +488,25 @@ uint8_t loopBackTestOptoOut8(void)
     readVal = digitalRead(loopVal);
     if (readVal != LOW)
     {
-      testPass = 0;
+      testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed LOW on bit "));
       Serial.println(testChannel);
     }
     testBit <<= 1;
     testChannel++;
   }
-  if (testPass)
-    return 0;
-  else
-    return 1;
+  if (testResults)
+    return TEST_PASSED;
+  return TEST_FAILED;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t loopBackTestDIGIO128_CARD(void) -
+// uint8_t extLBTestDIGIO128_CARD(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t loopBackTestDIGIO128_CARD(void)
+uint8_t extLBTestDIGIO128_CARD(void)
 {
-  uint8_t testPass = 1;
+  uint8_t testResults = TEST_PASSED;
 //  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (uint8_t port = 0; port < 128; port++)
   {
@@ -580,31 +525,30 @@ uint8_t loopBackTestDIGIO128_CARD(void)
       delay(2);
       if (Dio128.digitalRead(((chip + 1) << 4) + 15 - port) != HIGH)
       {
-        Serial.print(F("loopBackTestDIGIO128_CARD() 1: Error on chip "));
+        Serial.print(F("extLBTestDIGIO128_CARD() 1: Error on chip "));
         Serial.print(chip);
         Serial.print(F(" and port "));
         Serial.print(port);
         Serial.println(F(" Expected High"));
-        testPass = 0;
+        testResults = TEST_FAILED;
       }
       Dio128.digitalWrite((chip << 4) + port, LOW);
       delay(2);
       if (Dio128.digitalRead(((chip + 1) << 4) + 15 - port) != LOW)
       {
-        Serial.print(F("loopBackTestDIGIO128_CARD() 2: Error on chip "));
+        Serial.print(F("extLBTestDIGIO128_CARD() 2: Error on chip "));
         Serial.print(chip);
         Serial.print(F(" and port "));
         Serial.print(port);
         Serial.println(F(" Expected LOW"));
-        testPass = 0;
+        testResults = TEST_FAILED;
       }
       Dio128.pinMode((chip << 4) + port, INPUT);
       delay(2);
     }
   }
-  if (testPass)
-    return 0;
-  else
-    return 1;
+  if (testResults)
+    return TEST_PASSED;
+  return TEST_FAILED;
 }
 

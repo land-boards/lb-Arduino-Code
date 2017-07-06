@@ -38,6 +38,8 @@ typedef enum {
   SWLEDX8_I2C_CARD,
 } boardType_t;
 
+enum {TEST_PASSED,TEST_FAILED};
+
 //////////////////////////////////////////////////////////
 // globals follow
 

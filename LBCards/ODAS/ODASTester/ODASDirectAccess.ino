@@ -12,6 +12,7 @@ uint8_t readBitValue(uint8_t bitToCheck)
       return(readBitDIGIO128(bitToCheck));
       break;
     case OPTOIN8I2C_CARD:
+      return(readSingleMCP23008(bitToCheck));
       break;
     case OPTOOUT8I2C_CARD:
       break;
@@ -44,7 +45,7 @@ uint8_t readBitValue(uint8_t bitToCheck)
 
 uint8_t readBitDIGIO128(uint8_t bitToCheck)
 {
-  uint32_t rdVal;
+  uint8_t rdVal;
   Serial.println(F("\nreadBitDIGIO128() - reached function"));
   Dio128.pinMode(bitToCheck,INPUT_PULLUP);
   rdVal = Dio128.digitalRead(bitToCheck);
@@ -57,9 +58,21 @@ uint8_t readBitDIGIO128(uint8_t bitToCheck)
 
 uint8_t readBitDIGIO32(uint8_t bitToCheck)
 {
-  uint32_t rdVal;
+  uint8_t rdVal;
 //  Serial.println(F("\nreadBitDIGIO32() - reached function"));
   rdVal = Dio32.digitalRead(bitToCheck);
+  return(rdVal);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t readSingleMCP23008(uint8_t bitToCheck)
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t readSingleMCP23008(uint8_t bitToCheck)
+{
+   uint8_t rdVal;
+//  Serial.println(F("\nreadBitDIGIO32() - reached function"));
+  rdVal = singleMCP23008.digitalRead(bitToCheck);
   return(rdVal);
 }
 
