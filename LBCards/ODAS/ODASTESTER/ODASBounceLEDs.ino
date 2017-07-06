@@ -52,11 +52,11 @@ void bounceLedsCard(void)
       Serial.println(F("Not supported at present - default case"));
       break;
   }
-    if (Serial.available() > 0)
-    {
-      Serial.read();
-      return;
-    }
+  if (Serial.available() > 0)
+  {
+    Serial.read();
+    return;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

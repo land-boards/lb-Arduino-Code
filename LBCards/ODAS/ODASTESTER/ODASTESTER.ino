@@ -38,7 +38,7 @@ typedef enum {
   SWLEDX8_I2C_CARD,
 } boardType_t;
 
-enum {TEST_PASSED,TEST_FAILED};
+enum {TEST_PASSED, TEST_FAILED};
 
 //////////////////////////////////////////////////////////
 // globals follow
@@ -73,7 +73,7 @@ void setup()
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Dio32.begin(0);
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-//  TWBR = 12;    // go to 400 KHz I2C speed mode
+  //  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   failCount = 0;
   passCount = 0;

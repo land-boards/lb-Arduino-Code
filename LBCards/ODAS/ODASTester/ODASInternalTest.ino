@@ -72,7 +72,7 @@ uint8_t intLBTstSingleMCP23008(void)
     if (readVal != loopVal)
     {
       Serial.print(F("Readback="));
-      Serial.println(readVal,HEX);
+      Serial.println(readVal, HEX);
       testResults = 0;
     }
   }
@@ -83,7 +83,7 @@ uint8_t intLBTstSingleMCP23008(void)
     if (readVal != loopVal)
     {
       Serial.print(F("Readback="));
-      Serial.println(~readVal),HEX;
+      Serial.println(~readVal), HEX;
       testResults = 0;
     }
   }
