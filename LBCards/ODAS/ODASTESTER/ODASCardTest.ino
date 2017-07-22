@@ -464,7 +464,7 @@ uint8_t extLBTestOptoOut8(void)
     {
       testResults = TEST_FAILED;
       Serial.print(F("OptoOut8-I2C failed - Expected HIGH on bit "));
-      Serial.println(port);
+      Serial.println(port-16);
     }
   }
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
@@ -504,10 +504,9 @@ uint8_t extLBTestDIGIO128_CARD(void)
 
       Dio128.pinMode((chip << 4) + port, OUTPUT);
       Dio128.pinMode(((chip + 1) << 4) + 15 - port, INPUT_PULLUP);
-
-      delay(2);
+//      delay(2);
       Dio128.digitalWrite((chip << 4) + port, HIGH);
-      delay(2);
+//      delay(2);
       if (Dio128.digitalRead(((chip + 1) << 4) + 15 - port) != HIGH)
       {
         Serial.print(F("extLBTestDIGIO128_CARD() 1: Error on chip "));
@@ -518,7 +517,7 @@ uint8_t extLBTestDIGIO128_CARD(void)
         testResults = TEST_FAILED;
       }
       Dio128.digitalWrite((chip << 4) + port, LOW);
-      delay(2);
+//      delay(2);
       if (Dio128.digitalRead(((chip + 1) << 4) + 15 - port) != LOW)
       {
         Serial.print(F("extLBTestDIGIO128_CARD() 2: Error on chip "));
@@ -529,11 +528,9 @@ uint8_t extLBTestDIGIO128_CARD(void)
         testResults = TEST_FAILED;
       }
       Dio128.pinMode((chip << 4) + port, INPUT);
-      delay(2);
+//      delay(2);
     }
   }
-  if (testResults)
-    return TEST_PASSED;
-  return TEST_FAILED;
+  return testResults;
 }
 

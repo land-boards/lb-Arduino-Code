@@ -3,50 +3,61 @@
 // void bounceLedsCard(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-void bounceLedsCard(void)
+uint8_t bounceLedsCard(void)
 {
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
-      bounceLedsSinglesingleMCP2301723017_CARD();
+      bounceLedsSingles23017_CARD();
+      return 1;
       break;
     case DIGIO128_CARD:
       bounceLedsDIGIO128_CARD();
+      return 1;
       break;
     case SWLEDX8_I2C_CARD:
       bounceLedsSwLedX8();
+      return 1;
       break;
     case OPTOIN8I2C_CARD:
       Serial.println(F("Can't bounce LEDs on an input only card"));
-      return;
+      return 0;
       break;
     case OPTOOUT8I2C_CARD:
+      bounceOptoOut8();
       Serial.println(F("Not supported at present"));
-      return;
+      return 0;
       break;
     case DIGIO32I2C_CARD:
       bounceLedsDigio32();
+      return 1;
       break;
     case PROTO16I2C_CARD:
-      bounceLedsSinglesingleMCP2301723017_CARD();
+      bounceLedsSingles23017_CARD();
+      return 1;
       break;
     case ODASRELAY16_CARD:
-      bounceLedsSinglesingleMCP2301723017_CARD();
+      bounceLedsSingles23017_CARD();
+      return 1;
       break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
+      return 0;
       return;
       break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
+      return 0;
       return;
       break;
     case I2CIO8_CARD:
       bounceLedsI2CIO8();
+      return 1;
       break;
     case I2CIO8X_CARD:
       bounceLedsI2CIO8X();
+      return 1;
       break;
     default:
       Serial.println(F("Not supported at present - default case"));
@@ -60,10 +71,19 @@ void bounceLedsCard(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// void bounceLedsSinglesingleMCP2301723017_CARD(void)
+// void bounceOptoOut8(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void bounceLedsSinglesingleMCP2301723017_CARD(void)
+void bounceOptoOut8(void)
+{
+  
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// void bounceLedsSingles23017_CARD(void)
+//////////////////////////////////////////////////////////////////////////////////////
+
+void bounceLedsSingles23017_CARD(void)
 {
   Serial.println(F("Bouncing LEDs - any key to stop"));
   while (1)
