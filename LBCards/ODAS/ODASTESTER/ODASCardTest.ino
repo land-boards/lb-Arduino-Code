@@ -72,25 +72,30 @@ uint8_t testOptoFastSmallInverting(void)
   uint8_t testResults = TEST_PASSED;
   myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
+  {
     Dio32.pinMode(port, OUTPUT);
+    Dio32.digitalWrite(port, LOW);
+  }
   for (port = 8; port < 12; port++)   // Set all inputs to Pullup
     Dio32.pinMode(port, INPUT_PULLUP);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
-    Dio32.digitalWrite(port, LOW);
-    if (Dio32.digitalRead(port + 8) != HIGH)
-    {
-      Serial.print(F("Error on port "));
-      Serial.print(port);
-      Serial.println(F(" Expected High"));
-      testResults = TEST_FAILED;
-    }
     Dio32.digitalWrite(port, HIGH);
+    delay(2);
     if (Dio32.digitalRead(port + 8) != LOW)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected Low"));
+      testResults = TEST_FAILED;
+    }
+    Dio32.digitalWrite(port, LOW);
+    delay(2);
+    if (Dio32.digitalRead(port + 8) != HIGH)
+    {
+      Serial.print(F("Error on port "));
+      Serial.print(port);
+      Serial.println(F(" Expected High"));
       testResults = TEST_FAILED;
     }
   }
