@@ -1,3 +1,5 @@
+#include <Wire.h>
+
 //////////////////////////////////////////////////////////
 // ODASTESTER Factory Test code
 // Test each card and channel
