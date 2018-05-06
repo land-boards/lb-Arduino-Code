@@ -11,8 +11,8 @@
 #define LandBoards_digio128_h
 
 #include <inttypes.h>
-#include <Adafruit_MCP23017.h>
 #include <Arduino.h>
+#include "Adafruit_MCP23017.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // enums follow

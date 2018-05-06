@@ -11,11 +11,12 @@
 #include <EEPROM.h>
 #include <OneWire.h>
 #include <SD.h>
-#include <OneWireLogger.h>
+#include <LandBoards_OneWireLogger.h>
 #include "RTClib.h"
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
-#include <EEPROMAnything.h>    // EEPROM anything
+//#include <EEPROMAnything.h>    // EEPROM anything
+#include <eepromanything.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
@@ -142,7 +143,7 @@ void setup()
   RTC.begin();
   if (! RTC.isrunning() )
   {
-    tft.print("Replace RTC Battery");
+    tft.print(F("Replace RTC Battery"));
     RTC.adjust(DateTime(__DATE__, __TIME__));   
   }
   myOneWireLogger.delayAvailable(1000);

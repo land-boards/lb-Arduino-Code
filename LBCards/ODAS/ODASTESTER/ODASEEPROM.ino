@@ -41,7 +41,7 @@ void eepromRead(void)
 {
   char readBuff[97];
   eeprom.begin();
-  Serial.println(F("Reading EEPROM"));
+  //  Serial.println(F("Reading EEPROM"));
   delay(10);
 
   eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
@@ -62,7 +62,7 @@ void eepromRead(void)
     Serial.print(readBuff[loopv++]);
   }
   while ((readBuff[loopv] != 0) && (loopv < 128));
-  Serial.println("");
+  //  Serial.println("\n\rDone reading EPROM");
 }
 
 //////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ void eepromRead(void)
 void eepromWrite(void)
 {
   if (boardType > NOEEPROMAFTER)
-  { 
+  {
     Serial.println("No EEPROM on this board");
     return;
   }
@@ -134,6 +134,9 @@ void eepromWrite(void)
       break;
     case ODASPSOC5_CARD:
       strcpy(myEep.pstr, "ODAS-PSOC5");
+      break;
+    case ODASRELAY16_CARD:
+      strcpy(myEep.pstr, "ODAS-RELAY16");
       break;
     case NEW_CARD:
       strcpy(myEep.pstr, "TBD");
@@ -253,6 +256,12 @@ uint8_t detectBoardInEeprom(void)
     Serial.println(F("Detected ODAS-PSOC5 board"));
     return 0;
   }
+  else if (strcmp(testStr, "ODAS-RELAY16") == 0)
+  {
+    boardType = ODASRELAY16_CARD;
+    Serial.println(F("Detected ODAS-RELAY16 board"));
+    return 0;
+  }
   Serial.print(F("Did not find board match"));
   Serial.println((char*)testStr);
   return 1;
@@ -268,7 +277,7 @@ void selectBoardType(void)
   Serial.println(F("5 - DIGIO32-I2C board"));
   Serial.println(F("6 - PROTO16-I2C board"));
   Serial.println(F("7 - ODAS-PSOC5 board"));
-  Serial.println(F("8 - TBD board"));
+  Serial.println(F("8 - ODAS-RELAY16 board"));
   Serial.println(F("9 - TBD board"));
   Serial.println(F("X - Boards without EEPROMs"));
   Serial.print(F("Select board > "));
@@ -322,7 +331,7 @@ void selectBoardType(void)
         }
       case '8':
         {
-          boardType = NEW_CARD;
+          boardType = ODASRELAY16_CARD;
           break;
         }
       case '9':
@@ -349,10 +358,9 @@ void otherBoardType(void)
   Serial.println(F("Select the board type"));
   Serial.println(F("1 - I2CIO8 board"));
   Serial.println(F("2 - I2CIO8X board"));
-  Serial.println(F("3 - TBD board"));
-  Serial.println(F("4 - TBD board"));
-  Serial.println(F("5 - TBD board"));
-  Serial.println(F("6 - TBD board"));
+  Serial.println(F("3 - SWLEDX8-I2C board"));
+  Serial.println(F("4 - OPTOFast/Small Non-Inverting board"));
+  Serial.println(F("5 - OPTOFast/Small Inverting board"));
   Serial.print(F("Select board > "));
   int incomingByte = 0;   // for incoming serial data
 
@@ -375,6 +383,21 @@ void otherBoardType(void)
       case '2':
         {
           boardType = I2CIO8X_CARD;
+          break;
+        }
+      case '3':
+        {
+          boardType = SWLEDX8_I2C_CARD;
+          break;
+        }
+      case '4':
+        {
+          boardType = OPTOFST_SML_NON_INVERTING_CARD;
+          break;
+        }
+      case '5':
+        {
+          boardType = OPTOFST_SML_INVERTING_CARD;
           break;
         }
       default:

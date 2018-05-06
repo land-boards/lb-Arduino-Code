@@ -76,7 +76,7 @@ char readNext1Wire(void)
 //  for ( i = 0; i < 8; i++) 
 //  {           // we need 9 bytes
 //    tft.print(addr[7-i],HEX);
-//    tft.print(" ");
+//    tft.print(F(" "));
 //  }
   
   // convert the data to actual temperature

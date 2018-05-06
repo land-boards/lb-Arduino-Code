@@ -1,15 +1,22 @@
 ////////////////////////////////////////////////////////////////////////////
 //  LandBoards_DIGIO32_I2C.cpp - Library for DIGIO32_I2C card
-//  Created by Douglas Gilliland. 2016-10-26
+//  Created by Douglas Gilliland. 2017-06-05
 //  DIGIO32_I2C is a card which has 2 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
 //  This library allows for both bit access and chip access to the card
 //  	Bit access (32 bits) via digitalWrite, digitalRead, pinMode
-//		Chip access (16-bits) via writeGPIOAB, readGPIOAB
+//		Chip access (16-bits) via writeOLATAB, readGPIOAB
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO32_I2C
+//	Base address of the card is set by jumpers to one of four addresses
+////////////////////////////////////////////////////////////////////////////
+//	Library class supports multiple types of access:
+//		Arduino-ish (bit) oriented
+//      Byte oriented
+//      I2C Low Level Driver (I2C register access)oriented
 ////////////////////////////////////////////////////////////////////////////
 
+#include <Wire.h>
 #include <Arduino.h>
 #include <inttypes.h>
 
@@ -27,58 +34,62 @@ Digio32::Digio32(void)
 ////////////////////////////////////////////////////////////////////////////
 // begin(baseAddr) - Initialize the card
 // Sets all bits to inputs
+// Sets the global baseAddress - board base address register
 ////////////////////////////////////////////////////////////////////////////
 
 void Digio32::begin(uint8_t baseAddr)
 {
-	mcp0.begin((baseAddr&7));
-	mcp1.begin((baseAddr&7)+1);
+	boardBaseAddr = MCP23017_ADDRESS + baseAddr;	// baseAddr set by jumpers
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-    for (uint8_t port = 0; port < 16; port++)
-    {
-      mcp0.pinMode(port, INPUT);
-      mcp1.pinMode(port, INPUT);
-    }
+	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT; chipNum++)	// Set all pins to input by default
+	{
+		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);
+		writeRegister(chipNum, MCP23017_IODIRA, 0xff);		// bits are all inputs
+		writeRegister(chipNum, MCP23017_GPPUA, 0x00);		// Turn off pullups
+		writeRegister(chipNum, MCP23017_IODIRB, 0xff);		// bits are all inputs
+		writeRegister(chipNum, MCP23017_GPPUB, 0x00);		// Turn off pullups
+	}
 	return;
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
+// void digitalWrite(uint8_t bit, uint8_t wrVal) - write to a bit
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::digitalWrite(uint8_t bit, uint8_t value)
+void Digio32::digitalWrite(uint8_t bit, uint8_t wrVal)
 {
-	int chip;
-	chip = bit >> 4;
-	switch (chip)
-	{
-		case 0:
-			mcp0.digitalWrite(bit & 0xf, value);
-			break;
-		case 1:
-			mcp1.digitalWrite(bit & 0xf, value);
-			break;
-	}
+	uint8_t regAdr;
+	uint8_t chipAddr;
+	uint8_t rdVal;
+	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	if ((bit & 0x08) == 0)
+		regAdr = MCP23017_OLATA;
+	else
+		regAdr = MCP23017_OLATB;
+	rdVal = readRegister(chipAddr,regAdr);
+	if (wrVal == 0)
+		rdVal &= ~(1 << (bit&0x7));
+	else
+		rdVal |= (1 << (bit&0x7));
+	writeRegister(chipAddr, regAdr, rdVal);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // uint8_t digitalRead(uint8_t p) - read back a bit
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio32::digitalRead(uint8_t p)
+uint8_t Digio32::digitalRead(uint8_t bit)
 {
-	int chip, bit;
-	chip = bit >> 4;
-	bit = p & 0xf;
-	switch (chip)
-	{
-		case 0:
-			return mcp0.digitalRead(bit);
-			break;
-		case 1:
-			return mcp1.digitalRead(bit);
-			break;
-	}
+	uint8_t regAdr;
+	uint8_t chipAddr;
+	uint8_t rdVal;
+	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	if ((bit & 0x08) == 0)
+		regAdr = MCP23017_GPIOA;
+	else
+		regAdr = MCP23017_GPIOB;
+	rdVal = readRegister(chipAddr,regAdr);
+	return ((rdVal>>(bit&7))&0x01);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -87,65 +98,64 @@ uint8_t Digio32::digitalRead(uint8_t p)
 //	#define INPUT 0x0
 //	#define OUTPUT 0x1
 //	#define INPUT_PULLUP 0x2
+// This function only changes the direction of one bit at a time
+// This function affects the pull-up and direction registers in the MCP23017
+// Pull-up bit - 1=use pull-up on input, 0=don't use pull-up
+// Direction bit - 1=Input, 0=Output
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::pinMode(uint8_t p, uint8_t d)
+void Digio32::pinMode(uint8_t bit, uint8_t value)
 {
-	int chip, bit;
-	chip = p >> 4;
-	bit = p & 0xf;
-	switch (chip)
+	uint8_t puRegAdr;	// Pull-up register address
+	uint8_t dirRegAdr;	// Direction register address
+	uint8_t chipAddr;	// Which MCP23017 chip?
+	uint8_t rdPuVal;	// Value of the pull-up register
+	uint8_t rdDirVal;	// Value of the direction register
+	uint8_t changeBit;	// The bit that changes in the register
+	changeBit = 1 << (bit & 0x7);
+	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	if ((bit & 0x08) == 0)	// A registers
 	{
-		case 0:
-			if (d == INPUT_PULLUP)
-			{
-				mcp0.pullUp(bit,1);			// Pullup enabled
-				mcp0.pinMode(bit,INPUT);
-			}
-			else if (d == INPUT)
-			{
-				mcp0.pinMode(bit,0);		// Pullup disabled
-				mcp0.pinMode(bit,INPUT);
-			}
-			else
-			{
-				mcp0.pinMode(bit,OUTPUT);
-			}
-			break;
-		case 1:
-			if (d == INPUT_PULLUP)
-			{
-				mcp1.pullUp(bit,1);
-				mcp1.pinMode(bit,INPUT);
-			}
-			else if (d == INPUT)
-			{
-				mcp1.pinMode(bit,0);
-				mcp1.pinMode(bit,INPUT);
-			}
-			else
-			{
-				mcp1.pinMode(bit,OUTPUT);
-			}
-			break;
+		puRegAdr = MCP23017_GPPUA;
+		dirRegAdr = MCP23017_IODIRA;
 	}
-}
+	else					// B registers
+	{
+		puRegAdr = MCP23017_GPPUB;
+		dirRegAdr = MCP23017_IODIRB;
+	}
+	rdPuVal = readRegister(chipAddr,puRegAdr);		// Read the previous pull-up reg value
+	rdDirVal = readRegister(chipAddr,dirRegAdr);	// Read the previous direction reg value
+	if (value == INPUT_PULLUP)		// 
+	{
+		rdPuVal  |= changeBit;
+		writeRegister(chipAddr,puRegAdr,rdPuVal);
+		rdDirVal |= changeBit;
+		writeRegister(chipAddr,dirRegAdr,rdDirVal);
+	}
+	else if (value == INPUT)
+	{
+		rdPuVal &= ~changeBit;
+		writeRegister(chipAddr,puRegAdr,rdPuVal);
+		rdDirVal |= changeBit;
+		writeRegister(chipAddr,dirRegAdr,rdDirVal);
+	}
+	else if (value == OUTPUT)
+	{
+		rdDirVal &= ~changeBit;
+		writeRegister(chipAddr,dirRegAdr,rdDirVal);
+	}
+} 
 
 ////////////////////////////////////////////////////////////////////////////
-// void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
+// void writeOLATAB(chip,baData) - Write 16-bits of data at a time
+// There are two chips on the card
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio32::writeGPIOAB(uint8_t chip, uint16_t baData)
+void Digio32::writeOLATAB(uint8_t chip, uint16_t baData)
 {
-	switch (chip)
-	{
-		case 0:
-			mcp0.writeGPIOAB(baData);
-			break;
-		case 1:
-			mcp1.writeGPIOAB(baData);
-			break;
-	}
+	writeRegister(chip,MCP23017_OLATB,(baData>>8)&0xff);
+	writeRegister(chip,MCP23017_OLATA,baData&0xff);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -154,15 +164,16 @@ void Digio32::writeGPIOAB(uint8_t chip, uint16_t baData)
 
 uint16_t Digio32::readGPIOAB(uint8_t chip)
 {
-	switch (chip)
-	{
-		case 0:
-			return mcp0.readGPIOAB();
-			break;
-		case 1:
-			return mcp1.readGPIOAB();
-			break;
-	}
+	return (((readRegister(chip,MCP23017_GPIOB)<<8)&0xff)|(readRegister(chip,MCP23017_GPIOA)&0xff));
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint16_t readOLATAB(chip) - Read 16-bits at a time
+////////////////////////////////////////////////////////////////////////////
+
+uint16_t Digio32::readOLATAB(uint8_t chip)
+{
+	return (((readRegister(chip,MCP23017_OLATB)<<8)&0xff00)|(readRegister(chip,MCP23017_OLATA)&0xff));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -171,16 +182,42 @@ uint16_t Digio32::readGPIOAB(uint8_t chip)
 
 void Digio32::write32(uint32_t longVal)
 {
-	mcp0.writeGPIOAB((uint16_t)(longVal&0xffff));
-	mcp1.writeGPIOAB((uint16_t)(longVal>>16));
+	writeOLATAB(0,(uint16_t)(longVal&0xffff));
+	writeOLATAB(1,(uint16_t)(longVal>>16));
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // uint32_t readGPIO32(void) - Read 32-bits
 ////////////////////////////////////////////////////////////////////////////
 
-uint32_t Digio32::readGPIO32(void)
+uint32_t Digio32::read32(void)
 {
 	uint32_t longReadVal = 0;
-	longReadVal = (mcp1.readGPIOAB() << 16) | mcp0.readGPIOAB();
+	longReadVal = ((readGPIOAB(1) << 16) | readGPIOAB(0));
+	return longReadVal;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
+{
+	Wire.beginTransmission(boardBaseAddr + chipAddr);
+	Wire.write(regAddr);
+	Wire.endTransmission();
+	Wire.requestFrom(boardBaseAddr + chipAddr, 1);
+	return Wire.read();
+}
+	
+////////////////////////////////////////////////////////////////////////////
+// void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+////////////////////////////////////////////////////////////////////////////
+
+void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+{
+	Wire.beginTransmission(boardBaseAddr + chipAddr);
+	Wire.write(regAddr);
+	Wire.write(value);
+	Wire.endTransmission(1);
 }
