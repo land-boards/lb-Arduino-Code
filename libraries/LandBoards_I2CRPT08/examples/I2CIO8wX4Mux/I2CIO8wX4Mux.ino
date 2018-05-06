@@ -5,10 +5,10 @@
 #include <LandBoards_I2CIO8.h>
 #include "LandBoards_I2CRPT08.h"
 
-I2CIO8 myI2CIO80;
-I2CIO8 myI2CIO81;
-I2CIO8 myI2CIO82;
-I2CIO8 myI2CIO83;
+LandBoards_I2CIO8 myI2CIO80;
+LandBoards_I2CIO8 myI2CIO81;
+LandBoards_I2CIO8 myI2CIO82;
+LandBoards_I2CIO8 myI2CIO83;
 
 LandBoards_I2CRPT08 mux;
 
@@ -17,13 +17,13 @@ void setup()
   uint8_t port;
 
   mux.begin(0);   // start the mux
-  mux.setI2CChannel(0);
+  mux.setI2CChannel(0,1);
   myI2CIO80.begin(0);      // use default address 0
-  mux.setI2CChannel(1);
+  mux.setI2CChannel(1,1);
   myI2CIO81.begin(0);      // use default address 0
-  mux.setI2CChannel(2);
+  mux.setI2CChannel(2,1);
   myI2CIO82.begin(0);      // use default address 0
-  mux.setI2CChannel(3);
+  mux.setI2CChannel(3,1);
   myI2CIO83.begin(0);      // use default address 0
 }
 
@@ -33,33 +33,37 @@ void loop()
 {
   uint8_t port;
 
-  mux.setI2CChannel(0);
+  mux.setI2CChannel(0,1);
   for (port = 0; port < 4; port++)
   {
     myI2CIO80.writeLED(port, HIGH);
     delay(250);
     myI2CIO80.writeLED(port, LOW);
   }
-  mux.setI2CChannel(1);
+  mux.setI2CChannel(0,0);
+  mux.setI2CChannel(1,1);
   for (port = 0; port < 4; port++)
   {
     myI2CIO81.writeLED(port, HIGH);
     delay(250);
     myI2CIO81.writeLED(port, LOW);
   }
-  mux.setI2CChannel(2);
+  mux.setI2CChannel(1,0);
+  mux.setI2CChannel(2,1);
   for (port = 0; port < 4; port++)
   {
     myI2CIO82.writeLED(port, HIGH);
     delay(250);
     myI2CIO82.writeLED(port, LOW);
   }
-  mux.setI2CChannel(3);
+  mux.setI2CChannel(2,0);
+  mux.setI2CChannel(3,1);
   for (port = 0; port < 4; port++)
   {
     myI2CIO82.writeLED(port, HIGH);
     delay(250);
     myI2CIO82.writeLED(port, LOW);
   }
+  mux.setI2CChannel(3,0);
 }
 
