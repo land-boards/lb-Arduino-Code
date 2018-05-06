@@ -61,6 +61,8 @@ typedef struct TembooSensor{
     int defaultValue;
 } TembooSensor;
 
+typedef TembooSensor TembooActuator;
+
 void addWebSocketPinData(int pin, int pinVal, bool requestResponse);
 void updateIntervalTime(int intervalTime);
 

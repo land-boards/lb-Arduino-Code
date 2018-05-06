@@ -70,11 +70,11 @@ void menuRefresh(void)
   uint8_t nextLine, lastLine;
   clearDisplay();
   setBannerTextColor();                // Sets color of the banner at the top line of the screen
-  tft.print("*** 1-Wire Logger ***");  // Banner string is always reprinted with every refresh
+  tft.print(F("*** 1-Wire Logger ***"));  // Banner string is always reprinted with every refresh
   setUnselectedTextColor();            // Return to "normal" text color
   setDisplayCursor(TFT_HEIGHT-1,0);    // Set the cursor to the bottom line of the screen
   tft.print(__DATE__);                 // Print the code compilation date and time
-  tft.print(" ");
+  tft.print(F(" "));
   tft.print(__TIME__);
 // The following lines are helpful to debug the menu but use serial port resources so beware
 #ifdef SERIAL_DEBUG
@@ -131,7 +131,7 @@ void menuNav(void)
 #endif
   keyState = myOneWireLogger.waitKeyPressed();
 #ifdef SERIAL_OUT
-  Serial.print("menuNav: got");
+  Serial.print(F("menuNav: got"));
   Serial.println(keyState);
 #endif
   switch(keyState)

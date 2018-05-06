@@ -86,6 +86,11 @@ class TFT_HX8357GLUE : public MCUFRIEND_kbv
             _first = false;
         }
 
+        void pushColors(uint16_t *data, uint16_t len, int first)
+        {
+            MCUFRIEND_kbv::pushColors((uint16_t*)data, len, first);
+        }
+
         void pushColor(uint16_t color)
         {
             uint16_t c = color;

@@ -11,11 +11,79 @@
 #define LPC1768 1768
 #define LPC2103 2103
 #define LPC2148 2148
-#warning Using pin_SHIELD_8.h
+//#warning Using pin_SHIELD_8.h
 
 #if 0
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB)
+#elif defined(MY_BLUEPILL) // Uno Shield on BLUEPILL_ADAPTER
+#warning Uno Shield on MY_BLUEPILL_ADAPTER
+
+// configure macros for the data pins
+#define AMASK 0x060F
+#define BMASK 0x00C0
+#define write_8(d)    { GPIOA->BSRR = AMASK << 16; GPIOB->BSRR = BMASK << 16; \
+                       GPIOA->BSRR = (((d) & 3) << 9) | (((d) & 0xF0) >> 4); \
+                       GPIOB->BSRR = (((d) & 0x0C) << 4); \
+                       }
+#define read_8()      (((GPIOA->IDR & (3<<9)) >> 9) | ((GPIOA->IDR & (0x0F)) << 4) | ((GPIOB->IDR & (3<<6)) >> 4))
+
+#define GROUP_MODE(port, reg, mask, val)  {port->reg = (port->reg & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+//                                     PA10,PA9                     PA3-PA0                         PB7,PB6  
+#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFF0); GP_OUT(GPIOA, CRL, 0xFFFF); GP_OUT(GPIOB, CRL, 0xFF000000); }
+#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFF0); GP_INP(GPIOA, CRL, 0xFFFF); GP_INP(GPIOB, CRL, 0xFF000000); }
+
+#elif defined(BLUEPILL) // Uno Shield on BLUEPILL_ADAPTER
+#warning Uno Shield on BLUEPILL_ADAPTER
+
+// configure macros for the data pins
+#define write_8(d)    { GPIOA->BSRR = 0x00FF << 16; GPIOA->BSRR = (d) & 0xFF; }
+#define read_8()      (GPIOA->IDR & 0xFF)
+
+#define GROUP_MODE(port, reg, mask, val)  {port->reg = (port->reg & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+//                                         PA7 ..PA0
+#define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
+#define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
+
+#elif defined(ITEADMAPLE) // Uno Shield on MAPLE_REV3 board
+#warning Uno Shield on MAPLE_REV3 board
+
+#define REGS(x) x
+#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+
+	// configure macros for the data pins
+#define write_8(d) { \
+        GPIOA->REGS(BSRR) = 0x0703 << 16; \
+        GPIOB->REGS(BSRR) = 0x00E0 << 16; \
+        GPIOA->REGS(BSRR) = (  ((d) & (1<<0)) << 10) \
+                            | (((d) & (1<<2)) >> 2) \
+                            | (((d) & (1<<3)) >> 2) \
+                            | (((d) & (1<<6)) << 2) \
+                            | (((d) & (1<<7)) << 2); \
+        GPIOB->REGS(BSRR) = (  ((d) & (1<<1)) << 6) \
+                            | (((d) & (1<<4)) << 1) \
+                            | (((d) & (1<<5)) << 1); \
+    }
+
+#define read_8()  (     (   (  (GPIOA->REGS(IDR) & (1<<10)) >> 10) \
+                            | ((GPIOB->REGS(IDR) & (1<<7)) >> 6) \
+                            | ((GPIOA->REGS(IDR) & (1<<0)) << 2) \
+                            | ((GPIOA->REGS(IDR) & (1<<1)) << 2) \
+                            | ((GPIOB->REGS(IDR) & (1<<5)) >> 1) \
+                            | ((GPIOB->REGS(IDR) & (1<<6)) >> 1) \
+                            | ((GPIOA->REGS(IDR) & (1<<8)) >> 2) \
+                            | ((GPIOA->REGS(IDR) & (1<<9)) >> 2)))
+
+//                                 PA10,PA9,PA8                   PA1,PA0                     PB7,PB6,PB5
+#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOA, CRL, 0xFF); GP_OUT(GPIOB, CRL, 0xFFF00000); }
+#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOA, CRL, 0xFF); GP_INP(GPIOB, CRL, 0xFFF00000); }
+
+#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
 #if __MBED__
 #warning MBED knows everything
 #elif defined(STM32F072xB)
@@ -66,7 +134,7 @@
                           GPIOA->MODER |=  0x150000; GPIOB->MODER |=  0x100540; GPIOC->MODER |=  0x4000; }
   #define setReadDir()  { GPIOA->MODER &= ~0x3F0000; GPIOB->MODER &= ~0x300FC0; GPIOC->MODER &= ~0xC000; }
 #endif
-	
+    
 
 #elif __TARGET_PROCESSOR == LPC1768
   #include <LPC17xx.h>
@@ -191,8 +259,12 @@
   #define setReadDir()  { PTA->PDDR &= ~0x1C00; PTB->PDDR &= ~0x0CE0; }
 
 
-#elif defined(MK20D7) && defined(TEENSY)
+#elif (defined(MK20D7) && defined(TEENSY)) || defined(TARGET_TEENSY3_1)
+#if __MBED__
+#warning MBED knows everything
+#else
   #include <MK20D5.h>
+#endif
 // configure macros for the data pins
 #define AMASK ((1<<12)|(1<<13))
 #define CMASK ((1<<3))

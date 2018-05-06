@@ -11,7 +11,7 @@
 #include <SD.h>
 #include <Wire.h>
 #include "RTClib.h"
-#include <OneWireLogger.h>
+#include <LandBoards_OneWireLogger.h>
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
 

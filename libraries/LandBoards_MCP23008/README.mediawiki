@@ -1,0 +1,25 @@
+== Land Boards MCP23008 Library Files ==
+
+* These are our MCP23008 library and example files.
+* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+
+=== Library Files ===
+
+* LandBoards_MCP23008.cpp
+* LandBoards_MCP23008.h
+
+==== Examples ====
+
+* I2CIO8Example - Uses LandBoards_I2CIO8 library to echo the I/O lines
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.

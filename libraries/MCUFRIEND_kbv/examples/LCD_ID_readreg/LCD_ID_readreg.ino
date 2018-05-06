@@ -33,7 +33,7 @@ void setup()
     readReg(0x00, 2, "ID: ILI9320, ILI9325, ILI9335, ...");
     readReg(0x04, 4, "Manufacturer ID");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x61, 2, "RDID1 HX8347-G");
     readReg(0x62, 2, "RDID2 HX8347-G");
@@ -55,6 +55,7 @@ void setup()
     readReg(0xD0, 3, "Power Control");
     readReg(0xD2, 5, "NVM Read");
     readReg(0xD3, 4, "ILI9341, ILI9488");
+    readReg(0xD4, 4, "Novatek ID");
     readReg(0xDA, 2, "RDID1");
     readReg(0xDB, 2, "RDID2");
     readReg(0xDC, 2, "RDID3");

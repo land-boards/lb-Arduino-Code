@@ -53,10 +53,15 @@ class TembooChoreo : public Process {
     void setSettingsFileToRead(const String& filePath) { addParameter("-r" + filePath);}
     void setGatewayAddress(const String& addr) { addParameter("-s" + addr);}
     void addInputExpression(const String& inputName, const String& inputValue) { addParameter("-f" + inputName + ":" + inputValue);}
+    void addInputWithSensor(const String& inputName, const String& inputValue) { addParameter("-f" + inputName + ":" + inputValue);}
     void addSensorInput(const String& sensorName, long sensorValue, const String& conversion) {addParameter("-n" + sensorName + ":" + String(sensorValue) + ":" + conversion);}
     void addSensorInput(const String& sensorName, long sensorValue) {addParameter("-v" + sensorName + ":" + String(sensorValue));}
     void addSensorInput(const String& sensorName, long sensorValue, const String& conversion, const String& calibrationValue) {addParameter("-b" + sensorName + ":" + String(sensorValue) + ":" + conversion + ":" + calibrationValue);}
     void addSensorInput(const String& sensorName, long sensorValue, const String& rawLow, const String& rawHigh, const String& scaleLow, const String& scaleHigh) {addParameter("-m" + sensorName + ":" + String(sensorValue) + ":" + rawLow+ ":" + rawHigh+ ":" + scaleLow+ ":" + scaleHigh);}
+    void addSensorValue(const String& sensorName, long sensorValue, const String& conversion) {addParameter("-n" + sensorName + ":" + String(sensorValue) + ":" + conversion);}
+    void addSensorValue(const String& sensorName, long sensorValue) {addParameter("-v" + sensorName + ":" + String(sensorValue));}
+    void addSensorValue(const String& sensorName, long sensorValue, const String& conversion, const String& calibrationValue) {addParameter("-b" + sensorName + ":" + String(sensorValue) + ":" + conversion + ":" + calibrationValue);}
+    void addSensorValue(const String& sensorName, long sensorValue, const String& rawLow, const String& rawHigh, const String& scaleLow, const String& scaleHigh) {addParameter("-m" + sensorName + ":" + String(sensorValue) + ":" + rawLow+ ":" + rawHigh+ ":" + scaleLow+ ":" + scaleHigh);}
     void setDeviceName(const String& deviceName) {addParameter("-d" + deviceName);}
     void setDeviceType(const String& deviceType) {addParameter("-t" + deviceType);}
 };
@@ -112,12 +117,12 @@ class TembooChoreo : public Stream {
         void setAppKey(const String& appKey);
         void setAppKey(const char* appKey);
         
-        // sets the name of the choreo to be executed.
+        // Sets the name of the choreo to be executed.
         // (required)
         void setChoreo(const String& choreoPath);
         void setChoreo(const char* choreoPath);
         
-        // sets the name of the saved inputs to use when executing the choreo
+        // Sets the name of the saved inputs to use when executing the choreo
         // (optional)
         void setSavedInputs(const String& savedInputsName);
         void setSavedInputs(const char* savedInputsName);
@@ -134,25 +139,35 @@ class TembooChoreo : public Stream {
         void setDeviceName(const String& deviceName);
         void setDeviceName(const char* deviceName);
 
-        // sets an input to be used when executing a choreo.
+        // Sets an input to be used when executing a choreo.
         // (optional or required, depending on the choreo being executed.)
         void addInput(const String& inputName, const String& inputValue);
         void addInput(const char* inputName, const char* inputValue);
         void addInput(const char* inputName, const String& inputValue);
         void addInput(const String& inputName, const char* inputValue);
 
+        // Sets a Choreo input that contains a sensor value to be converted by Temboo
+        void addInputWithSensor(const String& inputName, const String& inputValue);
+        void addInputWithSensor(const char* inputName, const String& inputValue);
+        void addInputWithSensor(const char* inputName, const char* inputValue);
+        // Keeping legacy methods
         void addInputExpression(const String& inputName, const String& inputValue);
         void addInputExpression(const char* inputName, const String& inputValue);
         void addInputExpression(const char* inputName, const char* inputValue);
 
-        // sets in input that is using a sensor value. Different parameters are needed depending
+        // Sets in input that is using a sensor value. Different parameters are needed depending
         // on the type of sensor being used.
+        void addSensorValue(const char* sensorName, int sensorValue, const char* conversion);
+        void addSensorValue(const char* sensorName, int sensorValue);
+        void addSensorValue(const char* sensorName, int sensorValue, const char* conversion, const char* calibrationValue);
+        void addSensorValue(const char* sensorName, int sensorValue, const char* rawLow, const char* rawHigh, const char* scaleLow, const char* scaleHigh);
+        // Keeping legacy methods
         void addSensorInput(const char* sensorName, int sensorValue, const char* conversion);
         void addSensorInput(const char* sensorName, int sensorValue);
         void addSensorInput(const char* sensorName, int sensorValue, const char* conversion, const char* calibrationValue);
         void addSensorInput(const char* sensorName, int sensorValue, const char* rawLow, const char* rawHigh, const char* scaleLow, const char* scaleHigh);
-        
-        // sets an output filter to be used to process the choreo output
+
+        // Sets an output filter to be used to process the choreo output
         // (optional)
         void addOutputFilter(const char* filterName, const char* filterPath, const char* variableName);
         void addOutputFilter(const String& filterName, const char* filterPath, const char* variableName);
@@ -163,12 +178,12 @@ class TembooChoreo : public Stream {
         void addOutputFilter(const char* filterName, const String& filterPath, const String& variableName);
         void addOutputFilter(const String& filterName, const String& filterPath, const String& variableName);
        
-        // run the choreo using the current input info
+        // Run the choreo using the current input info
         int run();
-        // run the choreo with a user specified timeout
+        // Run the choreo with a user specified timeout
         int run(uint16_t timeoutSecs);
     
-        // run the choreo on the Temboo server at the given IP address and port
+        // Run the choreo on the Temboo server at the given IP address and port
         int run(IPAddress addr, uint16_t port);
         int run(IPAddress addr, uint16_t port, uint16_t timeoutSecs);
 

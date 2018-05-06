@@ -12,7 +12,7 @@
 #include <OneWire.h>
 #include <SD.h>
 #include "RTClib.h"
-#include <OneWireLogger.h>     // One Wire Logger
+#include <LandBoards_OneWireLogger.h>     // One Wire Logger
 #include <Adafruit_GFX.h>      // Core graphics library
 #include <Adafruit_ST7735.h>   // Hardware-specific library
 #include <eepromanything.h>    // EEPROM anything
@@ -96,7 +96,7 @@ void setup()
 {
 #ifdef SERIAL_OUT
   Serial.begin(57600);
-  Serial.print("Brew Station");
+  Serial.print(F("Brew Station"));
 #endif
 // EEPROM access
   EEPROM_readAnything(0, IZConfigs);
@@ -130,7 +130,7 @@ void setup()
   RTC.begin();
   if (! RTC.isrunning() )
   {
-    tft.print("RTC-Setting time!");
+    tft.print(F("RTC-Setting time!"));
     RTC.adjust(DateTime(__DATE__, __TIME__));   }
     delay(1000);
 }

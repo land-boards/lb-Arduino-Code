@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-# Temboo MQTT edge device library
+# Temboo MQTT Edge Device library
 #
 # Copyright (C) 2017, Temboo Inc.
 # 
