@@ -1,0 +1,24 @@
+== land-boards ODASRELAY16 Card Example Arduino Source Code Files ==
+
+<img src="http://land-boards.com/blwiki/images/2/28/ODAS-RELAY-16-P356-720px.JPG" alt="ODAS-RELAY-16 Card image"></img>
+
+* These are Land Boards' [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card related] files.
+** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card].
+
+=== Files ===
+
+==== DIGIO16I2CLEDS16 ====
+
+* Turn on one relay at a time on the [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card]
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
