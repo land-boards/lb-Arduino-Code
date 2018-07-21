@@ -18,8 +18,9 @@ int leftSpeed, rightSpeed;
 
 void stopMotors(void)
 {
+  int i;
   if ((leftSpeed == 0) && (rightSpeed == 0))
-    return();
+    return;
   else if (leftSpeed == rightSpeed)
   {
       for (i=255; i>=0; i--) 
@@ -59,7 +60,7 @@ void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   Serial.println("Motor Control over serial port!");
   Serial.println("Keyboard controls");
-  Serial.println("a=left, s=stop, d = right, w=forward, x=stop");
+  Serial.println("a=left, s=stop, d = right, w=forward, x=backward");
 
   // turn on motor
   motor1.setSpeed(200);
@@ -88,7 +89,7 @@ void loop() {
       motor2.run(FORWARD);
       motor3.run(FORWARD);
       motor4.run(FORWARD);
-      for (i=0; i<255; i++) 
+      for (i=0; i<255; i+=5) 
       {
         motor1.setSpeed(i);
         motor2.setSpeed(i/2);  
@@ -104,12 +105,12 @@ void loop() {
     case 'D':
     {
       stopMotors();
-      Serial.println("Right...   ");
+      Serial.println("Right...");
       motor1.run(FORWARD);
       motor2.run(FORWARD);
       motor3.run(FORWARD);
       motor4.run(FORWARD);
-      for (i=0; i<255; i++) 
+      for (i=0; i<255; i+=5) 
       {
         motor1.setSpeed(i/2);
         motor2.setSpeed(i);  
@@ -125,12 +126,12 @@ void loop() {
     case 'W':
     {
       stopMotors();
-      Serial.println("Forward...   ");
+      Serial.println("Forward...");
       motor1.run(FORWARD);
       motor2.run(FORWARD);
       motor3.run(FORWARD);
       motor4.run(FORWARD);
-      for (i=0; i<255; i++) 
+      for (i=0; i<255; i+=5) 
       {
         motor1.setSpeed(i);
         motor2.setSpeed(i);  
@@ -146,12 +147,12 @@ void loop() {
     case 'X':
     {
       stopMotors();
-      Serial.println("Backward...   ");
+      Serial.println("Back...");
       motor1.run(BACKWARD);
       motor2.run(BACKWARD);
       motor3.run(BACKWARD);
       motor4.run(BACKWARD);
-      for (i=0; i<255; i++) 
+      for (i=0; i<255; i+=5) 
       {
         motor1.setSpeed(i);
         motor2.setSpeed(i);  
@@ -164,15 +165,16 @@ void loop() {
     }
     break;
       Serial.print("tech");
-    case 's':  // go backward
+    case 's':  // stop
     case 'S':
     {
       stopMotors();
+      Serial.println("Stop...");
       motor1.run(RELEASE);
       motor2.run(RELEASE);
       motor3.run(RELEASE);
       motor4.run(RELEASE);
-      delay(1000);
+      delay(100);
       leftSpeed = 0;
       rightSpeed = 0;
      }
@@ -180,3 +182,4 @@ void loop() {
   }
   }
 }
+
