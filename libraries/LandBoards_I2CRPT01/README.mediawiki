@@ -4,7 +4,7 @@
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=I2C-RPT-01 Wiki page for the I2C-RPT-01].
+*[http://land-boards.com/blwiki/index.php?title=I2C-RPT Wiki page for the I2C-RPT-01].
 * [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
 
 === Ownership ===
