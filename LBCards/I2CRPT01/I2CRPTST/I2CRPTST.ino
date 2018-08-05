@@ -1,13 +1,17 @@
 /////////////////////////////////////////////////////////////////////////
 // I2CRPTST Example code
-// Uses GVSDuino (Arduino UNO compatible)
-// 4x I2CIO-8 cards
 // I2C-RPI-01 as UUT
-// Blink each line, one at a time
-// Wiring to UNO
+// http://land-boards.com/blwiki/index.php?title=I2C-RPT#Factory_Test_Procedure
+// Uses GVSDuino (Arduino UNO compatible)
+// http://land-boards.com/blwiki/index.php?title=GVSDuino
+// 4x I2CIO-8 cards - I2C addressable card with 4 LEDs and 4 jumpers
+// http://land-boards.com/blwiki/index.php?title=I2CIO-8
+// Blink 4 LEDs on each I2CIO-8 card, one at a time
+// Wiring to GVSDuino
 //  I2C - A4 (SDA), A5 (SCL)
-//  INTR from I2C-RPT-01 = D8
-//  LED = D9
+//  INTR from I2C-RPT-01 = D9
+//  LED = D8
+//  Connects to J5 on UUT
 /////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
