@@ -1,10 +1,10 @@
-== Land Boards, LLC - I2C-RPT-01 Library ==
+== Land Boards, LLC - I2C-RPT-01 Factory Test Code ==
 
 <img src="http://land-boards.com/blwiki/images/5/54/I2C-RPT-01-X2-CCA_6031-640px.jpg" alt="I2C-RPT-01 Card Image"></img>
 
 === Documentation ===
 
-*[http://land-boards.com/blwiki/index.php?title=I2C-RPT Wiki page for the I2C-RPT-01].
+*[http://land-boards.com/blwiki/index.php?title=I2C-RPT#Factory_Testing Wiki page for the I2C-RPT-01] - Factory Test.
 * [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
 
 === Ownership ===
