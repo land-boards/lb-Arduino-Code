@@ -82,7 +82,7 @@ uint16_t currYear;
 uint8_t currMonth, currDay, currHour, currMin, currSec;
 
 // class initializers
-OneWireLogger myOneWireLogger;
+LandBoards_OneWireLogger myOneWireLogger;
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);
 OneWire  ds(ONE_WIRE);  // on pin 
 RTC_DS1307 RTC;

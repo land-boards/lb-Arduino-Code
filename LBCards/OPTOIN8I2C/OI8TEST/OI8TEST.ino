@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
-// OO8-TEST
-// Test the OptoOut8-I2C card
+// OI8TEST
+// Test the OptoIn8-I2C card
 // Uses GVSDuino card
 // Uses MyMenu card
 // https://code.google.com/p/u8glib/wiki/u8glib?tm=6
@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include <Wire.h>
-#include "MyMenu.h"
+#include "LandBoards_MyMenu.h"
 #include "U8glib.h"
 #include <I2C_eeprom.h>
 
@@ -44,7 +44,7 @@ Adafruit_MCP23008 mcpOI8;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
-MyMenu menuCard;
+LandBoards_MyMenu menuCard;
 
 I2C_eeprom eeprom(DEVICEADDRESS, EE24LC024MAXBYTES);
 

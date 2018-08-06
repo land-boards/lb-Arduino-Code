@@ -1,7 +1,7 @@
 #include <Wire.h>
-#include "MyMenu.h"
+#include "LandBoards_MyMenu.h"
 
-MyMenu myMenuCard;
+LandBoards_MyMenu myMenuCard;
 
 void setup()
 {

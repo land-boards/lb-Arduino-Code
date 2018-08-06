@@ -14,7 +14,7 @@
 
 #include <Arduino.h>
 #include "Wire.h"                 // Arduino I2C library
-#include "LandBoards_MyMenu_g2.h" // MyMenu card library handles switches and LEDs
+#include "LandBoards_MyMenu.h" // MyMenu card library handles switches and LEDs
 #include "U8x8lib.h"              // Direct 8x8 buffer-less mode
 
 //////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ uint8_t menuState;           // Menu State variable which holds the currently se
 
 U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(/* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // OLEDs without Reset of the Display
 
-LandBoards_MyMenu_g2 menuCard;                // MyMenu card by Land Boards, LLC
+LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
 void setup(void)
 {

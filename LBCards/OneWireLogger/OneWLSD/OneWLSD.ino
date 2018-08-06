@@ -48,7 +48,7 @@ float temps1Wire[32];
 float fahrenheit;
 
 // class initializers - most initialize hardware
-OneWireLogger myOneWireLogger;
+LandBoards_OneWireLogger myOneWireLogger;
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
 OneWire  ds(ONE_WIRE);  // on pin 
 RTC_DS1307 RTC;
