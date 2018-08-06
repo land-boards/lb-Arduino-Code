@@ -1,7 +1,4 @@
 /*
- CdSSerial based on AnalogReadSerial example sketch.
- Reads a CdS SENSOR on pin 0, prints the result to the serial monitor.
- Running a python program to read the serial port on the host computer.
 */
 
 int ledNum;
