@@ -3,7 +3,7 @@
 
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
-#include "landboards_pca9544a.h"
+#include "landboards_I2CRPT01.h"
 
 I2CIO8 myI2CIO8;
 landboards_pca9544a mux;

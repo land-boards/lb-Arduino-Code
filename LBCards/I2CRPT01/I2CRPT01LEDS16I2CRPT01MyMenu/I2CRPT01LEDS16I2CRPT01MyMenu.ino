@@ -11,7 +11,7 @@
 #include <I2C_eeprom.h>
 
 #include "Adafruit_MCP23017.h"
-#include "landboards_pca9544a.h"
+#include "landboards_I2CRPT01.h"
 
 Adafruit_MCP23017 mcp0;
 
