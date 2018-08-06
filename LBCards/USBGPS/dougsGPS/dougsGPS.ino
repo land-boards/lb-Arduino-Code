@@ -37,7 +37,7 @@
 #include <SoftwareSerial.h>
 #include <Time.h>  
 #include <IRremote.h>
-#include <EEPROMAnything.h>
+#include <eepromanything.h>
 #include <EEPROM.h>
 
 //////////////////////////////////////////////////////////////////////////////

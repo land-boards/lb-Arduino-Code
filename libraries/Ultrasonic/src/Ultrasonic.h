@@ -31,13 +31,13 @@ class Ultrasonic {
     unsigned int distanceRead();
     unsigned int distanceRead(uint8_t und);
     void setTimeout(unsigned long timeOut) {timeout = timeOut;}
+    unsigned int timing();
 
   private:
     uint8_t trig;
     uint8_t echo;
     boolean threePins = false;
     unsigned long timeout;
-    unsigned int timing();
 };
 
 #endif // Ultrasonic_h

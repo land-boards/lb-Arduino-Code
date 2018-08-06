@@ -1,4 +1,4 @@
-#include <Ultrasonic.h>
+#include <Ultrasonic.h>   // Library modified to make timing public (not private) function
 
 //#include "HVPot2Channel.h"
 
@@ -31,8 +31,8 @@ void setup(void)
 
 void loop()
 {
-  int pitch = ultrasonic2.Timing();
-  int vol = ultrasonic1.Timing();
+  int pitch = ultrasonic2.timing();
+  int vol = ultrasonic1.timing();
   int pitch2;
   int vol2;
   Serial.println(pitch);
