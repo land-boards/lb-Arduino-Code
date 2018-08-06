@@ -1,4 +1,4 @@
-// DIGIO-16 Loopback code
+// DIGIO-128 Loopback code
 // Tests port-to-port loopback
 // Reports any failures
 
