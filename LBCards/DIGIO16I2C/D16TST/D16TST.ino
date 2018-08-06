@@ -10,7 +10,7 @@
 #include <string.h>
 
 #include <Wire.h>
-#include "MyMenu.h"
+#include "LandBoards_MyMenu.h"
 #include "U8glib.h"
 #include <I2C_eeprom.h>
 
@@ -44,7 +44,7 @@ Adafruit_MCP23017 mcp0;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
-MyMenu menuCard;
+LandBoards_MyMenu menuCard;
 
 I2C_eeprom eeprom(DEVICEADDRESS, EE24LC024MAXBYTES);
 
