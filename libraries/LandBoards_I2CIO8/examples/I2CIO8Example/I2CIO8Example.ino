@@ -10,7 +10,7 @@
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
 
-I2CIO8 MyI2CIO8;
+LandBoards_I2CIO8 MyI2CIO8;
 
 ////////////////////////////////////////////////////////////////////////////
 // setup() - 
@@ -19,6 +19,8 @@ I2CIO8 MyI2CIO8;
 void setup()
 {
   MyI2CIO8.begin(0);     // use default address 0
+  //  TWBR = 12;          // go to 400 KHz I2C speed mode
+  pinMode(13, OUTPUT);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -27,9 +29,9 @@ void setup()
 
 void loop()
 {
-  MyI2CIO8.writeLED(LED0, !MyI2CIO8.readJumper(H4JUMPER));
-  MyI2CIO8.writeLED(LED1, !MyI2CIO8.readJumper(H5JUMPER));
-  MyI2CIO8.writeLED(LED2, !MyI2CIO8.readJumper(H6JUMPER));
-  MyI2CIO8.writeLED(LED3, !MyI2CIO8.readJumper(H7JUMPER));
+  MyI2CIO8.writeLED(LED0, MyI2CIO8.readJumper(H4JUMPER));
+  MyI2CIO8.writeLED(LED1, MyI2CIO8.readJumper(H5JUMPER));
+  MyI2CIO8.writeLED(LED2, MyI2CIO8.readJumper(H6JUMPER));
+  MyI2CIO8.writeLED(LED3, MyI2CIO8.readJumper(H7JUMPER));
 }
 
