@@ -24,7 +24,7 @@ void loop()
 {
 char theChar;
 
-theChar = read8(MCP23008_GPIO);
+theChar = mcpread8(MCP23008_GPIO);
 mcpwrite8(MCP23008_OLAT,theChar>>4);
 mcpwrite8(MCP23008_IPOL,0xf0);
 mcpwrite8(MCP23008_GPINTEN,0xf0);
@@ -38,7 +38,7 @@ void mcpwrite8(uint8_t addr, uint8_t data) {
   Wire.endTransmission();
 }
 
-uint8_t read8(uint8_t addr) {
+uint8_t mcpread8(uint8_t addr) {
   Wire.beginTransmission(0x20);
   Wire.write((byte)addr);  
   Wire.endTransmission();
