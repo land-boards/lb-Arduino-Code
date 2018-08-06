@@ -13,8 +13,7 @@
 #include "LandBoards_MyMenu.h"
 #include "U8glib.h"
 #include <I2C_eeprom.h>
-
-//#include "Adafruit_MCP23008.h"
+#include "LandBoards_MCP23008.h"
 
 #define EE24LC024MAXBYTES 2048/8
 
@@ -40,7 +39,7 @@
 // Instantiations
 //////////////////////////////////////////////////////////////////////////////////
 
-Adafruit_MCP23008 mcpOI8;
+LandBoards_MCP23008 mcpOI8;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 

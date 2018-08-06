@@ -1,9 +1,9 @@
 //
 
 #include <Wire.h>
-#include "Adafruit_MCP23008.h"
+#include "LandBoards_MCP23008.h"
 
-Adafruit_MCP23008 mcp;
+LandBoards_MCP23008 mcp;
 
 unsigned long testCount;
 unsigned long passCount;

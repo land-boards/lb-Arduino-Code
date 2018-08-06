@@ -1,17 +1,13 @@
 #include <Wire.h>
-#include "Adafruit_MCP23008.h"
+#include "LandBoards_MCP23008.h"
 
-Adafruit_MCP23008 mcp;
+LandBoards_MCP23008 mcp;
 
 int d13shadow;
-unsigned long passCount;
-unsigned long failCount;
 
 void setup()
 {
   int loopVal;
-  passCount = 0;
-  failCount = 0;
   d13shadow = 0;
   Serial.begin(57600);
   mcp.begin();      // use default address 0
@@ -39,7 +35,7 @@ unsigned char readOptoIn8(void)
     rval |= mcp.digitalRead(loopVal) & 0x1;
     rval <<= 1;
   }
-  return rval >> 1;
+  return rval>>1;
 }
 
 void loop()
@@ -64,20 +60,12 @@ void loop()
     }
     testBit <<= 1;
   }
-  if (testPass)
-  {
-    passCount++;
-  }
+  if (testPass == 0)
+    Serial.println("Test failed");
   else
-  {
-    failCount++;
-  }
-  Serial.print("Test Pass/Fail=");
-  Serial.print(passCount);
-  Serial.print("/");
-  Serial.println(failCount);
+    Serial.println("Test passed");
   d13shadow ^= 0x1;
   pinMode(13, d13shadow);
-  delay(100);
+  delay(100);  
 }
 
