@@ -1,14 +1,15 @@
+
 // DIGIO16-I2C Example code
 // Make all 16 lines outputs
 // Blink each line, one at a time
 
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
-#include "landboards_I2CRPT01.h"
+#include <LandBoards_I2CRPT01.h>
 
 Adafruit_MCP23017 mcp0;
 
-landboards_pca9544a mux;
+LandBoards_I2CRPT01 mux;
 
 void setup() {
   mux.begin(0);

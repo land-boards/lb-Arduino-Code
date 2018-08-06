@@ -5,10 +5,10 @@
 #include <LandBoards_I2CIO8.h>
 #include "LandBoards_I2CRPT01.h"
 
-I2CIO8 myI2CIO80;
-I2CIO8 myI2CIO81;
-I2CIO8 myI2CIO82;
-I2CIO8 myI2CIO83;
+LandBoards_I2CIO8 myI2CIO80;
+LandBoards_I2CIO8 myI2CIO81;
+LandBoards_I2CIO8 myI2CIO82;
+LandBoards_I2CIO8 myI2CIO83;
 
 LandBoards_I2CRPT01 mux;
 
@@ -57,9 +57,9 @@ void loop()
   mux.setI2CChannel(3);
   for (port = 0; port < 4; port++)
   {
-    myI2CIO82.writeLED(port, HIGH);
+    myI2CIO83.writeLED(port, HIGH);
     delay(250);
-    myI2CIO82.writeLED(port, LOW);
+    myI2CIO83.writeLED(port, LOW);
   }
 }
 
