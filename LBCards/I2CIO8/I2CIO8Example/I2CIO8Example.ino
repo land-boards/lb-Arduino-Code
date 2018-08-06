@@ -10,7 +10,7 @@
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
 
-I2CIO8 MyI2CIO8;
+LandBoards_I2CIO8 MyI2CIO8;
 
 ////////////////////////////////////////////////////////////////////////////
 // setup() - 
