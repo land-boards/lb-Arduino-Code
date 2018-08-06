@@ -58,10 +58,10 @@ enum KEY_PRESSES
 // #define SDATA       A4
 // #define SDCLK       A5
 
-class OneWireLogger
+class LandBoards_OneWireLogger
 {
   public:
-    OneWireLogger(void);
+    LandBoards_OneWireLogger(void);
     uint8_t pollKeypad(void);
     void waitForKeyRelease(void);
     uint8_t getKeyPressed(void);

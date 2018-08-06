@@ -1,17 +1,17 @@
 ////////////////////////////////////////////////////////////////////////////
-//  OneWireLogger.cpp - Library for OneWireLogger
+//  LandBoards_OneWireLogger.cpp - Library for LandBoards_OneWireLogger
 //  Created by Douglas Gilliland. 2013-08-29
-//  OneWireLogger is an Leonardo compatible
+//  LandBoards_OneWireLogger is an Leonardo compatible
 ////////////////////////////////////////////////////////////////////////////
 
 #include "Arduino.h"
 #include "LandBoards_OneWireLogger.h"
  
 ////////////////////////////////////////////////////////////////////////////
-// OneWireLogger constructor
+// LandBoards_OneWireLogger constructor
 ////////////////////////////////////////////////////////////////////////////
 
-OneWireLogger::OneWireLogger(void)
+LandBoards_OneWireLogger::LandBoards_OneWireLogger(void)
 {
   initPins();
   return;
@@ -21,7 +21,7 @@ OneWireLogger::OneWireLogger(void)
 // initPins() - Initialize the pins on the part
 ////////////////////////////////////////////////////////////////////////////
 
-void OneWireLogger::initPins(void)
+void LandBoards_OneWireLogger::initPins(void)
 {
   pinMode(BACKLIGHT, OUTPUT);     // LCD Backlight
   pinMode(LCD_RST, OUTPUT);       // LCD Reset
@@ -36,7 +36,7 @@ void OneWireLogger::initPins(void)
 // pollKeypad() - Returns the value of the instantenously pressed keys
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t OneWireLogger::pollKeypad(void)
+uint8_t LandBoards_OneWireLogger::pollKeypad(void)
 {
   unsigned int sensorValue = analogRead(KEYPAD);
 #ifdef SERIAL_DEBUG
@@ -61,7 +61,7 @@ uint8_t OneWireLogger::pollKeypad(void)
 // waitForKeyRelease() - Stick in the routine as long as the key is pressed
 ////////////////////////////////////////////////////////////////////////////
 
-void OneWireLogger::waitForKeyRelease(void)
+void LandBoards_OneWireLogger::waitForKeyRelease(void)
 {
   while (analogRead(KEYPAD) <= 871)
     delay(5);
@@ -74,7 +74,7 @@ void OneWireLogger::waitForKeyRelease(void)
 // Returns the value of the key that was pressed.
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t OneWireLogger::getKeyPressed(void)
+uint8_t LandBoards_OneWireLogger::getKeyPressed(void)
 {
   signed char keyPadVal2;
   keyPadVal2 = pollKeypad();
@@ -88,7 +88,7 @@ uint8_t OneWireLogger::getKeyPressed(void)
 // waitKeyPressed()
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t OneWireLogger::waitKeyPressed(void)
+uint8_t LandBoards_OneWireLogger::waitKeyPressed(void)
 {
   signed char keyPadVal3;
   do
@@ -107,7 +107,7 @@ uint8_t OneWireLogger::waitKeyPressed(void)
 //  there is a reason to break into the delay for serial input.
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t OneWireLogger::delayAvailable(int delayTime)
+uint8_t LandBoards_OneWireLogger::delayAvailable(int delayTime)
 {  
   int delayTimeDiv4;
   delayTimeDiv4 = delayTime >> 2;

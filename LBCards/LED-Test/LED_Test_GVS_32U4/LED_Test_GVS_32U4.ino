@@ -27,7 +27,7 @@ unsigned char DS4B = 20;  // A2
 unsigned char DS5B = 21;  // A3
 unsigned char DS6B = 22;  // A4
 unsigned char DS7B = 23;  // A5
-unsigned char DS8B = \/  // A5
+unsigned char DS8B = 24;  // A6
 
 
 int delayTime = 175;
