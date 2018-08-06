@@ -1,13 +1,12 @@
-// DIGIO16-I2C Example code
-// Make all 16 lines outputs
+// I2CIO8wMux Example code
 // Blink each line, one at a time
 
 #include <Wire.h>
 #include <LandBoards_I2CIO8.h>
-#include "LandBoards_I2CRPT01.h"
+#include "landboards_I2CRPT01.h"
 
 I2CIO8 myI2CIO8;
-LandBoards_I2CRPT01 mux;
+landboards_pca9544a mux;
 
 void setup() 
 {
@@ -30,9 +29,9 @@ void loop()
 
   for (port = 0; port < 4; port++)
   {
-    myI2CIO8.digitalWrite(port, HIGH);
+    myI2CIO8.writeLED(port, HIGH);
     delay(250);
-    myI2CIO8.digitalWrite(port, LOW);
+    myI2CIO8.writeLED(port, LOW);
   }
 }
 
