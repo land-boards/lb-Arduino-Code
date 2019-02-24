@@ -1,4 +1,6 @@
-== land-boards DigIO-128 Library Files ==
+== land-boards DigIO-128/64 Library Files ==
+
+This library is for the 64-bit version of the DIGIO-128 card
 
 These files are not dependent on the Adafruit library
 
