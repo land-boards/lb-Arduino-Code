@@ -36,6 +36,9 @@ uint8_t internalextLBTestCard(void)
     case DIGIO128_CARD:
       return (internalextLBTestDIGIO128_CARD());
       break;
+    case DIGIO128_64_CARD:
+      return (internalextLBTestDIGIO128_64_CARD());
+      break;
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
       break;
@@ -241,6 +244,56 @@ uint8_t internalextLBTestDIGIO128_CARD(void)
         testResults = 0;
       }
       Dio128.pinMode((chip * 16) + port, INPUT);
+      delay(2);
+    }
+  }
+  if (testResults)
+    return 0;
+  else
+    return 1;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t internalextLBTestDIGIO128_64_CARD(void) -
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t internalextLBTestDIGIO128_64_CARD(void)
+{
+  uint8_t testResults = 1;
+  for (uint8_t port = 0; port < 64; port++)
+    Dio128_64.pinMode(port, INPUT_PULLUP);
+  for (uint8_t chip = 0; chip < 4; chip += 2)
+  {
+    for (uint8_t port = 0; port < 16; port++)
+    {
+
+      Dio128_64.pinMode((chip * 16) + port, OUTPUT);
+      Dio128_64.pinMode(((chip + 1) * 16) + 15 - port, INPUT);
+
+      delay(2);
+      Dio128_64.digitalWrite((chip * 16) + port, HIGH);
+      delay(2);
+      if (Dio128_64.digitalRead(((chip + 1) * 16) + 15 - port) != HIGH)
+      {
+        Serial.print(F("Error on chip "));
+        Serial.print(chip);
+        Serial.print(F(" and port "));
+        Serial.print(port);
+        Serial.println(F(" Expected High"));
+        testResults = 0;
+      }
+      Dio128_64.digitalWrite((chip * 16) + port, LOW);
+      delay(2);
+      if (Dio128_64.digitalRead(((chip + 1) * 16) + 15 - port) != LOW)
+      {
+        Serial.print(F("Error on chip "));
+        Serial.print(chip);
+        Serial.print(F(" and port "));
+        Serial.print(port);
+        Serial.println(F(" Expected LOW"));
+        testResults = 0;
+      }
+      Dio128_64.pinMode((chip * 16) + port, INPUT);
       delay(2);
     }
   }

@@ -11,7 +11,7 @@
 #include <LandBoards_I2CIO8.h>
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
-#include <LandBoards_I2CRPT01.h>
+#include "LandBoards_I2CRPT01.h"
 #include <Adafruit_MCP23008.h>
 #include <Adafruit_MCP23017.h>
 #include <LandBoards_MCP23008.h>
@@ -25,6 +25,7 @@ typedef enum {
   NONE,
   DIGIO16I2C_CARD = 1,
   DIGIO128_CARD,
+  DIGIO128_64_CARD,
   OPTOIN8I2C_CARD,
   OPTOOUT8I2C_CARD,
   DIGIO32I2C_CARD,
@@ -58,6 +59,7 @@ typedef enum {
 
 LandBoards_I2CRPT01 myI2CMux;
 Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
+Digio128 Dio128_64;    // Call the class constructor for the DigIO-128 card
 Digio32 Dio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8X i2cio8xCard;
@@ -90,6 +92,9 @@ void setup()
   {
     case DIGIO128_CARD:
       Dio128.begin();
+      break;
+    case DIGIO128_64_CARD:
+      Dio128_64.begin();
       break;
     case PROTO16I2C_CARD:
       singleMCP23017.begin(0);      // use default address

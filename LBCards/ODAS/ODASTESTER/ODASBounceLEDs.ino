@@ -1,4 +1,3 @@
-
 //////////////////////////////////////////////////////////////////////////////////////
 // void bounceLedsCard(void) -
 //////////////////////////////////////////////////////////////////////////////////////
@@ -14,6 +13,10 @@ uint8_t bounceLedsCard(void)
       break;
     case DIGIO128_CARD:
       bounceLedsDIGIO128_CARD();
+      return 1;
+      break;
+    case DIGIO128_64_CARD:
+      bounceLedsDIGIO128_64_CARD();
       return 1;
       break;
     case SWLEDX8_I2C_CARD:
@@ -178,6 +181,32 @@ void bounceLedsDIGIO128_CARD(void)
       Dio128.digitalWrite(port, HIGH);
       delay(20);
       Dio128.digitalWrite(port, LOW);
+      delay(20);
+    }
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// void bounceLedsDIGIO128_64_CARD(void)
+//////////////////////////////////////////////////////////////////////////////////////
+
+void bounceLedsDIGIO128_64_CARD(void)
+{
+  Serial.println(F("Bouncing LEDs DIGIO-128/64 - any key to stop"));
+  while (1)
+  {
+    for (uint8_t port = 0; port < 64; port++)
+    {
+      Dio128_64.pinMode(port, OUTPUT);
+      delay(20);
+      Dio128_64.digitalWrite(port, HIGH);
+      delay(20);
+      Dio128_64.digitalWrite(port, LOW);
       delay(20);
     }
     if (Serial.available() > 0)

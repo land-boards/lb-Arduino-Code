@@ -17,6 +17,9 @@ uint8_t extLBTestCard(void)
     case DIGIO128_CARD:
       return (extLBTestDIGIO128_CARD());
       break;
+    case DIGIO128_64_CARD:
+      return (extLBTestDIGIO128_64_CARD());
+      break;
     case OPTOIN8I2C_CARD:
       return (extLBTestOptoIn8());
       break;
@@ -533,6 +536,55 @@ uint8_t extLBTestDIGIO128_CARD(void)
         testResults = TEST_FAILED;
       }
       Dio128.pinMode((chip << 4) + port, INPUT);
+//      delay(2);
+    }
+  }
+  return testResults;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t extLBTestDIGIO128_CARD(void) -
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t extLBTestDIGIO128_64_CARD(void)
+{
+  uint8_t testResults = TEST_PASSED;
+  //  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  for (uint8_t port = 0; port < 64; port++)
+  {
+    Dio128_64.pinMode(port, INPUT_PULLUP);
+  }
+  for (uint8_t chip = 0; chip < 4; chip += 2)
+  {
+    for (uint8_t port = 0; port < 16; port++)
+    {
+
+      Dio128_64.pinMode((chip << 4) + port, OUTPUT);
+      Dio128_64.pinMode(((chip + 1) << 4) + 15 - port, INPUT_PULLUP);
+//      delay(2);
+      Dio128_64.digitalWrite((chip << 4) + port, HIGH);
+//      delay(2);
+      if (Dio128_64.digitalRead(((chip + 1) << 4) + 15 - port) != HIGH)
+      {
+        Serial.print(F("extLBTestDIGIO128_64_CARD() 1: Error on chip "));
+        Serial.print(chip);
+        Serial.print(F(" and port "));
+        Serial.print(port);
+        Serial.println(F(" Expected High"));
+        testResults = TEST_FAILED;
+      }
+      Dio128_64.digitalWrite((chip << 4) + port, LOW);
+//      delay(2);
+      if (Dio128_64.digitalRead(((chip + 1) << 4) + 15 - port) != LOW)
+      {
+        Serial.print(F("extLBTestDIGIO128_64_CARD() 2: Error on chip "));
+        Serial.print(chip);
+        Serial.print(F(" and port "));
+        Serial.print(port);
+        Serial.println(F(" Expected LOW"));
+        testResults = TEST_FAILED;
+      }
+      Dio128_64.pinMode((chip << 4) + port, INPUT);
 //      delay(2);
     }
   }

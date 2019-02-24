@@ -120,6 +120,9 @@ void eepromWrite(void)
     case DIGIO128_CARD:
       strcpy(myEep.pstr, "DIGIO-128");
       break;
+    case DIGIO128_64_CARD:
+      strcpy(myEep.pstr, "DIGIO-128/64");
+      break;
     case OPTOIN8I2C_CARD:
       strcpy(myEep.pstr, "OptoIn8-I2C");
       break;
@@ -244,6 +247,12 @@ uint8_t detectBoardInEeprom(void)
     Serial.println(F("Detected DIGIO-128 board"));
     return 0;
   }
+  else if (strcmp(testStr, "DIGIO-128/64") == 0)
+  {
+    boardType = DIGIO128_64_CARD;
+    Serial.println(F("Detected DIGIO-128/64 board"));
+    return 0;
+  }
   else if (strcmp(testStr, "PROTO16-I2C") == 0)
   {
     boardType = PROTO16I2C_CARD;
@@ -278,6 +287,7 @@ void selectBoardType(void)
   Serial.println(F("6 - PROTO16-I2C board"));
   Serial.println(F("7 - ODAS-PSOC5 board"));
   Serial.println(F("8 - ODAS-RELAY16 board"));
+  Serial.println(F("A - DIGIO-128/64 board"));
   Serial.println(F("9 - TBD board"));
   Serial.println(F("X - Boards without EEPROMs"));
   Serial.print(F("Select board > "));
@@ -302,6 +312,12 @@ void selectBoardType(void)
       case '2':
         {
           boardType = DIGIO128_CARD;
+          break;
+        }
+      case 'A':
+      case 'a':
+        {
+          boardType = DIGIO128_64_CARD;
           break;
         }
       case '3':

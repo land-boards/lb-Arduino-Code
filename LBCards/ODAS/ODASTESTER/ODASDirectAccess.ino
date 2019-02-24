@@ -11,6 +11,9 @@ uint8_t readBitValue(uint8_t bitToCheck)
     case DIGIO128_CARD:
       return (readBitDIGIO128(bitToCheck));
       break;
+    case DIGIO128_64_CARD:
+      return (readBitDIGIO128_64(bitToCheck));
+      break;
     case OPTOIN8I2C_CARD:
       return (readSingleMCP23008(bitToCheck));
       break;
@@ -53,6 +56,19 @@ uint8_t readBitDIGIO128(uint8_t bitToCheck)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+// uint8_t readBitDIGIO128_64(uint8_t bitToCheck)
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t readBitDIGIO128_64(uint8_t bitToCheck)
+{
+  uint8_t rdVal;
+  Serial.println(F("\nreadBitDIGIO128() - reached function"));
+  Dio128_64.pinMode(bitToCheck, INPUT_PULLUP);
+  rdVal = Dio128_64.digitalRead(bitToCheck);
+  return (rdVal);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
 // uint8_t readBitDIGIO32(uint8_t bitToCheck)
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -88,6 +104,9 @@ void writeBitValue(uint8_t bitToCheck, uint8_t bitToWrite)
       break;
     case DIGIO128_CARD:
       writeBitDIGIO128(bitToCheck, bitToWrite);
+      break;
+    case DIGIO128_64_CARD:
+      writeBitDIGIO128_64(bitToCheck, bitToWrite);
       break;
     case OPTOIN8I2C_CARD:
       break;
@@ -134,5 +153,16 @@ void writeBitDIGIO128(uint8_t bitNumber, uint8_t bitValue)
   //  Serial.println(F("\writeBitDIGIO128() - reached function"));
   Dio128.pinMode(bitNumber, OUTPUT);
   Dio128.digitalWrite(bitNumber, bitValue);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// void writeBitDIGIO128_64(uint8_t bitNumber, uint8_t bitValue)
+//////////////////////////////////////////////////////////////////////////////////////
+
+void writeBitDIGIO128_64(uint8_t bitNumber, uint8_t bitValue)
+{
+  //  Serial.println(F("\writeBitDIGIO128() - reached function"));
+  Dio128_64.pinMode(bitNumber, OUTPUT);
+  Dio128_64.digitalWrite(bitNumber, bitValue);
 }
 
