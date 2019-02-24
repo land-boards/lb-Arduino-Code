@@ -47,12 +47,10 @@ uint8_t bounceLedsCard(void)
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
       return 0;
-      return;
       break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
       return 0;
-      return;
       break;
     case I2CIO8_CARD:
       bounceLedsI2CIO8();
@@ -69,7 +67,7 @@ uint8_t bounceLedsCard(void)
   if (Serial.available() > 0)
   {
     Serial.read();
-    return;
+    return 0;
   }
 }
 
@@ -274,5 +272,3 @@ void bounceLedsI2CIO8X(void)
     }
   }
 }
-
-

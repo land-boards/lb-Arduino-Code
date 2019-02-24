@@ -128,7 +128,7 @@ void writeBitValue(uint8_t bitToCheck, uint8_t bitToWrite)
       break;
     default:
       Serial.println(F("Undefined board type"));
-      return 1;
+      return;
       break;
   }
 }
@@ -165,4 +165,3 @@ void writeBitDIGIO128_64(uint8_t bitNumber, uint8_t bitValue)
   Dio128_64.pinMode(bitNumber, OUTPUT);
   Dio128_64.digitalWrite(bitNumber, bitValue);
 }
-
