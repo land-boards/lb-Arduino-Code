@@ -1,5 +1,3 @@
-
-
 //////////////////////////////////////////////////////////
 // ODASTESTER Factory Test code
 // Test each card and channel
@@ -8,6 +6,7 @@
 
 #include <LandBoards_DIGIO32_I2C.h>
 #include <LandBoards_Digio128V2.h>
+#include <LandBoards_Digio128_64_v2.h>
 #include <LandBoards_I2CIO8.h>
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
@@ -59,7 +58,7 @@ typedef enum {
 
 LandBoards_I2CRPT01 myI2CMux;
 Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
-Digio128 Dio128_64;    // Call the class constructor for the DigIO-128 card
+Digio128_64 Dio128_64;    // Call the class constructor for the DigIO-128 card
 Digio32 Dio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8X i2cio8xCard;
