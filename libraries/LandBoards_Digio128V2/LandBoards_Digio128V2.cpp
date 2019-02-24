@@ -34,7 +34,7 @@ void Digio128::begin(void)
 {
 	boardBaseAddr = MCP23017_ADDRESS;
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT; chipNum++)	// Set all pins to input by default
+	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128; chipNum++)	// Set all pins to input by default
 	{
 		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);
 		writeRegister(chipNum, MCP23017_IODIRA, 0xff);		// bits are all inputs
@@ -54,7 +54,7 @@ void Digio128::digitalWrite(uint8_t bit, uint8_t wrVal)
 	uint8_t regAdr;
 	uint8_t chipAddr;
 	uint8_t rdVal;
-	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	chipAddr = ((bit & CHIP_MASK_D128) >> CHIP_SHIFT);
 	if ((bit & 0x08) == 0)
 		regAdr = MCP23017_OLATA;
 	else
@@ -76,7 +76,7 @@ uint8_t Digio128::digitalRead(uint8_t bit)
 	uint8_t regAdr;
 	uint8_t chipAddr;
 	uint8_t rdVal;
-	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	chipAddr = ((bit & CHIP_MASK_D128) >> CHIP_SHIFT);
 	if ((bit & 0x08) == 0)
 		regAdr = MCP23017_GPIOA;
 	else
@@ -106,7 +106,7 @@ void Digio128::pinMode(uint8_t bit, uint8_t value)
 	uint8_t rdDirVal;	// Value of the direction register
 	uint8_t changeBit;	// The bit that changes in the register
 	changeBit = 1 << (bit & 0x7);
-	chipAddr = ((bit & CHIP_MASK) >> CHIP_SHIFT);
+	chipAddr = ((bit & CHIP_MASK_D128) >> CHIP_SHIFT);
 	// Serial.print("chipAddr: 0x");
 	// Serial.print(chipAddr,HEX);
 	// Serial.println("");

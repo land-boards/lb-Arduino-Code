@@ -48,8 +48,8 @@
 #define MCP23017_OLATB 0x15
 
 #define CHIP_SHIFT 0x04
-#define CHIP_MASK 0x70
-#define CHIP_COUNT 8
+#define CHIP_MASK_D128 0x70
+#define CHIP_COUNT_D128 8
 
 ////////////////////////////////////////////////////////////////////////////////////
 // enums follow
