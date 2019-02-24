@@ -188,12 +188,15 @@ void Digio32::write32(uint32_t longVal)
 
 ////////////////////////////////////////////////////////////////////////////
 // uint32_t readGPIO32(void) - Read 32-bits
+// Split load into longReadVal into three lines to eliminate warning from Arduino IDE
 ////////////////////////////////////////////////////////////////////////////
 
 uint32_t Digio32::read32(void)
 {
 	uint32_t longReadVal = 0;
-	longReadVal = ((readGPIOAB(1) << 16) | readGPIOAB(0));
+	longReadVal = readGPIOAB(1);
+	longReadVal = longReadVal << 16;
+	longReadVal |= readGPIOAB(0);
 	return longReadVal;
 }
 
