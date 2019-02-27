@@ -15,6 +15,19 @@
 #define _Adafruit_MCP23017_H_
 
 // Don't forget the Wire library
+#ifndef ARDUINO_AVR_GEMMA
+                                    //TinyWireM is now part of
+                                    //   Adafruit version of Wire Library, so this
+                                    // will work with Adafruit ATtiny85's
+                                    //But Arduino Gemma doesn't use that library
+                                    // We do NOT want to include Wire if it's an arduino Gemma
+  #include <Wire.h>
+#else
+  #include <TinyWireM.h>
+  #define Wire TinyWireM
+#endif
+
+
 class Adafruit_MCP23017 {
 public:
   void begin(uint8_t addr);

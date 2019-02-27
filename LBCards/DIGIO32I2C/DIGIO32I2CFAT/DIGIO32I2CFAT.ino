@@ -6,6 +6,12 @@
 // Use Serial Port for menu/test results
 //////////////////////////////////////////////////////////
 
+#if defined(ARDUINO_ARCH_AVR)
+  // AVR-specific code
+#else
+  #error This library only supports boards with an AVR processor.
+#endif
+
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 
@@ -25,7 +31,10 @@ void setup()
   Serial.begin(9600);     // 9600 baud serial connection
   mcp0.begin(0);          // Instantate two MCP23017 chips
   mcp1.begin(1);
+  
+#if defined(ARDUINO_ARCH_AVR)
   //  TWBR = 12;    // go to 400 KHz I2C speed mode
+#endif
 
   for (uint8_t chip = 0; chip < 2; chip++)  // Set all of the ports to inputs with pullups on
   {
