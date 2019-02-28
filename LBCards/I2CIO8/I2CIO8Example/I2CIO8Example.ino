@@ -19,7 +19,6 @@ LandBoards_I2CIO8 MyI2CIO8;
 void setup()
 {
   MyI2CIO8.begin(0);     // use default address 0
-  //  TWBR = 12;          // go to 400 KHz I2C speed mode
   pinMode(13, OUTPUT);
 }
 
