@@ -30,9 +30,10 @@ LandBoards_I2CIO8::LandBoards_I2CIO8(void)
 void LandBoards_I2CIO8::begin(uint8_t addr)
 {
 	i2caddr = addr;
-
 	Wire.begin();
+#if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#endif
 	write8(MCP23008_IODIR,0xf0);
 	write8(MCP23008_GPIO, 0x00);
 	write8(MCP23008_INTCON,0x00);
