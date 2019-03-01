@@ -1,10 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////
 //  I2CIO8Example.cpp - Example code for I2CIO8-8 card
 //  Created by Douglas Gilliland. 2015-11-23
+//  Code reads jumpers and writes the jumper values to the LEDs
 //  I2CIO8-8 is a card which has an MCP23008 8-bit port expander
 //	Communication with the card is via I2C Two-wire interface
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+// Updated 2019-02-28 - Added STM32F1 support
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
@@ -18,8 +20,7 @@ LandBoards_I2CIO8 MyI2CIO8;
 
 void setup()
 {
-  MyI2CIO8.begin(0);     // use default address 0
-  pinMode(13, OUTPUT);
+  MyI2CIO8.begin(0x20);     // use default address 0x20
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -33,4 +34,3 @@ void loop()
   MyI2CIO8.writeLED(LED2, MyI2CIO8.readJumper(H6JUMPER));
   MyI2CIO8.writeLED(LED3, MyI2CIO8.readJumper(H7JUMPER));
 }
-
