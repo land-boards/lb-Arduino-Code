@@ -71,6 +71,9 @@ static const uint8_t u8x8_d_st7920_powersave1_seq[] = {
   U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
   U8X8_C(0x038),            			/* 8 Bit interface (DL=1), basic instruction set (RE=0) */
   U8X8_C(0x008),		                /* display off */
+  U8X8_C(0x034), /* 8 Bit interface (DL=1), extended instruction set (RE=1) */
+  U8X8_C(0x001), /* Standby mode */
+    
   U8X8_END_TRANSFER(),             	/* disable chip */
   U8X8_END()             			/* end of sequence */
 };
@@ -126,6 +129,7 @@ uint8_t u8x8_d_st7920_common(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *a
       /* The following byte is sent to allow the ST7920 to sync up with the data */
       /* it solves some issues with garbage data */
       u8x8_cad_SendCmd(u8x8, 0x03e );	/* enable extended mode */
+      u8x8_cad_SendCmd(u8x8, 0x03e );	/* enable extended mode, issue 487 */
       for( i = 0; i < 8; i++ )
       {
 	//u8x8_cad_SendCmd(u8x8, 0x03e );	/* enable extended mode */

@@ -20,7 +20,7 @@
 
   See file LICENSE.txt for further informations on licensing terms.
 
-  Last updated October 16th, 2016
+  Last updated April 15th, 2018
 */
 
 #include <Servo.h>
@@ -55,10 +55,6 @@
 
 // the minimum interval for sampling analog input
 #define MINIMUM_SAMPLING_INTERVAL   1
-
-// min cannot be < 0x0006. Adjust max if necessary
-#define FIRMATA_BLE_MIN_INTERVAL    0x0006 // 7.5ms (7.5 / 1.25)
-#define FIRMATA_BLE_MAX_INTERVAL    0x0018 // 30ms (30 / 1.25)
 
 /*==============================================================================
  * GLOBAL VARIABLES
@@ -603,7 +599,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
     case I2C_CONFIG:
       delayTime = (argv[0] + (argv[1] << 7));
 
-      if (delayTime > 0) {
+      if (argc > 1 && delayTime > 0) {
         i2cReadDelayTime = delayTime;
       }
 
@@ -777,9 +773,9 @@ void setup()
   // set the BLE connection interval - this is the fastest interval you can read inputs
   stream.setConnectionInterval(FIRMATA_BLE_MIN_INTERVAL, FIRMATA_BLE_MAX_INTERVAL);
   // set how often the BLE TX buffer is flushed (if not full)
-  stream.setFlushInterval(FIRMATA_BLE_MAX_INTERVAL);
+  stream.setFlushInterval(FIRMATA_BLE_TXBUFFER_FLUSH_INTERVAL);
 
-#ifdef BLE_REQ
+#ifdef IS_IGNORE_BLE_PINS
   for (byte i = 0; i < TOTAL_PINS; i++) {
     if (IS_IGNORE_BLE_PINS(i)) {
       Firmata.setPinMode(i, PIN_MODE_IGNORE);

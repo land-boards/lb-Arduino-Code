@@ -33,7 +33,9 @@ Digio128_64::Digio128_64(void)
 void Digio128_64::begin(void)
 {
 	boardBaseAddr = MCP23017_ADDRESS;
+#if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128_64; chipNum++)	// Set all pins to input by default
 	{
 		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);

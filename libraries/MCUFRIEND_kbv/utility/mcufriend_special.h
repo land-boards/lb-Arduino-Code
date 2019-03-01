@@ -4,17 +4,17 @@
 //#define USE_SSD1289_SHIELD_MEGA 
 //#define USE_SSD1289_SHIELD_DUE 
 //#define USE_MEGA_8BIT_PROTOSHIELD
-//#define USE_MEGA_8BIT_SHIELD
-//#define USE_MEGA_16BIT_SHIELD     //RD on PL6 (D43)
+//#define USE_MEGA_8BIT_SHIELD      // 4.7sec Mega2560 Shield
+//#define USE_MEGA_16BIT_SHIELD     // 2.14sec Mega2560 Shield 
 //#define USE_BLD_BST_MEGA32U4
-//#define USE_BLD_BST_MEGA2560
+//#define USE_BLD_BST_MEGA2560      // 12.23sec Uno Shield (17.38s C)
 //#define USE_DUE_8BIT_PROTOSHIELD
 //#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 //#define USE_BOBCACHELOT_TEENSY
 //#define USE_FRDM_K20
 //#define USE_OPENSMART_SHIELD_PINOUT //thanks Michel53
 //#define USE_ELECHOUSE_DUE_16BIT_SHIELD    //Untested yet
-#define USE_MY_BLUEPILL
+//#define USE_MY_BLUEPILL
 
 #if 0
 #elif defined(__AVR_ATmega328P__) && defined(USE_SSD1289_SHIELD_UNO)    //on UNO
@@ -110,13 +110,18 @@
 // VPORTs are very fast.   CBI, SBI are only one cycle.    Hence all those RD_ACTIVEs
 // ILI9320 data sheet says tDDR=100ns.    We need 218ns to read REGs correctly.
 // S6D0154 data sheet says tDDR=250ns.    We need ~500ns to read REGs correctly.
+// ST7789 data sheet says tRC=450ns.    We need ~167ns to read REGs correctly. (10 cycles @ 60MHz )
+// ST7789 says tRC=160ns for ID and tRC=450ns for Frame Memory
+// ILI9341 says tRC=160ns for ID and tRC=450ns for Frame Memory.  They are FASTER
+#define WRITE_DELAY   { }
+#define READ_DELAY    { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #define write_8(x)    { VPORT2.OUT = x; }
 #define read_8()      ( VPORT2.IN )
 #define setWriteDir() { PORTCFG.VPCTRLA=0x10; PORTCFG.VPCTRLB=0x32; VPORT2.DIR = 0xFF; }
 #define setReadDir()  { VPORT2.DIR = 0x00; }
-#define write8(x)     { write_8(x); WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define PIN_LOW(p, b)        (p).OUT &= ~(1<<(b))
@@ -139,7 +144,7 @@
 #define EMASK         0x38
 #define GMASK         0x20
 #define HMASK         0x78
-static inline void write_8(uint8_t val)
+static __attribute((always_inline)) void write_8(uint8_t val)
 {
 	asm volatile("lds __tmp_reg__,0x0102" "\n\t"
 	"BST %0,0" "\n\t" "BLD __tmp_reg__,5" "\n\t"
@@ -366,7 +371,7 @@ static inline void write_8(uint8_t val)
 #define CMASK         (1<<6)
 #define DMASK         ((1<<7)|(1<<4)|(3<<0))
 #define EMASK         (1<<6)
-static inline void write_8(uint8_t val)
+static __attribute((always_inline)) void write_8(uint8_t val)
 {
 	asm volatile("in __tmp_reg__,0x05" "\n\t"
 	"BST %0,0" "\n\t" "BLD __tmp_reg__,4" "\n\t"
@@ -804,6 +809,58 @@ static inline void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
+#elif defined(__SAM3X8E__) && defined(USE_OPENSMART_SHIELD_PINOUT)  //OPENSMART shield on DUE
+#warning USE_OPENSMART_SHIELD_PINOUT on DUE
+ // configure macros for the control pins
+#define RD_PORT PIOA
+#define RD_PIN  16
+#define WR_PORT PIOA
+#define WR_PIN  24
+#define CD_PORT PIOA
+#define CD_PIN  23
+#define CS_PORT PIOA
+#define CS_PIN  22
+#define RESET_PORT PIOA
+#define RESET_PIN  24  // n/a. so mimic WR_PIN
+ // configure macros for data bus
+#define BMASK         (1<<27)
+#define CMASK         (0x12F << 21)
+#define DMASK         (1<<7)
+#define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; PIOD->PIO_CODR = DMASK; \
+                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22); \
+                        PIOC->PIO_SODR = (((x) & (1<<1)) << 20); \
+                        PIOC->PIO_SODR = (((x) & (1<<2)) << 27); \
+                        PIOD->PIO_SODR = (((x) & (1<<3)) << 4); \
+                        PIOC->PIO_SODR = (((x) & (1<<4)) << 22); \
+                        PIOB->PIO_SODR = (((x) & (1<<5)) << 22); \
+                        PIOC->PIO_SODR = (((x) & (1<<6)) << 18); \
+                        PIOC->PIO_SODR = (((x) & (1<<7)) << 16); \
+					 }
+
+#define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<21)) >> 20)\
+                      | ((PIOC->PIO_PDSR & (1<<29)) >> 27)\
+                      | ((PIOD->PIO_PDSR & (1<<7))  >> 4)\
+                      | ((PIOC->PIO_PDSR & (1<<26)) >> 22)\
+                      | ((PIOB->PIO_PDSR & (1<<27)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<24)) >> 18)\
+                      | ((PIOC->PIO_PDSR & (1<<23)) >> 16)\
+                      )
+#define setWriteDir() { PIOB->PIO_OER = BMASK; PIOC->PIO_OER = CMASK; PIOD->PIO_OER = DMASK; }
+#define setReadDir()  { \
+                          PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC)|(1 << ID_PIOD);\
+						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK; PIOD->PIO_ODR = DMASK;\
+						}
+#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; }
+//#define write8(x)     { write_8(x); WR_ACTIVE; WR_STROBE; WR_IDLE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE; dst = read_8(); RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+ // Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+
 #elif defined(__MK20DX256__) && defined(USE_BOBCACHELOT_TEENSY) // special for BOBCACHEALOT_TEENSY
 #warning  special for BOBCACHEALOT_TEENSY
 #define RD_PORT GPIOD
@@ -899,7 +956,7 @@ static inline void write_8(uint8_t val)
 #define CS_PORT PORTC
 #define CS_PIN  3
 #define RESET_PORT PORTC
-#define RESET_PIN  4
+#define RESET_PIN  1  // n/a. so mimic WR_PIN
 
 #define BMASK         B00101111
 #define DMASK         B11010000
@@ -933,7 +990,7 @@ static inline void write_8(uint8_t val)
 #define CS_PORT PORTF
 #define CS_PIN  3
 #define RESET_PORT PORTF
-#define RESET_PIN  4
+#define RESET_PIN  1  // n/a. so mimic WR_PIN
 
 #define BMASK         B10110000 //D13, D11, D10
 #define GMASK         0x20      //D4

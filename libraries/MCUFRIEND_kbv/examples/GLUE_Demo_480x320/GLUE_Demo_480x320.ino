@@ -1,5 +1,6 @@
-// UTFT_Demo_480x320 (C)2013 Henning Karlsen
-// web: http://www.henningkarlsen.com/electronics
+// UTFT_Demo_480x320 
+// Copyright (C)2015 Rinky-Dink Electronics, Henning Karlsen. All right reserved
+// web: http://www.RinkyDinkElectronics.com/
 //
 // This program is a demo of how to use most of the functions
 // of the library with a supported display modules.
@@ -10,20 +11,36 @@
 // This program requires the UTFT library.
 //
 
-#include <Adafruit_GFX.h>
-#include <UTFTGLUE.h>
-UTFTGLUE myGLCD(0x9488,A2,A1,A3,A4,A0);
+//################################################
+// GLUE class that implements the UTFT API
+// replace UTFT include and constructor statements
+// remove UTFT font declaration e.g. SmallFont
+//################################################
+
+#include <UTFTGLUE.h>              //use GLUE class and constructor
+UTFTGLUE myGLCD(0,A2,A1,A3,A4,A0); //all dummy args
 
 // Declare which fonts we will be using
-#if !defined(SmallFont)
-extern uint8_t SmallFont[];    //.kbv GLUE defines as GFXFont ref
-#endif
+//extern uint8_t SmallFont[];      //GLUE defines as GFXFont ref
+
+// Set the pins to the correct ones for your development shield
+// ------------------------------------------------------------
+// Arduino Uno / 2009:
+// -------------------
+// Standard Arduino Uno/2009 shield            : <display model>,A5,A4,A3,A2
+// DisplayModule Arduino Uno TFT shield        : <display model>,A5,A4,A3,A2
+//
+// Arduino Mega:
+// -------------------
+// Standard Arduino Mega/Due shield            : <display model>,38,39,40,41
+// CTE TFT LCD/SD Shield for Arduino Mega      : <display model>,38,39,40,41
+//
+// Remember to change the model parameter to suit your display module!
+//UTFT myGLCD(CTE32HR,38,39,40,41);
 
 void setup()
 {
-  randomSeed(analogRead(5));   //.kbv Due does not like A0
-    pinMode(A0, OUTPUT);       //.kbv mcufriend have RD on A0
-    digitalWrite(A0, HIGH);
+  randomSeed(analogRead(0));
   
 // Setup the LCD
   myGLCD.InitLCD();
@@ -49,7 +66,7 @@ void loop()
   myGLCD.print("* Universal Color TFT Display Library *", CENTER, 1);
   myGLCD.setBackColor(64, 64, 64);
   myGLCD.setColor(255,255,0);
-  myGLCD.print("<http://electronics.henningkarlsen.com>", CENTER, 307);
+  myGLCD.print("<http://www.RinkyDinkElectronics.com/>", CENTER, 307);
 
   myGLCD.setColor(0, 0, 255);
   myGLCD.drawRect(0, 14, 479, 305);
@@ -322,4 +339,3 @@ void loop()
   
   delay (10000);
 }
-

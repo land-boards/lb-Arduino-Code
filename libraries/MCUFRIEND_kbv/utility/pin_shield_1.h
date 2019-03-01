@@ -96,16 +96,17 @@
   #define D8_PIN  0
   #define D9_PORT GPIOA
   #define D9_PIN  1
-  #define D10_PORT GPIOA
-  #define D10_PIN  15
+  #define D10_PORT GPIOB //GPIOA
+  #define D10_PIN  12    //15
   #define D11_PORT GPIOB
-  #define D11_PIN  5
+  #define D11_PIN  15    //5
   #define D12_PORT GPIOB
-  #define D12_PIN  4
+  #define D12_PIN  14    //4
   #define D13_PORT GPIOB
-  #define D13_PIN  3
+  #define D13_PIN  13    //3
   #define A0_PORT GPIOB
-  #define A0_PIN  5
+  #define A0_PIN  5      //original pcb uses SPI pin 
+//  #define A0_PIN  0      //hardware mod to Adapter to PB0.  Allows use of PB5 for SD Card
   #define A1_PORT GPIOB
   #define A1_PIN  6
   #define A2_PORT GPIOB
@@ -181,7 +182,7 @@
 #define PIN_INPUT(port, pin) {if (pin > 7) PIN_MODE4((port)->CRH, (pin&7), 0x4); else  PIN_MODE4((port)->CRL, pin, 0x4); }  //input
 
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
+#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG) || defined(TARGET_NUCLEO_F446RE)
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
 #if __MBED__
 #warning MBED knows everything
@@ -195,7 +196,7 @@
   #endif
 #elif defined(STM32L476xx)
   #include <STM32L4XX.h>
-#elif defined(STM32F401xE) || defined(STM32F411xE)
+#elif defined(STM32F401xE) || defined(STM32F411xE) || defined(STM32F446xx)
   #include <STM32F4XX.h>
 #endif
   #define D0_PORT GPIOA
@@ -714,45 +715,45 @@
 #elif defined(__AVR_ATtiny1634__)
   #include <avr/io.h>
   // 
-    #define D0_PORT PORTA
+  #define D0_PORT PORTA //PA7
   #define D0_PIN  7
-  #define D1_PORT PORTB
+  #define D1_PORT PORTB //PB0
   #define D1_PIN  0
-  #define D2_PORT PORTA
-  #define D2_PIN  0
-  #define D3_PORT PORTA
+  #define D2_PORT PORTC //PC2
+  #define D2_PIN  2
+  #define D3_PORT PORTA //PA3
   #define D3_PIN  3
-  #define D4_PORT PORTA
+  #define D4_PORT PORTA //PA4
   #define D4_PIN  4
-  #define D5_PORT PORTB
-  #define D5_PIN  3
-  #define D6_PORT PORTA
+  #define D5_PORT PORTC //PC4
+  #define D5_PIN  4
+  #define D6_PORT PORTA //PA1
   #define D6_PIN  1
-  #define D7_PORT PORTA
+  #define D7_PORT PORTA //PA0
   #define D7_PIN  0
-  #define D8_PORT PORTA
+  #define D8_PORT PORTA //PA2
   #define D8_PIN  2
-  #define D9_PORT PORTB
-  #define D9_PIN  2
-  #define D10_PORT PORTA
+  #define D9_PORT PORTC //PC5
+  #define D9_PIN  5
+  #define D10_PORT PORTA //PA6
   #define D10_PIN  6
-  #define D11_PORT PORTB
+  #define D11_PORT PORTB //PB2
   #define D11_PIN  2
-  #define D12_PORT PORTB
+  #define D12_PORT PORTB //PB1
   #define D12_PIN  1
-  #define D13_PORT PORTC
+  #define D13_PORT PORTC //PC1
   #define D13_PIN  1
-  #define A0_PORT PORTB
+  #define A0_PORT PORTB //PB3
   #define A0_PIN  3
-  #define A1_PORT PORTC
+  #define A1_PORT PORTC //PC0
   #define A1_PIN  0
-  #define A2_PORT PORTA
+  #define A2_PORT PORTA //PA5
   #define A2_PIN  5
-  #define A3_PORT PORTB
+  #define A3_PORT PORTB //PB2
   #define A3_PIN  2
-  #define A4_PORT PORTB
+  #define A4_PORT PORTB //PB1
   #define A4_PIN  1
-  #define A5_PORT PORTC
+  #define A5_PORT PORTC //PC1
   #define A5_PIN  1
 #else
 #error MCU unselected

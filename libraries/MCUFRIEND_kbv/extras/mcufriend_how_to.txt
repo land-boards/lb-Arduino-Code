@@ -17,15 +17,27 @@
 9. Any Adafruit sketch should work with the MCUFRIEND_kbv constructor() but should allow extra ID values
 An Adafruit constructor(cs, rs, wr, rd, rst) IGNORES any arguments.   i.e. it only uses the shield control pins
 
+MCUFRIEND_kbv inherits all the methods from 
+the Adafruit_GFX class: https://learn.adafruit.com/adafruit-gfx-graphics-library/overview 
+and Print class: https://www.arduino.cc/en/Serial/Print
+
+The only "new" methods are hardware related: 
+vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), begin()
+readReg(), pushCommand(), WriteCmdData() access the controller registers
+
 10. It currently supports UNO shields with "mcufriend.com" pcbs with controllers:
 HX8347-A 240x320  ID=0x8347 #define SUPPORT_8347A *** Untested ***
 HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
 HX8347-G 240x320  ID=0x7575 #define SUPPORT_8347D
 HX8347-I 240x320  ID=0x9595 #define SUPPORT_8347D
 HX8352-A 240x400  ID=0x5252 #define SUPPORT_8352A
+HX8352-B 240x400  ID=0x0065 #define SUPPORT_8352B
 HX8357-B 320x480  ID=0x8357 (shares init with 8357-D)
-HX8357-D 320x480  ID=0x9090 (ID has changed from 0x8357)
+HX8357-C 320x480  ID=0x9090 (ID has changed from 0x8357)
+HX8357-D 320x480  ID=0x0099 #define SUPPORT_8357D_GAMMA
 HX8367-A 240x320  ID=0x6767 #define SUPPORT_8347D
+ILI9225  176x220  ID=0x9225 #define SUPPORT_9225 
+ILI9226  176x220  ID=0x9226 #define SUPPORT_9225 
 ILI9302  240x320  ID=0x9302 
 ILI9320  240x320  ID=0x9320
 ILI9325  240x320  ID=0x9325
@@ -38,14 +50,15 @@ ILI9335  240x320  ID=0x9335
 ILI9338  240x320  ID=0x9338 
 ILI9340  240x320  ID=0x9340 
 ILI9341  240x320  ID=0x9341 
+ILI9342  320x240  ID=0x9342 #define SUPPORT_9342 
 ILI9481  320x480  ID=0x9481  
 ILI9486  320x480  ID=0x9486
-ILI9487  320x480  ID=0x9488
+ILI9487  320x480  ID=0x9487
 ILI9488  320x480  ID=0x9488 (weird 555 display :#define SUPPORT_9488_555) 
 LGDP4532 240x320  ID=0x4532 #define SUPPORT_4532
 LGDP4535 240x320  ID=0x4535 #define SUPPORT_4535
 NT35310  320x480  ID=0x5310 (hardware must be set for 8-bit parallel)
-R61505   240x320  ID=0x1505 (not working)
+R61505   240x320  ID=0x1505 works like an ILI9320
 R61505V  240x320  ID=0xB505
 R61505W  240x320  ID=0xC505 
 R61509V  240x400  ID=0xB509 #define SUPPORT_B509_7793
@@ -55,7 +68,7 @@ R61580   240x320  ID=0x1580 #define SUPPORT_1580 *** Untested ***
 R61581   320x480  ID=0x1581
 RM68090  240x320  ID=0x6809
 RM68140  320x480  ID=0x6814 #define SUPPORT_68140
-S6D0139  240x320  ID=0x0139 #define SUPPORT_0139 *** Untested ***
+S6D0139  240x320  ID=0x0139 #define SUPPORT_0139 (no Band Scroll)
 S6D0154  240x320  ID=0x0154 #define SUPPORT_0154
 SPFD5408 240x320  ID=0x5408
 SPFD5420 240x400  ID=0x5420 #define SUPPORT_9326_5420
@@ -69,6 +82,8 @@ UC8230   240x320  ID=0x8230 #define SUPPORT_8230
 UNKNOWN  320x480  ID=0x1511 (scroll directions not correct)
 UNKNOWN  240x320  ID=0x1602
 UNKNOWN  240x320  ID=0xAC11
+UNKNOWN  240x320  ID=0x2053 weird controller from BangGood (was ID=0x0000)
+UNKNOWN  240x320  ID=0x8031 (no Vertical Scroll)
 
 Most of these controllers are #define SUPPORT_xxxx by default.
 You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp
@@ -77,10 +92,9 @@ You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_k
 It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
 
 12. These Mcufriend-style shields tend to have a resistive TouchScreen on A1, 7, A2, 6 but are not always the same rotation of direction.
-Run the diagnose_Touchpins.ino sketch to detect which pins are used
-Run the TouchScreen_Calibr_kbv.ino sketch to diagnose your model and then scale the result from TouchScreen.h methods()
-The Resistive TouchScreen does not work on the Due.   It seems to be upset by sharing pins.  I have discovered why.   
-(You need a new Touch library.)
+    The TouchScreen_Calibr_native.ino sketch wiil diagnose Touch Pins, do Calibration, report to Serial Terminal.
+	The Calibration should work with the TouchScreen.h library from Adafruit.
+	You can always copy the local TouchScreen_kbv.h library from sketch to the global user libraries folder.
 
 13. The graphictest_kbv.ino sketch runs the standard Adafruit tests and reports the execution time.
     The Scroll tests show each screen rotation, colours, scroll directions, colour inversion.
@@ -102,5 +116,10 @@ The Resistive TouchScreen does not work on the Due.   It seems to be upset by sh
     If your "special" is write-only,  the library can not read the ID.  It always returns 0xD3D3
 	
 18. Please run LCD_ID_readreg.ino to verify your non-standard wiring.  Paste the defines to a Forum message.
+
+19. OPEN-SMART Shields have different wiring to regular Uno Shields:
+    Edit mcufriend_shield.h:  #define USE_SPECIAL
+    Edit mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT
+    Edit MCUFRIEND_kbv.cpp:   #define SUPPORT_8352B
 
 CHANGE HISTORY: is now in "mcufriend_history.txt"

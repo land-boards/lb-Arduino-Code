@@ -11,7 +11,7 @@
   Copyright (C) 2006-2008 Hans-Christoph Steiner.  All rights reserved.
   Copyright (C) 2010-2011 Paul Stoffregen.  All rights reserved.
   Copyright (C) 2009 Shigeru Kobayashi.  All rights reserved.
-  Copyright (C) 2009-2016 Jeff Hoefs.  All rights reserved.
+  Copyright (C) 2009-2017 Jeff Hoefs.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -20,14 +20,14 @@
 
   See file LICENSE.txt for further informations on licensing terms.
 
-  Last updated October 16th, 2016
+  Last updated August 17th, 2017
 */
 
 /*
   README
 
-  StandardFirmataEthernet is a TCP client implementation. You will need a Firmata client library
-  with a network transport that can act as a TCP server in order to establish a connection between
+  StandardFirmataEthernet is a TCP client/server implementation. You will need a Firmata client library
+  with a network transport that can act as a TCP server or client in order to establish a connection between
   StandardFirmataEthernet and the Firmata client application.
 
   To use StandardFirmataEthernet you will need to have one of the following
@@ -68,6 +68,7 @@
 // follow the instructions in ethernetConfig.h to configure your particular hardware
 #include "ethernetConfig.h"
 #include "utility/EthernetClientStream.h"
+#include "utility/EthernetServerStream.h"
 
 /*
  * Uncomment the following include to enable interfacing with Serial devices via hardware or
@@ -103,17 +104,25 @@
 
 #if defined remote_ip && !defined remote_host
 #ifdef local_ip
-EthernetClientStream stream(client, local_ip, remote_ip, NULL, remote_port);
+EthernetClientStream stream(client, local_ip, remote_ip, NULL, network_port);
 #else
-EthernetClientStream stream(client, IPAddress(0, 0, 0, 0), remote_ip, NULL, remote_port);
+EthernetClientStream stream(client, IPAddress(0, 0, 0, 0), remote_ip, NULL, network_port);
 #endif
 #endif
 
 #if !defined remote_ip && defined remote_host
 #ifdef local_ip
-EthernetClientStream stream(client, local_ip, IPAddress(0, 0, 0, 0), remote_host, remote_port);
+EthernetClientStream stream(client, local_ip, IPAddress(0, 0, 0, 0), remote_host, network_port );
 #else
-EthernetClientStream stream(client, IPAddress(0, 0, 0, 0), IPAddress(0, 0, 0, 0), remote_host, remote_port);
+EthernetClientStream stream(client, IPAddress(0, 0, 0, 0), IPAddress(0, 0, 0, 0), remote_host, network_port);
+#endif
+#endif
+
+#if !defined remote_ip && !defined remote_host
+#ifdef local_ip
+EthernetServerStream stream(local_ip, network_port);
+#else
+EthernetServerStream stream(IPAddress(0, 0, 0, 0), network_port);
 #endif
 #endif
 
@@ -657,7 +666,7 @@ void sysexCallback(byte command, byte argc, byte *argv)
     case I2C_CONFIG:
       delayTime = (argv[0] + (argv[1] << 7));
 
-      if (delayTime > 0) {
+      if (argc > 1 && delayTime > 0) {
         i2cReadDelayTime = delayTime;
       }
 
@@ -823,6 +832,17 @@ void systemResetCallback()
   isResetting = false;
 }
 
+void printEthernetStatus()
+{
+  DEBUG_PRINT("Local IP Address: ");
+  IPAddress ip = Ethernet.localIP();
+  DEBUG_PRINTLN(ip);
+#ifdef remote_ip
+  DEBUG_PRINT("Connecting to server at: ");
+  DEBUG_PRINTLN(remote_ip);
+#endif
+}
+
 /*
  * StandardFirmataEthernet communicates with Ethernet shields over SPI. Therefore all
  * SPI pins must be set to IGNORE. Otherwise Firmata would break SPI communication.
@@ -859,11 +879,14 @@ void initTransport()
 #ifdef local_ip
   Ethernet.begin((uint8_t *)mac, local_ip); //start ethernet
 #else
-  Ethernet.begin((uint8_t *)mac);           //start ethernet using dhcp
+  DEBUG_PRINTLN("Local IP will be requested from DHCP...");
+  //start ethernet using dhcp
+  if (Ethernet.begin((uint8_t *)mac) == 0) {
+    DEBUG_PRINTLN("Failed to configure Ethernet using DHCP");
+  }
 #endif
 #endif
-
-  DEBUG_PRINTLN("connecting...");
+  printEthernetStatus();
 }
 
 void initFirmata()
@@ -882,7 +905,7 @@ void initFirmata()
 
   // start up Network Firmata:
   Firmata.begin(stream);
-  systemResetCallback();  // reset to default config
+  systemResetCallback();  // Initialize default configuration
 }
 
 void setup()

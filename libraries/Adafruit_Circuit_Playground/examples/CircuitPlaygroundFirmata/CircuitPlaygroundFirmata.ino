@@ -37,6 +37,9 @@
 // Uncomment below to enable debug output.
 //#define DEBUG_MODE
 
+// Uncomment below to add a demo mode before USB connect
+#define DEMO_MODE
+
 // These defines setup debug output if enabled above (otherwise it
 // turns into no-ops that compile out).
 #define DEBUG_OUTPUT Serial1
@@ -136,14 +139,38 @@ typedef struct {
 } cap_state_type;
 
 cap_state_type cap_state[CAP_COUNT] = {
-  { false,  0 },
-  { false,  1 },
-  { false,  2 },
-  { false,  3 },
-  { false,  6 },
-  { false,  9 },
-  { false, 10 },
-  { false, 12 }
+  {
+    .streaming = false,
+    .pin       = 0
+  },
+  {
+    .streaming = false,
+    .pin       = 1
+  },
+  {
+    .streaming = false,
+    .pin       = 2
+  },
+  {
+    .streaming = false,
+    .pin       = 3
+  },
+  {
+    .streaming = false,
+    .pin       = 6
+  },
+  {
+    .streaming = false,
+    .pin       = 9
+  },
+  {
+    .streaming = false,
+    .pin       = 10
+  },
+  {
+    .streaming = false,
+    .pin       = 12
+  }
 };
 
 
@@ -1107,16 +1134,15 @@ void setup()
 
   // Tell Firmata to ignore pins that are used by the Circuit Playground hardware.
   // This MUST be called or else Firmata will 'clobber' pins like the SPI CS!
-  pinConfig[1]  = PIN_MODE_IGNORE;   // Pin 1 = LIS3DH interrupt
-  pinConfig[11] = PIN_MODE_IGNORE;   // Pin 11 = SPI
-  pinConfig[10] = PIN_MODE_IGNORE;   // Pin 10 = SPI
-  pinConfig[9]  = PIN_MODE_IGNORE;   // Pin 9  = SPI
   pinConfig[28] = PIN_MODE_IGNORE;   // Pin 28 = D8 = LIS3DH CS
   pinConfig[26] = PIN_MODE_IGNORE;   // Messes with CS too?
 
-  //while (!Serial) {
-  //  ; // wait for serial port to connect. Only needed for ATmega32u4-based boards (Leonardo, etc).
-  //}
+#if defined(DEMO_MODE)
+  while (!Serial) {
+     runDemo();   // this will 'demo' the board off, so you know its working, until the serial port is opened
+  }
+#endif
+
   systemResetCallback();  // reset to default config
 }
 
@@ -1171,4 +1197,49 @@ void loop()
       }
     }
   }
+}
+
+
+/*==============================================================================
+ * RUN_DEMO()
+ *============================================================================*/
+
+// we light one pixel at a time, this is our counter
+uint8_t pixeln = 0;
+void runDemo(void) {
+  // test Red #13 LED
+  CircuitPlayground.redLED(pixeln % 1);
+
+  /************* TEST SLIDE SWITCH */
+  if (CircuitPlayground.slideSwitch()) {
+    pixeln++;
+    if (pixeln == 11) {
+      pixeln = 0;
+      CircuitPlayground.clearPixels();
+    }
+  } else {
+    if (pixeln == 0) {
+      pixeln = 10;
+      CircuitPlayground.clearPixels();
+    }
+    pixeln--;
+  }
+
+
+  /************* TEST 10 NEOPIXELS */
+  CircuitPlayground.setPixelColor(pixeln, CircuitPlayground.colorWheel(25 * pixeln));
+
+
+  /************* TEST BOTH BUTTONS */
+  if (CircuitPlayground.leftButton()) {
+    CircuitPlayground.playTone(500 + pixeln * 500, 100, false);
+  }
+  if (CircuitPlayground.rightButton()) {
+    CircuitPlayground.setBrightness(60);
+  } else {
+    CircuitPlayground.setBrightness(20);
+  }
+
+  delay(100);
+
 }

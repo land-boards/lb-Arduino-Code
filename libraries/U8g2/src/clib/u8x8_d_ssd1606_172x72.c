@@ -170,33 +170,39 @@ static const uint8_t u8x8_d_ssd1606_to_display_seq[] = {
   U8X8_DLY(200),		/* this requres about 270ms */
   U8X8_DLY(90),  
   
+  //U8X8_CA(0x10, 0x01), /* deep sleep mode */
+  //U8X8_C(0x20), 		/* execute sequence */
+  U8X8_DLY(50),  
+  
   U8X8_END_TRANSFER(),             	/* disable chip */
   U8X8_END()             			/* end of sequence */
 };
 
-static const uint8_t u8x8_d_ssd1606_172x72_powersave0_seq[] = {
-  U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
-  U8X8_END_TRANSFER(),             	/* disable chip */
-  U8X8_END()             			/* end of sequence */
-};
 
-static const uint8_t u8x8_d_ssd1606_172x72_powersave1_seq[] = {
-  U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
-  U8X8_END_TRANSFER(),             	/* disable chip */
-  U8X8_END()             			/* end of sequence */
-};
+// static const uint8_t u8x8_d_ssd1606_172x72_powersave0_seq[] = {
+//   U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
+//   U8X8_END_TRANSFER(),             	/* disable chip */
+//   U8X8_END()             			/* end of sequence */
+// };
 
-static const uint8_t u8x8_d_ssd1606_172x72_flip0_seq[] = {
-  U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
-  U8X8_END_TRANSFER(),             	/* disable chip */
-  U8X8_END()             			/* end of sequence */
-};
 
-static const uint8_t u8x8_d_ssd1606_172x72_flip1_seq[] = {
-  U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
-  U8X8_END_TRANSFER(),             	/* disable chip */
-  U8X8_END()             			/* end of sequence */
-};
+// static const uint8_t u8x8_d_ssd1606_172x72_powersave1_seq[] = {
+//   U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
+//   U8X8_END_TRANSFER(),             	/* disable chip */
+//   U8X8_END()             			/* end of sequence */
+// };
+
+// static const uint8_t u8x8_d_ssd1606_172x72_flip0_seq[] = {
+//   U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
+//   U8X8_END_TRANSFER(),             	/* disable chip */
+//   U8X8_END()             			/* end of sequence */
+// };
+
+// static const uint8_t u8x8_d_ssd1606_172x72_flip1_seq[] = {
+//   U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
+//   U8X8_END_TRANSFER(),             	/* disable chip */
+//   U8X8_END()             			/* end of sequence */
+// };
 
 
 static uint8_t *u8x8_convert_tile_for_ssd1606(uint8_t *t)

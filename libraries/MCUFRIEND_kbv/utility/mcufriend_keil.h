@@ -39,23 +39,26 @@
 // General macros.   IOCLR registers are 1 cycle when optimised.
 #define WR_STROBE { WR_ACTIVE; WR_IDLE; }         //PWLW=TWRL=50ns
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE   //PWLR=TRDL=150ns
-#if defined(TEENSY) || defined(__ARM_ARCH_7EM__) // || defined(STM32L476xx)
-#define write8(d) { write_8(d); WR_ACTIVE; WR_ACTIVE; WR_STROBE; WR_IDLE; } // STROBEs are defined later
-// read 250ns after RD_ACTIVE goes low
-#define read8() ( RD_STROBE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE, read_8() )
-#else
-#define write8(d) { write_8(d); WR_STROBE; } // STROBEs are defined later
-// read 250ns after RD_ACTIVE goes low
-#define read8() ( RD_STROBE, read_8() )
+
+#if defined(TEENSY) || defined(__ARM_ARCH_7EM__) // -O2: F411@100MHz = 1.44s 
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#elif defined(__ARM_ARCH_7M__) // -O2: F103@72MHz = 2.68s
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE;  }
+#elif defined(__ARM_ARCH_6M__) // -O2: F072@48MHz = 5.03s
+#define WRITE_DELAY { }
+#define READ_DELAY  { }
 #endif
 
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; WR_IDLE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { dst = read8(); RD_IDLE; }
-#define READ_16(dst)  { dst = read8(); dst = (dst<<8) | read8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; RD_IDLE; } // read 250ns after RD_ACTIVE goes low
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #define CTL_INIT()   { RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; write16(x); }
-#define WriteData(x) { CD_DATA; write16(x); }
+#define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
+#define WriteData(x) { write16(x); }
 
 #endif   //!USE_SERIAL
 #endif   //MCUFRIEND_KEIL_H_

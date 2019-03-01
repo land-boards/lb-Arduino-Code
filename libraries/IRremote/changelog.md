@@ -1,3 +1,34 @@
+## 2.4.0 - 2017/08/10
+ - Cleanup of hardware dependencies. Merge in SAM support [PR #437](https://github.com/z3t0/Arduino-IRremote/pull/437)
+
+## 2.3.3 - 2017/03/31
+- Added ESP32 IR receive support [PR #427](https://github.com/z3t0/Arduino-IRremote/pull/425)
+
+## 2.2.3 - 2017/03/27
+- Fix calculation of pause length in LEGO PF protocol [PR #427](https://github.com/z3t0/Arduino-IRremote/pull/427)
+
+## 2.2.2 - 2017/01/20
+- Fixed naming bug [PR #398](https://github.com/z3t0/Arduino-IRremote/pull/398)
+
+## 2.2.1 - 2016/07/27
+- Added tests for Lego Power Functions Protocol [PR #336](https://github.com/z3t0/Arduino-IRremote/pull/336)
+
+## 2.2.0 - 2016/06/28
+- Added support for ATmega8535
+- Added support for ATmega16
+- Added support for ATmega32
+- Added support for ATmega164
+- Added support for ATmega324
+- Added support for ATmega644
+- Added support for ATmega1284
+- Added support for ATmega64
+- Added support for ATmega128
+
+[PR](https://github.com/z3t0/Arduino-IRremote/pull/324)
+
+## 2.1.1 - 2016/05/04
+- Added Lego Power Functions Protocol [PR #309](https://github.com/z3t0/Arduino-IRremote/pull/309)
+
 ## 2.1.0 - 2016/02/20
 - Improved Debugging [PR #258](https://github.com/z3t0/Arduino-IRremote/pull/258)
 - Display TIME instead of TICKS [PR #258](https://github.com/z3t0/Arduino-IRremote/pull/258)
@@ -15,7 +46,7 @@
 ## 2.0.1 - 2015/07/26 - [Release](https://github.com/shirriff/Arduino-IRremote/releases/tag/BETA)
 ### Changes
 - Updated README
-- Updated Contributors 
+- Updated Contributors
 - Fixed #110 Mess
 - Created Gitter Room
 - Added Gitter Badge
@@ -35,7 +66,7 @@
 - Added Denon Protocol
 - Added Pronto Support
 - Added Library Properties
-- Added Template For New Protocols 
+- Added Template For New Protocols
 - Added this changelog
 - Added Teensy LC Support
 - Added ATtiny84 Support
@@ -44,7 +75,7 @@
 
 ### Deletions
 - Removed (Fixed) #110
-- Broke Teensy 3 / 3.1 Support 
+- Broke Teensy 3 / 3.1 Support
 
 ### Not Working
 - Teensy 3 / 3.1 Support is in Development

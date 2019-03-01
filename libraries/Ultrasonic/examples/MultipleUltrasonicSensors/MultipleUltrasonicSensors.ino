@@ -3,28 +3,30 @@
  * Prints the distance read by many ultrasonic sensors in
  * centimeters and inches. They are supported to four pins
  * ultrasound sensors (liek HC-SC04) and three pins
- * (like PING))) and Seeed Studio sesores).
+ * (like PING))) and Seeed Studio sensors).
  *
  * The circuit:
  * * In this circuit there is an ultrasonic module HC-SC04,
  *   PING))) and a Seeed Studio (4 pins, 3 pins, 3 pins,
  *   respectively), attached to digital pins as follows:
- * ---------------------     ---------------------     ---------------------
- * | HC-SC04 | Arduino |     | PING))) | Arduino |     |  Seeed  | Arduino |
- * ---------------------     ---------------------     ---------------------
- * |   Vcc   |   5V    |     |   Vcc   |   5V    |     |   Vcc   |   5V    |
- * |   Trig  |   12    | AND |   SIG   |   10    | AND |   SIG   |    8    |
- * |   Echo  |   13    |     |   Gnd   |   GND   |     |   Gnd   |   GND   |
- * |   Gnd   |   GND   |     ---------------------     ---------------------
+ * ---------------------     ---------------------     -------------------
+ * | HC-SC04 | Arduino |     | PING))) | Arduino |     | Seeed | Arduino |
+ * ---------------------     ---------------------     -------------------
+ * |   Vcc   |   5V    |     |   Vcc   |   5V    |     |  Vcc  |   5V    |
+ * |   Trig  |   12    | AND |   SIG   |   10    | AND |  SIG  |    8    |
+ * |   Echo  |   13    |     |   Gnd   |   GND   |     |  Gnd  |   GND   |
+ * |   Gnd   |   GND   |     ---------------------     -------------------
  * ---------------------
- * Note: You need not obligatorily use the pins defined above
+ * Note: You do not obligatorily need to use the pins defined above
  * 
- * By default, the distance returned by the distanceRead()
- * method is in centimeters, to get the distance in inches,
+ * By default, the distance returned by the read()
+ * method is in centimeters. To get the distance in inches,
  * pass INC as a parameter.
- * Example: ultrasonic.distanceRead(INC)
+ * Example: ultrasonic.read(INC)
  *
  * created 3 Mar 2017
+ * by Erick Simões (github: @ErickSimoes | twitter: @AloErickSimoes)
+ * modified 11 Jun 2018
  * by Erick Simões (github: @ErickSimoes | twitter: @AloErickSimoes)
  *
  * This example code is released into the MIT License.
@@ -43,15 +45,15 @@ void setup() {
 
 void loop() {
   Serial.print("Sensor 01: ");
-  Serial.print(ultrasonic1.distanceRead()); // Prints the distance on the default unit (centimeters)
+  Serial.print(ultrasonic1.read()); // Prints the distance on the default unit (centimeters)
   Serial.println("cm");
 
   Serial.print("Sensor 02: ");
-  Serial.print(ultrasonic2.distanceRead(CM)); // Prints the distance making the unit explicit
+  Serial.print(ultrasonic2.read(CM)); // Prints the distance making the unit explicit
   Serial.println("cm");
 
   Serial.print("Sensor 03: ");
-  Serial.print(ultrasonic3.distanceRead(INC)); // Prints the distance in inches
+  Serial.print(ultrasonic3.read(INC)); // Prints the distance in inches
   Serial.println("inc");
 
   delay(1000);

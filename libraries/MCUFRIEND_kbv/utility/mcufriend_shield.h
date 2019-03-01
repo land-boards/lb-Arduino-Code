@@ -8,6 +8,7 @@
 #if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
 #if 0
+//################################### UNO ##############################
 #elif defined(__AVR_ATmega328P__)       //regular UNO shield on UNO
 #define RD_PORT PORTC
 #define RD_PIN  0
@@ -35,6 +36,7 @@
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
+//################################### MEGA2560 ##############################
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)       //regular UNO shield on MEGA2560
 #define RD_PORT PORTF
 #define RD_PIN  0
@@ -183,6 +185,7 @@
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
+//################################### LEONARDO ##############################
 #elif defined(__AVR_ATmega32U4__)       //regular UNO shield on Leonardo
 #define RD_PORT PORTF
 #define RD_PIN  7
@@ -234,13 +237,43 @@ void write_8(uint8_t x)
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
+//################################### UNO SHIELD on BOBUINO ##############################
+#elif defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644P__) //UNO shield on BOBUINO
+#warning regular UNO shield on BOBUINO
+#define RD_PORT PORTA
+#define RD_PIN  7
+#define WR_PORT PORTA
+#define WR_PIN  6
+#define CD_PORT PORTA
+#define CD_PIN  5
+#define CS_PORT PORTA
+#define CS_PIN  4
+#define RESET_PORT PORTA
+#define RESET_PIN  3
+
+#define BMASK         0x0F              //
+#define DMASK         0x6C              //
+#define write_8(x)    { PORTB = (PORTB & ~BMASK) | ((x) >> 4); \
+        PORTD = (PORTD & ~DMASK) | ((x) & 0x0C) | (((x) & 0x03) << 5); }
+#define read_8()      ( (PINB << 4) | (PIND & 0x0C) | ((PIND & 0x60) >> 5) )
+#define setWriteDir() { DDRB |=  BMASK; DDRD |=  DMASK; }
+#define setReadDir()  { DDRB &= ~BMASK; DDRD &= ~DMASK; }
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
 //####################################### TEENSY ############################
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) // regular UNO shield on a Teensy 3.x
 #warning regular UNO shield on a Teensy 3.x
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
 #elif defined(__MK64FX512__) // Teensy3.5 120MHz thanks to PeteJohno
 #define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
 #define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
@@ -302,27 +335,42 @@ void write_8(uint8_t x)
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
 
 //####################################### STM32 ############################
-#elif defined(__STM32F1__) || defined(STM32F103xB) || defined(STM32L476xx) // MAPLECORE or STM32CORE 
-
-#if 0
-#elif defined(STM32L476xx)
-#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
-#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
-#define REGS(x) x
-#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
-#define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
-#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
-#elif defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_NUCLEO_F103RB)   //regular CMSIS libraries
-#define REGS(x) x
-#define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
-        AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
-#else                                                                  //weird Maple libraries
+// NUCLEO:   ARDUINO_NUCLEO_xxxx from ST Core or ARDUINO_STM_NUCLEO_F103RB from MapleCore
+// BLUEPILL: ARDUINO_NUCLEO_F103C8 / ARDUINO_BLUEPILL_F103C8 from ST Core or ARDUINO_GENERIC_STM32F103C from MapleCore
+// MAPLE_REV3: n/a from ST Core or ARDUINO_MAPLE_REV3 from MapleCore
+// ST Core:   ARDUINO_ARCH_STM32
+// MapleCore: __STM32F1__
+#elif defined(__STM32F1__) || defined(ARDUINO_ARCH_STM32)   //MapleCore or ST Core
+#define IS_NUCLEO64 ( defined(ARDUINO_STM_NUCLEO_F103RB) \
+                   || defined(ARDUINO_NUCLEO_F030R8) || defined(ARDUINO_NUCLEO_F091RC) \
+                   || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F303RE) \
+                   || defined(ARDUINO_NUCLEO_F401RE) || defined(ARDUINO_NUCLEO_F411RE) \
+                   || defined(ARDUINO_NUCLEO_F446RE) || defined(ARDUINO_NUCLEO_L053R8) \
+                   || defined(ARDUINO_NUCLEO_L152RE) || defined(ARDUINO_NUCLEO_L476RG) \
+                    )
+// F1xx, F4xx, L4xx have different registers and styles.  General Macros
+#if defined(__STM32F1__)   //weird Maple Core
 #define REGS(x) regs->x
+#else                      //regular ST Core
+#define REGS(x) x
 #endif
-#if defined(__STM32F1__) || defined(STM32F103xB)
+#define PIN_HIGH(port, pin)   (port)-> REGS(BSRR) = (1<<(pin))
+#define PIN_LOW(port, pin)    (port)-> REGS(BSRR) = (1<<((pin)+16))
+#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+
+// Family specific Macros.  F103 needs ST and Maple compatibility
+// note that ILI9320 class of controller has much slower Read cycles
+#if 0
+#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
-#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+#if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
+#define GPIO_INIT()      
+#else
+#define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
+        AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
+#endif
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
 #define PIN_OUTPUT(port, pin) {\
@@ -333,15 +381,72 @@ void write_8(uint8_t x)
         if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin)<<2)); } \
         else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
     }
+
+// should be easy to add F030, F091, F303, L053, ...
+#elif defined(STM32F030x8)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F091xC)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F303xE)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; \
+                      /* AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1; */ }
+
+#elif defined(STM32F401xE)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F411xE)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32F446xx)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L053xx)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->IOPENR |= RCC_IOPENR_GPIOAEN | RCC_IOPENR_GPIOBEN | RCC_IOPENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L152xE)
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#elif defined(STM32L476xx)
+#define WRITE_DELAY { WR_ACTIVE; WR_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; RD_ACTIVE; }
+#define GPIO_INIT()   { RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN; }
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+
+#else
+#error unsupported STM32
 #endif
-#define PIN_HIGH(port, pin)   (port)-> REGS(BSRR) = (1<<(pin))
-#define PIN_LOW(port, pin)    (port)-> REGS(BSRR) = (1<<((pin)+16))
 
 #if 0
-#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8)
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8)
 #warning Uno Shield on BLUEPILL
 #define RD_PORT GPIOB
-#define RD_PIN  5
+//#define RD_PIN  5
+#define RD_PIN  0  //hardware mod to Adapter.  Allows use of PB5 for SD Card
 #define WR_PORT GPIOB
 #define WR_PIN  6
 #define CD_PORT GPIOB
@@ -358,7 +463,7 @@ void write_8(uint8_t x)
 #define setWriteDir() {GP_OUT(GPIOA, CRL, 0xFFFFFFFF); }
 #define setReadDir()  {GP_INP(GPIOA, CRL, 0xFFFFFFFF); }
 
-#elif defined(ARDUINO_STM_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_NUCLEO_L476RG) // Uno Shield on NUCLEO
+#elif IS_NUCLEO64 // Uno Shield on NUCLEO
 #warning Uno Shield on NUCLEO
 #define RD_PORT GPIOA
 #define RD_PIN  0
@@ -396,15 +501,15 @@ void write_8(uint8_t x)
                             | ((GPIOA->REGS(IDR) & (1<<8))  >> 1)))
 
 
-#if defined(ARDUINO_NUCLEO_L476RG)
+#if defined(ARDUINO_NUCLEO_F103RB) || defined(ARDUINO_STM_NUCLEO_F103RB) //F103 has unusual GPIO modes
+//                                 PA10,PA9,PA8                       PB10                   PB5,PB4,PB3                             PC7
+#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOB, CRH, 0xF00); GP_OUT(GPIOB, CRL, 0xFFF000); GP_OUT(GPIOC, CRL, 0xF0000000); }
+#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOB, CRH, 0xF00); GP_INP(GPIOB, CRL, 0xFFF000); GP_INP(GPIOC, CRL, 0xF0000000); }
+#else      //F0xx, F3xx, F4xx, L0xx, L1xx, L4xx use MODER
 //                                   PA10,PA9,PA8           PB10,PB5,PB4,PB3                      PC7
 #define setWriteDir() { setReadDir(); \
                         GPIOA->MODER |=  0x150000; GPIOB->MODER |=  0x100540; GPIOC->MODER |=  0x4000; }
 #define setReadDir()  { GPIOA->MODER &= ~0x3F0000; GPIOB->MODER &= ~0x300FC0; GPIOC->MODER &= ~0xC000; }
-#else
-//                                 PA10,PA9,PA8                       PB10                   PB5,PB4,PB3                             PC7
-#define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOB, CRH, 0xF00); GP_OUT(GPIOB, CRL, 0xFFF000); GP_OUT(GPIOC, CRL, 0xF0000000); }
-#define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOB, CRH, 0xF00); GP_INP(GPIOB, CRL, 0xFFF000); GP_INP(GPIOC, CRL, 0xF0000000); }
 #endif
 
 #elif defined(ARDUINO_MAPLE_REV3) // Uno Shield on MAPLE_REV3 board
@@ -451,10 +556,114 @@ void write_8(uint8_t x)
 #error REGS group
 #endif
 
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; WR_IDLE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+//################################### ESP32 ##############################
+#elif defined(ESP32)       //regular UNO shield on TTGO D1 R32 (ESP32)
+#define LCD_RD  2  //LED
+#define LCD_WR  4
+#define LCD_RS 15  //hard-wired to A2 (GPIO35) 
+#define LCD_CS 33  //hard-wired to A3 (GPIO34)
+#define LCD_RST 32 //hard-wired to A4 (GPIO36)
+
+#define LCD_D0 12
+#define LCD_D1 13
+#define LCD_D2 26
+#define LCD_D3 25
+#define LCD_D4 17
+#define LCD_D5 16
+#define LCD_D6 27
+#define LCD_D7 14
+
+#define RD_PORT GPIO.out
+#define RD_PIN  LCD_RD
+#define WR_PORT GPIO.out
+#define WR_PIN  LCD_WR
+#define CD_PORT GPIO.out
+#define CD_PIN  LCD_RS
+#define CS_PORT GPIO.out1.val
+#define CS_PIN  LCD_CS
+#define RESET_PORT GPIO.out1.val
+#define RESET_PIN  LCD_RST
+
+static inline uint32_t map_8(uint32_t d)
+{
+    return (
+               0
+               | ((d & (1 << 0)) << (LCD_D0 - 0))
+               | ((d & (1 << 1)) << (LCD_D1 - 1))
+               | ((d & (1 << 2)) << (LCD_D2 - 2))
+               | ((d & (1 << 3)) << (LCD_D3 - 3))
+               | ((d & (1 << 4)) << (LCD_D4 - 4))
+               | ((d & (1 << 5)) << (LCD_D5 - 5))
+               | ((d & (1 << 6)) << (LCD_D6 - 6))
+               | ((d & (1 << 7)) << (LCD_D7 - 7))
+           );
+}
+
+static inline uint8_t map_32(uint32_t d)
+{
+    return (
+               0
+               | ((d & (1 << LCD_D0)) >> (LCD_D0 - 0))
+               | ((d & (1 << LCD_D1)) >> (LCD_D1 - 1))
+               | ((d & (1 << LCD_D2)) >> (LCD_D2 - 2))
+               | ((d & (1 << LCD_D3)) >> (LCD_D3 - 3))
+               | ((d & (1 << LCD_D4)) >> (LCD_D4 - 4))
+               | ((d & (1 << LCD_D5)) >> (LCD_D5 - 5))
+               | ((d & (1 << LCD_D6)) >> (LCD_D6 - 6))
+               | ((d & (1 << LCD_D7)) >> (LCD_D7 - 7))
+           );
+}
+
+static inline void write_8(uint16_t data)
+{
+    GPIO.out_w1tc = map_8(0xFF);  //could define once as DMASK
+    GPIO.out_w1ts = map_8(data);
+}
+
+static inline uint8_t read_8()
+{
+    return map_32(GPIO.in);
+}
+static void setWriteDir()
+{
+    pinMode(LCD_D0, OUTPUT);
+    pinMode(LCD_D1, OUTPUT);
+    pinMode(LCD_D2, OUTPUT);
+    pinMode(LCD_D3, OUTPUT);
+    pinMode(LCD_D4, OUTPUT);
+    pinMode(LCD_D5, OUTPUT);
+    pinMode(LCD_D6, OUTPUT);
+    pinMode(LCD_D7, OUTPUT);
+}
+
+static void setReadDir()
+{
+    pinMode(LCD_D0, INPUT);
+    pinMode(LCD_D1, INPUT);
+    pinMode(LCD_D2, INPUT);
+    pinMode(LCD_D3, INPUT);
+    pinMode(LCD_D4, INPUT);
+    pinMode(LCD_D5, INPUT);
+    pinMode(LCD_D6, INPUT);
+    pinMode(LCD_D7, INPUT);
+}
+
+#define WRITE_DELAY { }
+#define READ_DELAY  { }
+
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (digitalWrite(b, LOW))
+#define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
+#define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
 #else
 #error MCU unsupported
@@ -486,5 +695,5 @@ void write_8(uint8_t x)
 #define GPIO_INIT()
 #endif
 #define CTL_INIT()   { GPIO_INIT(); RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; write16(x); }
-#define WriteData(x) { CD_DATA; write16(x); }
+#define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
+#define WriteData(x) { write16(x); }

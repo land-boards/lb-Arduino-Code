@@ -1,9 +1,6 @@
-// UTFT_Demo_320x240 (C)2012 uCtronics
-// web: http://www.uctronics.com
-// UTFT_Demo_320x240 is derived from 
-// UTFT_Demo_320x240 (C)2010 Henning Karlsen
-// web: http://www.henningkarlsen.com/electronics
-// to fit for our 3.2 inch TFT LCD shield for Arduino/Maple/Chipkit
+// UTFT_Demo_320x240 
+// Copyright (C)2015 Rinky-Dink Electronics, Henning Karlsen. All right reserved
+// web: http://www.RinkyDinkElectronics.com/
 //
 // This program is a demo of how to use most of the functions
 // of the library with a supported display modules.
@@ -11,30 +8,39 @@
 // This demo was made for modules with a screen resolution 
 // of 320x240 pixels.
 //
-// This program requires the UTFT library (8bit mode)
-// and the code is compatible with both UNO and Mega board.
-// No code modification required.
+// This program requires the UTFT library.
 //
 
-// if I want to use a GLUE class that implements the UTFT API
-// with the Adafruit classes,   I MUST include those headers
-// because the Arduino Java does not look at nested includes !
+//################################################
+// GLUE class that implements the UTFT API
+// replace UTFT include and constructor statements
+// remove UTFT font declaration e.g. SmallFont
+//################################################
 
-
-#include <Adafruit_GFX.h>
-#include <UTFTGLUE.h>              // class methods are in here
-UTFTGLUE myGLCD(0x0154,A2,A1,A3,A4,A0);
+#include <UTFTGLUE.h>              //use GLUE class and constructor
+UTFTGLUE myGLCD(0,A2,A1,A3,A4,A0); //all dummy args
 
 // Declare which fonts we will be using
-#if !defined(SmallFont)
-extern uint8_t SmallFont[];    //.kbv GLUE defines as GFXFont ref
-#endif
+//extern uint8_t SmallFont[];      //GLUE defines as GFXFont ref
+
+// Set the pins to the correct ones for your development shield
+// ------------------------------------------------------------
+// Arduino Uno / 2009:
+// -------------------
+// Standard Arduino Uno/2009 shield            : <display model>,A5,A4,A3,A2
+// DisplayModule Arduino Uno TFT shield        : <display model>,A5,A4,A3,A2
+//
+// Arduino Mega:
+// -------------------
+// Standard Arduino Mega/Due shield            : <display model>,38,39,40,41
+// CTE TFT LCD/SD Shield for Arduino Mega      : <display model>,38,39,40,41
+//
+// Remember to change the model parameter to suit your display module!
+//UTFT myGLCD(ITDB32S,38,39,40,41);
 
 void setup()
 {
-  randomSeed(analogRead(5));   //.kbv Due does not like A0
-    pinMode(A0, OUTPUT);       //.kbv mcufriend have RD on A0
-    digitalWrite(A0, HIGH);
+  randomSeed(analogRead(0));
   
 // Setup the LCD
   myGLCD.InitLCD();
@@ -60,7 +66,7 @@ void loop()
   myGLCD.print("* Universal Color TFT Display Library *", CENTER, 1);
   myGLCD.setBackColor(64, 64, 64);
   myGLCD.setColor(255,255,0);
-  myGLCD.print("<http://electronics.henningkarlsen.com>", CENTER, 227);
+  myGLCD.print("<http://www.RinkyDinkElectronics.com/>", CENTER, 227);
 
   myGLCD.setColor(0, 0, 255);
   myGLCD.drawRect(0, 14, 319, 225);
@@ -244,7 +250,7 @@ void loop()
   delay(2000);
   
   myGLCD.setColor(0,0,0);
-  myGLCD.fillRect(1,15,318,225);
+  myGLCD.fillRect(1,15,318,224);
 
 // Draw some random circles
   for (int i=0; i<100; i++)
@@ -333,4 +339,3 @@ void loop()
   
   delay (10000);
 }
-

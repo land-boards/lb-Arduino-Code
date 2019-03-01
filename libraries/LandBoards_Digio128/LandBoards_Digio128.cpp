@@ -39,7 +39,9 @@ void Digio128::begin(void)
 	mcp5.begin(5);
 	mcp6.begin(6);
 	mcp7.begin(7);
+#if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#endif
 	for (uint8_t pinNum = 0; pinNum < 16; pinNum++)	// Set all pins to input by default
 	{
 		mcp0.pinMode(pinNum, INPUT);

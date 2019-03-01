@@ -83,7 +83,7 @@
 #define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOA, CRL, 0xFF); GP_OUT(GPIOB, CRL, 0xFFF00000); }
 #define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOA, CRL, 0xFF); GP_INP(GPIOB, CRL, 0xFFF00000); }
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG)
+#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG) || defined(TARGET_NUCLEO_F446RE)
 #if __MBED__
 #warning MBED knows everything
 #elif defined(STM32F072xB)
@@ -96,7 +96,7 @@
   #endif
 #elif defined(STM32L476xx)
   #include <STM32L4XX.h>
-#elif defined(STM32F401xE) || defined(STM32F411xE)
+#elif defined(STM32F401xE) || defined(STM32F411xE) || defined(STM32F446xx)
   #include <STM32F4XX.h>
 #endif
 // configure macros for the data pins. -00=10.06, -O1=7.85, -O1t=7.21, -O2=7.87, -O3=7.45, -O3t=7.03

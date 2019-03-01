@@ -16,7 +16,9 @@ Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
 void setup(void)
 {
   Dio128.begin();              // connects to the 8 MCP23017 parts
-  TWBR = 12;                   // go to 400 KHz I2C speed mode
+#if defined(ARDUINO_ARCH_AVR)
+  TWBR = 12;      // go to 400 KHz I2C speed mode
+#endif
   for (uint8_t pin = 0; pin < 128; pin++)
     Dio128.pinMode(pin, INPUT);    // make all pins into INPUTs
 }

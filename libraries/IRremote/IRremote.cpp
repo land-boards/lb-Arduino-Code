@@ -18,13 +18,16 @@
 // Whynter A/C ARC-110WD added by Francesco Meschia
 //******************************************************************************
 
-#include <avr/interrupt.h>
-
 // Defining IR_GLOBAL here allows us to declare the instantiation of global variables
 #define IR_GLOBAL
 #	include "IRremote.h"
 #	include "IRremoteInt.h"
 #undef IR_GLOBAL
+
+#ifdef HAS_AVR_INTERRUPT_H
+#include <avr/interrupt.h>
+#endif
+
 
 //+=============================================================================
 // The match functions were (apparently) originally MACROs to improve code speed
@@ -182,6 +185,7 @@ ISR (TIMER_INTR_NAME)
 		 	break;
 	}
 
+#ifdef BLINKLED
 	// If requested, flash LED while receiving IR data
 	if (irparams.blinkflag) {
 		if (irdata == MARK)
@@ -190,4 +194,5 @@ ISR (TIMER_INTR_NAME)
 		else if (irparams.blinkpin) digitalWrite(irparams.blinkpin, LOW); // Turn user defined pin LED on
 				else BLINKLED_OFF() ;   // if no user defined LED pin, turn default LED pin for the hardware on
 	}
+#endif // BLINKLED
 }

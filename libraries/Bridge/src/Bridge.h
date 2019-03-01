@@ -30,6 +30,7 @@ class BridgeClass {
   public:
     BridgeClass(Stream &_stream);
     void begin();
+    void end();
 
     // Methods to handle key/value datastore
     void put(const char *key, const char *value);
@@ -103,6 +104,11 @@ class SerialBridgeClass : public BridgeClass {
     void begin(unsigned long baudrate = BRIDGE_BAUDRATE) {
       serial.begin(baudrate);
       BridgeClass::begin();
+    }
+
+    void end(unsigned long baudrate = BRIDGE_BAUDRATE) {
+      serial.begin(baudrate);
+      BridgeClass::end();
     }
 
   private:

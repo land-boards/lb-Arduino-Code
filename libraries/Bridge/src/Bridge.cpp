@@ -84,6 +84,37 @@ void BridgeClass::begin() {
   }
 }
 
+void BridgeClass::end() {
+
+  while (true) {
+    // Bridge interrupt:
+    // - Ask the bridge to close itself
+    uint8_t quit_cmd[] = {'X', 'X', 'X', 'X', 'X'};
+    max_retries = 1;
+    transfer(quit_cmd, 5);
+    delay(100);
+    stream.print(CTRL_C);
+    delay(250);
+    stream.print(F("cd \n"));
+    //expect a shell
+    bool done = false;
+    delay(100);
+    while (stream.available()) {
+      char c = stream.read();
+      if (c == '#') {
+        done = true;
+        break;
+      }
+    }
+    if (done) {
+      stream.print(F("reset\n"));
+      break;
+    }
+  }
+  delay(100);
+  dropAll();
+}
+
 void BridgeClass::put(const char *key, const char *value) {
   // TODO: do it in a more efficient way
   String cmd = "D";
@@ -166,8 +197,8 @@ uint16_t BridgeClass::transfer(const uint8_t *buff1, uint16_t len1,
     }
     crcWrite();                     // CRC
 
-    // Wait for ACK in 100ms
-    if (timedRead(100) != 0xFF)
+    // Wait for ACK in 200ms
+    if (timedRead(200) != 0xFF)
       continue;
     crcReset();
     crcUpdate(0xFF);

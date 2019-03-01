@@ -80,6 +80,11 @@ int  IRrecv::decode (decode_results *results)
 	if (decodeDenon(results))  return true ;
 #endif
 
+#if DECODE_LEGO_PF
+	DBG_PRINTLN("Attempting Lego Power Functions");
+	if (decodeLegoPowerFunctions(results))  return true ;
+#endif
+
 	// decodeHash returns a hash on any input.
 	// Thus, it needs to be last in the list.
 	// If you add any decodes, add them before this.
@@ -110,8 +115,10 @@ IRrecv::IRrecv (int recvpin, int blinkpin)
 //+=============================================================================
 // initialization
 //
+#ifdef USE_DEFAULT_ENABLE_IR_IN
 void  IRrecv::enableIRIn ( )
 {
+// Interrupt Service Routine - Fires every 50uS
 	cli();
 	// Setup pulse clock timer interrupt
 	// Prescale /8 (16M/8 = 0.5 microseconds per tick)
@@ -133,20 +140,23 @@ void  IRrecv::enableIRIn ( )
 	// Set pin modes
 	pinMode(irparams.recvpin, INPUT);
 }
+#endif // USE_DEFAULT_ENABLE_IR_IN
 
 //+=============================================================================
 // Enable/disable blinking of pin 13 on IR processing
 //
 void  IRrecv::blink13 (int blinkflag)
 {
+#ifdef BLINKLED
 	irparams.blinkflag = blinkflag;
 	if (blinkflag)  pinMode(BLINKLED, OUTPUT) ;
+#endif
 }
 
 //+=============================================================================
 // Return if receiving new IR signals
-// 
-bool  IRrecv::isIdle ( ) 
+//
+bool  IRrecv::isIdle ( )
 {
  return (irparams.rcvstate == STATE_IDLE || irparams.rcvstate == STATE_STOP) ? true : false;
 }

@@ -11,11 +11,20 @@
  * by Erick Simões (github: @ErickSimoes | twitter: @AloErickSimoes)
  * modified 15 May 2017
  * by Eliot Lim    (github: @eliotlim)
+ * modified 10 Jun 2018
+ * by Erick Simões (github: @ErickSimoes | twitter: @AloErickSimoes)
+ * modified 14 Jun 2018
+ * by Otacilio Maia (github: @OtacilioN | linkedIn: in/otacilio)
  *
  * Released into the MIT License.
  */
 
-#include <Arduino.h>
+#if ARDUINO >= 100
+  #include <Arduino.h>
+#else
+  #include <WProgram.h>
+#endif
+
 #include "Ultrasonic.h"
 
 Ultrasonic::Ultrasonic(uint8_t trigPin, uint8_t echoPin, unsigned long timeOut) {
@@ -39,19 +48,28 @@ unsigned int Ultrasonic::timing() {
 
   if (threePins)
     pinMode(trig, INPUT);
+  
+  previousMicros = micros();
+  while(!digitalRead(echo) && (micros() - previousMicros) <= timeout); // wait for the echo pin HIGH or timeout
+  previousMicros = micros();
+  while(digitalRead(echo)  && (micros() - previousMicros) <= timeout); // wait for the echo pin LOW or timeout
 
-  return pulseIn(echo, HIGH, timeout); // duration
+  return micros() - previousMicros; // duration
 }
 
-unsigned int Ultrasonic::distanceRead() {
-  /*
-   * If the unit of measure is not passed as a parameter,
-   * by default, it will return the distance in centimeters.
-   * To change the default, replace CM by INC.
-   */
-  return distanceRead(CM);
-}
-
-unsigned int Ultrasonic::distanceRead(uint8_t und) {
+/*
+ * If the unit of measure is not passed as a parameter,
+ * sby default, it will return the distance in centimeters.
+ * To change the default, replace CM by INC.
+ */
+unsigned int Ultrasonic::read(uint8_t und) {
   return timing() / und / 2;  //distance by divisor
+}
+
+/*
+ * This method is too verbal, so, it's deprecated.
+ * Use read() instead.
+ */
+unsigned int Ultrasonic::distanceRead(uint8_t und) {
+  return read(und);
 }

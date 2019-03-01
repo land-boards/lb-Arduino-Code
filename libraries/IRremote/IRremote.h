@@ -56,7 +56,7 @@
 #define SEND_AIWA_RC_T501    1
 
 #define DECODE_LG            1
-#define SEND_LG              1 
+#define SEND_LG              1
 
 #define DECODE_SANYO         1
 #define SEND_SANYO           0 // NOT WRITTEN
@@ -75,6 +75,9 @@
 
 #define DECODE_PRONTO        0 // This function doe not logically make sense
 #define SEND_PRONTO          1
+
+#define DECODE_LEGO_PF       0 // NOT WRITTEN
+#define SEND_LEGO_PF         1
 
 //------------------------------------------------------------------------------
 // When sending a Pronto code we request to send either the "once" code
@@ -115,6 +118,7 @@ typedef
 		SHARP,
 		DENON,
 		PRONTO,
+		LEGO_PF,
 	}
 decode_type_t;
 
@@ -243,6 +247,10 @@ class IRrecv
 #		if DECODE_DENON
 			bool  decodeDenon (decode_results *results) ;
 #		endif
+//......................................................................
+#		if DECODE_LEGO_PF
+			bool  decodeLegoPowerFunctions (decode_results *results) ;
+#		endif
 } ;
 
 //------------------------------------------------------------------------------
@@ -251,7 +259,18 @@ class IRrecv
 class IRsend
 {
 	public:
-		IRsend () { }
+#ifdef USE_SOFT_CARRIER
+
+		IRsend(int pin = SEND_PIN)
+		{
+			sendPin = pin;
+		}
+#else
+
+		IRsend()
+		{
+		}
+#endif
 
 		void  custom_delay_usec (unsigned long uSecs);
 		void  enableIROut 		(int khz) ;
@@ -327,6 +346,24 @@ class IRsend
 #		if SEND_PRONTO
 			void  sendPronto     (char* code,  bool repeat,  bool fallback) ;
 #		endif
+//......................................................................
+#		if SEND_LEGO_PF
+			void  sendLegoPowerFunctions (uint16_t data, bool repeat = true) ;
+#		endif
+
+#ifdef USE_SOFT_CARRIER
+	private:
+		int sendPin;
+
+		unsigned int periodTime;
+		unsigned int periodOnTime;
+		
+		void sleepMicros(unsigned long us);
+		void sleepUntilMicros(unsigned long targetTime);
+
+#else
+		const int sendPin = SEND_PIN;
+#endif
 } ;
 
 #endif

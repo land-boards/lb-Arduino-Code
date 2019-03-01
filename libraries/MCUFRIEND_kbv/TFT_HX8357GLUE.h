@@ -11,6 +11,9 @@
 
 //#include <Adafruit_GFX.h>    // Core graphics library
 #include <MCUFRIEND_kbv.h> // Hardware-specific library
+#if !defined(AVR)
+#include <avr/dtostrf.h>
+#endif
 
 #include <Fonts/FreeSans9pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>

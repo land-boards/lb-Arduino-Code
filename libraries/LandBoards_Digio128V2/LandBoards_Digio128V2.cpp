@@ -12,6 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <inttypes.h>
 
 #include "LandBoards_digio128V2.h"
@@ -33,14 +34,21 @@ Digio128::Digio128(void)
 
 void Digio128::begin(void)
 {
+	Serial.println("begin: called");
 	boardBaseAddr = MCP23017_ADDRESS;
+	Wire.begin();
+	Serial.println("begin: set base address");
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
-#endif
+#endif 
+	Serial.println("begin: ignored twbr write");
+
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128; chipNum++)	// Set all pins to input by default
 	{
 		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);
+		Serial.println("begin: in loop");
 		writeRegister(chipNum, MCP23017_IODIRA, 0xff);		// bits are all inputs
+		Serial.println("begin: called writeRegister");
 		writeRegister(chipNum, MCP23017_GPPUA, 0x00);		// Turn off pullups
 		writeRegister(chipNum, MCP23017_IODIRB, 0xff);		// bits are all inputs
 		writeRegister(chipNum, MCP23017_GPPUB, 0x00);		// Turn off pullups
@@ -184,14 +192,24 @@ uint8_t Digio128::readRegister(uint8_t chipAddr, uint8_t regAddr)
 	Wire.requestFrom(boardBaseAddr + chipAddr, 1);
 	return Wire.read();
 }
-	
+
 ////////////////////////////////////////////////////////////////////////////
 // void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
 void Digio128::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 {
+	Serial.println("writeRegister: in fcn");
+	Serial.print("writeRegister: chipAddr = ");
+	Serial.println(chipAddr);
+	Serial.print("writeRegister: regAddr = ");
+	Serial.println(regAddr);
+	Serial.print("writeRegister: value = ");
+	Serial.println(value);
+	Serial.print("writeRegister: boardBaseAddr = ");
+	Serial.println(boardBaseAddr);
 	Wire.beginTransmission(boardBaseAddr + chipAddr);
+	Serial.println("writeRegister: begin transmission");
 	Wire.write(regAddr);
 	Wire.write(value);
 	Wire.endTransmission();

@@ -33,7 +33,7 @@
 
 #include "Adafruit_NeoPixel.h"
 
-#if defined(NRF52)
+#if defined(NRF52) || defined(NRF52_SERIES)
 #include "nrf.h"
 
 // Interrupt is only disabled if there is no PWM device available
@@ -43,7 +43,7 @@
 
 // Constructor when length, pin and type are known at compile-time:
 Adafruit_NeoPixel::Adafruit_NeoPixel(uint16_t n, uint8_t p, neoPixelType t) :
-  begun(false), brightness(0), pixels(NULL), endTime(0)  
+  begun(false), brightness(0), pixels(NULL), endTime(0)
 {
   updateType(t);
   updateLength(n);
@@ -110,7 +110,7 @@ void Adafruit_NeoPixel::updateType(neoPixelType t) {
   }
 }
 
-#if defined(ESP8266) 
+#if defined(ESP8266)
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
 extern "C" void ICACHE_RAM_ATTR espShow(
   uint8_t pin, uint8_t *pixels, uint32_t numBytes, uint8_t type);
@@ -130,7 +130,7 @@ void Adafruit_NeoPixel::show(void) {
   // allows the mainline code to start generating the next frame of data
   // rather than stalling for the latch.
   while(!canShow());
-  // endTime is a private member (rather than global var) so that mutliple
+  // endTime is a private member (rather than global var) so that multiple
   // instances on different pins can be quickly issued in succession (each
   // instance doesn't delay the next).
 
@@ -145,7 +145,7 @@ void Adafruit_NeoPixel::show(void) {
   // to the PORT register as needed.
 
   // NRF52 may use PWM + DMA (if available), may not need to disable interrupt
-#ifndef NRF52
+#if !( defined(NRF52) || defined(NRF52_SERIES) )
   noInterrupts(); // Need 100% focus on instruction timing
 #endif
 
@@ -1058,7 +1058,7 @@ void Adafruit_NeoPixel::show(void) {
 
 // ARM MCUs -- Teensy 3.0, 3.1, LC, Arduino Due ---------------------------
 
-#if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy 3.0 & 3.1
+#if defined(TEENSYDUINO) && defined(KINETISK) // Teensy 3.0, 3.1, 3.2, 3.5, 3.6
 #define CYCLES_800_T0H  (F_CPU / 4000000)
 #define CYCLES_800_T1H  (F_CPU / 1250000)
 #define CYCLES_800      (F_CPU /  800000)
@@ -1115,7 +1115,7 @@ void Adafruit_NeoPixel::show(void) {
   }
 #endif // NEO_KHZ400
 
-#elif defined(__MKL26Z64__) // Teensy-LC
+#elif defined(TEENSYDUINO) && defined(__MKL26Z64__) // Teensy-LC
 
 #if F_CPU == 48000000
   uint8_t          *p   = pixels,
@@ -1201,18 +1201,18 @@ void Adafruit_NeoPixel::show(void) {
 #error "Sorry, only 48 MHz is supported, please set Tools > CPU Speed to 48 MHz"
 #endif // F_CPU == 48000000
 
-// Begin of support for NRF52832 based boards  -------------------------
+// Begin of support for nRF52 based boards  -------------------------
 
-#elif defined(NRF52)
+#elif defined(NRF52) || defined(NRF52_SERIES)
 // [[[Begin of the Neopixel NRF52 EasyDMA implementation
 //                                    by the Hackerspace San Salvador]]]
 // This technique uses the PWM peripheral on the NRF52. The PWM uses the
-// EasyDMA feature included on the chip. This technique loads the duty 
-// cycle configuration for each cycle when the PWM is enabled. For this 
+// EasyDMA feature included on the chip. This technique loads the duty
+// cycle configuration for each cycle when the PWM is enabled. For this
 // to work we need to store a 16 bit configuration for each bit of the
 // RGB(W) values in the pixel buffer.
 // Comparator values for the PWM were hand picked and are guaranteed to
-// be 100% organic to preserve freshness and high accuracy. Current 
+// be 100% organic to preserve freshness and high accuracy. Current
 // parameters are:
 //   * PWM Clock: 16Mhz
 //   * Minimum step time: 62.5ns
@@ -1242,13 +1242,13 @@ void Adafruit_NeoPixel::show(void) {
 #define CTOPVAL_400KHz         40UL            // 2.5us
 
 // ---------- END Constants for the EasyDMA implementation -------------
-// 
+//
 // If there is no device available an alternative cycle-counter
 // implementation is tried.
-// The nRF52832 runs with a fixed clock of 64Mhz. The alternative
+// The nRF52 runs with a fixed clock of 64Mhz. The alternative
 // implementation is the same as the one used for the Teensy 3.0/1/2 but
 // with the Nordic SDK HAL & registers syntax.
-// The number of cycles was hand picked and is guaranteed to be 100% 
+// The number of cycles was hand picked and is guaranteed to be 100%
 // organic to preserve freshness and high accuracy.
 // ---------- BEGIN Constants for cycle counter implementation ---------
 #define CYCLES_800_T0H  18  // ~0.36 uS
@@ -1277,8 +1277,14 @@ void Adafruit_NeoPixel::show(void) {
 
   // Try to find a free PWM device, which is not enabled
   // and has no connected pins
-  NRF_PWM_Type* PWM[3] = {NRF_PWM0, NRF_PWM1, NRF_PWM2};
-  for(int device = 0; device<3; device++) {
+  NRF_PWM_Type* PWM[] = {
+    NRF_PWM0, NRF_PWM1, NRF_PWM2
+#ifdef NRF_PWM3
+    ,NRF_PWM3
+#endif
+  };
+
+  for(int device = 0; device < (sizeof(PWM)/sizeof(PWM[0])); device++) {
     if( (PWM[device]->ENABLE == 0)                            &&
         (PWM[device]->PSEL.OUT[0] & PWM_PSEL_OUT_CONNECT_Msk) &&
         (PWM[device]->PSEL.OUT[1] & PWM_PSEL_OUT_CONNECT_Msk) &&
@@ -1289,10 +1295,10 @@ void Adafruit_NeoPixel::show(void) {
       break;
     }
   }
-  
+
   // only malloc if there is PWM device available
   if ( pwm != NULL ) {
-    #ifdef ARDUINO_FEATHER52 // use thread-safe malloc
+    #ifdef ARDUINO_NRF52_ADAFRUIT // use thread-safe malloc
       pixels_pattern = (uint16_t *) rtos_malloc(pattern_size);
     #else
       pixels_pattern = (uint16_t *) malloc(pattern_size);
@@ -1307,7 +1313,7 @@ void Adafruit_NeoPixel::show(void) {
     for(uint16_t n=0; n<numBytes; n++) {
       uint8_t pix = pixels[n];
 
-      for(uint8_t mask=0x80, i=0; mask>0; mask >>= 1, i++) {
+      for(uint8_t mask=0x80; mask>0; mask >>= 1) {
         #ifdef NEO_KHZ400
         if( !is800KHz ) {
           pixels_pattern[pos] = (pix & mask) ? MAGIC_T1H_400KHz : MAGIC_T0H_400KHz;
@@ -1322,8 +1328,8 @@ void Adafruit_NeoPixel::show(void) {
     }
 
     // Zero padding to indicate the end of que sequence
-    pixels_pattern[++pos] = 0 | (0x8000); // Seq end
-    pixels_pattern[++pos] = 0 | (0x8000); // Seq end
+    pixels_pattern[pos++] = 0 | (0x8000); // Seq end
+    pixels_pattern[pos++] = 0 | (0x8000); // Seq end
 
     // Set the wave mode to count UP
     pwm->MODE = (PWM_MODE_UPDOWN_Up << PWM_MODE_UPDOWN_Pos);
@@ -1383,7 +1389,7 @@ void Adafruit_NeoPixel::show(void) {
     // But we have to wait for the flag to be set.
     while(!pwm->EVENTS_SEQEND[0])
     {
-      #ifdef ARDUINO_FEATHER52
+      #ifdef ARDUINO_NRF52_ADAFRUIT
       yield();
       #endif
     }
@@ -1399,7 +1405,7 @@ void Adafruit_NeoPixel::show(void) {
 
     pwm->PSEL.OUT[0] = 0xFFFFFFFFUL;
 
-    #ifdef ARDUINO_FEATHER52  // use thread-safe free
+    #ifdef ARDUINO_NRF52_ADAFRUIT  // use thread-safe free
       rtos_free(pixels_pattern);
     #else
       free(pixels_pattern);
@@ -1408,7 +1414,7 @@ void Adafruit_NeoPixel::show(void) {
   // ---------------------------------------------------------------------
   else{
     // Fall back to DWT
-    #ifdef ARDUINO_FEATHER52
+    #ifdef ARDUINO_NRF52_ADAFRUIT
       // Bluefruit Feather 52 uses freeRTOS
       // Critical Section is used since it does not block SoftDevice execution
       taskENTER_CRITICAL();
@@ -1421,7 +1427,8 @@ void Adafruit_NeoPixel::show(void) {
       __disable_irq();
     #endif
 
-    uint32_t pinMask = 1UL << g_ADigitalPinMap[pin];
+    NRF_GPIO_Type* nrf_port = (NRF_GPIO_Type*) digitalPinToPort(pin);
+    uint32_t pinMask = digitalPinToBitMask(pin);
 
     uint32_t CYCLES_X00     = CYCLES_800;
     uint32_t CYCLES_X00_T1H = CYCLES_800_T1H;
@@ -1454,7 +1461,7 @@ void Adafruit_NeoPixel::show(void) {
           while(DWT->CYCCNT - cyc < CYCLES_X00);
           cyc  = DWT->CYCCNT;
 
-          NRF_GPIO->OUTSET |= pinMask;
+          nrf_port->OUTSET |= pinMask;
 
           if(pix & mask) {
             while(DWT->CYCCNT - cyc < CYCLES_X00_T1H);
@@ -1462,7 +1469,7 @@ void Adafruit_NeoPixel::show(void) {
             while(DWT->CYCCNT - cyc < CYCLES_X00_T0H);
           }
 
-          NRF_GPIO->OUTCLR |= pinMask;
+          nrf_port->OUTCLR |= pinMask;
         }
       }
       while(DWT->CYCCNT - cyc < CYCLES_X00);
@@ -1479,7 +1486,7 @@ void Adafruit_NeoPixel::show(void) {
     }
 
     // Enable interrupts again
-    #ifdef ARDUINO_FEATHER52
+    #ifdef ARDUINO_NRF52_ADAFRUIT
       taskEXIT_CRITICAL();
     #elif defined(NRF52_DISABLE_INT)
       __enable_irq();
@@ -1487,7 +1494,7 @@ void Adafruit_NeoPixel::show(void) {
   }
 // END of NRF52 implementation
 
-#elif defined(__SAMD21G18A__)  || defined(__SAMD21E18A__) || defined(__SAMD21J18A__) // Arduino Zero, Gemma/Trinket M0, SODAQ Autonomo and others
+#elif defined (__SAMD21E17A__) || defined(__SAMD21G18A__)  || defined(__SAMD21E18A__) || defined(__SAMD21J18A__) // Arduino Zero, Gemma/Trinket M0, SODAQ Autonomo and others
   // Tried this with a timer/counter, couldn't quite get adequate
   // resolution.  So yay, you get a load of goofball NOPs...
 
@@ -1559,6 +1566,83 @@ void Adafruit_NeoPixel::show(void) {
         bitMask = 0x80;
       }
     }
+  }
+#endif
+
+#elif defined (__SAMD51__) // M4 @ 120mhz
+  // Tried this with a timer/counter, couldn't quite get adequate
+  // resolution.  So yay, you get a load of goofball NOPs...
+
+  uint8_t  *ptr, *end, p, bitMask, portNum;
+  uint32_t  pinMask;
+
+  portNum =  g_APinDescription[pin].ulPort;
+  pinMask =  1ul << g_APinDescription[pin].ulPin;
+  ptr     =  pixels;
+  end     =  ptr + numBytes;
+  p       = *ptr++;
+  bitMask =  0x80;
+
+  volatile uint32_t *set = &(PORT->Group[portNum].OUTSET.reg),
+                    *clr = &(PORT->Group[portNum].OUTCLR.reg);
+
+#ifdef NEO_KHZ400 // 800 KHz check needed only if 400 KHz support enabled
+  if(is800KHz) {
+#endif
+    for(;;) {
+      if(p & bitMask) { // ONE
+        // High 800ns
+        *set = pinMask;
+        asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;");
+        // Low 450ns
+        *clr = pinMask;
+        asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop;");
+      } else { // ZERO
+        // High 400ns
+        *set = pinMask;
+        asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop;");
+        // Low 850ns
+        *clr = pinMask;
+        asm("nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;"
+            "nop; nop; nop; nop; nop; nop; nop; nop;");
+      }
+      if(bitMask >>= 1) {
+        // Move on to the next pixel
+        asm("nop;");
+      } else {
+        if(ptr >= end) break;
+        p       = *ptr++;
+        bitMask = 0x80;
+      }
+    }
+#ifdef NEO_KHZ400
+  } else { // 400 KHz bitstream
+    // ToDo!
   }
 #endif
 
@@ -1644,7 +1728,87 @@ void Adafruit_NeoPixel::show(void) {
   }
 #endif
 
-#else // Other ARM architecture -- Presumed Arduino Due
+#elif defined (NRF51)
+  uint8_t          *p   = pixels,
+                    pix, count, mask;
+  int32_t         num = numBytes;
+  unsigned int bitmask = ( 1 << g_ADigitalPinMap[pin] );
+// https://github.com/sandeepmistry/arduino-nRF5/blob/dc53980c8bac27898fca90d8ecb268e11111edc1/variants/BBCmicrobit/variant.cpp
+
+  volatile unsigned int *reg = (unsigned int *) (0x50000000UL + 0x508);
+
+// https://github.com/sandeepmistry/arduino-nRF5/blob/dc53980c8bac27898fca90d8ecb268e11111edc1/cores/nRF5/SDK/components/device/nrf51.h
+// http://www.iot-programmer.com/index.php/books/27-micro-bit-iot-in-c/chapters-micro-bit-iot-in-c/47-micro-bit-iot-in-c-fast-memory-mapped-gpio?showall=1
+// https://github.com/Microsoft/pxt-neopixel/blob/master/sendbuffer.asm
+
+  asm volatile(
+    // "cpsid i" ; disable irq
+
+    //    b .start
+    "b  L%=_start"                    "\n\t"
+    // .nextbit:               ;            C0
+    "L%=_nextbit:"                    "\n\t"          //;            C0
+    //    str r1, [r3, #0]    ; pin := hi  C2
+    "strb %[bitmask], [%[reg], #0]"   "\n\t"          //; pin := hi  C2
+    //    tst r6, r0          ;            C3
+    "tst %[mask], %[pix]"             "\n\t"//          ;            C3
+    //    bne .islate         ;            C4
+    "bne L%=_islate"                  "\n\t"          //;            C4
+    //    str r1, [r2, #0]    ; pin := lo  C6
+    "strb %[bitmask], [%[reg], #4]"   "\n\t"          //; pin := lo  C6
+    // .islate:
+    "L%=_islate:"                     "\n\t"
+    //    lsrs r6, r6, #1     ; r6 >>= 1   C7
+    "lsr %[mask], %[mask], #1"       "\n\t"          //; r6 >>= 1   C7
+    //    bne .justbit        ;            C8
+    "bne L%=_justbit"                 "\n\t"          //;            C8
+
+    //    ; not just a bit - need new byte
+    //    adds r4, #1         ; r4++       C9
+    "add %[p], #1"                   "\n\t"          //; r4++       C9
+    //    subs r5, #1         ; r5--       C10
+    "sub %[num], #1"                 "\n\t"          //; r5--       C10
+    //    bcc .stop           ; if (r5<0) goto .stop  C11
+    "bcc L%=_stop"                    "\n\t"          //; if (r5<0) goto .stop  C11
+    // .start:
+    "L%=_start:"
+    //    movs r6, #0x80      ; reset mask C12
+    "movs %[mask], #0x80"             "\n\t"          //; reset mask C12
+    //    nop                 ;            C13
+    "nop"                             "\n\t"          //;            C13
+
+    // .common:               ;             C13
+    "L%=_common:"                     "\n\t"          //;            C13
+    //    str r1, [r2, #0]   ; pin := lo   C15
+    "strb %[bitmask], [%[reg], #4]"   "\n\t"          //; pin := lo  C15
+    //    ; always re-load byte - it just fits with the cycles better this way
+    //    ldrb r0, [r4, #0]  ; r0 := *r4   C17
+    "ldrb  %[pix], [%[p], #0]"        "\n\t"          //; r0 := *r4   C17
+    //    b .nextbit         ;             C20
+    "b L%=_nextbit"                   "\n\t"          //;             C20
+
+    // .justbit: ; C10
+    "L%=_justbit:"                    "\n\t"          //; C10
+    //    ; no nops, branch taken is already 3 cycles
+    //    b .common ; C13
+    "b L%=_common"                    "\n\t"          //; C13
+
+    // .stop:
+    "L%=_stop:"                       "\n\t"
+    //    str r1, [r2, #0]   ; pin := lo
+    "strb %[bitmask], [%[reg], #4]"   "\n\t"          //; pin := lo
+    //    cpsie i            ; enable irq
+
+    : [p] "+r" (p),
+    [pix] "=&r" (pix),
+    [count] "=&r" (count),
+    [mask] "=&r" (mask),
+    [num] "+r" (num)
+    : [bitmask] "r" (bitmask),
+    [reg] "r" (reg)
+  );
+
+#elif defined(__SAM3X8E__) // Arduino Due
 
   #define SCALE      VARIANT_MCK / 2UL / 1000000UL
   #define INST       (2UL * F_CPU / VARIANT_MCK)
@@ -1813,14 +1977,14 @@ void Adafruit_NeoPixel::show(void) {
     }
   }
 
-#else 
+#else
 #error Architecture not supported
 #endif
 
 
 // END ARCHITECTURE SELECT ------------------------------------------------
 
-#ifndef NRF52
+#if !( defined(NRF52) || defined(NRF52_SERIES) )
   interrupts();
 #endif
 
@@ -1909,6 +2073,32 @@ void Adafruit_NeoPixel::setPixelColor(uint16_t n, uint32_t c) {
     p[rOffset] = r;
     p[gOffset] = g;
     p[bOffset] = b;
+  }
+}
+
+// Fills all or a given start+length of strip. Arguments:
+// Packed RGB color (0 if unspecified, effectively a strip clear operation).
+// Index if first pixel (0 if unspecified - beginning of strip).
+// Pixel count (if unspecified, fills to end of strip).
+void Adafruit_NeoPixel::fill(uint32_t c, uint16_t first, uint16_t count) {
+  uint16_t i, end;
+
+  if(first >= numLEDs) {
+    return; // If first LED is past end of strip, nothing to do
+  }
+
+  // Calculate the index ONE AFTER the last pixel to fill
+  if(count == 0) {
+    // Fill to end of strip
+    end = numLEDs;
+  } else {
+    // Ensure that the loop won't go past the last pixel
+    end = first + count;
+    if(end > numLEDs) end = numLEDs;
+  }
+
+  for(i = first; i < end; i++) {
+    this->setPixelColor(i, c);
   }
 }
 
@@ -2019,3 +2209,63 @@ uint8_t Adafruit_NeoPixel::getBrightness(void) const {
 void Adafruit_NeoPixel::clear() {
   memset(pixels, 0, numBytes);
 }
+
+/* A PROGMEM (flash mem) table containing 8-bit unsigned sine wave (0-255).
+   Copy & paste this snippet into a Python REPL to regenerate:
+import math
+for x in range(256):
+    print("{:3},".format(int((math.sin(x/128.0*math.pi)+1.0)*127.5+0.5))),
+    if x&15 == 15: print
+*/
+static const uint8_t PROGMEM _sineTable[256] = {
+  128,131,134,137,140,143,146,149,152,155,158,162,165,167,170,173,
+  176,179,182,185,188,190,193,196,198,201,203,206,208,211,213,215,
+  218,220,222,224,226,228,230,232,234,235,237,238,240,241,243,244,
+  245,246,248,249,250,250,251,252,253,253,254,254,254,255,255,255,
+  255,255,255,255,254,254,254,253,253,252,251,250,250,249,248,246,
+  245,244,243,241,240,238,237,235,234,232,230,228,226,224,222,220,
+  218,215,213,211,208,206,203,201,198,196,193,190,188,185,182,179,
+  176,173,170,167,165,162,158,155,152,149,146,143,140,137,134,131,
+  128,124,121,118,115,112,109,106,103,100, 97, 93, 90, 88, 85, 82,
+   79, 76, 73, 70, 67, 65, 62, 59, 57, 54, 52, 49, 47, 44, 42, 40,
+   37, 35, 33, 31, 29, 27, 25, 23, 21, 20, 18, 17, 15, 14, 12, 11,
+   10,  9,  7,  6,  5,  5,  4,  3,  2,  2,  1,  1,  1,  0,  0,  0,
+    0,  0,  0,  0,  1,  1,  1,  2,  2,  3,  4,  5,  5,  6,  7,  9,
+   10, 11, 12, 14, 15, 17, 18, 20, 21, 23, 25, 27, 29, 31, 33, 35,
+   37, 40, 42, 44, 47, 49, 52, 54, 57, 59, 62, 65, 67, 70, 73, 76,
+   79, 82, 85, 88, 90, 93, 97,100,103,106,109,112,115,118,121,124};
+
+/* Similar to above, but for an 8-bit gamma-correction table.
+   Copy & paste this snippet into a Python REPL to regenerate:
+import math
+gamma=2.6
+for x in range(256):
+    print("{:3},".format(int(math.pow((x)/255.0,gamma)*255.0+0.5))),
+    if x&15 == 15: print
+*/
+static const uint8_t PROGMEM _gammaTable[256] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,
+    1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2,  3,  3,  3,  3,
+    3,  3,  4,  4,  4,  4,  5,  5,  5,  5,  5,  6,  6,  6,  6,  7,
+    7,  7,  8,  8,  8,  9,  9,  9, 10, 10, 10, 11, 11, 11, 12, 12,
+   13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20,
+   20, 21, 21, 22, 22, 23, 24, 24, 25, 25, 26, 27, 27, 28, 29, 29,
+   30, 31, 31, 32, 33, 34, 34, 35, 36, 37, 38, 38, 39, 40, 41, 42,
+   42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
+   58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 71, 72, 73, 75,
+   76, 77, 78, 80, 81, 82, 84, 85, 86, 88, 89, 90, 92, 93, 94, 96,
+   97, 99,100,102,103,105,106,108,109,111,112,114,115,117,119,120,
+  122,124,125,127,129,130,132,134,136,137,139,141,143,145,146,148,
+  150,152,154,156,158,160,162,164,166,168,170,172,174,176,178,180,
+  182,184,186,188,191,193,195,197,199,202,204,206,209,211,213,215,
+  218,220,223,225,227,230,232,235,237,240,242,245,247,250,252,255};
+
+uint8_t Adafruit_NeoPixel::sine8(uint8_t x) const {
+  return pgm_read_byte(&_sineTable[x]); // 0-255 in, 0-255 out
+}
+
+uint8_t Adafruit_NeoPixel::gamma8(uint8_t x) const {
+  return pgm_read_byte(&_gammaTable[x]); // 0-255 in, 0-255 out
+}
+

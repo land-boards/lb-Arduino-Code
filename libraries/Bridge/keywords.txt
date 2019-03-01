@@ -68,7 +68,7 @@ runShellCommandAsynchronously	KEYWORD2
 readMessage	KEYWORD2
 writeMessage	KEYWORD2
 writeJSON	KEYWORD2
-message Available	KEYWORD2
+messageAvailable	KEYWORD2
 
 # HttpClient Class
 getAsynchronously	KEYWORD2

@@ -1,3 +1,6 @@
+[![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
+[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.png?v=103)](https://opensource.org/licenses/mit-license.php)
+
 Ultrasonic
 ===========
 
@@ -18,7 +21,7 @@ It is very easy to connect an ultrasound module to the Arduino. For example, if 
 
 If you are using a module with three pins (like  **Ping)))** or **Seeed SEN136B5B**), you can conect the **sig** pin module on pin **13** of the Arduino.
 
-#### You can use the [Fritzing](http://fritzing.org/home/)(_.fzz_) files inside [extras](https://github.com/ErickSimoes/Ultrasonic/tree/master/extras) to draw your prototypes.
+> You can use the [Fritzing](http://fritzing.org/home/)(_.fzz_) files inside [extras](https://github.com/ErickSimoes/Ultrasonic/tree/master/extras) to draw your prototypes.
 
 How to use:
 ---------------
@@ -32,7 +35,7 @@ The idea is to provide a simpler environment possible. To do this, simply follow
     - In the list, look for ```Ultrasonic by Erick Simões```;
     - Click on ```Install```.
 
-    Alternatively, you can download the library [here](https://github.com/ErickSimoes/Ultrasonic/archive/v1.0.1.zip) and import the ```.zip``` file into the IDE (see how to import a library [here](https://www.arduino.cc/en/Guide/Libraries#toc4)).
+    > Alternatively, you can download the library [here](https://github.com/ErickSimoes/Ultrasonic/archive/master.zip) and import the ```.zip``` file into the IDE (see how to import a library [here](https://www.arduino.cc/en/Guide/Libraries#toc4)).
 2. **Importing on code**
 
     To import the library to your code, just write at the beginning of the code ```#include <Ultrasonic.h>``` or, in the Arduino IDE, click in ```Sketch > Include Library > Ultrasonic``` (_will have the same result_).
@@ -48,21 +51,21 @@ The idea is to provide a simpler environment possible. To do this, simply follow
     ```
 4. **Discovering the distance**
 
-    Having initialized a variable, you can run hers from the method that returns the distance read by module Ultrasonic: ```distanceRead()```
+    Having initialized a variable, you can run hers from the method that returns the distance read by module Ultrasonic: ```read()```:
     ```c++
-    ultrasonic.distanceRead()
+    ultrasonic.read()
     ```
 5. **Only this?**
 
-    Yes. That's it. By default, the value returned from the function  ```distanceRead()``` is the distance in centimeters.
+    Yes. That's it. By default, the value returned from the function  ```read()``` is the distance in centimeters.
 
 6. **Seriously?**
 
     You can still do a little more determining the unit of measurement that will be returned (centimeters (CM) or inches (INC)).
     ```c++
-    ultrasonic.distanceRead()    // distance in CM
-    ultrasonic.distanceRead(CM)  // distance in CM
-    ultrasonic.distanceRead(INC) // distance in INC
+    ultrasonic.read()    // distance in CM
+    ultrasonic.read(CM)  // distance in CM
+    ultrasonic.read(INC) // distance in INC
     ```
     You can also use more than one ultrasound module:
     ```c++
