@@ -39,8 +39,10 @@ Digio32::Digio32(void)
 
 void Digio32::begin(uint8_t baseAddr)
 {
-	boardBaseAddr = MCP23017_ADDRESS + baseAddr;	// baseAddr set by jumpers
+	boardBaseAddr = MCP23017_ADDRESS + (baseAddr&7);	// baseAddr set by jumpers
+#if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT; chipNum++)	// Set all pins to input by default
 	{
 		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);

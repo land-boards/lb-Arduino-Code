@@ -57,8 +57,8 @@ public:
     I2C_eeprom(const uint8_t deviceAddress, const unsigned int deviceSize);
 
     void begin();
-    int writeByte(const uint16_t memoryAddress, const uint8_t value);
-    int writeBlock(const uint16_t memoryAddress, const uint8_t* buffer, const uint16_t length);
+    int writeByte(const uint16_t memoryAddress, uint8_t value);
+    int writeBlock(const uint16_t memoryAddress, uint8_t* buffer, int length);
     int setBlock(const uint16_t memoryAddress, const uint8_t value, const uint16_t length);
 
     uint8_t readByte(const uint16_t memoryAddress);
@@ -83,8 +83,8 @@ private:
      */
     void _beginTransmission(const uint16_t memoryAddress);
 
-    int _pageBlock(const uint16_t memoryAddress, const uint8_t* buffer, const uint16_t length, const bool incrBuffer);
-    int _WriteBlock(const uint16_t memoryAddress, const uint8_t* buffer, const uint8_t length);
+    int _pageBlock(const uint16_t memoryAddress, uint8_t* buffer, uint16_t length, const bool incrBuffer);
+    int _WriteBlock(const uint16_t memoryAddress, uint8_t* buffer, int length);
     uint8_t _ReadBlock(const uint16_t memoryAddress, uint8_t* buffer, const uint8_t length);
 
     void waitEEReady();

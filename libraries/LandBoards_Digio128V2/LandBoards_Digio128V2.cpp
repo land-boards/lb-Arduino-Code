@@ -8,6 +8,7 @@
 //		Chip access (16-bits) via writeGPIOAB, readGPIOAB
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO-128
+//	2019-02-28 - Added support for STM32F1 "blus pill" boards
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>
@@ -33,7 +34,9 @@ Digio128::Digio128(void)
 void Digio128::begin(void)
 {
 	boardBaseAddr = MCP23017_ADDRESS;
+#if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128; chipNum++)	// Set all pins to input by default
 	{
 		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);

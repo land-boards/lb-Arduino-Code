@@ -5,6 +5,7 @@
 // Card has an MCP23008 chip
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+// 2019-02-28 - Added support for STN32F1 "blue pill" board
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef LandBoards_I2CIO8_h

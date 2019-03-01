@@ -7,6 +7,7 @@
 //  	Bit access (4 bits) via digitalWrite, digitalRead, pinMode
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+//	2019-02-28 - Added support for STM32F1 "blus pill" boards
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>

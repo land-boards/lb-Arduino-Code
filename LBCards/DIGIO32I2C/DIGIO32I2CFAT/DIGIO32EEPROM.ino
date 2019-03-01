@@ -39,7 +39,7 @@ void eepromRead(void)
   Serial.println("Reading EEPROM");
   delay(10);
 
-  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
+  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, 96);
   readBuff[96] = 0;
 
   Serial.print("Family=");
@@ -165,11 +165,11 @@ void eepromWrite(void)
   Serial.print("len of buffer=");
   Serial.println(sizeof(myEep));
 
-  eeprom.writeBlock(0, (const uint8_t*) myEep.signature, 96);
+  eeprom.writeBlock(0, (uint8_t*) myEep.signature, 96);
   Serial.println("reading block");
   delay(10);
 
-  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
+  eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff,  96);
 
   Serial.print("Family=");
   for (int loopv = 0; loopv < 4; loopv++)

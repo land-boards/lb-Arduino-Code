@@ -82,7 +82,7 @@ void I2C_eeprom::begin()
 
 
 
-int I2C_eeprom::writeByte(const uint16_t memoryAddress, const uint8_t data)
+int I2C_eeprom::writeByte(const uint16_t memoryAddress, uint8_t data)
 {
     int rv = _WriteBlock(memoryAddress, &data, 1);
     return rv;
@@ -97,7 +97,7 @@ int I2C_eeprom::setBlock(const uint16_t memoryAddress, const uint8_t data, const
     return rv;
 }
 
-int I2C_eeprom::writeBlock(const uint16_t memoryAddress, const uint8_t* buffer, const uint16_t length)
+int I2C_eeprom::writeBlock(const uint16_t memoryAddress, uint8_t* buffer, int length)
 {
     int rv = _pageBlock(memoryAddress, buffer, length, true);
     return rv;
@@ -178,7 +178,7 @@ int I2C_eeprom::determineSize()
 // _pageBlock aligns buffer to page boundaries for writing.
 // and to TWI buffer size
 // returns 0 = OK otherwise error
-int I2C_eeprom::_pageBlock(const uint16_t memoryAddress, const uint8_t* buffer, const uint16_t length, const bool incrBuffer)
+int I2C_eeprom::_pageBlock(const uint16_t memoryAddress, uint8_t* buffer, uint16_t length, const bool incrBuffer)
 {
     uint16_t addr = memoryAddress;
     uint16_t len = length;
@@ -214,7 +214,7 @@ void I2C_eeprom::_beginTransmission(const uint16_t memoryAddress)
 
 // pre: length <= this->_pageSize  && length <= I2C_TWIBUFFERSIZE;
 // returns 0 = OK otherwise error
-int I2C_eeprom::_WriteBlock(const uint16_t memoryAddress, const uint8_t* buffer, const uint8_t length)
+int I2C_eeprom::_WriteBlock(const uint16_t memoryAddress, uint8* buffer, int length)
 {
     waitEEReady();
 
