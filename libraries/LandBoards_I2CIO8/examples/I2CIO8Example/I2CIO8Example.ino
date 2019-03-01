@@ -10,6 +10,8 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
+#include <Arduino.h>
+#include <stdint.h>
 #include <LandBoards_I2CIO8.h>
 
 LandBoards_I2CIO8 MyI2CIO8;
@@ -29,8 +31,8 @@ void setup()
 
 void loop()
 {
-  uint8 lastJumpers = 0;
-  uint8 allJumpers = 0;
+  uint8_t lastJumpers = 0;
+  uint8_t allJumpers = 0;
   while(1)
   {
     allJumpers = MyI2CIO8.readAllJumpers();
