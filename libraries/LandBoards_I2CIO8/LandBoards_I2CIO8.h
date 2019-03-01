@@ -55,15 +55,17 @@ class LandBoards_I2CIO8
     LandBoards_I2CIO8(void);
 	void begin(void);
 	void begin(uint8_t);
+	void pinMode(uint8_t, uint8_t);
+	void digitalWrite(uint8_t, uint8_t);
+	uint8_t digitalRead(uint8_t);
+	void pullUp(uint8_t, uint8_t);
+	void writeOLAT(uint8_t);
+	uint8_t readOLAT();
 	void writeLED(uint8_t,uint8_t);			// Writes to a single LED
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper
 	uint8_t readAllJumpers(void);
-	void pinMode(uint8_t, uint8_t);
   private:
-	void digitalWrite(uint8_t, uint8_t);
-	uint8_t digitalRead(uint8_t);
-	uint8_t boardBaseAddr;
-	void pullUp(uint8_t, uint8_t);
+	uint8_t i2caddr;
 	void write8(uint8_t addr, uint8_t data);
 	uint8_t read8(uint8_t addr);
 };

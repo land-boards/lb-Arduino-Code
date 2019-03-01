@@ -29,8 +29,23 @@ void setup()
 
 void loop()
 {
-  MyI2CIO8.writeLED(LED0, MyI2CIO8.readJumper(H4JUMPER));
-  MyI2CIO8.writeLED(LED1, MyI2CIO8.readJumper(H5JUMPER));
-  MyI2CIO8.writeLED(LED2, MyI2CIO8.readJumper(H6JUMPER));
-  MyI2CIO8.writeLED(LED3, MyI2CIO8.readJumper(H7JUMPER));
+  uint8 lastJumpers = 0;
+  uint8 allJumpers = 0;
+  while(1)
+  {
+    allJumpers = MyI2CIO8.readAllJumpers();
+    if (lastJumpers != allJumpers)
+    {
+      if ((lastJumpers & 1) != (allJumpers & 1))
+        MyI2CIO8.writeLED(LED0, allJumpers & 1);
+      if ((lastJumpers & 2) != (allJumpers & 2))
+        MyI2CIO8.writeLED(LED1, (allJumpers >> 1) & 1);
+      if ((lastJumpers & 4) != (allJumpers & 4))
+        MyI2CIO8.writeLED(LED2, (allJumpers >> 2) & 1);
+      if ((lastJumpers & 8) != (allJumpers & 8))
+        MyI2CIO8.writeLED(LED3, (allJumpers >> 3) & 1);
+      lastJumpers = allJumpers;
+    }
+    //delay(250);
+  }
 }
