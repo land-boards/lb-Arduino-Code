@@ -3,15 +3,20 @@
 //  Created by Douglas Gilliland. 2015-11-23
 //  LandBoards_I2CIO8-8 is a card which has an MCP23008 8-bit port expander
 //	Communication with the card is via I2C Two-wire interface
-//  This library allows for both bit access
-//  	Bit access (4 bits) via digitalWrite, digitalRead, pinMode
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+//	Base address of the card is set by jumpers to one of eight addresses
 //	2019-02-28 - Added support for STM32F1 "blus pill" boards
+////////////////////////////////////////////////////////////////////////////
+//	Library class supports multiple types of access:
+//		Arduino-ish (bit) oriented
+//      Byte oriented
+//      I2C Low Level Driver (I2C register access)oriented
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <inttypes.h>
 
 #include "LandBoards_I2CIO8.h"
 
@@ -26,11 +31,12 @@ LandBoards_I2CIO8::LandBoards_I2CIO8(void)
 
 ////////////////////////////////////////////////////////////////////////////
 // begin(addr) - Initialize the card
+// addr - can be either the 0x20-0x27 or 0x00-0x07
 ////////////////////////////////////////////////////////////////////////////
 
 void LandBoards_I2CIO8::begin(uint8_t addr)
 {
-	i2caddr = addr;
+	boardBaseAddr = MCP23008_ADDRESS + (addr&7);
 	Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
@@ -40,7 +46,7 @@ void LandBoards_I2CIO8::begin(uint8_t addr)
 	write8(MCP23008_INTCON,0x00);
 	write8(MCP23008_IPOL,0xf0);
 	write8(MCP23008_GPINTEN,0xf0);
-	read8(MCP23008_GPIO);
+//	read8(MCP23008_GPIO);
 	return;
 }
 
@@ -172,10 +178,10 @@ uint8_t LandBoards_I2CIO8::digitalRead(uint8_t bit)
 
 uint8_t LandBoards_I2CIO8::read8(uint8_t addr) 
 {
-	Wire.beginTransmission(MCP23008_ADDRESS | i2caddr);
+	Wire.beginTransmission(boardBaseAddr);
 	Wire.write((uint8_t)addr);	
 	Wire.endTransmission();
-	Wire.requestFrom(MCP23008_ADDRESS | i2caddr, 1);
+	Wire.requestFrom(MCP23008_ADDRESS | boardBaseAddr, 1);
 	return Wire.read();
 }
 
@@ -185,7 +191,7 @@ uint8_t LandBoards_I2CIO8::read8(uint8_t addr)
 
 void LandBoards_I2CIO8::write8(uint8_t addr, uint8_t data) 
 {
-	Wire.beginTransmission(MCP23008_ADDRESS | i2caddr);
+	Wire.beginTransmission(boardBaseAddr);
 	Wire.write((uint8_t)addr);
 	Wire.write((uint8_t)data);
 	Wire.endTransmission();

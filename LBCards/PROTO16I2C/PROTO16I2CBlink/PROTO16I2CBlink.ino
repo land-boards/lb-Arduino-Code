@@ -2,37 +2,45 @@
 // PROTO16-I2C Example code
 // Make all 16 lines outputs
 // Blink each line, one at a time
+// 2019-03-01 - Tested with Adafruit_MCP23017 library v1.0.3
+// 2019-03-01 - Working on STM32F1
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
 #include "Adafruit_MCP23017.h"
 
-Adafruit_MCP23017 mcp0;   // Uses the Adafruit MCP23017 library
-
-#define PORT0 0
+Adafruit_MCP23017 mcp;   // Uses the Adafruit MCP23017 library
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //  setup() - Set bit 0 pin to Output
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void setup() {
-  mcp0.begin(1);      // use default address 0
-//  TWBR = 12;    // go to 400 KHz I2C speed mode
-
-  mcp0.pinMode(PORT0, OUTPUT);
+void setup() 
+{
+  mcp.begin(0);      // use default chip offset 0 (Adafruit library adds 0x20)
+#if defined(ARDUINO_ARCH_AVR)
+  TWBR = 12;      // go to 400 KHz I2C speed mode
+#endif
+  for (int port = 0; port < 16; port++)
+  {
+    mcp.pinMode(port, OUTPUT);
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // loop() - flip the pins up and down around forever
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void loop() {
-
-  while(1)
+void loop()
+{
+  while (1)
   {
-    mcp0.digitalWrite(PORT0, HIGH);
-    delay(250);
-    mcp0.digitalWrite(PORT0, LOW);
+    for (int port = 0; port < 16; port++)
+    {
+      mcp.digitalWrite(port, HIGH);
+      delay(250);
+      mcp.digitalWrite(port, LOW);
+      delay(100);
+    }
   }
 }
-

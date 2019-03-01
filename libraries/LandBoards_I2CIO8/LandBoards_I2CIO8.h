@@ -62,7 +62,7 @@ class LandBoards_I2CIO8
   private:
 	void digitalWrite(uint8_t, uint8_t);
 	uint8_t digitalRead(uint8_t);
-	uint8_t i2caddr;
+	uint8_t boardBaseAddr;
 	void pullUp(uint8_t, uint8_t);
 	void write8(uint8_t addr, uint8_t data);
 	uint8_t read8(uint8_t addr);

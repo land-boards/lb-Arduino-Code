@@ -3,12 +3,10 @@
 //  Created by Douglas Gilliland. 2017-06-05
 //  DIGIO32_I2C is a card which has 2 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
-//  This library allows for both bit access and chip access to the card
-//  	Bit access (32 bits) via digitalWrite, digitalRead, pinMode
-//		Chip access (16-bits) via writeOLATAB, readGPIOAB
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO32_I2C
 //	Base address of the card is set by jumpers to one of four addresses
+//	2019-02-28 - Added support for STM32F1 "blus pill" boards
 ////////////////////////////////////////////////////////////////////////////
 //	Library class supports multiple types of access:
 //		Arduino-ish (bit) oriented
@@ -20,7 +18,7 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
-#include <LandBoards_DIGIO32_I2C.h>
+#include "LandBoards_DIGIO32_I2C.h"
 
 ////////////////////////////////////////////////////////////////////////////
 // Digio32 constructor - has no address since the card uses all 0x20-0x27
@@ -40,6 +38,7 @@ Digio32::Digio32(void)
 void Digio32::begin(uint8_t baseAddr)
 {
 	boardBaseAddr = MCP23017_ADDRESS + (baseAddr&7);	// baseAddr set by jumpers
+	Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    	// go to 400 KHz I2C speed mode
 #endif
