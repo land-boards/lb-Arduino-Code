@@ -214,7 +214,7 @@ void I2C_eeprom::_beginTransmission(const uint16_t memoryAddress)
 
 // pre: length <= this->_pageSize  && length <= I2C_TWIBUFFERSIZE;
 // returns 0 = OK otherwise error
-int I2C_eeprom::_WriteBlock(const uint16_t memoryAddress, uint8* buffer, int length)
+int I2C_eeprom::_WriteBlock(const uint16_t memoryAddress, uint8_t * buffer, int length)
 {
     waitEEReady();
 
