@@ -1,6 +1,3 @@
-#ifndef LANDBOARDS_DIGIO128_64_h
-#define LANDBOARDS_DIGIO128_64_h
-
 ////////////////////////////////////////////////////////////////////////////
 //  LandBoards_Digio128_64_V2.h - Library for Land Boards DigIO-128/64 card
 //  Created by Douglas Gilliland. 2017-06-05
@@ -15,7 +12,10 @@
 // Card has 4x MCP23017 chips
 ////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
+#ifndef LANDBOARDS_DIGIO128_64_h
+#define LANDBOARDS_DIGIO128_64_h
+
+//#include <Wire.h>
 #include <inttypes.h>
 #include <Arduino.h>
 

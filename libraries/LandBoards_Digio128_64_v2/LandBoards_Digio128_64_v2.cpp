@@ -6,11 +6,14 @@
 //  This library allows for both bit access and chip access to the card
 //  	Bit access (128 bits) via digitalWrite, digitalRead, pinMode
 //		Chip access (16-bits) via writeGPIOAB, readGPIOAB
+//  Boards are for sale at:
+//	https://www.tindie.com/products/land_boards/
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO-128
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <inttypes.h>
 
 #include "LandBoards_digio128_64_V2.h"
@@ -32,9 +35,14 @@ Digio128_64::Digio128_64(void)
 
 void Digio128_64::begin(void)
 {
-	boardBaseAddr = MCP23017_ADDRESS;
+	i2caddr = MCP23017_ADDRESS;
+	Wire.begin();			// Join I2C as a master (void = master)
 #if defined(ARDUINO_ARCH_AVR)
-	TWBR = 12;    	// go to 400 KHz I2C speed mode
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
 #endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128_64; chipNum++)	// Set all pins to input by default
 	{
@@ -177,10 +185,10 @@ uint16_t Digio128_64::readGPIOAB(uint8_t chip)
 
 uint8_t Digio128_64::readRegister(uint8_t chipAddr, uint8_t regAddr)
 {
-	Wire.beginTransmission(boardBaseAddr + chipAddr);
+	Wire.beginTransmission(i2caddr + chipAddr);
 	Wire.write(regAddr);
 	Wire.endTransmission();
-	Wire.requestFrom(boardBaseAddr + chipAddr, 1);
+	Wire.requestFrom(i2caddr + chipAddr, 1);
 	return Wire.read();
 }
 	
@@ -190,7 +198,7 @@ uint8_t Digio128_64::readRegister(uint8_t chipAddr, uint8_t regAddr)
 
 void Digio128_64::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 {
-	Wire.beginTransmission(boardBaseAddr + chipAddr);
+	Wire.beginTransmission(i2caddr + chipAddr);
 	Wire.write(regAddr);
 	Wire.write(value);
 	Wire.endTransmission();
