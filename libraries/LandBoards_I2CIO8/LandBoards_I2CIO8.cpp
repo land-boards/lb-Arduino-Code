@@ -197,36 +197,36 @@ void LandBoards_I2CIO8::writeOLAT(uint8_t value)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// readOLAT(void)
+// readGPIO(void)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_I2CIO8::readOLAT(void)
+uint8_t LandBoards_I2CIO8::readGPIO(void)
 {
-	return (read8(MCP23008_OLAT));
+	return (read8(MCP23008_GPIO));
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t read8(addr) 
+// uint8_t read8(regAddr) 
 // https://www.arduino.cc/en/Reference/WireRequestFrom
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_I2CIO8::read8(uint8_t addr) 
+uint8_t LandBoards_I2CIO8::read8(uint8_t regAddr) 
 {
 	Wire.beginTransmission(i2caddr);
-	Wire.write((uint8_t)addr);	
+	Wire.write((uint8_t)regAddr);	
 	Wire.endTransmission();
 	Wire.requestFrom(i2caddr, 1);		// get 1 byte
 	return Wire.read();
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void LandBoards_I2CIO8::write8(addr, data) 
+// void LandBoards_I2CIO8::write8(regAddr, value) 
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_I2CIO8::write8(uint8_t addr, uint8_t data) 
+void LandBoards_I2CIO8::write8(uint8_t regAddr, uint8_t value) 
 {
 	Wire.beginTransmission(i2caddr);
-	Wire.write((uint8_t)addr);
-	Wire.write((uint8_t)data);
+	Wire.write((uint8_t)regAddr);
+	Wire.write((uint8_t)value);
 	Wire.endTransmission();
 }

@@ -60,7 +60,7 @@ class LandBoards_I2CIO8
 	uint8_t digitalRead(uint8_t);
 	void pullUp(uint8_t, uint8_t);
 	void writeOLAT(uint8_t);
-	uint8_t readOLAT();
+	uint8_t readGPIO();
 	void writeLED(uint8_t,uint8_t);			// Writes to a single LED
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper
 	uint8_t readAllJumpers(void);
