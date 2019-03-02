@@ -32,7 +32,13 @@ void LandBoards_I2CIO8X::begin(uint8_t addr)
 	i2caddr = addr;
 
 	Wire.begin();
-	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#if defined(ARDUINO_ARCH_AVR)
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
 	write8(MCP23008_IODIR,0xff);
 	write8(MCP23008_GPIO, 0x00);
 	write8(MCP23008_INTCON,0x00);
