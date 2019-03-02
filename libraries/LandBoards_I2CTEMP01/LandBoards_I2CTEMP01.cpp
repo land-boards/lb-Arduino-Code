@@ -28,14 +28,19 @@ void LandBoards_I2CTEMP01::begin(uint8_t addr)
 	configShadow = 0;
 
 	Wire.begin();
-
+#if defined(ARDUINO_ARCH_AVR)
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif	
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
 	Wire.write((uint8_t)TCN75A_CONFIG);           			// Register Point to config register
 	Wire.endTransmission();           						// Command to read bytes
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
 	Wire.write((uint8_t)configShadow);	           			// Clear the config shadow
 	Wire.endTransmission();           						// Command to read bytes
-	TWBR = 12;
 }
 
 ////////////////////////////////////////////////////////////////////////////
