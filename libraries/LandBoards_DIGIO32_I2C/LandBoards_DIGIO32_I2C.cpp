@@ -40,7 +40,11 @@ void Digio32::begin(uint8_t baseAddr)
 	boardBaseAddr = MCP23017_ADDRESS + (baseAddr&7);	// baseAddr set by jumpers
 	Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
-	TWBR = 12;    	// go to 400 KHz I2C speed mode
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
 #endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT; chipNum++)	// Set all pins to input by default
 	{
