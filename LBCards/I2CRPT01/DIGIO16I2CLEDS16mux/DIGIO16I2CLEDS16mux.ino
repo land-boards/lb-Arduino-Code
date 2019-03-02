@@ -17,7 +17,6 @@ void setup()
   mux.begin(0);   // start the mux
   mux.setI2CChannel(0);
   mcp0.begin(0);      // use default address 0
-  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   for (port = 0; port < 16; port++)
     mcp0.pinMode(port, OUTPUT);

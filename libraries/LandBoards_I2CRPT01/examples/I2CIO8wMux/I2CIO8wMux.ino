@@ -15,7 +15,6 @@ void setup()
   mux.begin(0);   // start the mux
   mux.setI2CChannel(0);
   myI2CIO8.begin(0);      // use default address 0
-  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   for (port = 0; port < 4; port++)
     myI2CIO8.pinMode(port, OUTPUT);
@@ -34,4 +33,3 @@ void loop()
     myI2CIO8.writeLED(port, LOW);
   }
 }
-

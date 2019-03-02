@@ -98,7 +98,6 @@ void setup()
   mux.setI2CChannel(SEL_OLED);
   displayInit();                // Hardware specific function to set up the display
   menuCard.begin(1);            // pass the address of the mcp23008 on the menu card
-  TWBR = 12;    // go to 400 KHz I2C speed mode
 
   displayInit();
 //  u8g.setFont(u8g_font_unifont);
