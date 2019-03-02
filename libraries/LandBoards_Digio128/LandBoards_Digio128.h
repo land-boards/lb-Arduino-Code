@@ -1,14 +1,19 @@
+#ifndef LandBoards_digio128_h
+#define LandBoards_digio128_h
+
 ////////////////////////////////////////////////////////////////////////////
 //  landboards_digio128.h - Library for Land Boards DigIO-128 card
 //  Created by Douglas Gilliland. 2015-11-23
+//  Digio-128 is a card which has 8 of MCP23017 16-bit port expanders
+//	Communication with the card is via I2C Two-wire interface
+//  This library allows for both bit access and chip access to the card
+//  	Bit access (128 bits) via digitalWrite, digitalRead, pinMode
+//		Chip access (16-bits) via writeGPIOAB, readGPIOAB
+//  Webpage for the card is at:
+//	http://land-boards.com/blwiki/index.php?title=DIGIO-128
 ////////////////////////////////////////////////////////////////////////////
 // Card has 8x MCP23017 chips
-// This library uses the Adafruit MCP23017 library
-// This library encapsulates the Adafruit library into a card level library
 ////////////////////////////////////////////////////////////////////////////
-
-#ifndef LandBoards_digio128_h
-#define LandBoards_digio128_h
 
 #include <inttypes.h>
 #include <Arduino.h>

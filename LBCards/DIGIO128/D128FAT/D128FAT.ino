@@ -74,7 +74,13 @@ void setup()
   mcp5.begin(5);
   mcp6.begin(6);
   mcp7.begin(7);
-//  TWBR = 12;    // go to 400 KHz I2C speed mode
+#if defined(ARDUINO_ARCH_AVR)
+  TWBR = 12;          // go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+  Wire.setClock(400000);  // 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
 
   for (uint8_t chip = 0; chip < 8; chip++)
   {
@@ -514,5 +520,3 @@ void eepromWrite(void)
   while ((readBuff[loopv] != 0) && (loopv < 128));
   Serial.println("");
 }
-
-

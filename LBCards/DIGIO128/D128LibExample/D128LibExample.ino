@@ -4,8 +4,8 @@
 // Blink each line, one at a time
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
-#include <LandBoards_Digio128.h>
+//#include <Wire.h>
+#include <LandBoards_Digio128V2.h>
 
 Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
 
@@ -16,7 +16,6 @@ Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
 void setup(void)
 {
   Dio128.begin();              // connects to the 8 MCP23017 parts
-  TWBR = 12;                   // go to 400 KHz I2C speed mode
   for (uint8_t pin = 0; pin < 128; pin++)
     Dio128.pinMode(pin, OUTPUT);    // make all pins into INPUTs
 }
@@ -32,7 +31,6 @@ void loop(void)
     Dio128.digitalWrite(pin, HIGH);
     delay(100);
     Dio128.digitalWrite(pin, LOW);
-    delay(100);
+    delay(10);
   }
 }
-

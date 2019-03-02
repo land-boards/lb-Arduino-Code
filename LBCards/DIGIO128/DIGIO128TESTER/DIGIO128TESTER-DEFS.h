@@ -1,5 +1,5 @@
-#ifndef DRVTEST_DEFS
-
+#ifndef DRVTEST_DEFS_h
+#define DRVTEST_DEFS_h
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UUT specific code
 // Port Mappings
@@ -18,13 +18,6 @@
 
 void blinkFailLedForever(void);
 uint8_t runStates(uint8_t);
-
-// Chip level bit access
-//void mcpWrite(uint8_t chipNum, uint8_t chNum, uint8_t val);
-//void mcpPinMode(uint8_t chipNum, uint8_t chNum, uint8_t val);
-//void mcpPullUp(uint8_t chipNum, uint8_t chNum, uint8_t val);
-//uint8_t mcpRead(uint8_t chipNum, uint8_t chNum);
-
 
 #endif
 

@@ -23,7 +23,13 @@ void setup() {
   mcp5.begin(5);      // use default address 0
   mcp6.begin(6);      // use default address 0
   mcp7.begin(7);      // use default address 0
-  TWBR = 12;    // go to 400 KHz I2C speed mode
+#if defined(ARDUINO_ARCH_AVR)
+  TWBR = 12;          // go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+  Wire.setClock(400000);  // 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
 
   uint8_t chip;
   uint8_t port;

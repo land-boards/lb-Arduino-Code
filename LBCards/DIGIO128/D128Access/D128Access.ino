@@ -3,7 +3,7 @@
 // Directly access bits on the card from the Serial Port
 //////////////////////////////////////////////////////////
 
-#include <LandBoards_Digio128V2.h>
+#include <LandBoards_Digio128.h>
 #include <LandBoards_I2CRPT01.h>
 
 //////////////////////////////////////////////////////////
@@ -26,7 +26,6 @@ void setup()
   Serial.begin(9600);
   myI2CMux.begin();
   myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-  TWBR = 12;    // go to 400 KHz I2C speed mode
   Serial.println(F("H=Set a bit High, L=Set a bit Low, R=Read bit (no dir change), P=Poll input bit"));
   Dio128.begin();
 }
@@ -204,5 +203,3 @@ uint32_t stringToHex(char * theStringValue)
 //  Serial.println(hexVal,HEX);
   return (hexVal);
 }
-
-

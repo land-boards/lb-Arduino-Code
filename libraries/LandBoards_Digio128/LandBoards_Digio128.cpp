@@ -8,6 +8,7 @@
 //		Chip access (16-bits) via writeGPIOAB, readGPIOAB
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO-128
+//	Uses Adafruit library
 ////////////////////////////////////////////////////////////////////////////
 
 #include <Arduino.h>
@@ -40,7 +41,11 @@ void Digio128::begin(void)
 	mcp6.begin(6);
 	mcp7.begin(7);
 #if defined(ARDUINO_ARCH_AVR)
-	TWBR = 12;    	// go to 400 KHz I2C speed mode
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
 #endif
 	for (uint8_t pinNum = 0; pinNum < 16; pinNum++)	// Set all pins to input by default
 	{

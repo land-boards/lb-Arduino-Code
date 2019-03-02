@@ -5,7 +5,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
-#include <LandBoards_Digio128V2.h>
+#include <LandBoards_Digio128.h>
 
 Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
 
@@ -16,11 +16,8 @@ Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
 void setup(void)
 {
   Dio128.begin();              // connects to the 8 MCP23017 parts
-#if defined(ARDUINO_ARCH_AVR)
-  TWBR = 12;      // go to 400 KHz I2C speed mode
-#endif
   for (uint8_t pin = 0; pin < 128; pin++)
-    Dio128.pinMode(pin, INPUT);    // make all pins into INPUTs
+    Dio128.pinMode(pin, OUTPUT);    // make all pins into INPUTs
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,10 +31,6 @@ void loop(void)
     Dio128.digitalWrite(pin, HIGH);
     delay(100);
     Dio128.digitalWrite(pin, LOW);
+    delay(10);
   }
-  Dio128.writeGPIOAB(0,0x5555);              // write alternate bits
-  delay(1000);
-  Dio128.writeGPIOAB(0,~Dio128.readGPIOAB(0));  // alternate the bits
-  delay(1000);
 }
-
