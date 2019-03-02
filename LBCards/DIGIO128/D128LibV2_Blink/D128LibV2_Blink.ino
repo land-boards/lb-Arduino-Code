@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// D128LibExample code
+// D128LibV2Example code
 // Make all 128 lines outputs
 // Blink each line, one at a time
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
-#include <LandBoards_Digio128.h>
+//#include <Wire.h>
+#include <LandBoards_Digio128V2.h>
 
 Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
 
@@ -26,11 +26,8 @@ void setup(void)
 
 void loop(void)
 {
-  for (uint8_t pin = 0; pin < 128; pin++)    // bounce an LED through all the channels
-  {
-    Dio128.digitalWrite(pin, HIGH);
-    delay(100);
-    Dio128.digitalWrite(pin, LOW);
-    delay(10);
-  }
+  Dio128.digitalWrite(0, HIGH);
+  delay(250);
+  Dio128.digitalWrite(0, LOW);
+  delay(250);
 }
