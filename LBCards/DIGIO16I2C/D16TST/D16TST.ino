@@ -6,6 +6,7 @@
 // https://code.google.com/p/u8glib/wiki/u8glib?tm=6
 //////////////////////////////////////////////////////////////////////////////////
 
+#include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
 
@@ -139,4 +140,3 @@ void loop()
 
   menuNav();
 }
-
