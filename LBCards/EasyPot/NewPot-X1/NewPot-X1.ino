@@ -26,12 +26,19 @@
 // Each click of encoder includes four state changes
 // Eliminates LED and replaces with Digital Pot
 /////////////////////////////////////////////////////////////////////////////////////////
+// ATTiny support - board manager
+// https://github.com/SpenceKonde/ATTinyCore
+//  Add path to support files (File|Preferences|Additional Boards Manager URLs):
+//  Can use a comma to add to list or click the add box
+//  Add the following
+//    http://drazzy.com/package_drazzy.com_index.json
+/////////////////////////////////////////////////////////////////////////////////////////
 
 // ATtiny85 inputs/outputs
 const int EncoderA = 0;		// Encoder pins
 const int EncoderB = 1;
-const int MOSI = 2;			// SPI-POT pins
-const int SCK = 3;
+//static const int8_t MOSI = 2;			// SPI-POT pins
+//static const int8_t SCK = 3;
 const int CS = 4;
 
 // Globals
@@ -129,4 +136,3 @@ void setup()
 void loop()
 {
 }
-

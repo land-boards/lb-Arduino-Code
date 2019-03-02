@@ -42,7 +42,7 @@
 #include <inttypes.h>
 #include <SoftwareSerial.h>
 #include <Time.h>
-//#include <Sw5Way.h>
+#include <Sw5Way.h>
 #include <eepromanything.h>    // http://arduino.cc/playground/Code/EEPROMWriteAnything
 #include <EEPROM.h> 
 #include <SPI.h>
@@ -224,5 +224,3 @@ void drawVector(float angle)
   lastX = endX;
   lastY  = endY;
 }
-
-

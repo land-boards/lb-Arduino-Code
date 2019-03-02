@@ -1,3 +1,6 @@
+#ifndef LANDBOARDS_DIGIO128_64_h
+#define LANDBOARDS_DIGIO128_64_h
+
 ////////////////////////////////////////////////////////////////////////////
 //  LandBoards_Digio128_64_V2.h - Library for Land Boards DigIO-128/64 card
 //  Created by Douglas Gilliland. 2017-06-05
@@ -12,10 +15,7 @@
 // Card has 4x MCP23017 chips
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef LANDBOARDS_DIGIO128_64_h
-#define LANDBOARDS_DIGIO128_64_h
-
-//#include <Wire.h>
+#include <Wire.h>
 #include <inttypes.h>
 #include <Arduino.h>
 
@@ -69,12 +69,12 @@ class Digio128_64
 	void digitalWrite(uint8_t,uint8_t);		// Writes to a single bit
 	uint8_t digitalRead(uint8_t);			// Reads a single bit
 	void pinMode(uint8_t,uint8_t);			// Set the single bit direction (INPUT, INPUT_PULLUP, OUTPUT)
-	void writeGPIOAB(uint8_t,uint16_t);		// Write to a 16-bit chip
+	void writeOLAT(uint8_t,uint16_t);		// Write to a 16-bit chip
 	uint16_t readGPIOAB(uint8_t);			// Read from a 16-bit chip
   private:
-  	uint8_t boardBaseAddr;
-	uint8_t readRegister(uint8_t chipAddr, uint8_t addr);
-	void writeRegister(uint8_t chipAddr, uint8_t addr, uint8_t value);
+  	uint8_t i2caddr;
+	uint8_t read8(uint8_t chipAddr, uint8_t addr);
+	void write8(uint8_t chipAddr, uint8_t addr, uint8_t value);
 };
 
 #endif

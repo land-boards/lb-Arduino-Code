@@ -3,14 +3,19 @@
 //  Created by Douglas Gilliland. 2017-06-05
 //  Digio-128 is a card which has 8 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
-//  This library allows for both bit access and chip access to the card
-//  	Bit access (128 bits) via digitalWrite, digitalRead, pinMode
-//		Chip access (16-bits) via writeGPIOAB, readGPIOAB
+//	Part datasheet:
+//	https://www.microchip.com/wwwproducts/en/MCP23017
 //  Boards are for sale at:
 //	https://www.tindie.com/products/land_boards/
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO-128
+//	2019-03-02 - Added support for STM32F1 "blus pill" boards
 ////////////////////////////////////////////////////////////////////////////
+//	Library class supports multiple types of access:
+//		Arduino (bit) oriented
+//      Byte oriented
+//      I2C Low Level Driver (I2C register access)oriented
+//	https://playground.arduino.cc/Main/WireLibraryDetailedReference
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -30,7 +35,10 @@ Digio128_64::Digio128_64(void)
 ////////////////////////////////////////////////////////////////////////////
 // begin(void) - Initialize the card
 // Sets all bits to inputs
-// Consumes 8 of I2C Addresses (no selection)
+// Consumes 4 of I2C Addresses (no selection)
+// DIGIO-128 Card specific I/O configuration
+// Based on the following functions
+// https://www.arduino.cc/en/Reference/WireBegin
 ////////////////////////////////////////////////////////////////////////////
 
 void Digio128_64::begin(void)
@@ -46,53 +54,20 @@ void Digio128_64::begin(void)
 #endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128_64; chipNum++)	// Set all pins to input by default
 	{
-		// writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value);
-		writeRegister(chipNum, MCP23017_IODIRA, 0xff);		// bits are all inputs
-		writeRegister(chipNum, MCP23017_GPPUA, 0x00);		// Turn off pullups
-		writeRegister(chipNum, MCP23017_IODIRB, 0xff);		// bits are all inputs
-		writeRegister(chipNum, MCP23017_GPPUB, 0x00);		// Turn off pullups
+		write8(chipNum, MCP23017_IODIRA, 0xff);		// bits are all inputs
+		write8(chipNum, MCP23017_GPPUA, 0x00);		// Turn off pullups
+		write8(chipNum, MCP23017_GPIOA, 0x00);	// preset output bits to 0
+		write8(chipNum, MCP23017_INTCONA,0x00);	// Interrupt control
+		write8(chipNum, MCP23017_IPOLA,0xff);		// Special input polarity values for card
+		write8(chipNum, MCP23017_GPINTENA,0xff);	// Special interrupt on change values for card
+		write8(chipNum, MCP23017_IODIRB, 0xff);		// bits are all inputs
+		write8(chipNum, MCP23017_GPPUB, 0x00);		// Turn off pullups
+		write8(chipNum, MCP23017_GPIOB, 0x00);	// preset output bits to 0
+		write8(chipNum, MCP23017_INTCONB,0x00);	// Interrupt control
+		write8(chipNum, MCP23017_IPOLB,0xff);		// Special input polarity values for card
+		write8(chipNum, MCP23017_GPINTENB,0xff);	// Special interrupt on change values for card
 	}
 	return;
-}
-
-////////////////////////////////////////////////////////////////////////////
-// void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
-////////////////////////////////////////////////////////////////////////////
-
-void Digio128_64::digitalWrite(uint8_t bit, uint8_t wrVal)
-{
-	uint8_t regAdr;
-	uint8_t chipAddr;
-	uint8_t rdVal;
-	chipAddr = ((bit & CHIP_MASK_D128_64) >> CHIP_SHIFT);
-	if ((bit & 0x08) == 0)
-		regAdr = MCP23017_OLATA;
-	else
-		regAdr = MCP23017_OLATB;
-	rdVal = readRegister(chipAddr,regAdr);
-	if (wrVal == 0)
-		rdVal &= ~(1 << (bit&0x7));
-	else
-		rdVal |= (1 << (bit&0x7));
-	writeRegister(chipAddr, regAdr, rdVal);
-}
-
-////////////////////////////////////////////////////////////////////////////
-// uint8_t digitalRead(uint8_t bit)
-////////////////////////////////////////////////////////////////////////////
-
-uint8_t Digio128_64::digitalRead(uint8_t bit)
-{
-	uint8_t regAdr;
-	uint8_t chipAddr;
-	uint8_t rdVal;
-	chipAddr = ((bit & CHIP_MASK_D128_64) >> CHIP_SHIFT);
-	if ((bit & 0x08) == 0)
-		regAdr = MCP23017_GPIOA;
-	else
-		regAdr = MCP23017_GPIOB;
-	rdVal = readRegister(chipAddr,regAdr);
-	return ((rdVal>>(bit&0x7))&0x1);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -117,15 +92,6 @@ void Digio128_64::pinMode(uint8_t bit, uint8_t value)
 	uint8_t changeBit;	// The bit that changes in the register
 	changeBit = 1 << (bit & 0x7);
 	chipAddr = ((bit & CHIP_MASK_D128_64) >> CHIP_SHIFT);
-	// Serial.print("chipAddr: 0x");
-	// Serial.print(chipAddr,HEX);
-	// Serial.println("");
-	// Serial.print("bit: 0x");
-	// Serial.print(bit,HEX);
-	// Serial.println("");
-	// Serial.print("value: 0x");
-	// Serial.print(value,HEX);
-	// Serial.println("");
 	if ((bit & 0x08) == 0)	// A registers
 	{
 		puRegAdr = MCP23017_GPPUA;
@@ -136,38 +102,78 @@ void Digio128_64::pinMode(uint8_t bit, uint8_t value)
 		puRegAdr = MCP23017_GPPUB;
 		dirRegAdr = MCP23017_IODIRB;
 	}
-	rdPuVal = readRegister(chipAddr,puRegAdr);		// Read the previous pull-up reg value
-	rdDirVal = readRegister(chipAddr,dirRegAdr);	// Read the previous direction reg value
+	rdPuVal = read8(chipAddr,puRegAdr);		// Read the previous pull-up reg value
+	rdDirVal = read8(chipAddr,dirRegAdr);	// Read the previous direction reg value
 	if (value == INPUT_PULLUP)		// 
 	{
 		rdPuVal  |= changeBit;
-		writeRegister(chipAddr,puRegAdr,rdPuVal);
+		write8(chipAddr,puRegAdr,rdPuVal);
 		rdDirVal |= changeBit;
-		writeRegister(chipAddr,dirRegAdr,rdDirVal);
+		write8(chipAddr,dirRegAdr,rdDirVal);
 	}
 	else if (value == INPUT)
 	{
 		rdPuVal &= ~changeBit;
-		writeRegister(chipAddr,puRegAdr,rdPuVal);
+		write8(chipAddr,puRegAdr,rdPuVal);
 		rdDirVal |= changeBit;
-		writeRegister(chipAddr,dirRegAdr,rdDirVal);
+		write8(chipAddr,dirRegAdr,rdDirVal);
 	}
 	else if (value == OUTPUT)
 	{
 		rdDirVal &= ~changeBit;
-		writeRegister(chipAddr,dirRegAdr,rdDirVal);
+		write8(chipAddr,dirRegAdr,rdDirVal);
 	}
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
+// void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
+////////////////////////////////////////////////////////////////////////////
+
+void Digio128_64::digitalWrite(uint8_t bit, uint8_t wrVal)
+{
+	uint8_t regAdr;
+	uint8_t chipAddr;
+	uint8_t rdVal;
+	chipAddr = ((bit & CHIP_MASK_D128_64) >> CHIP_SHIFT);
+	if ((bit & 0x08) == 0)
+		regAdr = MCP23017_OLATA;
+	else
+		regAdr = MCP23017_OLATB;
+	rdVal = read8(chipAddr,regAdr);
+	if (wrVal == 0)
+		rdVal &= ~(1 << (bit&0x7));
+	else
+		rdVal |= (1 << (bit&0x7));
+	write8(chipAddr, regAdr, rdVal);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint8_t digitalRead(uint8_t bit)
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t Digio128_64::digitalRead(uint8_t bit)
+{
+	uint8_t regAdr;
+	uint8_t chipAddr;
+	uint8_t rdVal;
+	chipAddr = ((bit & CHIP_MASK_D128_64) >> CHIP_SHIFT);
+	if ((bit & 0x08) == 0)
+		regAdr = MCP23017_GPIOA;
+	else
+		regAdr = MCP23017_GPIOB;
+	rdVal = read8(chipAddr,regAdr);
+	return ((rdVal>>(bit&0x7))&0x1);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// void writeOLAT(chip,baData) - Write 16-bits of data at a time
 // There are eight chips on the card
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::writeGPIOAB(uint8_t chip, uint16_t baData)
+void Digio128_64::writeOLAT(uint8_t chip, uint16_t baData)
 {
-	writeRegister(chip,MCP23017_OLATA,((baData>>8)&0xff));
-	writeRegister(chip,MCP23017_OLATB,(baData&0xff));
+	write8(chip,MCP23017_OLATA,((baData>>8)&0xff));
+	write8(chip,MCP23017_OLATB,(baData&0xff));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -176,14 +182,14 @@ void Digio128_64::writeGPIOAB(uint8_t chip, uint16_t baData)
 
 uint16_t Digio128_64::readGPIOAB(uint8_t chip)
 {
-	return ((readRegister(chip,(MCP23017_GPIOB))<<8)|(readRegister(chip,MCP23017_GPIOA)));
+	return ((read8(chip,(MCP23017_GPIOB))<<8)|(read8(chip,MCP23017_GPIOA)));
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t Digio32::readRegister(uint8_t chipAddr, uint8_t regAddr)
+// uint8_t Digio32::read8(uint8_t chipAddr, uint8_t regAddr)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio128_64::readRegister(uint8_t chipAddr, uint8_t regAddr)
+uint8_t Digio128_64::read8(uint8_t chipAddr, uint8_t regAddr)
 {
 	Wire.beginTransmission(i2caddr + chipAddr);
 	Wire.write(regAddr);
@@ -193,10 +199,10 @@ uint8_t Digio128_64::readRegister(uint8_t chipAddr, uint8_t regAddr)
 }
 	
 ////////////////////////////////////////////////////////////////////////////
-// void Digio32::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+// void Digio32::write8(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+void Digio128_64::write8(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 {
 	Wire.beginTransmission(i2caddr + chipAddr);
 	Wire.write(regAddr);

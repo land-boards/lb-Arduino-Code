@@ -5,6 +5,8 @@
 //	Communication with the card is via I2C Two-wire interface
 //	Part datasheet:
 //	https://www.microchip.com/wwwproducts/en/MCP23017
+//  Boards are for sale at:
+//	https://www.tindie.com/products/land_boards/
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=DIGIO-128
 //	2019-02-28 - Added support for STM32F1 "blus pill" boards

@@ -126,7 +126,7 @@ void writeEEPROM(void)
     strcpy(myEep.vstr, "land-boards.com");
     strcpy(myEep.pstr, "DigIO16-I2C");
 
-    eeprom.writeBlock(0, (const uint8_t*) myEep.signature, 96);
+    eeprom.writeBlock(0, (uint8_t*) myEep.signature, 96);
     delay(10);
 
     eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
@@ -215,4 +215,3 @@ void testLEDsFcn(void)
   delay(500);
   menuCard.setLED(2, LOW);
 }
-

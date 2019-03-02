@@ -10,9 +10,11 @@
 //	http://land-boards.com/blwiki/index.php?title=LandBoards_MyMenu
 ////////////////////////////////////////////////////////////////////////////
 
-#include "LandBoards_MyMenu.h"
-
+#include <Wire.h>
+#include <Arduino.h>
 #include <inttypes.h>
+
+#include "LandBoards_MyMenu.h"
 
 ////////////////////////////////////////////////////////////////////////////
 // LandBoards_MyMenu constructor - As I learned by looking at the Adafruit LiquidCrystal 
@@ -29,14 +31,26 @@ LandBoards_MyMenu::LandBoards_MyMenu(void)
 void LandBoards_MyMenu::begin(int portNum)
 {
 	mcp.begin(portNum);   	// use default address 0	
-	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#if defined(ARDUINO_ARCH_AVR)
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
 	initPins();
 }
 
 void LandBoards_MyMenu::begin(void)
 {
 	mcp.begin();   	// use default address 0	
-	TWBR = 12;    	// go to 400 KHz I2C speed mode
+#if defined(ARDUINO_ARCH_AVR)
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
 	initPins();
 }
 

@@ -44,7 +44,7 @@ enum MENUITEMS              // MenuCode Customizable section
 
 uint8_t menuState;           // Menu State variable which holds the currently selected menu lin
 
-U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE, SCL, SDA);   // OLEDs without Reset of the Display
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE);   // OLEDs without Reset of the Display
 
 LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 
@@ -55,10 +55,16 @@ LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
 void setup(void)
 {
   menuState = FIRST_LINE_MENU;  // Set up the init menu state - Menu should show the first line selected
-  menuCard.begin(1);            // pass the address of the mcp23008 on the menu card
+  menuCard.begin(0);            // pass the address of the mcp23008 on the menu card
   u8x8.setI2CAddress(0x78);
   u8x8.begin();
-  TWBR = 12;                    // 400 KHz I2C
+#if defined(ARDUINO_ARCH_AVR)
+  TWBR = 12;          // go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+  Wire.setClock(400000);  // 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.draw2x2String(0,2,"MyMenu");
   u8x8.draw2x2String(0, 4, "   v2");
