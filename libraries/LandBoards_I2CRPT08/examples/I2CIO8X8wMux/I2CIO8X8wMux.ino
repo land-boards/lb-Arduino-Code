@@ -4,8 +4,7 @@
 // I2C-RPI-08 as UUT
 // Blink first LED on each I2CIO-8 card , one at a time
 
-#include <Wire.h>
-#include <LandBoards_I2CIO8.h>
+#include "LandBoards_I2CIO8.h"
 #include "LandBoards_I2CRPT08.h"
 
 LandBoards_I2CIO8 myI2CIO80;
@@ -95,4 +94,3 @@ void loop()
   myI2CIO87.writeLED(0, LOW);
   mux.setI2CChannel(7,0);
 }
-

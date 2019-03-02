@@ -21,10 +21,17 @@ LandBoards_I2CRPT08::LandBoards_I2CRPT08()
 
 void LandBoards_I2CRPT08::begin(uint8_t addr) 
 {
-	i2caddr = addr & 0x7;
+	i2caddr = PCA9544A_ADDRESS | (addr & 0x7);
 	Wire.begin();
+#if defined(ARDUINO_ARCH_AVR)
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or SAM processor.”
+#endif
 	ctrl_copy = 0;  // ctrl reg initialized 
-	Wire.beginTransmission(PCA9544A_ADDRESS | i2caddr);
+	Wire.beginTransmission(i2caddr);
 	Wire.write((byte)ctrl_copy);
 	Wire.endTransmission();
 }
@@ -51,7 +58,7 @@ void LandBoards_I2CRPT08::setI2CChannel(uint8_t chNum, uint8_t enableFlag)
 		ctrl_copy |= bitToWrite;
 	else
 		ctrl_copy &= ~bitToWrite;
-	Wire.beginTransmission(PCA9544A_ADDRESS | i2caddr);
+	Wire.beginTransmission(i2caddr);
 	Wire.write((byte)ctrl_copy);
 	Wire.endTransmission();
 	return;
@@ -63,6 +70,6 @@ void LandBoards_I2CRPT08::setI2CChannel(uint8_t chNum, uint8_t enableFlag)
 
 uint8_t LandBoards_I2CRPT08::getI2CChannel(void)
 {
-	Wire.requestFrom(PCA9544A_ADDRESS | i2caddr, 1);
+	Wire.requestFrom(i2caddr, 1);
 	return (Wire.read() & 0x7);
 }
