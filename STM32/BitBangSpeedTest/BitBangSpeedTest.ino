@@ -9,7 +9,7 @@
   
  */
 
-#define ON_BOARD_LED PB12
+#define ON_BOARD_LED 5
 
 // the setup function runs once when you press reset or power the board
 void setup() 
@@ -24,4 +24,3 @@ void loop()
   digitalWrite(ON_BOARD_LED, HIGH);   // turn the LED on (HIGH is the voltage level)
   digitalWrite(ON_BOARD_LED, LOW);    // turn the LED off by making the voltage LOW
 }
-
