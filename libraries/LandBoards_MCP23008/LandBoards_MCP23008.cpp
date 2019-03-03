@@ -175,7 +175,7 @@ uint8_t LandBoards_MCP23008::read8(uint8_t addr)
 	Wire.write((uint8_t)addr);	
 	Wire.endTransmission();
 	Wire.requestFrom(i2caddr, 1);
-	return Wire.read();
+	return (uint8_t)Wire.read();
 }
 
 ////////////////////////////////////////////////////////////////////////////
