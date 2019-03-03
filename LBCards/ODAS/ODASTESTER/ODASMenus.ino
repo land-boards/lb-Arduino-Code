@@ -53,6 +53,8 @@ void cardTestMenu(void)
 {
   int incomingByte = 0;   // for incoming serial data
   uint8_t testType = NO_TEST;
+  passCount = 0;
+  failCount = 0;
   Serial.println(F("L/S=Loop/Single, T=Test, B=Bounce LEDs, I=Int'l Tests, X=eXit sub-menu"));
   while (1)
   {
@@ -461,5 +463,3 @@ uint32_t stringToHex(char * theStringValue)
   //  Serial.println(hexVal);
   return (hexVal);
 }
-
-

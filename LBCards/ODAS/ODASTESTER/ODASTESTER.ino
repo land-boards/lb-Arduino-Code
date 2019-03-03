@@ -3,6 +3,16 @@
 // Test each card and channel
 // Read/write EEPROM if there is one
 //////////////////////////////////////////////////////////
+// Tester Hardware
+//  Arduino Nano card on NANO-BKOUT card
+//    http://land-boards.com/blwiki/index.php?title=NANO-BKOUT
+//  I2CRPT-01 I2C Multiplexer card
+//    http://land-boards.com/blwiki/index.php?title=I2C-RPT
+//  DIGIO32-I2C 32 bit I2C card
+//    http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C
+//  LED-32 card
+//    http://land-boards.com/blwiki/index.php?title=LED-32
+//////////////////////////////////////////////////////////
 
 #include <LandBoards_DIGIO32_I2C.h>
 #include <LandBoards_Digio128V2.h>
@@ -11,7 +21,7 @@
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
 #include <LandBoards_I2CRPT01.h>
-#include <Adafruit_MCP23008.h>
+//#include <Adafruit_MCP23008.h>
 #include <Adafruit_MCP23017.h>
 #include <LandBoards_MCP23008.h>
 

@@ -49,7 +49,7 @@ uint8_t readBitValue(uint8_t bitToCheck)
 uint8_t readBitDIGIO128(uint8_t bitToCheck)
 {
   uint8_t rdVal;
-  Serial.println(F("\nreadBitDIGIO128() - reached function"));
+  //Serial.println(F("\nreadBitDIGIO128() - reached function"));
   Dio128.pinMode(bitToCheck, INPUT_PULLUP);
   rdVal = Dio128.digitalRead(bitToCheck);
   return (rdVal);
@@ -62,7 +62,7 @@ uint8_t readBitDIGIO128(uint8_t bitToCheck)
 uint8_t readBitDIGIO128_64(uint8_t bitToCheck)
 {
   uint8_t rdVal;
-  Serial.println(F("\nreadBitDIGIO128() - reached function"));
+  //Serial.println(F("\nreadBitDIGIO128() - reached function"));
   Dio128_64.pinMode(bitToCheck, INPUT_PULLUP);
   rdVal = Dio128_64.digitalRead(bitToCheck);
   return (rdVal);
