@@ -3,8 +3,9 @@
 //  Created by Douglas Gilliland. 2015-11-23
 ////////////////////////////////////////////////////////////////////////////
 // Card has an MCP23008 chip
-//  Webpage for the card is at:
+//  Webpage for a card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
+// 2019-03-03 - Added support for STM32F1 "blue pill" board
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef LandBoards_MCP23008_h
@@ -50,7 +51,7 @@ class LandBoards_MCP23008
 	uint8_t digitalRead(uint8_t);
 	void pullUp(uint8_t, uint8_t);
 	void writeOLAT(uint8_t);
-	uint8_t readOLAT();
+	uint8_t readGPIO(void);
   private:
 	uint8_t i2caddr;
 	void write8(uint8_t addr, uint8_t data);

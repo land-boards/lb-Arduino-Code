@@ -103,22 +103,21 @@ void LandBoards_MCP23008::pinMode(uint8_t bit, uint8_t d)
 //  uint8_t pullUp(bit, d) 
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_MCP23008::pullUp(uint8_t bit, uint8_t d) 
+void LandBoards_I2CIO8::pullUp(uint8_t bit, uint8_t d) 
 {
 	uint8_t gppuCopy;
 	uint8_t dupGppu;
 	bit &= 7;
 	gppuCopy = read8(MCP23008_GPPU);
 	// set the pin and direction
-	if (d == HIGH) {
+	if (d == HIGH)
 		gppuCopy |= 1 << bit; 
-	} else {
+	else
 		gppuCopy &= ~(1 << bit);
-	}
-	// write the new pullup value only if there was a change
+	// write the new GPIO
 	if (gppuCopy != dupGppu)
 		write8(MCP23008_GPPU, gppuCopy);
-}
+	}
 
 ////////////////////////////////////////////////////////////////////////////
 //  uint8_t digitalWrite(uint8_t, uint8_t)
@@ -127,7 +126,6 @@ void LandBoards_MCP23008::pullUp(uint8_t bit, uint8_t d)
 void LandBoards_MCP23008::digitalWrite(uint8_t bit, uint8_t d) 
 {
 	uint8_t gpioCopy;
-
 	bit &= 7;
 	gpioCopy = read8(MCP23008_OLAT);
 	if (d == HIGH)
@@ -148,7 +146,7 @@ uint8_t LandBoards_MCP23008::digitalRead(uint8_t bit)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// writeOLAT(uint8_t value)
+// writeOLAT(uint8_t value)- write out an entire byte
 ////////////////////////////////////////////////////////////////////////////
 
 void LandBoards_MCP23008::writeOLAT(uint8_t value)
@@ -157,35 +155,36 @@ void LandBoards_MCP23008::writeOLAT(uint8_t value)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// readOLAT(void)
+// readGPIO(void)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_MCP23008::readOLAT(void)
+uint8_t LandBoards_MCP23008::readGPIO(void)
 {
-	return (read8(MCP23008_OLAT));
+	return (read8(MCP23008_GPIO));
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t read8(addr) 
+// uint8_t read8(regAddr) 
+// https://www.arduino.cc/en/Reference/WireRequestFrom
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_MCP23008::read8(uint8_t addr) 
+uint8_t LandBoards_MCP23008::read8(uint8_t regAddr) 
 {
 	Wire.beginTransmission(i2caddr);
-	Wire.write((uint8_t)addr);	
+	Wire.write((uint8_t)regAddr);	
 	Wire.endTransmission();
 	Wire.requestFrom(i2caddr, 1);
 	return (uint8_t)Wire.read();
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// void LandBoards_MCP23008::write8(addr, data) 
+// void LandBoards_MCP23008::write8(regAddr, data) 
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_MCP23008::write8(uint8_t addr, uint8_t data) 
+void LandBoards_MCP23008::write8(uint8_t regAddr, uint8_t value) 
 {
 	Wire.beginTransmission(i2caddr);
-	Wire.write((uint8_t)addr);
-	Wire.write((uint8_t)data);
+	Wire.write((uint8_t)regAddr);
+	Wire.write((uint8_t)value);
 	Wire.endTransmission();
 }
