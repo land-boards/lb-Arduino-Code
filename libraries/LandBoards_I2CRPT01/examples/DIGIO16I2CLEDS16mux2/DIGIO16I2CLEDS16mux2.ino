@@ -1,4 +1,3 @@
-
 // DIGIO16-I2C Example code
 // Make all 16 lines outputs
 // Blink each line, one at a time
@@ -43,4 +42,3 @@ void loop() {
     //      delay(250);
   }
 }
-

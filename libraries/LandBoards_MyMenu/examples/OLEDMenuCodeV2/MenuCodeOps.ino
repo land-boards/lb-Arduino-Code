@@ -8,7 +8,7 @@
 
 void runThingFcn(void)
 {
-  clearDisplay();
+  u8x8.clear();
   menuCard.setLED(2, HIGH);
   u8x8.drawString(0,2,"Running Thing");  // write something to the internal memory
   delay(500);
@@ -23,7 +23,7 @@ void runMonFcn(void)
 {
   double myTemp;
   uint8_t keyState;
-  clearDisplay();
+  u8x8.clear();
   menuCard.setLED(0, HIGH);
   do
   {
@@ -41,7 +41,7 @@ void runMonFcn(void)
 
 void Opt1Fcn(void)
 {
-  clearDisplay();
+  u8x8.clear();
   u8x8.drawString(0,1,"Selected");  // write something to the internal memory
   u8x8.drawString(0,2,"Option1");  // write something to the internal memory
   delay(2000);
@@ -53,7 +53,7 @@ void Opt1Fcn(void)
 
 void Opt2Fcn(void)
 {
-  clearDisplay();
+  u8x8.clear();
   u8x8.drawString(0,1,"Selected");  // write something to the internal memory
   u8x8.drawString(0,2,"Option2");  // write something to the internal memory
   delay(2000);
@@ -65,7 +65,7 @@ void Opt2Fcn(void)
 
 void testButtons(void)
 {
-  clearDisplay();
+  u8x8.clear();
   uint8_t keyState;
   u8x8.drawString(0,1,"Button tests");  // write something to the internal memory
   u8x8.drawString(0,2,"Press button");  // write something to the internal memory
@@ -100,7 +100,7 @@ void testButtons(void)
 
 void testLEDsFcn(void)
 {
-  clearDisplay();
+  u8x8.clear();
   u8x8.drawString(0,1,"Running");  // write something to the internal memory
   u8x8.drawString(0,2,"LED Tests");  // write something to the internal memory
   u8x8.drawString(0,3,"Select=exit");  // write something to the internal memory

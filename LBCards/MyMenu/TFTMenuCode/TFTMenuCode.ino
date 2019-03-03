@@ -1,29 +1,23 @@
 //////////////////////////////////////////////////////////////////////////////
-//  OneWL - One-Wire Data Logger.
+//  MenuCode - MenuCode Example.
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // Includes follow
 //////////////////////////////////////////////////////////////////////////////
 
-#include <SPI.h>
-#include <OneWire.h>
-#include <SD.h>
-#include <Wire.h>
-#include "RTClib.h"
-#include <LandBoards_OneWireLogger.h>
-#include <Adafruit_GFX.h>      // Core graphics library
-#include <Adafruit_ST7735.h>   // Hardware-specific library
+#include <LandBoards_OneWireLogger.h>     // Board Specific hardware config file
+#include <SPI.h>               // SPI library is needed to talk to the TFT display
+#include <Adafruit_GFX.h>      // Core graphics library for the TFT display
+#include <Adafruit_ST7735.h>   // Hardware-specific library for the TFT display
 
 //////////////////////////////////////////////////////////////////////////////
 // defines follow
 //////////////////////////////////////////////////////////////////////////////
 
-//#define SERIAL_OUT
-#undef SERIAL_OUT
+// Display specific colors and height of the display (in character rows)
 
-#define	TFT_RED      0x001F    // Colors are reversed on my display from Adafruit's library
-#define	TFT_BLUE     0xF800
+#define DISPLAY_ROWS   16        // TFT is 16 lines tall
 
 //////////////////////////////////////////////////////////////////////////////
 // enums follow
@@ -31,58 +25,29 @@
 
 enum MENUITEMS
 {
-  LOG2SCRN_MENU,
-  LOG2USB_MENU,
+  FIRST_LINE_MENU,
+  SECOND_LINE_MENU,
+  THIRD_LINE_MENU,
+  FIRST_SUB_MENU,
 };
 
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
 //////////////////////////////////////////////////////////////////////////////
 
-uint8_t menuState;  // Used to implement the menuing state machine
+uint8_t menuState;              // Menu State variable
 
-uint8_t sensorNumber;
-uint8_t sensorAddr;
-uint8_t firstRun;
-float temps1Wire[32];
-float fahrenheit;
-
-// class initializers - most initialize hardware
-LandBoards_OneWireLogger myOneWireLogger;
+LandBoards_OneWireLogger myOneWireLogger;  // instantiate the card initializer
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_CS, LCD_DC, LCD_RST);  // HW SPI
-OneWire  ds(ONE_WIRE);  // on pin 
-RTC_DS1307 RTC;
-
-DateTime setRTCTime;
 
 //////////////////////////////////////////////////////////////////////////////
-// the setup routine runs once when you press reset:
+// setup() runs when the card is powered up or reset is pressed
 //////////////////////////////////////////////////////////////////////////////
 
 void setup() 
 {
-  Serial.begin(115200);
-#ifdef SERIAL_OUT
-  Serial.print(F("1-Wire Logger"));
-#endif
-
-  // TFT init
-  analogWrite(BACKLIGHT, 0);
-  tft.initR(INITR_REDTAB);    // I actually have a black tab on my part
-
-  // Start up the One Wire Interface
-  sensorNumber = 0;
-
-  Wire.begin();
-  RTC.begin();
-  if (! RTC.isrunning() )
-  {
-    tft.print("Replace RTC Battery");
-    RTC.adjust(DateTime(__DATE__, __TIME__));   
-  }
-
-  // Set up the init menu state
-  menuState = LOG2SCRN_MENU;
+  displayInit();                // Hardware specific function to set up the display
+  menuState = FIRST_LINE_MENU;  // Set up the init menu state
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
