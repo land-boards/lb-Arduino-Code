@@ -81,35 +81,6 @@ void LandBoards_I2CIO8::begin(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// writeLED(bit,value)
-// D0-D3 are LEDs D0-D3
-////////////////////////////////////////////////////////////////////////////
-
-void LandBoards_I2CIO8::writeLED(uint8_t bit,uint8_t value)
-{
-	digitalWrite(bit, value);
-}
-
-////////////////////////////////////////////////////////////////////////////
-// readAllJumpers()
-// D4-D7 are H5-H8 jumpers
-////////////////////////////////////////////////////////////////////////////
-
-uint8_t LandBoards_I2CIO8::readAllJumpers(void)
-{
-	return ((read8(MCP23008_GPIO) & 0xf0) >> 4);
-}
-
-////////////////////////////////////////////////////////////////////////////
-// readJumper(uint8_t)
-////////////////////////////////////////////////////////////////////////////
-
-uint8_t LandBoards_I2CIO8::readJumper(uint8_t bit)
-{
-	return digitalRead(bit);
-}
-
-////////////////////////////////////////////////////////////////////////////
 // uint8_t PinMode(port, direction)
 // Arduino.h defines for direction are:
 //	#define INPUT 0x0
@@ -150,11 +121,10 @@ void LandBoards_I2CIO8::pullUp(uint8_t bit, uint8_t d)
 	bit &= 7;
 	gppuCopy = read8(MCP23008_GPPU);
 	// set the pin and direction
-	if (d == HIGH) {
+	if (d == HIGH)
 		gppuCopy |= 1 << bit; 
-	} else {
+	else
 		gppuCopy &= ~(1 << bit);
-	}
 	// write the new GPIO
 	if (gppuCopy != dupGppu)
 		write8(MCP23008_GPPU, gppuCopy);
@@ -167,14 +137,13 @@ void LandBoards_I2CIO8::pullUp(uint8_t bit, uint8_t d)
 void LandBoards_I2CIO8::digitalWrite(uint8_t bit, uint8_t d) 
 {
 	uint8_t gpioCopy;
-
 	bit &= 7;
 	gpioCopy = read8(MCP23008_OLAT);
 	if (d == HIGH)
 		gpioCopy |= 1 << bit;
 	else
 		gpioCopy &= ~(1 << bit);
-	write8(MCP23008_GPIO, gpioCopy);
+	write8(MCP23008_OLAT, gpioCopy);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -188,7 +157,7 @@ uint8_t LandBoards_I2CIO8::digitalRead(uint8_t bit)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// writeOLAT(uint8_t value)
+// writeOLAT(uint8_t value)- write out an entire byte
 ////////////////////////////////////////////////////////////////////////////
 
 void LandBoards_I2CIO8::writeOLAT(uint8_t value)
@@ -216,7 +185,7 @@ uint8_t LandBoards_I2CIO8::read8(uint8_t regAddr)
 	Wire.write((uint8_t)regAddr);	
 	Wire.endTransmission();
 	Wire.requestFrom(i2caddr, 1);		// get 1 byte
-	return Wire.read();
+	return (uint8_t)Wire.read();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -229,4 +198,33 @@ void LandBoards_I2CIO8::write8(uint8_t regAddr, uint8_t value)
 	Wire.write((uint8_t)regAddr);
 	Wire.write((uint8_t)value);
 	Wire.endTransmission();
+}
+
+////////////////////////////////////////////////////////////////////////////
+// writeLED(bit,value)
+// D0-D3 are LEDs D0-D3
+////////////////////////////////////////////////////////////////////////////
+
+void LandBoards_I2CIO8::writeLED(uint8_t bit,uint8_t value)
+{
+	digitalWrite(bit, value);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// readAllJumpers()
+// D4-D7 are H5-H8 jumpers
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t LandBoards_I2CIO8::readAllJumpers(void)
+{
+	return ((read8(MCP23008_GPIO) & 0xf0) >> 4);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// readJumper(uint8_t)
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t LandBoards_I2CIO8::readJumper(uint8_t bit)
+{
+	return digitalRead(bit);
 }

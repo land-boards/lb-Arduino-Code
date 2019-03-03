@@ -5,7 +5,7 @@
 // Card has an MCP23008 chip
 //  Webpage for the card is at:
 //	http://land-boards.com/blwiki/index.php?title=I2CIO-8
-// 2019-02-28 - Added support for STN32F1 "blue pill" board
+// 2019-02-28 - Added support for STM32F1 "blue pill" board
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef LandBoards_I2CIO8_h
@@ -22,15 +22,6 @@
 // defines follow
 ////////////////////////////////////////////////////////////////////////////
 
-#define LED0		0x00
-#define LED1		0x01
-#define LED2		0x02
-#define LED3		0x03
-#define H4JUMPER	0x04
-#define H5JUMPER	0x05
-#define H6JUMPER	0x06
-#define H7JUMPER	0x07
-
 #define MCP23008_ADDRESS 0x20
 #define MCP23008_IODIR 0x00
 #define MCP23008_IPOL 0x01
@@ -43,6 +34,15 @@
 #define MCP23008_INTCAP 0x08
 #define MCP23008_GPIO 0x09
 #define MCP23008_OLAT 0x0A
+
+#define LED0		0x00
+#define LED1		0x01
+#define LED2		0x02
+#define LED3		0x03
+#define H4JUMPER	0x04
+#define H5JUMPER	0x05
+#define H6JUMPER	0x06
+#define H7JUMPER	0x07
 
 ////////////////////////////////////////////////////////////////////////////
 // I2C Ports
@@ -60,10 +60,10 @@ class LandBoards_I2CIO8
 	uint8_t digitalRead(uint8_t);
 	void pullUp(uint8_t, uint8_t);
 	void writeOLAT(uint8_t);
-	uint8_t readGPIO();
+	uint8_t readGPIO(void);
 	void writeLED(uint8_t,uint8_t);			// Writes to a single LED
 	uint8_t readJumper(uint8_t);			// Reads a single Jumper
-	uint8_t readAllJumpers(void);
+	uint8_t readAllJumpers(void);			// Reads all jumpers
   private:
 	uint8_t i2caddr;
 	void write8(uint8_t addr, uint8_t data);

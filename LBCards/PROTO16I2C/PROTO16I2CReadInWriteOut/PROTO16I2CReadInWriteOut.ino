@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////
-// PROTO16I2CBlink Example code
-// Blink LED
+// PROTO16I2CReadInWriteOut
+// Copy input pin 0 to LED pin 1
 // 2019-03-03 - Tested with LandBoards_MCP23017 library v1.0.0
 // 2019-03-03 - Working on STM32F1
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,8 @@ LandBoards_MCP23017 mcp;   // Uses the LandBoards MCP23017 library
 void setup()
 {
   mcp.begin(0);      // use default chip offset 0 (Adafruit library adds 0x20)
-  mcp.pinMode(0, OUTPUT);
+  mcp.pinMode(0, INPUT_PULLUP);
+  mcp.pinMode(1, OUTPUT);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,8 +26,5 @@ void setup()
 
 void loop()
 {
-  mcp.digitalWrite(0, HIGH);
-  delay(500);
-  mcp.digitalWrite(0, LOW);
-  delay(500);
+  mcp.digitalWrite(1, mcp.digitalRead(0));
 }
