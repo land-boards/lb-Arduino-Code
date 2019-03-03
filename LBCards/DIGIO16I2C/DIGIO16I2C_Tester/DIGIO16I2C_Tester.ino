@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////
-// D16-TEST
+// D16TEST
 // Test the DigIO16-I2C card
 // Uses GVSDuino card
 // Uses MyMenu card
@@ -15,7 +15,7 @@
 #include "U8glib.h"
 #include <I2C_eeprom.h>
 
-#include "Adafruit_MCP23017.h"
+#include "LandBoards_MCP23017.h"
 
 #define EE24LC024MAXBYTES 2048/8
 
@@ -41,7 +41,7 @@
 // Instantiations
 //////////////////////////////////////////////////////////////////////////////////
 
-Adafruit_MCP23017 mcp0;
+LandBoards_MCP23017 mcp0;
 
 U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_NO_ACK);
 
