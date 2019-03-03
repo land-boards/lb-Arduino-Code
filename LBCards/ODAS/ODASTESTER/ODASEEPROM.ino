@@ -148,7 +148,7 @@ void eepromWrite(void)
   Serial.print(F("len of buffer="));
   Serial.println(sizeof(myEep));
 
-  eeprom.writeBlock(0, (const uint8_t*) myEep.signature, 96);
+  eeprom.writeBlock(0, (uint8_t*) myEep.signature, 96);
   Serial.println(F("reading block"));
   delay(10);
 
@@ -424,4 +424,3 @@ void otherBoardType(void)
   }
 
 }
-
