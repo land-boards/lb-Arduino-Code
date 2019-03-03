@@ -1,0 +1,29 @@
+== LandBoards_MCP23017 Library Files ==
+
+* These are the LandBoards_MCP23017 files.
+* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+
+=== LandBoards_MCP23017 - Arduino library Code ===
+
+<pre>#include <LandBoards_MCP23017.h></pre>
+* Class Name: LandBoards_MCP23017
+* begin(baseAddr) - Initialize the card
+* void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
+* uint8_t digitalRead(uint8_t p) - read back a bit
+* void PinMode(port, direction)- Set the direction of a bit (INPUT, OUTPUT, INPUT_PULLUP)
+* void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
+* uint16_t readGPIOAB(chip) - Read 16-bits at a time
+* void write32(uint32_t) - Write 32-bits
+* uint32_t readGPIO32() - Read 32-bits
+
+== Ownership ==
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.
