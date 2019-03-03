@@ -4,19 +4,16 @@
 // Blink each line, one at a time
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
+#include "LandBoards_MCP23017.h"
 
-Adafruit_MCP23017 mcp0;   // Uses the Adafruit MCP23017 library
+LandBoards_MCP23017 mcp0;   // Uses the Adafruit MCP23017 library
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 //  setup() - Set all of the pins to Outputs
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
-  mcp0.begin(1);      // use default address 0
-//  TWBR = 12;    // go to 400 KHz I2C speed mode
-
+  mcp0.begin(0);      // use default address 0
   for (uint8_t port = 0; port < 16; port++)
   {
     mcp0.pinMode(port, OUTPUT);
@@ -36,4 +33,3 @@ void loop() {
     mcp0.digitalWrite(port, LOW);
   }
 }
-

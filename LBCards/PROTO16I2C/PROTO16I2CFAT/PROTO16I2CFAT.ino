@@ -2,11 +2,12 @@
 // PROTO16I2CFAT : PROTO16-I2C EEPROM Exercise code
 // Uses the Serial port to display a menu
 //////////////////////////////////////////////////////////
+// 2019-03-03 - Tested with STM32F1 Blue Pill
+//////////////////////////////////////////////////////////
 
-#include <Wire.h>
-#include "Adafruit_MCP23017.h"
+#include "LandBoards_MCP23017.h"
 
-Adafruit_MCP23017 mcp;   // Uses the Adafruit MCP23017 library - globals
+LandBoards_MCP23017 mcp;   // Uses the Adafruit MCP23017 library - globals
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -16,7 +17,6 @@ void setup()
 {
   Serial.begin(9600);     // 9600 baud serial connection
   mcp.begin(0);          // Instantate MCP23017 chip
-  //  TWBR = 12;    // go to 400 KHz I2C speed mode
   Serial.println("\nR=Read EEPROM, W=Write EEPROM");
 }
 
@@ -46,6 +46,4 @@ void loop()
     while (Serial.available() > 0)    // Flush extra read data (CR-LF extras)
       Serial.read();
   }
-
 }
-

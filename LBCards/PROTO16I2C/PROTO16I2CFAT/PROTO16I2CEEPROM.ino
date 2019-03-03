@@ -165,7 +165,7 @@ void eepromWrite(void)
   Serial.print("len of buffer=");
   Serial.println(sizeof(myEep));
 
-  eeprom.writeBlock(0, (const uint8_t*) myEep.signature, 96);
+  eeprom.writeBlock(0, (uint8_t*) myEep.signature, (int)96);
   Serial.println("reading block");
   delay(10);
 
@@ -188,4 +188,3 @@ void eepromWrite(void)
   while ((readBuff[loopv] != 0) && (loopv < 128));
   Serial.println("");
 }
-
