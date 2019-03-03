@@ -58,13 +58,13 @@ void Digio128_64::begin(void)
 		write8(chipNum, MCP23017_GPPUA, 0x00);		// Turn off pullups
 		write8(chipNum, MCP23017_GPIOA, 0x00);	// preset output bits to 0
 		write8(chipNum, MCP23017_INTCONA,0x00);	// Interrupt control
-		write8(chipNum, MCP23017_IPOLA,0xff);		// Special input polarity values for card
+		write8(chipNum, MCP23017_IPOLA,0x00);		// Special input polarity values for card
 		write8(chipNum, MCP23017_GPINTENA,0xff);	// Special interrupt on change values for card
 		write8(chipNum, MCP23017_IODIRB, 0xff);		// bits are all inputs
 		write8(chipNum, MCP23017_GPPUB, 0x00);		// Turn off pullups
 		write8(chipNum, MCP23017_GPIOB, 0x00);	// preset output bits to 0
 		write8(chipNum, MCP23017_INTCONB,0x00);	// Interrupt control
-		write8(chipNum, MCP23017_IPOLB,0xff);		// Special input polarity values for card
+		write8(chipNum, MCP23017_IPOLB,0x00);		// Special input polarity values for card
 		write8(chipNum, MCP23017_GPINTENB,0xff);	// Special interrupt on change values for card
 	}
 	return;
