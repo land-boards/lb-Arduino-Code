@@ -16,11 +16,6 @@
 
 * Bounce a light around the 16 bits of the ODAS-RELAY-16 card
 
-==== ODASRELAY16_DigitalReadSerial ====
-
-* Read single bit of the ODAS-RELAY-16 card
-* Code is stripped down to the bare minimum
-
 ==== ODASRELAY16_Tester ====
 
 * Original Factory Acceptance Test for the ODAS-RELAY-16 card
