@@ -8,34 +8,26 @@
 
 ==== D128FAT ====
 
-* Original Factory Acceptance Test for the DigIO-128 card
-** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Test Station Software]
-* Uses an Arduino UNO with a Host USB connection
-* Requires 8 loopback cables (10 pin 1:1 jumper cables)
-* Performs loopback testing from one chip to the next (0-1, 2-3, 4-5, 6-7 chips)
-* Also, attempts to program the EEPROM and presents the result if successful
-* Runs with Host Serial Connection
-* Loops on running the loopback test forever - good for endurance testing
+* Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Test Station Software]
 
-==== D128LEDS ====
+==== DIGIO128_Access ====
 
-* Move the light around 128 LEDs
-* Uses a [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino card]
+* Uses I2C Multiplexer
+* Runs on STM32F1 and Arduino
+* Serial port driven
+* Directly access bits with simple commands
 
-==== D128Loopback ====
+==== DIGIO128_Blink ====
 
-* The FAT code isolated for the 128-bit loopback
-* Loops on running the loopback test forever - good for endurance testing
+* Blink a bit on the DIGIO128 card
 
-==== D128Utils ====
+==== DIGIO128_Blink128 ====
 
-* D128eep - EEPROM test portion isolated
-** Programs the EEPROM in the DigIO-128 Card
-** Uses an Arduino UNO with a Host USB connection
-** Standalone version of the eeprom code contained in the D128FAT
-** Write, read and check functions
-* D128Loop - Loopback test portion isolated
-* D128mcp - MCP23017 expansion from single chip to 8 chips
+* Blink all the bits on the DIGIO128 card
+
+==== DIGIO128_DigitalReadSerial ====
+
+* Read a bit from the DIGIO128 card and dump to the serial port
 
 === Ownership ===
 
