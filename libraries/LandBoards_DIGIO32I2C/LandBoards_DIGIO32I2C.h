@@ -56,10 +56,10 @@
 //	MCP23017 0x20-0x21 (or any offset of 2)
 ////////////////////////////////////////////////////////////////////////////
 
-class Digio32
+class LandBoards_DIGIO32I2C
 {
   public:
-    Digio32(void);
+    LandBoards_DIGIO32I2C(void);
 	void begin(uint8_t);					// Set the base address
 	void digitalWrite(uint8_t,uint8_t);		// Writes to a single bit
 	uint8_t digitalRead(uint8_t);			// Reads a single bit

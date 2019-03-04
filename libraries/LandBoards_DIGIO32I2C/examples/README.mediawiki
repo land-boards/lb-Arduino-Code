@@ -1,0 +1,30 @@
+== land-boards DigIO32-I2C Card Source Code Files ==
+
+<img src="http://land-boards.com/blwiki/images/a/a2/DigIO32-I2C-P1010486-720px.jpg" alt="DIGIO32-I2C Card image"></img>
+
+* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card] Source code files.
+* Here is the [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_DIGIO32_I2C Land Board DIGIO32-I2C Library] code
+
+=== Files ===
+
+==== DIGIO32I2CFAT ====
+
+* Original Factory Acceptance Test for the DIGIO32-I2C card
+** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester]
+* Uses an Arduino UNO with a Host USB connection
+* Performs loopback testing from one chip to the next (0-1 chips)
+* Also, attempts to program the EEPROM and presents the result if successful
+* Runs with Host Serial Connection
+* Loops on running the loopback test forever - good for endurance testing
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.

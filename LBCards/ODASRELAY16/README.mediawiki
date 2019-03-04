@@ -1,15 +1,27 @@
-== land-boards ODASRELAY16 Card Example Arduino Source Code Files ==
+== land-boards ODAS-RELAY-16 Card Example Arduino Source Code Files ==
 
-<img src="http://land-boards.com/blwiki/images/2/28/ODAS-RELAY-16-P356-720px.JPG" alt="ODAS-RELAY-16 Card image"></img>
+<img src="http://land-boards.com/blwiki/images/2/28/ODAS-RELAY-16-P356-720px.JPG" alt="ODAS-RELAY-I2C Card image"></img>
 
 * These are Land Boards' [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card].
+* Requires [https://github.com/land-boards/lb-Arduino-Code/tree/master/libraries/LandBoards_MCP23017 LandBoards_MCP23017 library]
 
 === Files ===
 
-==== DIGIO16I2CLEDS16 ====
+==== ODASRELAY16_Blink ====
 
-* Turn on one relay at a time on the [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card]
+* Blink single bit of the ODAS-RELAY-16 card
+
+==== ODASRELAY16_Blink16 ====
+
+* Bounce a light around the 16 bits of the ODAS-RELAY-16 card
+
+==== ODASRELAY16_Tester ====
+
+* Original Factory Acceptance Test for the ODAS-RELAY-16 card
+** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester Code]
+* Uses GVSDuino card
+* Uses MyMenu card
 
 === Ownership ===
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_DIGIO32_I2C.cpp - Library for DIGIO32_I2C card
+//  LandBoards_DIGIO32I2C.cpp - Library for DIGIO32_I2C card
 //  Created by Douglas Gilliland. 2017-06-05
 //  DIGIO32_I2C is a card which has 2 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
@@ -18,13 +18,13 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
-#include "LandBoards_DIGIO32_I2C.h"
+#include "LandBoards_DIGIO32I2C.h"
 
 ////////////////////////////////////////////////////////////////////////////
-// LandBoards_DIGIO32_I2C constructor - has no address since the card uses all 0x20-0x27
+// LandBoards_DIGIO32I2C constructor - has no address since the card uses all 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-LandBoards_DIGIO32_I2C::LandBoards_DIGIO32_I2C(void)
+LandBoards_DIGIO32I2C::LandBoards_DIGIO32I2C(void)
 {
 	return;
 }
@@ -35,7 +35,7 @@ LandBoards_DIGIO32_I2C::LandBoards_DIGIO32_I2C(void)
 // Sets the global baseAddress - board base address register
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_DIGIO32_I2C::begin(uint8_t baseAddr)
+void LandBoards_DIGIO32I2C::begin(uint8_t baseAddr)
 {
 	boardBaseAddr = MCP23017_ADDRESS + (baseAddr&7);	// baseAddr set by jumpers
 	Wire.begin();
@@ -60,7 +60,7 @@ void LandBoards_DIGIO32_I2C::begin(uint8_t baseAddr)
 // void digitalWrite(uint8_t bit, uint8_t wrVal) - write to a bit
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_DIGIO32_I2C::digitalWrite(uint8_t bit, uint8_t wrVal)
+void LandBoards_DIGIO32I2C::digitalWrite(uint8_t bit, uint8_t wrVal)
 {
 	uint8_t regAdr;
 	uint8_t chipAddr;
@@ -82,7 +82,7 @@ void LandBoards_DIGIO32_I2C::digitalWrite(uint8_t bit, uint8_t wrVal)
 // uint8_t digitalRead(uint8_t p) - read back a bit
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_DIGIO32_I2C::digitalRead(uint8_t bit)
+uint8_t LandBoards_DIGIO32I2C::digitalRead(uint8_t bit)
 {
 	uint8_t regAdr;
 	uint8_t chipAddr;
@@ -108,7 +108,7 @@ uint8_t LandBoards_DIGIO32_I2C::digitalRead(uint8_t bit)
 // Direction bit - 1=Input, 0=Output
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_DIGIO32_I2C::pinMode(uint8_t bit, uint8_t value)
+void LandBoards_DIGIO32I2C::pinMode(uint8_t bit, uint8_t value)
 {
 	uint8_t puRegAdr;	// Pull-up register address
 	uint8_t dirRegAdr;	// Direction register address
@@ -156,7 +156,7 @@ void LandBoards_DIGIO32_I2C::pinMode(uint8_t bit, uint8_t value)
 // There are two chips on the card
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_DIGIO32_I2C::writeOLATAB(uint8_t chip, uint16_t baData)
+void LandBoards_DIGIO32I2C::writeOLATAB(uint8_t chip, uint16_t baData)
 {
 	writeRegister(chip,MCP23017_OLATB,(baData>>8)&0xff);
 	writeRegister(chip,MCP23017_OLATA,baData&0xff);
@@ -166,7 +166,7 @@ void LandBoards_DIGIO32_I2C::writeOLATAB(uint8_t chip, uint16_t baData)
 // uint16_t readGPIOAB(chip) - Read 16-bits at a time
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t LandBoards_DIGIO32_I2C::readGPIOAB(uint8_t chip)
+uint16_t LandBoards_DIGIO32I2C::readGPIOAB(uint8_t chip)
 {
 	return (((readRegister(chip,MCP23017_GPIOB)<<8)&0xff)|(readRegister(chip,MCP23017_GPIOA)&0xff));
 }
@@ -175,7 +175,7 @@ uint16_t LandBoards_DIGIO32_I2C::readGPIOAB(uint8_t chip)
 // uint16_t readOLATAB(chip) - Read 16-bits at a time
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t LandBoards_DIGIO32_I2C::readOLATAB(uint8_t chip)
+uint16_t LandBoards_DIGIO32I2C::readOLATAB(uint8_t chip)
 {
 	return (((readRegister(chip,MCP23017_OLATB)<<8)&0xff00)|(readRegister(chip,MCP23017_OLATA)&0xff));
 }
@@ -184,7 +184,7 @@ uint16_t LandBoards_DIGIO32_I2C::readOLATAB(uint8_t chip)
 // void write32(uint8_t,uint32_t) - Write 32-bits
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_DIGIO32_I2C::write32(uint32_t longVal)
+void LandBoards_DIGIO32I2C::write32(uint32_t longVal)
 {
 	writeOLATAB(0,(uint16_t)(longVal&0xffff));
 	writeOLATAB(1,(uint16_t)(longVal>>16));
@@ -195,7 +195,7 @@ void LandBoards_DIGIO32_I2C::write32(uint32_t longVal)
 // Split load into longReadVal into three lines to eliminate warning from Arduino IDE
 ////////////////////////////////////////////////////////////////////////////
 
-uint32_t LandBoards_DIGIO32_I2C::read32(void)
+uint32_t LandBoards_DIGIO32I2C::read32(void)
 {
 	uint32_t longReadVal = 0;
 	longReadVal = readGPIOAB(1);
@@ -205,10 +205,10 @@ uint32_t LandBoards_DIGIO32_I2C::read32(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// uint8_t LandBoards_DIGIO32_I2C::readRegister(uint8_t chipAddr, uint8_t regAddr)
+// uint8_t LandBoards_DIGIO32I2C::readRegister(uint8_t chipAddr, uint8_t regAddr)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t LandBoards_DIGIO32_I2C::readRegister(uint8_t chipAddr, uint8_t regAddr)
+uint8_t LandBoards_DIGIO32I2C::readRegister(uint8_t chipAddr, uint8_t regAddr)
 {
 	Wire.beginTransmission(boardBaseAddr + chipAddr);
 	Wire.write(regAddr);
@@ -218,10 +218,10 @@ uint8_t LandBoards_DIGIO32_I2C::readRegister(uint8_t chipAddr, uint8_t regAddr)
 }
 	
 ////////////////////////////////////////////////////////////////////////////
-// void LandBoards_DIGIO32_I2C::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+// void LandBoards_DIGIO32I2C::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_DIGIO32_I2C::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+void LandBoards_DIGIO32I2C::writeRegister(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 {
 	Wire.beginTransmission(boardBaseAddr + chipAddr);
 	Wire.write(regAddr);

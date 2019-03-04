@@ -22,7 +22,8 @@ void setup()
 {
   Serial.begin(9600);     	// 9600 baud serial connection
   Dio32.begin(0);         	// Instantiate Digio32 card
-
+  
+  Serial.print("FAT");
   for (uint8_t port = 0; port < 32; port++)
   {
     Dio32.pinMode(port, INPUT_PULLUP);
