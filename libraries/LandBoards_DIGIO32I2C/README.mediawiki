@@ -5,18 +5,27 @@
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card library] files.
 * [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
 
-=== LandBoards_DIGIO32_I2C - Arduino library Code ===
+=== Files ===
 
-<pre>#include <LandBoards_DIGIO32_I2C.h></pre>
-* Class Name: Digio32
-* begin(baseAddr) - Initialize the card
-* void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
-* uint8_t digitalRead(uint8_t p) - read back a bit
-* void PinMode(port, direction)- Set the direction of a bit (INPUT, OUTPUT, INPUT_PULLUP)
-* void writeGPIOAB(chip,baData) - Write 16-bits of data at a time
-* uint16_t readGPIOAB(chip) - Read 16-bits at a time
-* void write32(uint32_t) - Write 32-bits
-* uint32_t readGPIO32() - Read 32-bits
+==== DIGIO32I2C_Blink ====
+
+* Blink single bit of the DigIO32-I2C card
+
+==== DIGIO32I2C_Blink16 ====
+
+* Bounce a light around the 32 bits of the DigIO16-I2C card
+
+==== DIGIO32I2C_DigitalReadSerial ====
+
+* Read single bit of the DigIO32-I2C card
+* Code is stripped down to the bare minimum
+
+==== DIGIO32I2C_Tester ====
+
+* Original Factory Acceptance Test for the DigIO32-I2C card
+** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester Code]
+* Uses GVSDuino card
+* Uses MyMenu card
 
 == Ownership ==
 
