@@ -61,10 +61,10 @@
 //	MCP23017 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-class Digio128
+class LandBoards_Digio128V2
 {
   public:
-    Digio128(void);
+    LandBoards_Digio128V2(void);
 	void begin();
 	void digitalWrite(uint8_t,uint8_t);		// Writes to a single bit
 	uint8_t digitalRead(uint8_t);			// Reads a single bit

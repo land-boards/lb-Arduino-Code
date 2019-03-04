@@ -6,13 +6,13 @@
 // Use Serial Port for menu/test results
 //////////////////////////////////////////////////////////
 
-#include "LandBoards_DIGIO32_I2C.h"
+#include "LandBoards_DIGIO32I2C.h"
 
 uint32_t failCount;       // Globals used in the below code
 uint32_t passCount;
 int looping;
 
-Digio32 Dio32;
+LandBoards_DIGIO32I2C Dio32;
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -212,7 +212,7 @@ uint8_t internalLoopBackTest(void)
     for (bit = 1; bit != 0; bit <<= 1)
     {
       Dio32.writeOLATAB(chip,bit);
-      rdVal = Dio32.readGPIOAB(chip);
+      rdVal = Dio32.readOLATAB(chip);
       if (rdVal != bit)
       {
         Serial.print("internalLoopBackTest(): Test failed - Could not set chip: ");
