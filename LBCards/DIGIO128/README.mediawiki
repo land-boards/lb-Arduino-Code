@@ -7,6 +7,12 @@
 
 === Files ===
 
+* There are two versions of these files
+** One version uses the LandBoards_DIGIO128V2 library which views the card as a 128-bit space
+*** Easier to use - just an extended version of the Arduino digital read/write functions
+** The other version uses the LandBoards_MCP23017 library and views the card as 8 chips
+*** Requires paying attention to the mapping/access to the specific chips
+
 ==== D128FAT ====
 
 * Original Factory Acceptance Test for the DigIO-128 card
