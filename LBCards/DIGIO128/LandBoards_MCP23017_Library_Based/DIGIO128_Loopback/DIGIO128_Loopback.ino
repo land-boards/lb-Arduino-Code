@@ -1,6 +1,7 @@
 // DIGIO128_Loopback code
 // Tests port-to-port loopback
 // Reports any failures
+// http://land-boards.com/blwiki/index.php?title=DIGIO-128
 
 #include "LandBoards_MCP23017.h"
 

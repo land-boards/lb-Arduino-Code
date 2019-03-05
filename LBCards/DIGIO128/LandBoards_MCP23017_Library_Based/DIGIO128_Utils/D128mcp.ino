@@ -1,5 +1,8 @@
 //////////////////////////////////////////////////////////
-//
+// DIGIO-128 extensions for read/write
+// These can be unwieldy to handle in code so this takes care
+// of some of the complications of the multiple chips.
+// http://land-boards.com/blwiki/index.php?title=DIGIO-128
 //////////////////////////////////////////////////////////
 
 /* mcpWrite(chipNum, chNum, val)

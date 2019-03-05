@@ -3,6 +3,7 @@
 // Loopback code
 // Test each channel
 // Read/write EEPROM
+// http://land-boards.com/blwiki/index.php?title=DIGIO-128
 //////////////////////////////////////////////////////////
 
 #include "I2C_eeprom.h"
