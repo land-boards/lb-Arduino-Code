@@ -2,6 +2,7 @@
 // DIGIO128_Blink128 code
 // Make all 128 lines outputs
 // Blink each line, one at a time
+// http://land-boards.com/blwiki/index.php?title=DIGIO-128
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "LandBoards_Digio128V2.h"
