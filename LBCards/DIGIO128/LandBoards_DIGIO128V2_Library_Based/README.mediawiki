@@ -1,0 +1,49 @@
+== land-boards DigIO-128 Card Example Arduino Source Code Files ==
+
+<img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
+
+* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card] example files.
+* The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128V2 Library for the DIGIO-128 card is here]
+
+=== Files ===
+
+* [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DIGIO-128 Card] Example Code
+* These files use the [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128V2 LandBoards_DIGIO128V2 library] which views the card as a 128-bit space
+** Easier to use - just an extended version of the Arduino digital read/write functions
+
+==== DIGIO128_Access ====
+
+* Uses an I2CRPT - I2C Multiplexer chip to communicate with the Digio-128 card
+* Uses the serial port on the Arduino to allow access to individual bits
+** H=Set a bit High
+** L=Set a bit Low
+** R=Read bit (no dir change)
+** P=Poll input bit
+
+==== DIGIO128_Blink ====
+
+* Demonstrates the [https://www.arduino.cc/reference/en/language/functions/digital-io/digitalwrite/ Arduino digitalWrite] function on the DIGIO-128 card
+* Blink LED on bit 0
+* Syntax: digitalWrite(pin, value)
+
+==== DIGIO128_Blink128 ====
+
+* Make all 128 lines outputs
+* Blink each line, one at a time
+
+==== DIGIO128_DigitalReadSerial ====
+
+* Demonstrates the [https://www.arduino.cc/reference/en/language/functions/digital-io/digitalread/ Arduino digitalRead] function
+* Reads digital input bit 0 from DIGIO-128 and prints the result to the Serial Monitor
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.
