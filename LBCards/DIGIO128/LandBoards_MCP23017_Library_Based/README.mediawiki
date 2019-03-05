@@ -25,11 +25,6 @@
 * Runs with Host Serial Connection
 * Loops on running the loopback test forever - good for endurance testing
 
-==== D128LEDS ====
-
-* Move the light around 128 LEDs
-* Uses a [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino card]
-
 ==== D128Loopback ====
 
 * The FAT code isolated for the 128-bit loopback
