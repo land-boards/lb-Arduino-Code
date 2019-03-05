@@ -6,7 +6,7 @@
 
 === Two Libraries ===
 
-* There are two versions of the Digio-128 libraries
+* The [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card] has two libraries
 ** The preferred version uses the [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/DIGIO128/LandBoards_DIGIO128V2_Library_Based LandBoards_DIGIO128V2 library] which views the card as a 128-bit space
 *** Easier to use - just an extended version of the Arduino digital read/write functions
 ** The other version uses the [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/DIGIO128/LandBoards_MCP23017_Library_Based LandBoards_MCP23017 library] and views the card as 8 chips
