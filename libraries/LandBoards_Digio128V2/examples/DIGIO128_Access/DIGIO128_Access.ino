@@ -1,6 +1,8 @@
 //////////////////////////////////////////////////////////
-// D128Access Direct access the DIGIO-128 card
+// DIGIO128_Access - Direct access the DIGIO-128 card
 // Directly access bits on the card from the Serial Port
+// http://land-boards.com/blwiki/index.php?title=DIGIO-128
+// http://land-boards.com/blwiki/index.php?title=I2C-RPT
 //////////////////////////////////////////////////////////
 
 #include "LandBoards_I2CRPT01.h"
@@ -40,8 +42,7 @@ void loop()
   uint8_t readValue;
   if (Serial.available() > 0)
   {
-    // read the incoming byte:
-    incomingByte = Serial.read();
+    incomingByte = Serial.read();	// read the incoming byte
     switch (incomingByte)
     {
       case 'H':
@@ -110,7 +111,7 @@ void flushSerial(void)
 uint8_t readBitDIGIO128(uint8_t bitToRead)
 {
   uint32_t rdVal;
-//  Serial.println(F("\nreadBitDIGIO128() - reached function"));
+  Serial.println(F("\nreadBitDIGIO128() - reached function"));
   rdVal = Dio128.digitalRead(bitToRead);
   Serial.print(F("Read Value: "));
   Serial.println(rdVal);
@@ -123,7 +124,7 @@ uint8_t readBitDIGIO128(uint8_t bitToRead)
 
 void writeBitDIGIO128(uint8_t bitToWrite, uint8_t writeValue)
 {
-//  Serial.println(F("\writeBitDIGIO128() - reached function"));
+  Serial.println(F("\writeBitDIGIO128() - reached function"));
   Dio128.pinMode(bitToWrite,OUTPUT);
   Dio128.digitalWrite(bitToWrite,writeValue);
 }
@@ -137,13 +138,8 @@ uint32_t getHexSerial(void)
   char inString[81];
   uint8_t hexVal;
   flushSerial();
-  //  Serial.println("getHexSerial() - reached function");
   readInSerialString(inString);
-  //  Serial.print("readInSerialString(): Returned: ");
-  //  Serial.println(inString);
   hexVal = stringToHex(inString);
-  //  Serial.print("stringToHex() - Returned: ");
-  //  Serial.println(bitToCheck);
   return (hexVal);
 }
 
@@ -155,7 +151,6 @@ uint32_t readInSerialString(char * myString)
 {
   uint8_t lineCounter = 0;
   flushSerial();
-  //  Serial.println("readInSerialString() - reached function");
   while (1)
   {
     while (Serial.available() == 0);
@@ -164,10 +159,6 @@ uint32_t readInSerialString(char * myString)
     if ((myString[lineCounter] == '\n') || (myString[lineCounter] == '\r'))
     {
       myString[lineCounter] = 0;
-      //      Serial.print("The String: ");
-      //      Serial.println(myString);
-      //      Serial.print("String Length: ");
-      //      Serial.println(lineCounter);
       return lineCounter;
     }
     lineCounter++;
@@ -182,7 +173,6 @@ uint32_t stringToHex(char * theStringValue)
 {
   uint8_t hexVal = 0;
   uint8_t linePtr = 0;
-  //  Serial.println("stringToHex() - reached function");
   while (theStringValue[linePtr] != 0)
   {
     if ((theStringValue[linePtr] >= '0') && (theStringValue[linePtr] <= '9'))
@@ -198,7 +188,5 @@ uint32_t stringToHex(char * theStringValue)
     }
     linePtr++;
   }
-//  Serial.print("stringToHex() - returning: ");
-//  Serial.println(hexVal,HEX);
   return (hexVal);
 }
