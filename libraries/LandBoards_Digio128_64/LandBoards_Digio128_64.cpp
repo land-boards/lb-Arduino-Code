@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_Digio128V2.cpp - Library for Land Boards DigIO-128 card
+//  LandBoards_Digio128_64.cpp - Library for Land Boards DigIO-128 card
 //  Created by Douglas Gilliland. 2017-06-05
 //  Digio-128 is a card which has 8 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
@@ -21,13 +21,13 @@
 #include <Wire.h>
 #include <inttypes.h>
 
-#include "LandBoards_digio128_64_V2.h"
+#include "LandBoards_Digio128_64.h"
 
 ////////////////////////////////////////////////////////////////////////////
 // Digio128 constructor - has no address since the card uses all 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-Digio128_64::Digio128_64(void)
+LandBoards_Digio128_64::LandBoards_Digio128_64(void)
 {
 	return;
 }
@@ -41,7 +41,7 @@ Digio128_64::Digio128_64(void)
 // https://www.arduino.cc/en/Reference/WireBegin
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::begin(void)
+void LandBoards_Digio128_64::begin(void)
 {
 	i2caddr = MCP23017_ADDRESS;
 	Wire.begin();			// Join I2C as a master (void = master)
@@ -82,7 +82,7 @@ void Digio128_64::begin(void)
 // Direction bit - 1=Input, 0=Output
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::pinMode(uint8_t bit, uint8_t value)
+void LandBoards_Digio128_64::pinMode(uint8_t bit, uint8_t value)
 {
 	uint8_t puRegAdr;	// Pull-up register address
 	uint8_t dirRegAdr;	// Direction register address
@@ -129,7 +129,7 @@ void Digio128_64::pinMode(uint8_t bit, uint8_t value)
 // void digitalWrite(uint8_t bit, uint8_t value) - write to a bit
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::digitalWrite(uint8_t bit, uint8_t wrVal)
+void LandBoards_Digio128_64::digitalWrite(uint8_t bit, uint8_t wrVal)
 {
 	uint8_t regAdr;
 	uint8_t chipAddr;
@@ -151,7 +151,7 @@ void Digio128_64::digitalWrite(uint8_t bit, uint8_t wrVal)
 // uint8_t digitalRead(uint8_t bit)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio128_64::digitalRead(uint8_t bit)
+uint8_t LandBoards_Digio128_64::digitalRead(uint8_t bit)
 {
 	uint8_t regAdr;
 	uint8_t chipAddr;
@@ -170,7 +170,7 @@ uint8_t Digio128_64::digitalRead(uint8_t bit)
 // There are eight chips on the card
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::writeOLAT(uint8_t chip, uint16_t baData)
+void LandBoards_Digio128_64::writeOLAT(uint8_t chip, uint16_t baData)
 {
 	write8(chip,MCP23017_OLATA,((baData>>8)&0xff));
 	write8(chip,MCP23017_OLATB,(baData&0xff));
@@ -180,7 +180,7 @@ void Digio128_64::writeOLAT(uint8_t chip, uint16_t baData)
 // uint16_t readGPIOAB(chip)
 ////////////////////////////////////////////////////////////////////////////
 
-uint16_t Digio128_64::readGPIOAB(uint8_t chip)
+uint16_t LandBoards_Digio128_64::readGPIOAB(uint8_t chip)
 {
 	return ((read8(chip,(MCP23017_GPIOB))<<8)|(read8(chip,MCP23017_GPIOA)));
 }
@@ -189,7 +189,7 @@ uint16_t Digio128_64::readGPIOAB(uint8_t chip)
 // uint8_t Digio32::read8(uint8_t chipAddr, uint8_t regAddr)
 ////////////////////////////////////////////////////////////////////////////
 
-uint8_t Digio128_64::read8(uint8_t chipAddr, uint8_t regAddr)
+uint8_t LandBoards_Digio128_64::read8(uint8_t chipAddr, uint8_t regAddr)
 {
 	Wire.beginTransmission(i2caddr + chipAddr);
 	Wire.write(regAddr);
@@ -202,7 +202,7 @@ uint8_t Digio128_64::read8(uint8_t chipAddr, uint8_t regAddr)
 // void Digio32::write8(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 ////////////////////////////////////////////////////////////////////////////
 
-void Digio128_64::write8(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
+void LandBoards_Digio128_64::write8(uint8_t chipAddr, uint8_t regAddr, uint8_t value)
 {
 	Wire.beginTransmission(i2caddr + chipAddr);
 	Wire.write(regAddr);

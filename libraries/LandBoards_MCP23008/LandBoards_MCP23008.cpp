@@ -103,7 +103,7 @@ void LandBoards_MCP23008::pinMode(uint8_t bit, uint8_t d)
 //  uint8_t pullUp(bit, d) 
 ////////////////////////////////////////////////////////////////////////////
 
-void LandBoards_I2CIO8::pullUp(uint8_t bit, uint8_t d) 
+void LandBoards_MCP23008::pullUp(uint8_t bit, uint8_t d) 
 {
 	uint8_t gppuCopy;
 	uint8_t dupGppu;
@@ -152,6 +152,15 @@ uint8_t LandBoards_MCP23008::digitalRead(uint8_t bit)
 void LandBoards_MCP23008::writeOLAT(uint8_t value)
 {
 	write8(MCP23008_OLAT,value);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// readGPIO(void)
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t LandBoards_MCP23008::readOLAT(void)
+{
+	return (read8(MCP23008_OLAT));
 }
 
 ////////////////////////////////////////////////////////////////////////////

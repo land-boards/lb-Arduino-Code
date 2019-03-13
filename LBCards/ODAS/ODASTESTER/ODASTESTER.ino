@@ -14,9 +14,9 @@
 //    http://land-boards.com/blwiki/index.php?title=LED-32
 //////////////////////////////////////////////////////////
 
-#include <LandBoards_DIGIO32_I2C.h>
+#include <LandBoards_DIGIO32I2C.h>
 #include <LandBoards_Digio128V2.h>
-#include <LandBoards_Digio128_64_v2.h>
+#include <LandBoards_Digio128_64.h>
 #include <LandBoards_I2CIO8.h>
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
@@ -67,9 +67,9 @@ typedef enum {
 } muxChannel_t;
 
 LandBoards_I2CRPT01 myI2CMux;
-Digio128 Dio128;    // Call the class constructor for the DigIO-128 card
-Digio128_64 Dio128_64;    // Call the class constructor for the DigIO-128 card
-Digio32 Dio32;
+LandBoards_Digio128V2 Dio128;    // Call the class constructor for the DigIO32_I2C card
+LandBoards_Digio128_64 Dio128_64;    // Call the class constructor for the DigIO-128 card
+LandBoards_DIGIO32I2C Dio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8X i2cio8xCard;
 LandBoards_MCP23008 singleMCP23008;
@@ -120,7 +120,7 @@ void setup()
       i2cio8Card.begin();
       break;
     case I2CIO8X_CARD:
-      i2cio8Card.begin();
+      i2cio8xCard.begin();
       break;
     case OPTOIN8I2C_CARD:
       singleMCP23008.begin();               // use default address 0

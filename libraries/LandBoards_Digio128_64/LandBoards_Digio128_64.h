@@ -2,7 +2,7 @@
 #define LANDBOARDS_DIGIO128_64_h
 
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_Digio128_64_V2.h - Library for Land Boards DigIO-128/64 card
+//  LandBoards_LandBoards_Digio128_64_V2.h - Library for Land Boards DigIO-128/64 card
 //  Created by Douglas Gilliland. 2017-06-05
 //  Digio-128/64 is a card which has 4 of MCP23017 16-bit port expanders
 //	Communication with the card is via I2C Two-wire interface
@@ -61,10 +61,10 @@
 //	MCP23017 0x20-0x27
 ////////////////////////////////////////////////////////////////////////////
 
-class Digio128_64
+class LandBoards_Digio128_64
 {
   public:
-    Digio128_64(void);
+    LandBoards_Digio128_64(void);
 	void begin();
 	void digitalWrite(uint8_t,uint8_t);		// Writes to a single bit
 	uint8_t digitalRead(uint8_t);			// Reads a single bit

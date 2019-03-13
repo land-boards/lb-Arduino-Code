@@ -213,12 +213,15 @@ uint8_t testI2CIO8(void)
   Serial.println(F("Move jumper across H5-H8, observe LEDs D0-D3"));
   Serial.println(F("Verify Int LED blinks"));
   Serial.println(F("Hit a key to stop test"));
+  delay(1);
+  while (Serial.available() > 0)
+    Serial.read();
   while (1)
   {
-    i2cio8Card.writeLED(LED0, !i2cio8Card.readJumper(H4JUMPER));
-    i2cio8Card.writeLED(LED1, !i2cio8Card.readJumper(H5JUMPER));
-    i2cio8Card.writeLED(LED2, !i2cio8Card.readJumper(H6JUMPER));
-    i2cio8Card.writeLED(LED3, !i2cio8Card.readJumper(H7JUMPER));
+    i2cio8Card.writeLED(LED0, i2cio8Card.readJumper(H4JUMPER));
+    i2cio8Card.writeLED(LED1, i2cio8Card.readJumper(H5JUMPER));
+    i2cio8Card.writeLED(LED2, i2cio8Card.readJumper(H6JUMPER));
+    i2cio8Card.writeLED(LED3, i2cio8Card.readJumper(H7JUMPER));
     delay(250);
     if (Serial.available() > 0)
     {

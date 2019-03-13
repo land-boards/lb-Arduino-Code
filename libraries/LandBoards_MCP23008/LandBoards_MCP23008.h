@@ -51,6 +51,7 @@ class LandBoards_MCP23008
 	uint8_t digitalRead(uint8_t);
 	void pullUp(uint8_t, uint8_t);
 	void writeOLAT(uint8_t);
+	uint8_t readOLAT(void);
 	uint8_t readGPIO(void);
   private:
 	uint8_t i2caddr;
