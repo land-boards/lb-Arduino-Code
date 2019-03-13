@@ -62,6 +62,7 @@ class LandBoards_MCP23017
 	uint8_t digitalRead(uint8_t);			// Reads a single bit
 	void pinMode(uint8_t,uint8_t);			// Set the single bit direction (INPUT, INPUT_PULLUP, OUTPUT)
 	void writeOLATAB(uint16_t);		// Write to a 16-bit chip
+	void writeGPIOAB(uint16_t);		// Write to a 16-bit chip
 	uint16_t readGPIOAB();			// Read from a 16-bit chip
 	uint16_t readOLATAB();			// Read from a 16-bit chip
   private:
