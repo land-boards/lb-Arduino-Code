@@ -2,9 +2,9 @@
 // Tests port-to-port loopback
 // Reports any failures
 
-#include "LandBoards_Digio128V2.h"
+#include "LandBoards_Digio128_64.h"
 
-Digio128 Dio128;
+LandBoards_Digio128_64 Dio128;
   
 void setup()
 {
@@ -26,7 +26,7 @@ uint8_t loopBackTest(void)
 {
   uint8_t port;
   uint8_t pass0fail1 = 0;
-    for (port = 0; port < 128; port++)
+    for (port = 0; port < 64; port++)
     {
       Dio128.pinMode(port, OUTPUT);
       Dio128.pinMode(15 - port,INPUT);

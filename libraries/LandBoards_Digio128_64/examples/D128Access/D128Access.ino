@@ -3,7 +3,7 @@
 // Directly access bits on the card from the Serial Port
 //////////////////////////////////////////////////////////
 
-#include <LandBoards_Digio128V2.h>
+#include <LandBoards_Digio128_64.h>
 #include <LandBoards_I2CRPT01.h>
 
 //////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@ LandBoards_I2CRPT01 myI2CMux;
 
 #define UUT_CARD_MUX_CH 0
 
-Digio128 Dio128;
+LandBoards_Digio128_64 Dio128;
 
 //////////////////////////////////////////////////////////
 // setup()

@@ -5,9 +5,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
-#include <LandBoards_Digio128V2.h>
+#include <LandBoards_Digio128_64.h>
 
-Digio128 Dio128;		// Call the class constructor for the DigIO-128 card
+LandBoards_Digio128_64 Dio128;		// Call the class constructor for the DigIO-128 card
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // setup() - Initialize the card
@@ -17,7 +17,7 @@ void setup(void)
 {
   Dio128.begin();              // connects to the 8 MCP23017 parts
   TWBR = 12;                   // go to 400 KHz I2C speed mode
-  for (uint8_t pin = 0; pin < 128; pin++)
+  for (uint8_t pin = 0; pin < 64; pin++)
     Dio128.pinMode(pin, INPUT);    // make all pins into INPUTs
 }
 
@@ -27,7 +27,7 @@ void setup(void)
 
 void loop(void)
 {
-  for (uint8_t pin = 0; pin < 128; pin++)    // bounce an LED through all the channels
+  for (uint8_t pin = 0; pin < 64; pin++)    // bounce an LED through all the channels
   {
     Dio128.digitalWrite(pin, HIGH);
     delay(100);
