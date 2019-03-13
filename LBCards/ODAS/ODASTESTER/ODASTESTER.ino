@@ -21,8 +21,7 @@
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
 #include <LandBoards_I2CRPT01.h>
-//#include <Adafruit_MCP23008.h>
-#include <Adafruit_MCP23017.h>
+#include <LandBoards_MCP23017.h>
 #include <LandBoards_MCP23008.h>
 
 //////////////////////////////////////////////////////////
@@ -73,7 +72,7 @@ LandBoards_DIGIO32I2C Dio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8X i2cio8xCard;
 LandBoards_MCP23008 singleMCP23008;
-Adafruit_MCP23017 singleMCP23017;
+LandBoards_MCP23017 singleMCP23017;
 
 //////////////////////////////////////////////////////////
 // setup()
