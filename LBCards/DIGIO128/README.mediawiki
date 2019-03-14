@@ -4,7 +4,7 @@
 
 <img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
 
-[https://www.tindie.com/products/land_boards/64128-channel-digital-io-card-digio-128/ Card is sold here on Tindie]
+<a href="https://www.tindie.com/products/land_boards/64128-channel-digital-io-card-digio-128/" ><img src="http://land-boards.com/blwiki/images/e/eb/Tindie-larges-v2.png" alt="Tindie Logo"></img></a>
 
 === Two Libraries ===
 
