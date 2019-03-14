@@ -1,3 +1,6 @@
+
+<a href="https://www.tindie.com/products/land_boards/coax-tester-fast-edge-pulse-gen-50-or-75-ohm/" ><img src="http://land-boards.com/blwiki/images/e/eb/Tindie-larges-v2.png" alt="Tindie Logo"></img></a>
+
 == PulseGenTest Card Test Software ==
 
 <img src="http://land-boards.com/blwiki/images/8/8b/PulseGenX1-CCA.JPG" alt="PulseGenTest Card Test Station Image"></img>
