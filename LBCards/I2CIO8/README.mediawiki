@@ -1,3 +1,5 @@
+<a href="https://www.tindie.com/products/land_boards/i2c-demo-board-mcp23008-i2cio-8/" ><img src="http://land-boards.com/blwiki/images/e/eb/Tindie-larges-v2.png" alt="Tindie Logo"></img></a>
+
 == I2CIO-8 Software ==
 
 <img src="http://land-boards.com/blwiki/images/e/ee/I2CIO-8_X2-6000-640px.jpg" alt="I2CIO-8 Card Image"></img>
