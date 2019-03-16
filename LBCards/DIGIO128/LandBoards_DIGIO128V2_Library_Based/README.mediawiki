@@ -5,6 +5,8 @@
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card] example files.
 * The [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128V2 Library for the DIGIO-128 card is here]
 
+[https://www.tindie.com/products/land_boards/64128-channel-digital-io-card-digio-128/ Card is sold here on Tindie]
+
 === Files ===
 
 * [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DIGIO-128 Card] Example Code
