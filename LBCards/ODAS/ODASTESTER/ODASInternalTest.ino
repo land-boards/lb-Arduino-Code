@@ -12,7 +12,7 @@
 
 uint8_t internalextLBTestCard(void)
 {
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     // Cards with single MCP23008 parts
@@ -50,7 +50,7 @@ uint8_t internalextLBTestCard(void)
       return 1;
       break;
   }
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   return 1; // fail
 }
 
@@ -86,7 +86,7 @@ uint8_t intLBTstSingleMCP23008(void)
     if (readVal != loopVal)
     {
       Serial.print(F("Readback="));
-      Serial.println(~readVal), HEX;
+      Serial.println(~readVal, HEX);
       testResults = 0;
     }
   }
@@ -114,8 +114,10 @@ uint8_t intLBTstSingleMCP23017(void)
     readBackVal = singleMCP23017.readGPIOAB();
     if (readBackVal != loopVal)
     {
-      Serial.print(F("Readback="));
-      Serial.println(readBackVal);
+      Serial.print(F("intLBTstSingleMCP23017: Readback="));
+      Serial.println(readBackVal,HEX);
+      Serial.print(F("intLBTstSingleMCP23017: loopVal="));
+      Serial.println(loopVal,HEX);
       failed = 1;
     }
   }
@@ -126,8 +128,10 @@ uint8_t intLBTstSingleMCP23017(void)
     readBackVal = !singleMCP23017.readGPIOAB();
     if (readBackVal != loopVal)
     {
-      Serial.print(F("Readback="));
-      Serial.println(~readBackVal);
+      Serial.print(F("intLBTstSingleMCP23017: Readback="));
+      Serial.println(~readBackVal,HEX);
+      Serial.print(F("intLBTstSingleMCP23017: loopVal="));
+      Serial.println(~loopVal,HEX);
       failed = 1;
     }
   }
@@ -302,4 +306,3 @@ uint8_t internalextLBTestDIGIO128_64_CARD(void)
   else
     return 1;
 }
-

@@ -172,7 +172,7 @@ void directAccessMenu(void)
   uint8_t readValue;
   flushSerial();
   Serial.println("Direct Access UUT Hardware");
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   Serial.println(F("H=Write High, L=Write Low, R=Read a bit, X=eXit"));
   while (1)
   {
@@ -221,7 +221,7 @@ void directAccessMenu(void)
         case 'X':   // Exit
         case 'x':
           {
-            myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+            BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
             Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
             return;
             break;
@@ -258,7 +258,7 @@ void directAccessInternalDIGIO32Menu(void)
   uint8_t readValue;
   flushSerial();
   Serial.println("Direct Access Test Station DIGIO32 Hardware");
-  myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Serial.println(F("H=Write High, L=Write Low, R=Read a bit, X=eXit"));
   while (1)
   {
@@ -288,7 +288,7 @@ void directAccessInternalDIGIO32Menu(void)
             bitToCheck = getHexSerial();
             Serial.println("");
             flushSerial();
-            writeBitDIGIO32(bitToCheck, 1);
+            Dio32.digitalWrite(bitToCheck, 1);
             //            Serial.println("Completed write");
             break;
           }
@@ -300,14 +300,14 @@ void directAccessInternalDIGIO32Menu(void)
             bitToCheck = getHexSerial();
             Serial.println("");
             flushSerial();
-            writeBitDIGIO32(bitToCheck, 0);
+            Dio32.digitalWrite(bitToCheck, 0);
             //            Serial.println("Completed write");
             break;
           }
         case 'X':   // Exit
         case 'x':
           {
-            myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+            BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
             Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
             return;
             break;

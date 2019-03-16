@@ -6,31 +6,41 @@ uint8_t readBitValue(uint8_t bitToCheck)
 {
   switch (boardType)
   {
-    case DIGIO16I2C_CARD:
-      break;
     case DIGIO128_CARD:
-      return (readBitDIGIO128(bitToCheck));
+      return (Dio128.digitalRead(bitToCheck));
       break;
     case DIGIO128_64_CARD:
-      return (readBitDIGIO128_64(bitToCheck));
+      return (Dio128_64.digitalRead(bitToCheck));
       break;
     case OPTOIN8I2C_CARD:
-      return (readSingleMCP23008(bitToCheck));
+      return (singleMCP23008.digitalRead(bitToCheck));
       break;
-    case OPTOOUT8I2C_CARD:
+    case DIGIO16I2C_CARD:
+      return (singleMCP23017.digitalRead(bitToCheck));
       break;
     case DIGIO32I2C_CARD:
-      return (readBitDIGIO32(bitToCheck));
+      return (Dio32.digitalRead(bitToCheck));
       break;
     case PROTO16I2C_CARD:
-      break;
-    case ODASRELAY16_CARD:
-      break;
-    case ODASPSOC5_CARD:
+      return (singleMCP23017.digitalRead(bitToCheck));
       break;
     case I2CIO8_CARD:
+      return (i2cio8Card.digitalRead(bitToCheck));
       break;
     case I2CIO8X_CARD:
+      return (i2cio8xCard.digitalRead(bitToCheck));
+      break;
+    case ODASRELAY16_CARD:
+      Serial.println("Card is write-only");
+      return(0);
+      break;
+    case ODASPSOC5_CARD:
+      Serial.println("Not implemented");
+      return(0);
+      break;
+    case OPTOOUT8I2C_CARD:
+      Serial.println("Card is write-only");
+      return(0);
       break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
@@ -100,28 +110,51 @@ void writeBitValue(uint8_t bitToCheck, uint8_t bitToWrite)
 {
   switch (boardType)
   {
-    case DIGIO16I2C_CARD:
-      break;
     case DIGIO128_CARD:
-      writeBitDIGIO128(bitToCheck, bitToWrite);
+      Dio128.pinMode(bitToCheck, OUTPUT);
+      Dio128.digitalWrite(bitToCheck, bitToWrite);
       break;
     case DIGIO128_64_CARD:
-      writeBitDIGIO128_64(bitToCheck, bitToWrite);
-      break;
-    case OPTOIN8I2C_CARD:
-      break;
-    case OPTOOUT8I2C_CARD:
-      break;
-    case DIGIO32I2C_CARD:
-      writeBitDIGIO32(bitToCheck, bitToWrite);
+      Dio128_64.pinMode(bitToCheck, OUTPUT);
+      Dio128_64.digitalWrite(bitToCheck, bitToWrite);
       break;
     case PROTO16I2C_CARD:
+      singleMCP23017.pinMode(bitToCheck, OUTPUT);
+      singleMCP23017.digitalWrite(bitToCheck, bitToWrite);
       break;
-    case ODASPSOC5_CARD:
+    case ODASRELAY16_CARD:
+      singleMCP23017.pinMode(bitToCheck, OUTPUT);
+      singleMCP23017.digitalWrite(bitToCheck, bitToWrite);
+      break;
+    case SWLEDX8_I2C_CARD:
+      singleMCP23017.pinMode(bitToCheck, OUTPUT);
+      singleMCP23017.digitalWrite(bitToCheck, bitToWrite);
+      break;
+    case DIGIO32I2C_CARD:
+      Dio32.pinMode(bitToCheck, OUTPUT);
+      Dio32.digitalWrite(bitToCheck, bitToWrite);
+      break;
+    case DIGIO16I2C_CARD:
+      singleMCP23017.pinMode(bitToCheck, OUTPUT);
+      singleMCP23017.digitalWrite(bitToCheck, bitToWrite);
       break;
     case I2CIO8_CARD:
+      i2cio8Card.pinMode(bitToCheck, OUTPUT);
+      i2cio8Card.digitalWrite(bitToCheck, bitToWrite);
       break;
     case I2CIO8X_CARD:
+      i2cio8xCard.pinMode(bitToCheck, OUTPUT);
+      i2cio8xCard.digitalWrite(bitToCheck, bitToWrite);
+      break;
+    case OPTOOUT8I2C_CARD:
+      singleMCP23008.pinMode(bitToCheck, OUTPUT);
+      singleMCP23008.digitalWrite(bitToCheck, bitToWrite);
+      break;
+    case OPTOIN8I2C_CARD:
+      Serial.println("Card is read-only");
+      break;
+    case ODASPSOC5_CARD:
+      Serial.println("Not implemented");
       break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
@@ -131,37 +164,4 @@ void writeBitValue(uint8_t bitToCheck, uint8_t bitToWrite)
       return;
       break;
   }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// void writeBitDIGIO32(uint8_t bitToCheck, uint8_t bitWeiteValue)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void writeBitDIGIO32(uint8_t bitNumber, uint8_t bitValue)
-{
-  //  Serial.println(F("\writeBitDIGIO32() - reached function"));
-  Dio32.pinMode(bitNumber, OUTPUT);
-  Dio32.digitalWrite(bitNumber, bitValue);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// void writeBitDIGIO128(uint8_t bitNumber, uint8_t bitValue)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void writeBitDIGIO128(uint8_t bitNumber, uint8_t bitValue)
-{
-  //  Serial.println(F("\writeBitDIGIO128() - reached function"));
-  Dio128.pinMode(bitNumber, OUTPUT);
-  Dio128.digitalWrite(bitNumber, bitValue);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////
-// void writeBitDIGIO128_64(uint8_t bitNumber, uint8_t bitValue)
-//////////////////////////////////////////////////////////////////////////////////////
-
-void writeBitDIGIO128_64(uint8_t bitNumber, uint8_t bitValue)
-{
-  //  Serial.println(F("\writeBitDIGIO128() - reached function"));
-  Dio128_64.pinMode(bitNumber, OUTPUT);
-  Dio128_64.digitalWrite(bitNumber, bitValue);
 }

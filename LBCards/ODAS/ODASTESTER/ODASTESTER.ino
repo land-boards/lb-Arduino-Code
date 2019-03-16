@@ -46,6 +46,7 @@ typedef enum {
   I2CIO8X_CARD,
   OPTOFST_SML_NON_INVERTING_CARD,
   OPTOFST_SML_INVERTING_CARD,
+  I2CRPT01_CARD,
   SWLEDX8_I2C_CARD,
 } boardType_t;
 
@@ -65,14 +66,19 @@ typedef enum {
   TEST_STN_INT_MUX_CH = 3,
 } muxChannel_t;
 
-LandBoards_I2CRPT01 myI2CMux;
+LandBoards_I2CRPT01 BluePillI2CMux;
 LandBoards_Digio128V2 Dio128;    // Call the class constructor for the DigIO32_I2C card
 LandBoards_Digio128_64 Dio128_64;    // Call the class constructor for the DigIO-128 card
 LandBoards_DIGIO32I2C Dio32;
 LandBoards_I2CIO8 i2cio8Card;
+LandBoards_I2CIO8 i2cio8Card1;
+LandBoards_I2CIO8 i2cio8Card2;
+LandBoards_I2CIO8 i2cio8Card3;
+LandBoards_I2CIO8 i2cio8Card4;
 LandBoards_I2CIO8X i2cio8xCard;
 LandBoards_MCP23008 singleMCP23008;
 LandBoards_MCP23017 singleMCP23017;
+LandBoards_I2CRPT01 UUTI2CMux;
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -81,11 +87,10 @@ LandBoards_MCP23017 singleMCP23017;
 void setup()
 {
   Serial.begin(9600);
-  myI2CMux.begin();
-  myI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  BluePillI2CMux.begin(1);
+  BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Dio32.begin(0);
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-  //  TWBR = 12;    // go to 400 KHz I2C speed mode
+  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 
   failCount = 0;
   passCount = 0;
@@ -112,6 +117,7 @@ void setup()
       break;
     case SWLEDX8_I2C_CARD:
       singleMCP23017.begin(0);
+      break;
     case DIGIO32I2C_CARD:
       Dio32.begin(0);
       break;
@@ -126,6 +132,17 @@ void setup()
       break;
     case OPTOOUT8I2C_CARD:
       singleMCP23008.begin();               // use default address 0
+      break;
+    case I2CRPT01_CARD:
+      UUTI2CMux.begin(0);                   // testing external I2C-RPT-01 card
+      UUTI2CMux.setI2CChannel(0); 
+      i2cio8Card1.begin(0);                  // Requires I2CIO8 cards connected to external I2C-RPT-01 card
+      UUTI2CMux.setI2CChannel(1); 
+      i2cio8Card2.begin(0);
+      UUTI2CMux.setI2CChannel(2); 
+      i2cio8Card3.begin(0);
+      UUTI2CMux.setI2CChannel(3); 
+      i2cio8Card4.begin(0);
       break;
   }
   Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));

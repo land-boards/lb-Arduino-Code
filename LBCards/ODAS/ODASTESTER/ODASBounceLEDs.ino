@@ -4,7 +4,7 @@
 
 uint8_t bounceLedsCard(void)
 {
-  myI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
@@ -60,6 +60,10 @@ uint8_t bounceLedsCard(void)
       bounceLedsI2CIO8X();
       return 1;
       break;
+    case I2CRPT01_CARD:
+      bounceLedsI2CRPT01();
+      return 1;
+      break;
     default:
       Serial.println(F("Not supported at present - default case"));
       break;
@@ -77,7 +81,7 @@ uint8_t bounceLedsCard(void)
 
 void bounceOptoOut8(void)
 {
-  
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +268,52 @@ void bounceLedsI2CIO8X(void)
       i2cio8xCard.digitalWrite(port, HIGH);
       delay(250);
       i2cio8xCard.digitalWrite(port, LOW);
+    }
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// void bounceLedsI2CRPT01(void)
+//////////////////////////////////////////////////////////////////////////////////////
+
+void bounceLedsI2CRPT01(void)
+{
+  uint8_t port;
+  Serial.println(F("Bouncing LEDs I2C-RPT-01 and I2CIO8 - any key to stop"));
+  while (1)
+  {
+    UUTI2CMux.setI2CChannel(0);
+    for (port = 0; port < 4; port++)
+    {
+      i2cio8Card1.writeLED(port, HIGH);
+      delay(250);
+      i2cio8Card1.writeLED(port, LOW);
+    }
+    UUTI2CMux.setI2CChannel(1);
+    for (port = 0; port < 4; port++)
+    {
+      i2cio8Card2.writeLED(port, HIGH);
+      delay(250);
+      i2cio8Card2.writeLED(port, LOW);
+    }
+    UUTI2CMux.setI2CChannel(2);
+    for (port = 0; port < 4; port++)
+    {
+      i2cio8Card3.writeLED(port, HIGH);
+      delay(250);
+      i2cio8Card3.writeLED(port, LOW);
+    }
+    UUTI2CMux.setI2CChannel(3);
+    for (port = 0; port < 4; port++)
+    {
+      i2cio8Card4.writeLED(port, HIGH);
+      delay(250);
+      i2cio8Card4.writeLED(port, LOW);
     }
     if (Serial.available() > 0)
     {

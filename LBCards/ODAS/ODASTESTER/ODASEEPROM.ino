@@ -377,6 +377,7 @@ void otherBoardType(void)
   Serial.println(F("3 - SWLEDX8-I2C board"));
   Serial.println(F("4 - OPTOFast/Small Non-Inverting board"));
   Serial.println(F("5 - OPTOFast/Small Inverting board"));
+  Serial.println(F("6 - I2C-RPT-01 board"));
   Serial.print(F("Select board > "));
   int incomingByte = 0;   // for incoming serial data
 
@@ -414,6 +415,11 @@ void otherBoardType(void)
       case '5':
         {
           boardType = OPTOFST_SML_INVERTING_CARD;
+          break;
+        }
+      case '6':
+        {
+          boardType = I2CRPT01_CARD;
           break;
         }
       default:
