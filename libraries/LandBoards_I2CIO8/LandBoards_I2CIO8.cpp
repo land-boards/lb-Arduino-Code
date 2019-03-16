@@ -62,6 +62,7 @@ void LandBoards_I2CIO8::begin(uint8_t addr)
 	write8(MCP23008_IODIR,0xf0);	// Special values for card (4 in/4 out)
 	write8(MCP23008_GPIO, 0x00);	// preset output bits to 0
 	write8(MCP23008_INTCON,0x00);	// Interrupt control
+	write8(MCP23008_IOCON,0x00);	// Set interrupt polarity
 	write8(MCP23008_IPOL,0xf0);		// Special input polarity values for card
 	write8(MCP23008_GPINTEN,0xf0);	// Special interrupt on change values for card
 	read8(MCP23008_GPIO);			// Clear port change interrupt line

@@ -52,7 +52,7 @@ void LandBoards_I2CRPT01::setI2CChannel(uint8_t chNum)
 {
 	if (chNum > 3)
 		return;
-	ctrl_copy = 0x04 | chNum;
+	ctrl_copy = 0x04 | (chNum&0x7);
 	Wire.beginTransmission(i2caddr);
 	Wire.write((byte)ctrl_copy);
 	Wire.endTransmission();
