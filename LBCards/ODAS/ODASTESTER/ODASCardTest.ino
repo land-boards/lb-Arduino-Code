@@ -56,6 +56,9 @@ uint8_t extLBTestCard(void)
     case OPTOFST_SML_INVERTING_CARD:
       return (testOptoFastSmallInverting());
       break;
+    case OPTOFSTBI_CARD:
+      return (testOptoFastBi());
+      break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
       break;
@@ -137,6 +140,43 @@ uint8_t testOptoFastSmallNonInverting(void)
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected High"));
+      testResults = TEST_FAILED;
+    }
+  }
+  return testResults;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+// uint8_t testOptoFastBi(void)
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t testOptoFastBi
+(void)
+{
+  uint8_t port;
+  uint8_t testResults = TEST_PASSED;
+  BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  for (port = 0; port < 4; port++)   // Set ports 0-3 to outputs
+    Dio32.pinMode(port, OUTPUT);
+  for (port = 8; port < 12; port++)   // Set all inputs to Pullup
+    Dio32.pinMode(port, INPUT_PULLUP);
+  for (port = 0; port < 4; port++)   // Set all inputs to Pullup
+  {
+    Dio32.digitalWrite(port, LOW);
+    if (Dio32.digitalRead(port + 8) != HIGH)
+    {
+      Serial.print(F("Error on port "));
+      Serial.print(port);
+      Serial.println(F(" Expected High"));
+      testResults = TEST_FAILED;
+    }
+    Dio32.digitalWrite(port, HIGH);
+    if (Dio32.digitalRead(port + 8) != LOW)
+    {
+      Serial.print(F("Error on port "));
+      Serial.print(port);
+      Serial.println(F(" Expected Low"));
       testResults = TEST_FAILED;
     }
   }
