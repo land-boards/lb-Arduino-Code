@@ -6,7 +6,7 @@
 
 <img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
 
-* ODAS Card Test Software runs on Arduino Nano [http://land-boards.com/blwiki/index.php?title=NANO-BKOUT NANO-BKOUT] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT] card
+* ODAS Card Test Software runs on Arduino Nano [http://land-boards.com/blwiki/index.php?title=Blue_Pill_Hub Blue Pill Hub] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT] card
 * USB running puTTY
 ** 9600 baud
 
