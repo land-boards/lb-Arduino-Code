@@ -4,10 +4,8 @@
 // Read/write EEPROM if there is one
 //////////////////////////////////////////////////////////
 // Tester Hardware
-//  Arduino Nano card on NANO-BKOUT card
-//    http://land-boards.com/blwiki/index.php?title=NANO-BKOUT
-//  I2CRPT-01 I2C Multiplexer card
-//    http://land-boards.com/blwiki/index.php?title=I2C-RPT
+//  Blue Pill Hub card
+//    http://land-boards.com/blwiki/index.php?title=Blue_Pill_Hub
 //  DIGIO32-I2C 32 bit I2C card
 //    http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C
 //  LED-32 card
