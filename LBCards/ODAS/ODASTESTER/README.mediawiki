@@ -1,6 +1,6 @@
-== land-boards ODAS Card Test Software (ODATTESTER) Files ==
+== land-boards ODAS Card Test Software (ODASTESTER) Files ==
 
-* These folder have Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Test Code.
+* These folder have Land Boards' Open Data Acquisition cards related Arduino Test Code.
 
 === Hardware ===
 
