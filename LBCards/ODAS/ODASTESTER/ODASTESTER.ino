@@ -47,6 +47,7 @@ typedef enum {
   OPTOFSTBI_CARD,
   I2CRPT01_CARD,
   SWLEDX8_I2C_CARD,
+  UNKNOWN_BOARD,
 } boardType_t;
 
 enum {TEST_PASSED, TEST_FAILED};

@@ -33,7 +33,7 @@ void topLevelMenu(void)
         break;
       case '?':
         Serial.println(F("\nC=Card Tests (Bounce LEDs, External loopback, Internal Tests)"));
-        Serial.println(F("D=Direct Access (Read or Write memory)"));
+        Serial.println(F("D=Direct Access (Read or Write Digital I/O pins)"));
         Serial.println(F("E=EEPROM Access (Read/Write EEPROM)"));
         Serial.println(F("I=Set/clear or read test internal DIGIO32 bits"));
         break;
@@ -352,17 +352,24 @@ void eepromAccessMenu(void)
         case 'r':
           Serial.println(F("Reading EEPROM"));
           eepromRead();
-          Serial.println(F("\neepromAccessMenu() - Finished reading EEPROM"));
+          Serial.println(F("\n\reepromAccessMenu() - Finished reading EEPROM"));
           break;
         case 'W':
         case 'w':
           selectBoardType();
-          eepromWrite();
-          //          Serial.println(F("\neepromAccessMenu() - Finished writing EEPROM"));
+          if (boardType != NONE)
+          {
+            eepromWrite();
+            Serial.println(F("\n\reepromAccessMenu() - Finished writing EEPROM"));
+          }
+          else
+          {
+            Serial.println(F("\n\reepromAccessMenu() - Did not select format writing EEPROM"));
+          }
           break;
         case 'X':
         case 'x':
-          Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
+          Serial.println("\n\rC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
           return;
           break;
         case '?':

@@ -364,6 +364,7 @@ void selectBoardType(void)
       default:
         {
           Serial.println(F("Failed to select board type"));
+          boardType = NONE;
         }
     }
   }
