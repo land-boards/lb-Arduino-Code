@@ -1,12 +1,12 @@
-== land-boards ODAS Card Test Software (ODATTESTER) Files ==
+== land-boards ODAS Card Test Software (ODASTESTER) Files ==
 
-* These folder have Land Boards' [http://land-boards.com/blwiki/index.php?title=Main_Page#Open_Data_Acquisition_System_.28ODAS.29 Open Data Acquisition cards related] Arduino Test Code.
+* These folder have Land Boards' Open Data Acquisition cards related Arduino Test Code.
 
 === Hardware ===
 
 <img src="http://land-boards.com/blwiki/images/b/bf/Proto16-I2C-P1010614-720px.jpg" alt="Test Station Hardware"></img>
 
-* ODAS Card Test Software runs on Arduino Nano [http://land-boards.com/blwiki/index.php?title=NANO-BKOUT NANO-BKOUT] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT] card
+* ODAS Card Test Software runs on Arduino Nano [http://land-boards.com/blwiki/index.php?title=Blue_Pill_Hub Blue Pill Hub] card with [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT] card
 * USB running puTTY
 ** 9600 baud
 
