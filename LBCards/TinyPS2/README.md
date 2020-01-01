@@ -10,9 +10,9 @@ This is based almost entirely on other peoples' work, see the attribution sectio
 I found a PS/2 keyboard library and a soft-uart library and hooked them together.
 
 Pin Assignments:
-   PB0 - PS/2 data
-   PB1 - PS/2 CLK
-   PB2 - Serial Out
+- PB0 - PS/2 data
+- PB1 - PS/2 CLK
+- PB2 - Serial Out
 
 Attribution:
    ATTiny85 UART Library 
