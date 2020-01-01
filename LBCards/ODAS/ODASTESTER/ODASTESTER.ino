@@ -19,6 +19,7 @@
 #include <LandBoards_I2CIO8X.h>
 #include <LandBoards_I2CTEMP01.h>
 #include <LandBoards_I2CRPT01.h>
+#include <LandBoards_I2CRPT08.h>
 #include <LandBoards_MCP23017.h>
 #include <LandBoards_MCP23008.h>
 
@@ -46,6 +47,7 @@ typedef enum {
   OPTOFST_SML_INVERTING_CARD,
   OPTOFSTBI_CARD,
   I2CRPT01_CARD,
+  I2CRPT08_CARD,
   SWLEDX8_I2C_CARD,
   UNKNOWN_BOARD,
 } boardType_t;
@@ -75,10 +77,15 @@ LandBoards_I2CIO8 i2cio8Card1;
 LandBoards_I2CIO8 i2cio8Card2;
 LandBoards_I2CIO8 i2cio8Card3;
 LandBoards_I2CIO8 i2cio8Card4;
+LandBoards_I2CIO8 i2cio8Card5;
+LandBoards_I2CIO8 i2cio8Card6;
+LandBoards_I2CIO8 i2cio8Card7;
+LandBoards_I2CIO8 i2cio8Card8;
 LandBoards_I2CIO8X i2cio8xCard;
 LandBoards_MCP23008 singleMCP23008;
 LandBoards_MCP23017 singleMCP23017;
 LandBoards_I2CRPT01 UUTI2CMux;
+LandBoards_I2CRPT08 UUTI2CMux8;
 
 //////////////////////////////////////////////////////////
 // setup()
@@ -143,6 +150,25 @@ void setup()
       i2cio8Card3.begin(0);
       UUTI2CMux.setI2CChannel(3); 
       i2cio8Card4.begin(0);
+      break;
+    case I2CRPT08_CARD:
+      UUTI2CMux8.begin(0);                   // testing external I2C-RPT-01 card
+      UUTI2CMux8.setI2CChannel(0,1); 
+      i2cio8Card1.begin(0);                  // Requires I2CIO8 cards connected to external I2C-RPT-01 card
+      UUTI2CMux8.setI2CChannel(1,1); 
+      i2cio8Card2.begin(0);
+      UUTI2CMux8.setI2CChannel(2,1); 
+      i2cio8Card3.begin(0);
+      UUTI2CMux8.setI2CChannel(3,1); 
+      i2cio8Card4.begin(0);
+      UUTI2CMux8.setI2CChannel(4,1); 
+      i2cio8Card5.begin(0);
+      UUTI2CMux8.setI2CChannel(5,1); 
+      i2cio8Card4.begin(0);
+      UUTI2CMux8.setI2CChannel(5,1); 
+      i2cio8Card7.begin(0);
+      UUTI2CMux8.setI2CChannel(7,1); 
+      i2cio8Card8.begin(0);
       break;
   }
   Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));

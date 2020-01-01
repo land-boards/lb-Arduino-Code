@@ -379,7 +379,8 @@ void otherBoardType(void)
   Serial.println(F("4 - OPTOFast/Small Non-Inverting board"));
   Serial.println(F("5 - OPTOFast/Small Inverting board"));
   Serial.println(F("6 - I2C-RPT-01 board"));
-  Serial.println(F("7 - OptoFastBi board"));
+  Serial.println(F("7 - I2C-RPT-08 board"));
+  Serial.println(F("8 - OptoFastBi board"));
   Serial.print(F("Select board > "));
   int incomingByte = 0;   // for incoming serial data
 
@@ -425,6 +426,11 @@ void otherBoardType(void)
           break;
         }
       case '7':
+        {
+          boardType = I2CRPT08_CARD;
+          break;
+        }
+      case '8':
         {
           boardType = OPTOFSTBI_CARD;
           break;
