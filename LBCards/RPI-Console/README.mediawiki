@@ -1,4 +1,4 @@
-<a href="https://www.tindie.com/products/land_boards/raspberry-pi-console-card-rpi-console-u/" >
+<a href="https://www.tindie.com/products/land_boards/raspberry-pi-console-card-rpi-console/" >
 <img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
 </img></a> 
 
