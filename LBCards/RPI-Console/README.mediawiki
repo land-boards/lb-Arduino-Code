@@ -8,7 +8,7 @@
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=RPI-CONSOLE Wiki page for the RPI-CONSOLE] test software.
+* [http://land-boards.com/blwiki/index.php?title=RPI-CONSOLE Wiki page for the RPI-CONSOLE] test software.
 
 === Ownership ===
 
