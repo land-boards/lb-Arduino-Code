@@ -18,7 +18,7 @@
   You should have received a copy of the GNU General Public License
   along with FabGL.  If not, see <http://www.gnu.org/licenses/>.
  */
-` q
+
 
 #include "fabgl.h"
 #include "fabutils.h"
