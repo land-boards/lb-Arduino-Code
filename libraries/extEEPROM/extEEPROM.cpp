@@ -62,7 +62,6 @@
 #define BUFFER_LENGTH 32
 #endif
 
-
 // Constructor.
 // - deviceCapacity is the capacity of a single EEPROM device in
 //   kilobits (kb) and should be one of the values defined in the
@@ -220,7 +219,11 @@ int extEEPROM::read(unsigned long addr)
 //For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
 byte extEEPROM::update(unsigned long addr, byte *values, unsigned int nBytes)
 {
-	return false;
+    if (nBytes == 1) {
+        return update(addr, values[0]);
+    }
+
+    return false;
 }
 
 //Update a single byte to external EEPROM.
