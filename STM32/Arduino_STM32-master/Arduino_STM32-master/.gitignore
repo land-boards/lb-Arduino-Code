@@ -1,0 +1,12 @@
+.DS_store
+other/maple-bootloader/.dep
+other/maple-bootloader/TAGS
+other/maple-bootloader/tags
+other/maple-bootloader/cscope.out
+other/maple-bootloader/build
+other/maple-bootloader/*~
+*.o
+*.bak
+*.1
+platform.local.txt
+boards.local.txt
