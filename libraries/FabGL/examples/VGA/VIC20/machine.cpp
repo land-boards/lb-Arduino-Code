@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -884,7 +884,7 @@ void Machine::VIA2PortIn(MOS6522 * via, VIAPort port)
 
 void Machine::loadPRG(char const * filename, bool resetRequired, bool execRun)
 {
-  fabgl::suspendInterrupts();
+  AutoSuspendInterrupts autoInt;
   FILE * f = fopen(filename, "rb");
   if (f) {
 
@@ -947,7 +947,6 @@ void Machine::loadPRG(char const * filename, bool resetRequired, bool execRun)
 
     fclose(f);
   }
-  fabgl::resumeInterrupts();
 }
 
 
@@ -960,7 +959,7 @@ void Machine::loadPRG(char const * filename, bool resetRequired, bool execRun)
 // return effective load address
 int Machine::loadCRT(char const * filename, bool reset, int address)
 {
-  fabgl::suspendInterrupts();
+  AutoSuspendInterrupts autoInt;
   FILE * f = fopen(filename, "rb");
   if (f) {
 
@@ -986,7 +985,6 @@ int Machine::loadCRT(char const * filename, bool reset, int address)
     fclose(f);
 
   }
-  fabgl::resumeInterrupts();
   return address;
 }
 
@@ -1305,71 +1303,6 @@ bool MOS6522::tick(int cycles)
 
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-// VICNoiseGenerator
-// "tries" to emulate VIC6561 noise generator
-// derived from a reverse enginnered VHDL code: http://www.denial.shamani.dk/bb/viewtopic.php?t=8733&start=210
-
-
-VICNoiseGenerator::VICNoiseGenerator()
-  : m_frequency(0),
-    m_counter(0),
-    m_LFSR(LFSRINIT),
-    m_outSR(0)
-{
-}
-
-
-void VICNoiseGenerator::setFrequency(int value)
-{
-  if (m_frequency != value) {
-    m_frequency = value >= 127 ? 0 : value;
-    m_LFSR      = LFSRINIT;
-    m_counter   = 0;
-    m_outSR     = 0;
-  }
-}
-
-
-int VICNoiseGenerator::getSample()
-{
-  const int reduc = CLK / 8 / sampleRate(); // resample to sampleRate() (ie 16000Hz)
-
-  int sample = 0;
-
-  for (int i = 0; i < reduc; ++i) {
-
-    if (m_counter >= 127) {
-
-      // reset counter
-      m_counter = m_frequency;
-
-      if (m_LFSR & 1)
-        m_outSR = ((m_outSR << 1) | ~(m_outSR >> 7));
-
-      m_LFSR <<= 1;
-      int bit3  = (m_LFSR >> 3) & 1;
-      int bit12 = (m_LFSR >> 12) & 1;
-      int bit14 = (m_LFSR >> 14) & 1;
-      int bit15 = (m_LFSR >> 15) & 1;
-      m_LFSR |= (bit3 ^ bit12) ^ (bit14 ^ bit15);
-    } else
-      ++m_counter;
-
-    sample += m_outSR & 1 ? 127 : -128;
-  }
-
-  // simple mean of all samples
-
-  sample = sample / reduc;
-
-  // process volume
-  sample = sample * volume() / 127;
-
-  return sample;
-}
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // VIC (6561 - Video Interface Chip)
@@ -1428,6 +1361,10 @@ void MOS6561::reset()
   m_scanY           = 0;
   m_Y               = 0;
   m_charRow         = 0;
+  m_charColumn      = 0;
+  m_inCharRow       = 0;
+  m_topPos          = 0;
+  m_leftPos         = 0;
   m_isVBorder       = false;
   m_colorLine       = nullptr;
   m_videoLine       = nullptr;

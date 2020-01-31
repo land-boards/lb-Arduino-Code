@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -63,8 +63,6 @@ private:
 ////////////////////////////////////////////////////////////////////////////////////
 // SIO
 
-typedef int (*GetCharPreprocessor)(int);
-
 
 class SIO : public Device {
 
@@ -72,7 +70,7 @@ public:
 
   SIO(Machine * machine, int address);
 
-  void attachStream(Stream * value, GetCharPreprocessor getCharPreprocessor = nullptr);
+  void attachStream(Stream * value);
 
   void tick(int ticks) { }
 
@@ -82,7 +80,6 @@ private:
   bool write(int address, int value);
 
   int                 m_address;
-  GetCharPreprocessor m_getCharPreprocessor;
   Stream *            m_stream;
 
 };

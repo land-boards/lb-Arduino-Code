@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -50,9 +50,21 @@ namespace fabgl {
 
 
 
+/** \ingroup Enumerations
+* @brief This enum defines SSD1306 orientation
+*/
+enum class SSD1306Orientation {
+  Normal,             /**< Normal orientation */
+  ReverseHorizontal,  /**< Reverse horizontal */
+  ReverseVertical,    /**< Reverse vertical */
+  Rotate180,          /**< Rotate 180 degrees */
+};
+
 
 /**
  * @brief Display driver for SSD1306 based OLED display, with I2C connection.
+ *
+ * This driver should also work with SH1106 (untested).
  *
  * Example:
  *
@@ -60,7 +72,7 @@ namespace fabgl {
  *     fabgl::SSD1306Controller SSD1306Controller;
  *
  *     void setup() {
- *       // SDA = gpio-4, SCL = gpio-15
+ *       // SDA = gpio-4, SCL = gpio-15  (WARN: disconnect VGA connector!!)
  *       I2C.begin(GPIO_NUM_4, GPIO_NUM_15);
  *
  *       // default OLED address is 0x3C
@@ -68,10 +80,11 @@ namespace fabgl {
  *       SSD1306Controller.setResolution(OLED_128x64);
  *
  *       Canvas cv(&SSD1306Controller);
+ *       cv.clear();
  *       cv.drawText(0, 0, "Hello World!");
- *
+ *     }
  */
-class SSD1306Controller : public DisplayController {
+class SSD1306Controller : public GenericDisplayController {
 
 public:
 
@@ -89,9 +102,9 @@ public:
    *
    * @param i2c I2C pointer
    * @param address Device address. Default is 0x3C.
-   * @param resetGPIO Reset pin (use GPIO_NUM_39 to disable). Default if disabled.
+   * @param resetGPIO Reset pin (use GPIO_UNUSED to disable). Default if disabled.
    */
-  void begin(I2C * i2c, int address = 0x3C, gpio_num_t resetGPIO = GPIO_NUM_39);
+  void begin(I2C * i2c, int address = 0x3C, gpio_num_t resetGPIO = GPIO_UNUSED);
 
   void end();
 
@@ -169,11 +182,30 @@ public:
 
   void readScreen(Rect const & rect, RGB888 * destBuf);
 
+  /**
+   * @brief Inverts display colors
+   *
+   * @param value True enables invertion.
+   */
+  void invert(bool value);
+
+  /**
+   * @brief Set display orientation and rotation
+   *
+   * @param value Display orientation and rotation
+   *
+   * Example:
+   * 
+   *     // rotate by 180 degrees
+   *     DisplayController.setOrientation(fabgl::SSD1306Orientation::Rotate180);
+   */
+  void setOrientation(SSD1306Orientation value);
+
 
 private:
 
   // abstract method of DisplayController
-  PixelFormat getBitmapSavePixelFormat() { return PixelFormat::RGBA2222; }
+  int getBitmapSavePixelSize() { return 1; }
 
 
   bool SSD1306_sendData(uint8_t * buf, int count, uint8_t ctrl);
@@ -184,62 +216,67 @@ private:
   void SSD1306_hardReset();
   bool SSD1306_softReset();
 
-  void SSD1306_sendScreenBuffer();
+  void SSD1306_sendScreenBuffer(Rect updateRect);
+
+  void sendRefresh();
+
+  void setupOrientation();
 
   void allocScreenBuffer();
 
   static void updateTaskFunc(void * pvParameters);
 
   // abstract method of DisplayController
-  void setPixelAt(PixelDesc const & pixelDesc);
+  void setPixelAt(PixelDesc const & pixelDesc, Rect & updateRect);
 
   // abstract method of DisplayController
-  void clear();
+  void clear(Rect & updateRect);
 
   // abstract method of DisplayController
-  void drawEllipse(Size const & size);
+  void drawEllipse(Size const & size, Rect & updateRect);
 
-  void VScroll(int scroll);
+  void VScroll(int scroll, Rect & updateRect);
   
-  void HScroll(int scroll);
+  void HScroll(int scroll, Rect & updateRect);
 
   // abstract method of DisplayController
-  void drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor);
-
-  void drawGlyph_full(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor);
-
-  void drawGlyph_light(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor);
+  void drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect);
 
   // abstract method of DisplayController
   void swapBuffers();
 
   // abstract method of DisplayController
-  void invertRect(Rect const & rect);
+  void invertRect(Rect const & rect, Rect & updateRect);
 
   // abstract method of DisplayController
-  void copyRect(Rect const & source);
+  void copyRect(Rect const & source, Rect & updateRect);
 
   // abstract method of DisplayController
-  void swapFGBG(Rect const & rect);
+  void swapFGBG(Rect const & rect, Rect & updateRect);
 
   // abstract method of DisplayController
-  void drawLine(int X1, int Y1, int X2, int Y2, RGB888 color);
+  void absDrawLine(int X1, int Y1, int X2, int Y2, RGB888 color);
 
   // abstract method of DisplayController
-  void fillRow(int y, int x1, int x2, RGB888 color);
+  void rawFillRow(int y, int x1, int x2, RGB888 color);
+
+  void rawFillRow(int y, int x1, int x2, uint8_t pattern);
+
+  void rawInvertRow(int y, int x1, int x2);
 
   // abstract method of DisplayController
-  void drawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount);
+  void rawDrawBitmap_Native(int destX, int destY, Bitmap const * bitmap, int X1, int Y1, int XCount, int YCount);
 
   // abstract method of DisplayController
-  void drawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount);
+  void rawDrawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount);
 
   // abstract method of DisplayController
-  void drawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount);
+  void rawDrawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount);
 
-  void copyRow(int x1, int x2, int srcY, int dstY);
+  // abstract method of DisplayController
+  void rawDrawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount);
 
-  uint8_t preparePixel(RGB888 const & rgb);
+  void rawCopyRow(int x1, int x2, int srcY, int dstY);
 
 
   I2C *              m_i2c;
@@ -259,7 +296,10 @@ private:
 
   TaskHandle_t       m_updateTaskHandle;
 
-  int                m_updateTaskFuncSuspended;             // 0 = enabled, >0 suspended
+  volatile int       m_updateTaskFuncSuspended;             // 0 = enabled, >0 suspended
+  volatile bool      m_updateTaskRunning;
+
+  SSD1306Orientation m_orientation;
 
 };
 

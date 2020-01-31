@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -43,7 +43,7 @@ void setup()
 
   // adjust this to center screen in your monitor
   //VGAController.moveScreen(20, -2);
-  VGAController.moveScreen(-6, 0);
+  //VGAController.moveScreen(-6, 0);
 }
 
 
@@ -220,14 +220,6 @@ class MyApp : public uiApp {
   void init() {
 
     rootWindow()->frameStyle().backgroundColor = RGB888(0, 0, 64);
-
-    /*
-    setTimer(this, 1000);
-    onTimer = [&](uiTimerHandle tHandle) {
-      Serial.printf("Std: %d * 32bit mem: %d\n", heap_caps_get_free_size(MALLOC_CAP_8BIT), heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    };
-    //*/
-
 
     new ChannelFrame(rootWindow());
     new ChannelFrame(rootWindow());

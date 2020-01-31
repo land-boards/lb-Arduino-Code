@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -67,7 +67,7 @@ struct I2CJobInfo {
  *     fabgl::I2C I2C;
  *
  *     void setup() {
- *       I2C.begin(GPIO_NUM_4, GPIO_NUM_15);  // 4 = SDA, 15 = SCL
+ *       I2C.begin(GPIO_NUM_4, GPIO_NUM_15);  // 4 = SDA, 15 = SCL (WARN: disconnect VGA connector!!)
  *     }
  */
 class I2C {
@@ -91,7 +91,7 @@ public:
    *
    * Example:
    *
-   *     // 4 = SDA, 15 = SCL
+   *     // 4 = SDA, 15 = SCL (WARN: disconnect VGA connector!!)
    *     I2C.begin(GPIO_NUM_4, GPIO_NUM_15);
    */
   bool begin(gpio_num_t SDAGPIO, gpio_num_t SCLGPIO);

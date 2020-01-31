@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -40,36 +40,39 @@
  * <a href="https://www.github.com/fdivitto/fabgl"> <img src="github.png" style="width:230px;height:80px;border:0;"> </a>
  * @endhtmlonly
  *
- * [www.FabGL.com](http://www.fabgl.com) - 2019 by Fabrizio Di Vittorio (fdivitto2013@gmail.com)
+ * [www.FabGL.com](http://www.fabgl.com) - 2019-2020 by Fabrizio Di Vittorio (fdivitto2013@gmail.com)
  *
  * - - -
  *
  * FabGL is mainly a Graphics Library for ESP32. It implements several display drivers (for direct VGA output and for I2C and SPI LCD drivers).<br>
- * FabGL can also get input from a PS/2 Keyboard and a Mouse. FabGL implements also: an Audio Engine, a Graphical User Interface (GUI), a Game Engine and an ANSI/VT Terminal.<br>
+ * FabGL can also get input from a PS/2 Keyboard and a Mouse. ULP core handles PS/2 ports communications, leaving main CPU cores free to perform other tasks.<br>
+ * FabGL also implements: an Audio Engine, a Graphical User Interface (GUI), a Game Engine and an ANSI/VT Terminal.<br>
  *
- * This library works with ESP32 revision 1 and upper.
+ * This library works with ESP32 revision 1 and upper.<br>
  *
- * VGA output requires a digital to analog converter (DAC): it can be done by three 270 Ohm resistors to have 8 colors, or by 6 resistors to have 64 colors.
+ * VGA output requires a digital to analog converter (DAC): it can be done by three 270 Ohm resistors to have 8 colors, or by 6 resistors to have 64 colors.<br>
  *
  * There are several fixed and variable width fonts embedded.
  *
- * Unlimited number of sprites are supported. However big sprites and a large amount of them reduces the frame rate and could generate flickering.
+ * Unlimited number of sprites are supported. However big sprites and a large amount of them reduces the frame rate and could generate flickering.<br>
  *
  * When there is enough memory (on low resolutions like 320x200), it is possible to allocate two screen buffers, so to implement double buffering.<br>
- * In this case primitives are always drawn on the back buffer.
+ * In this case primitives are always drawn on the back buffer.<br>
  *
  * Except for double buffering or when explicitly disabled, all drawings are performed on vertical retracing (using VGA driver), so no flickering is visible.<br>
- * If the queue of primitives to draw is not processed before the vertical retracing ends, then it is interrupted and continued at next retracing.
+ * If the queue of primitives to draw is not processed before the vertical retracing ends, then it is interrupted and continued at next retracing.<br>
  *
- * There is a graphical user interface (GUI) with overlapping windows and mouse handling and a lot of widgets (buttons, editboxes, checkboxes, comboboxes, listboxes, etc..).
+ * There is a graphical user interface (GUI) with overlapping windows and mouse handling and a lot of widgets (buttons, editboxes, checkboxes, comboboxes, listboxes, etc..).<br>
  *
- * Finally, there is a sound engine, with multiple channels mixed to a mono output. Each channel can generate sine waveforms, square, etc... or custom sampled data.
+ * Finally, there is a sound engine, with multiple channels mixed to a mono output. Each channel can generate sine waveforms, square, etc... or custom sampled data.<br>
+ * Audio output, like VGA output, is generated using DMA. CPU just mixes audio channels and prepares waveforms.<br>
  *
  * - - -
  *
  * The main classes of FabGL library are:
- *    * fabgl::VGAController, the device driver for VGA output.
- *    * fabgl::SSD1306Controller, the device driver for SSD1306 based OLED displays.
+ *    * fabgl::VGAController, device driver for VGA output.
+ *    * fabgl::SSD1306Controller, device driver for SSD1306 based OLED displays.
+ *    * fabgl::ST7789Controller, device driver for ST7789 based TFT displays.
  *    * fabgl::Canvas, that provides a set of drawing primitives (lines, rectangles, text...).
  *    * fabgl::Terminal, that emulates an ANSI/VT100/VT102 and up terminal (look at @ref vttest "vttest score").
  *    * fabgl::Keyboard, that controls a PS2 keyboard and translates scancodes to virtual keys or ASCII/ANSI codes.
@@ -129,7 +132,7 @@
  * - - -
  *
  * Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com> <br>
- * Copyright (c) 2019 Fabrizio Di Vittorio. <br>
+ * Copyright (c) 2019-2020 Fabrizio Di Vittorio. <br>
  * All rights reserved. <br>
  *
  * This file is part of FabGL Library.
@@ -239,12 +242,23 @@
  * @example VGA/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
  * @example VGA/SpaceInvaders/SpaceInvaders.ino Space invaders full game
  * @example VGA/GraphicalUserInterface/GraphicalUserInterface.ino Graphical User Interface - GUI demo
- * @example VGA/Audio/Audio.ino Audio demo
+ * @example VGA/Audio/Audio.ino Audio demo with GUI
+ * @example VGA/FileBrowser/FileBrowser.ino File browser (SPIFFS and SDCard) with GUI
+ * @example VGA/Sprites/Sprites.ino Simple sprites animation
  * @example SSD1306_OLED/128x32/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
  * @example SSD1306_OLED/128x32/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
  * @example SSD1306_OLED/128x64/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
+ * @example SSD1306_OLED/128x64/DoubleBuffer/DoubleBuffer.ino Show double buffering usage
+ * @example SSD1306_OLED/128x64/RTClock/RTClock.ino DateTime clock using DS3231 RTC
  * @example SSD1306_OLED/128x64/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
  * @example SSD1306_OLED/128x64/NetworkTerminal/NetworkTerminal.ino Network VT/ANSI Terminal
+ * @example SSD1306_OLED/128x64/UI/UI.ino Graphic User Interface - GUI demo
+ *
+ * @example ST7789_TFT/240x240/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
+ * @example ST7789_TFT/240x240/FileBrowser/FileBrowser.ino File browser (SPIFFS and SDCard) with GUI
+ * @example ST7789_TFT/240x240/Sprites/Sprites.ino Simple sprites animation
+ * @example ST7789_TFT/240x240/DoubleBuffer/DoubleBuffer.ino Show double buffering usage
+ *
  * @example Others/KeyboardStudio/KeyboardStudio.ino PS/2 keyboard full example (scancodes, virtual keys, LEDs control...)
  * @example Others/MouseStudio/MouseStudio.ino PS/2 mouse events
  */
@@ -262,6 +276,7 @@
 #include "displaycontroller.h"
 #include "dispdrivers/vgacontroller.h"
 #include "dispdrivers/SSD1306Controller.h"
+#include "dispdrivers/TFTControllerSpecif.h"
 #include "comdrivers/ps2controller.h"
 #include "comdrivers/tsi2c.h"
 #include "devdrivers/keyboard.h"
@@ -308,6 +323,7 @@ using fabgl::uiMessageBoxResult;
 using fabgl::SineWaveformGenerator;
 using fabgl::SquareWaveformGenerator;
 using fabgl::NoiseWaveformGenerator;
+using fabgl::VICNoiseGenerator;
 using fabgl::TriangleWaveformGenerator;
 using fabgl::SawtoothWaveformGenerator;
 using fabgl::SamplesGenerator;
@@ -328,7 +344,11 @@ using fabgl::RGB222;
 using fabgl::RGBA2222;
 using fabgl::RGB888;
 using fabgl::RGBA8888;
-
+using fabgl::FlowControl;
+using fabgl::LineEditor;
+using fabgl::TerminalController;
+using fabgl::AutoSuspendInterrupts;
+using fabgl::LineEnds;
 
 
 

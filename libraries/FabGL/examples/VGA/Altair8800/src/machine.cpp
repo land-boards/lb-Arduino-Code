@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -83,22 +83,19 @@ constexpr int bufferedFileDataSize = 4388;//4388;
 void diskFlush(FILE * file = nullptr)
 {
   // flush bufferedFile
+  AutoSuspendInterrupts autoInt;
   if (bufferedFileChanged && bufferedFile && bufferedFileDataPos != -1) {
-    fabgl::suspendInterrupts();
     fseek(bufferedFile, bufferedFileDataPos, SEEK_SET);
     //fprintf(stderr, "fseek(%d) fwrite(%d)\n", bufferedFileDataPos, bufferedFileDataSize);
     fwrite(bufferedFileData, bufferedFileDataSize, 1, bufferedFile);
     fflush(bufferedFile);
     fsync(fileno(bufferedFile));  // workaround from forums...
-    fabgl::resumeInterrupts();
     bufferedFileChanged = false;
   }
   if (file) {
     // flush specified file
-    fabgl::suspendInterrupts();
     fflush(file);
     fsync(fileno(file));  // workaround from forums...
-    fabgl::resumeInterrupts();
   }
 }
 
@@ -114,12 +111,11 @@ void fetchFileData(FILE * file, int position, int size)
     bufferedFile = file;
   }
   if (bufferedFileDataPos == -1 || position < bufferedFileDataPos || position + size >= bufferedFileDataPos + bufferedFileDataSize) {
-    fabgl::suspendInterrupts();
+    AutoSuspendInterrupts autoInt;
     diskFlush();
     fseek(file, position, SEEK_SET);
     //fprintf(stderr, "fseek(%d) fread(%d)\n", position, bufferedFileDataSize);
     fread(bufferedFileData, bufferedFileDataSize, 1, file);
-    fabgl::resumeInterrupts();
     bufferedFileDataPos = position;
   }
 }
@@ -149,27 +145,24 @@ void diskWrite(int position, void * buffer, int size, FILE * file)
 
 void diskRead(int position, void * buffer, int size, FILE * file)
 {
-  fabgl::suspendInterrupts();
+  AutoSuspendInterrupts autoInt;
   fseek(file, position, SEEK_SET);
   fread(buffer, size, 1, file);
-  fabgl::resumeInterrupts();
 }
 
 
 void diskWrite(int position, void * buffer, int size, FILE * file)
 {
-  fabgl::suspendInterrupts();
+  AutoSuspendInterrupts autoInt;
   fseek(file, position, SEEK_SET);
   fwrite(buffer, size, 1, file);
-  fabgl::resumeInterrupts();
 }
 
 void diskFlush(FILE * file = nullptr)
 {
-  fabgl::suspendInterrupts();
+  AutoSuspendInterrupts autoInt;
   fflush(file);
   fsync(fileno(file));  // workaround from forums...
-  fabgl::resumeInterrupts();
 }
 
 //*/
@@ -306,16 +299,17 @@ void Machine::writeIO(int address, int value)
 
 
 SIO::SIO(Machine * machine, int address)
-  : Device(machine), m_address(address), m_getCharPreprocessor(nullptr), m_stream(nullptr)
+  : Device(machine),
+    m_address(address),
+    m_stream(nullptr)
 {
   machine->attachDevice(this);
 }
 
 
-void SIO::attachStream(Stream * value, GetCharPreprocessor getCharPreprocessor)
+void SIO::attachStream(Stream * value)
 {
   m_stream = value;
-  m_getCharPreprocessor = getCharPreprocessor;
 }
 
 
@@ -331,11 +325,8 @@ bool SIO::read(int address, int * result)
   } else if (address == m_address + 1) {
     // DATA
     int ch = 0;
-    if (m_stream && m_stream->available()) {
+    if (m_stream && m_stream->available())
       ch = m_stream->read();
-      if (m_getCharPreprocessor)
-        ch = m_getCharPreprocessor(ch);
-    }
     *result = ch;
     return true;
   }
@@ -369,7 +360,11 @@ bool SIO::write(int address, int value)
 
 
 Mits88Disk::Mits88Disk(Machine * machine, DiskFormat diskFormat)
-  : Device(machine), m_tick(0), m_diskFormat(diskFormat), m_drive(-1), m_enabled(false)
+  : Device(machine),
+    m_tick(0),
+    m_diskFormat(diskFormat),
+    m_drive(-1),
+    m_enabled(false)
 {
   switch (diskFormat) {
     // 88-Disk 8'' inches has 77 tracks and 32 sectors
@@ -423,6 +418,7 @@ void Mits88Disk::detach(int drive)
   if (m_readOnlyBuffer[drive]) {
     m_readOnlyBuffer[drive] = nullptr;
   } else if (m_file[drive]) {
+    AutoSuspendInterrupts autoInt;
     fclose(m_file[drive]);
     m_file[drive] = nullptr;
     delete [] m_fileSectorBuffer[drive];
@@ -443,6 +439,8 @@ void Mits88Disk::attachFile(int drive, char const * filename)
   detach(drive);
 
   m_fileSectorBuffer[drive] = new uint8_t[SECTOR_SIZE];
+
+  AutoSuspendInterrupts autoInt;
 
   // file exists?
   struct stat st;

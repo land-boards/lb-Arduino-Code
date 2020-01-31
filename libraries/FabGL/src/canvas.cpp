@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -110,6 +110,14 @@ void Canvas::clear()
 }
 
 
+void Canvas::reset()
+{
+  Primitive p;
+  p.cmd = PrimitiveCmd::Reset;
+  m_displayController->addPrimitive(p);
+}
+
+
 void Canvas::scroll(int offsetX, int offsetY)
 {
   Primitive p;
@@ -198,6 +206,24 @@ void Canvas::setBrushColor(Color color)
 void Canvas::setBrushColor(uint8_t red, uint8_t green, uint8_t blue)
 {
   setBrushColor(RGB888(red, green, blue));
+}
+
+
+void Canvas::setPenWidth(int value)
+{
+  Primitive p;
+  p.cmd = PrimitiveCmd::SetPenWidth;
+  p.ivalue = value;
+  m_displayController->addPrimitive(p);
+}
+
+
+void Canvas::setLineEnds(LineEnds value)
+{
+  Primitive p;
+  p.cmd = PrimitiveCmd::SetLineEnds;
+  p.lineEnds = value;
+  m_displayController->addPrimitive(p);
 }
 
 
@@ -481,23 +507,24 @@ void Canvas::swapBuffers()
 }
 
 
-// warn: points memory must survive until next vsync interrupt when primitive is not executed immediately
 void Canvas::drawPath(Point const * points, int pointsCount)
 {
   Primitive p;
   p.cmd = PrimitiveCmd::DrawPath;
   p.path.points = points;
   p.path.pointsCount = pointsCount;
+  p.path.freePoints = false;
   m_displayController->addPrimitive(p);
 }
 
-// warn: points memory must survive until next vsync interrupt when primitive is not executed immediately
+
 void Canvas::fillPath(Point const * points, int pointsCount)
 {
   Primitive p;
   p.cmd = PrimitiveCmd::FillPath;
   p.path.points = points;
   p.path.pointsCount = pointsCount;
+  p.path.freePoints = false;
   m_displayController->addPrimitive(p);
 }
 

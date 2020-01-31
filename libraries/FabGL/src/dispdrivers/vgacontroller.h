@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -69,7 +69,8 @@ namespace fabgl {
 #define VGA_PIXELINROW(row, X) (row[(X) ^ 2])
 
 // requires variables: m_viewPort
-#define VGA_PIXEL(X, Y) VGA_PIXELINROW(m_viewPort[(Y)], X)
+#define VGA_PIXEL(X, Y)    VGA_PIXELINROW(m_viewPort[(Y)], X)
+#define VGA_INVERT_PIXEL(X, Y) { auto px = &VGA_PIXEL((X), (Y)); *px = ~(*px ^ VGA_SYNC_MASK); }
 
 
 
@@ -133,7 +134,7 @@ struct VGATimings {
 *     // Set 640x350@70Hz resolution
 *     VGAController.setResolution(VGA_640x350_70Hz);
 */
-class VGAController : public DisplayController {
+class VGAController : public GenericDisplayController {
 
 public:
 
@@ -418,8 +419,9 @@ private:
 
   void init(gpio_num_t VSyncGPIO);
 
-  uint8_t packHVSync(bool HSync = false, bool VSync = false);
-  uint8_t preparePixel(RGB222 rgb, bool HSync = false, bool VSync = false);
+  uint8_t packHVSync(bool HSync, bool VSync);
+  uint8_t preparePixel(RGB222 rgb) { return m_HVSync | (rgb.B << VGA_BLUE_BIT) | (rgb.G << VGA_GREEN_BIT) | (rgb.R << VGA_RED_BIT); }
+  uint8_t preparePixelWithSync(RGB222 rgb, bool HSync, bool VSync);
 
   void freeBuffers();
   void fillHorizBuffers(int offsetX);
@@ -430,58 +432,61 @@ private:
   int calcRequiredDMABuffersCount(int viewPortHeight);  
 
   // abstract method of DisplayController
-  void setPixelAt(PixelDesc const & pixelDesc);
+  void setPixelAt(PixelDesc const & pixelDesc, Rect & updateRect);
 
   // abstract method of DisplayController
-  void drawEllipse(Size const & size);
+  void drawEllipse(Size const & size, Rect & updateRect);
 
   // abstract method of DisplayController
-  void clear();
+  void clear(Rect & updateRect);
 
   // abstract method of DisplayController
-  void VScroll(int scroll);
+  void VScroll(int scroll, Rect & updateRect);
 
   // abstract method of DisplayController
-  void HScroll(int scroll);
+  void HScroll(int scroll, Rect & updateRect);
 
   // abstract method of DisplayController
-  void drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor);
-
-  void drawGlyph_full(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor);
-
-  void drawGlyph_light(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor);
+  void drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect);
 
   // abstract method of DisplayController
-  void invertRect(Rect const & rect);
+  void invertRect(Rect const & rect, Rect & updateRect);
 
   // abstract method of DisplayController
-  void copyRect(Rect const & source);
+  void copyRect(Rect const & source, Rect & updateRect);
 
   // abstract method of DisplayController
-  void swapFGBG(Rect const & rect);
+  void swapFGBG(Rect const & rect, Rect & updateRect);
 
   // abstract method of DisplayController
   void swapBuffers();
 
   // abstract method of DisplayController
-  void drawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount);
+  void rawDrawBitmap_Native(int destX, int destY, Bitmap const * bitmap, int X1, int Y1, int XCount, int YCount);
 
   // abstract method of DisplayController
-  void drawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount);
+  void rawDrawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount);
 
   // abstract method of DisplayController
-  void drawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount);
+  void rawDrawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount);
 
   // abstract method of DisplayController
-  void fillRow(int y, int x1, int x2, RGB888 color);
+  void rawDrawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount);
+
+  // abstract method of DisplayController
+  void rawFillRow(int y, int x1, int x2, RGB888 color);
+
+  void rawFillRow(int y, int x1, int x2, uint8_t pattern);
+
+  void rawInvertRow(int y, int x1, int x2);
 
   void swapRows(int yA, int yB, int x1, int x2);
 
   // abstract method of DisplayController
-  void drawLine(int X1, int Y1, int X2, int Y2, RGB888 color);
+  void absDrawLine(int X1, int Y1, int X2, int Y2, RGB888 color);
 
   // abstract method of DisplayController
-  PixelFormat getBitmapSavePixelFormat() { return PixelFormat::RGBA2222; }
+  int getBitmapSavePixelSize() { return 1; }
 
   static void VSyncInterrupt();
 
@@ -497,7 +502,7 @@ private:
 
   static VGAController * s_instance;
 
-  int                    m_VSyncInterruptSuspended;             // 0 = enabled, >0 suspended
+  volatile int           m_VSyncInterruptSuspended;             // 0 = enabled, >0 suspended
 
   GPIOStream             m_GPIOStream;
 
@@ -511,6 +516,9 @@ private:
   volatile uint8_t *     m_HBlankLine_withVSync;
   volatile uint8_t *     m_HBlankLine;
   int16_t                m_HLineSize;
+
+  // contains H and V signals for visible line
+  volatile uint8_t       m_HVSync;
 
   volatile int16_t       m_viewPortCol;
   volatile int16_t       m_viewPortRow;

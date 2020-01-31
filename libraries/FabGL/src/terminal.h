@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -217,6 +217,29 @@ namespace fabgl {
 
 
 
+#define FABGL_ENTERM_CMD "\e\xff"
+
+#define FABGL_ENTERM_GETCURSORPOS  1
+#define FABGL_ENTERM_GETCURSORCOL  2
+#define FABGL_ENTERM_GETCURSORROW  3
+#define FABGL_ENTERM_SETCURSORPOS  4
+#define FABGL_ENTERM_INSERTSPACE   5
+#define FABGL_ENTERM_DELETECHAR    6
+#define FABGL_ENTERM_CURSORLEFT    7
+#define FABGL_ENTERM_CURSORRIGHT   8
+#define FABGL_ENTERM_SETCHAR       9
+#define FABGL_ENTERM_SETCHARS     10
+
+
+
+/** \ingroup Enumerations
+ * @brief This enum defines various serial port flow control methods
+ */
+enum class FlowControl {
+  None,              /**< No flow control */
+  Software,          /**< Software flow control. Use XON and XOFF control characters */
+};
+
 
 // used by saveCursorState / restoreCursorState
 struct TerminalCursorState {
@@ -313,6 +336,9 @@ struct EmuState {
 
   // VT52 Graphics Mode
   bool         VT52GraphicsMode;
+
+  // Allow FabGL specific sequences (ESC 0xFF .....)
+  int          allowFabGLSequences;  // >0 allow, 0 = don't allow
 };
 
 
@@ -425,7 +451,7 @@ public:
   void end();
 
   /**
-   * @brief Connects a remove host using the specified serial port.
+   * @brief Connects a remote host using the specified serial port.
    *
    * When serial port is set, the typed keys on PS/2 keyboard are encoded
    * as ANSI/VT100 codes and then sent to the specified serial port.<br>
@@ -433,15 +459,44 @@ public:
    * sent to the serial port.<br>
    * Call Terminal.pollSerialPort() to send codes from serial port to the display.
    *
+   * This method requires continous polling of the serial port and is very inefficient. Use the second overload
+   * to directly handle serial port using interrupts.
+   *
    * @param serialPort The serial port to use.
    * @param autoXONXOFF If true uses software flow control (XON/XOFF).
    *
    * Example:
    *
-   *       Terminal.begin(&VGAController);
-   *       Terminal.connectSerialPort(Serial);
+   *     Terminal.begin(&VGAController);
+   *     Terminal.connectSerialPort(Serial);
    */
   void connectSerialPort(HardwareSerial & serialPort, bool autoXONXOFF = true);
+
+  /**
+   * @brief Connects a remote host using UART
+   *
+   * When serial port is set, the typed keys on PS/2 keyboard are encoded
+   * as ANSI/VT100 codes and then sent to the specified serial port.<br>
+   * Also replies to terminal queries like terminal identification, cursor position, etc.. will be
+   * sent to the serial port.<br>
+   * This method setups the UART2 with specified parameters. Received characters are handlded using interrupts freeing main
+   * loop to do something other.<br>
+   * <br>
+   * This is the preferred way to connect the Terminal with a serial port.<br>
+   *
+   * @param baud Baud rate.
+   * @param config Defines word length, parity and stop bits. Example: SERIAL_8N1.
+   * @param rxPin UART RX pin GPIO number.
+   * @param txPin UART TX pin GPIO number.
+   * @param flowControl Flow control. When set to FlowControl::Software, XON and XOFF characters are automatically sent.
+   * @param inverted If true RX and TX signals are inverted.
+   *
+   * Example:
+   *
+   *     Terminal.begin(&DisplayController);
+   *     Terminal.connectSerialPort(115200, SERIAL_8N1, 34, 2, FlowControl::Software);
+   */
+  void connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int txPin, FlowControl flowControl, bool inverted = false);
 
   /**
    * @brief Pools the serial port for incoming data.
@@ -451,10 +506,9 @@ public:
    *
    * Example:
    *
-   *       void loop()
-   *       {
-   *         Terminal.pollSerialPort();
-   *       }
+   *     void loop() {
+   *       Terminal.pollSerialPort();
+   *     }
    */
   void pollSerialPort();
 
@@ -466,10 +520,10 @@ public:
    *
    * Example:
    *
-   *        Terminal.begin(&VGAController);
-   *        Terminal.connectLocally();
-   *        // from here you can use Terminal.read() to receive keys from keyboard
-   *        // and Terminal.write() to control the display.
+   *     Terminal.begin(&VGAController);
+   *     Terminal.connectLocally();
+   *     // from here you can use Terminal.read() to receive keys from keyboard
+   *     // and Terminal.write() to control the display.
    */
   void connectLocally();
 
@@ -481,6 +535,15 @@ public:
    * @param c ASCII code to inject into the queue.
    */
   void localWrite(uint8_t c);
+
+  /**
+   * @brief Injects keys into the keyboard queue.
+   *
+   * Characters inserted with localWrite() will be received with read(), available() and peek() methods.
+   *
+   * @param c ASCII code to inject into the queue.
+   */
+  void localInsert(uint8_t c);
 
   /**
    * @brief Injects a string of keys into the keyboard queue.
@@ -500,9 +563,9 @@ public:
    *
    * Example:
    *
-   *        Serial.begin(115200);
-   *        Terminal.begin(&VGAController);
-   *        Terminal.setLogStream(Serial);
+   *     Serial.begin(115200);
+   *     Terminal.begin(&VGAController);
+   *     Terminal.setLogStream(Serial);
    */
   void setLogStream(Stream & stream) { m_logStream = &stream; }
 
@@ -533,7 +596,7 @@ public:
    *
    * Example:
    *
-   *        Terminal.setBackgroundColor(Color::Black);
+   *     Terminal.setBackgroundColor(Color::Black);
    */
   void setBackgroundColor(Color color, bool setAsDefault = true);
 
@@ -548,7 +611,7 @@ public:
    *
    * Example:
    *
-   *        Terminal.setForegroundColor(Color::White);
+   *     Terminal.setForegroundColor(Color::White);
    */
   void setForegroundColor(Color color, bool setAsDefault = true);
 
@@ -557,13 +620,15 @@ public:
    *
    * Clears the screen sending "CSI 2 J" command to the screen.
    *
+   * @param moveCursor If True moves cursor at position 1, 1.
+   *
    * Example:
    *
-   *        // Fill the screen with blue
-   *        Terminal.setBackgroundColor(Color::Blue);
-   *        Terminal.clear();
+   *     // Fill the screen with blue
+   *     Terminal.setBackgroundColor(Color::Blue);
+   *     Terminal.clear();
    */
-  void clear();
+  void clear(bool moveCursor = true);
 
   /**
    * @brief Waits for all codes sent to the display has been processed.
@@ -649,6 +714,29 @@ public:
   int read();
 
   /**
+   * @brief Reads codes from keyboard specyfing timeout.
+   *
+   * Keyboard queue is available only after Terminal.connectLocally() call.
+   *
+   * @param timeOutMS Timeout in milliseconds. -1 = no timeout (infinite wait).
+   *
+   * @return The first code of incoming data available (or -1 if no data is available after timeout has expired).
+   */
+  int read(int timeOutMS);
+
+  /**
+   * @brief Wait for a specific code from keyboard, discarding all previous codes.
+   *
+   * Keyboard queue is available only after Terminal.connectLocally() call.
+   *
+   * @param value Char code to wait for.
+   * @param timeOutMS Timeout in milliseconds. -1 = no timeout (infinite wait).
+   *
+   * @return True if specified value has been received within timeout time.
+   */
+  bool waitFor(int value, int timeOutMS = -1);
+
+  /**
    * @brief Reads a code from the keyboard without advancing to the next one.
    *
    * Keyboard queue is available only after Terminal.connectLocally() call.
@@ -676,13 +764,13 @@ public:
    *
    * Example:
    *
-   *        // Clear the screen and print "Hello World!"
-   *        Terminal.write("\e[2J", 4);
-   *        Terminal.write("Hellow World!\r\n", 15);
+   *     // Clear the screen and print "Hello World!"
+   *     Terminal.write("\e[2J", 4);
+   *     Terminal.write("Hellow World!\r\n", 15);
    *
-   *        // The same without size specified
-   *        Terminal.write("\e[2J");
-   *        Terminal.write("Hellow World!\r\n");
+   *     // The same without size specified
+   *     Terminal.write("\e[2J");
+   *     Terminal.write("Hellow World!\r\n");
    */
   int write(const uint8_t * buffer, int size);
 
@@ -699,6 +787,13 @@ public:
 
   using Print::write;
 
+  /**
+   * @brief Gets associated keyboard object.
+   *
+   * @return The Keyboard object.
+   */
+  Keyboard * keyboard() { return m_keyboard; }
+
 
 private:
 
@@ -714,6 +809,7 @@ private:
 
   bool moveUp();
   bool moveDown();
+  void move(int offset);
   void setCursorPos(int X, int Y);
   int getAbsoluteRow(int Y);
 
@@ -743,6 +839,7 @@ private:
   void consumeInputQueue();
   void consumeESC();
   void consumeCSI();
+  void consumeFabGLSeq();
   void consumeCSIQUOT(int * params, int paramsCount);
   void consumeCSISPC(int * params, int paramsCount);
   char consumeParamsAndGetCode(int * params, int * paramsCount, bool * questionMarkFound);
@@ -762,13 +859,18 @@ private:
   void blinkCursor();
   bool int_enableCursor(bool value);
 
+  static void IRAM_ATTR uart_isr(void *arg);
+
   char getNextCode(bool processCtrlCodes);
 
-  void setChar(char c);
+  bool setChar(char c);
   GlyphOptions getGlyphOptionsAt(int X, int Y);
 
   void insertAt(int column, int row, int count);
   void deleteAt(int column, int row, int count);
+
+  bool multilineInsertChar(int charsToMove);
+  void multilineDeleteChar(int charsToMove);
 
   void reverseVideo(bool value);
 
@@ -793,10 +895,18 @@ private:
   void ANSIDecodeVirtualKey(VirtualKey vk);
   void VT52DecodeVirtualKey(VirtualKey vk);
 
-  void convHandleTranslation(uint8_t c);
-  void convSendCtrl(ConvCtrl ctrl);
-  void convQueue(const char * str = nullptr);
+  void convHandleTranslation(uint8_t c, bool fromISR);
+  void convSendCtrl(ConvCtrl ctrl, bool fromISR);
+  void convQueue(const char * str, bool fromISR);
   void TermDecodeVirtualKey(VirtualKey vk);
+
+  bool addToInputQueue(char c, bool fromISR);
+
+  void write(char c, bool fromISR);
+
+  //static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
+
+  void uartCheckInputQueueForFlowControl();
 
   DisplayController * m_displayController;
   Canvas *           m_canvas;
@@ -843,8 +953,10 @@ private:
   volatile bool      m_cursorState;
 
   // timer used to blink
-  TimerHandle_t              m_blinkTimer;
-  volatile SemaphoreHandle_t m_blinkTimerMutex;
+  TimerHandle_t      m_blinkTimer;
+
+  // main terminal mutex
+  volatile SemaphoreHandle_t m_mutex;
 
   volatile bool      m_blinkingTextVisible;    // true = blinking text is currently visible
   volatile bool      m_blinkingTextEnabled;
@@ -855,25 +967,30 @@ private:
   // optional serial port
   // data from serial port is processed and displayed
   // keys from keyboard are processed and sent to serial port
-  HardwareSerial *   m_serialPort;
+  HardwareSerial *          m_serialPort;
+
+  // optional serial port (directly handled)
+  // data from serial port is processed and displayed
+  // keys from keyboard are processed and sent to serial port
+  volatile bool             m_uart;
 
   // contains characters to be processed (from write() calls)
-  QueueHandle_t      m_inputQueue;
+  volatile QueueHandle_t    m_inputQueue;
 
   // contains characters received and decoded from keyboard (or as replyes from ANSI-VT queries)
-  QueueHandle_t      m_outputQueue;
+  QueueHandle_t             m_outputQueue;
 
   // linked list that contains saved cursor states (first item is the last added)
-  TerminalCursorState * m_savedCursorStateList;
+  TerminalCursorState *     m_savedCursorStateList;
 
   // a reset has been requested
-  bool               m_resetRequested;
+  bool                      m_resetRequested;
 
-  bool               m_autoXONOFF;
-  bool               m_XOFF;       // true = XOFF sent
+  volatile bool             m_autoXONOFF;
+  volatile bool             m_XOFF;       // true = XOFF sent
 
   // used to implement m_emuState.keyAutorepeat
-  VirtualKey         m_lastPressedKey;
+  VirtualKey                m_lastPressedKey;
 
   uint8_t                   m_convMatchedCount;
   char                      m_convMatchedChars[EmuTerminalMaxChars];
@@ -881,6 +998,260 @@ private:
   TermInfo const *          m_termInfo;
 
 };
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// TerminalController
+
+
+/**
+ * @brief TerminalController allows direct controlling of the Terminal object without using escape sequences
+ *
+ * Example:
+ *
+ *     // Writes "Hello" at 10, 10
+ *     TerminalController termctrl(&Terminal);
+ *     termctrl.begin();
+ *     termctrl.setCursorPos(10, 10);
+ *     Terminal.write("Hello");
+ */
+class TerminalController {
+
+public:
+
+  /**
+   * @brief Object constructor
+   *
+   * @param terminal The Terminal instance to control.
+   */
+  TerminalController(Terminal * terminal);
+
+  ~TerminalController();
+
+  /**
+   * @brief Initializes TerminalController operations
+   */
+  void begin();
+
+  /**
+   * @brief Finalizes TerminalController operations
+   */
+  void end();
+
+  /**
+   * @brief Sets current cursor position
+   *
+   * @param col Cursor column (1 = left-most position).
+   * @param row Cursor row (1 = top-most position).
+   */
+  void setCursorPos(int col, int row);
+
+  /**
+   * @brief Gets current cursor position
+   *
+   * @param col Pointer to a variable where to store current cursor column (1 = left-most position).
+   * @param row Pointer to a variable where to store current cursor row (1 = top-most position).
+   *
+   * Example:
+   *     int col, row;
+   *     termctrl.getCursorPos(&col, &row);
+   */
+  void getCursorPos(int * col, int * row);
+
+  /**
+   * @brief Moves cursor to the left
+   *
+   * Cursor movement may cross lines.
+   *
+   * @param count Amount of positions to move.
+   */
+  void cursorLeft(int count);
+
+  /**
+   * @brief Moves cursor to the right
+   *
+   * Cursor movement may cross lines.
+   *
+   * @param count Amount of positions to move.
+   */
+  void cursorRight(int count);
+
+  /**
+   * @brief Gets current cursor column
+   *
+   * @return Cursor column (1 = left-most position).
+   */
+  int getCursorCol();
+
+  /**
+   * @brief Gets current cursor row
+   *
+   * @return Cursor row (1 = top-most position).
+   */
+  int getCursorRow();
+
+  /**
+   * @brief Inserts a blank character and move specified amount of characters to the right
+   *
+   * Moving characters to the right may cross multiple lines.
+   *
+   * @param charsToMove Amount of characters to move to the right, starting from current cursor position.
+   *
+   * @return True if vertical scroll occurred.
+   */
+  bool multilineInsertChar(int charsToMove);
+
+  /**
+   * @brief Deletes a character moving specified amount of characters to the left
+   *
+   * Moving characters to the left may cross multiple lines.
+   *
+   * @param charsToMove Amount of characters to move to the left, starting from current cursor position.
+   */
+  void multilineDeleteChar(int charsToMove);
+
+  /**
+   * @brief Sets a raw character at current cursor position
+   *
+   * Cursor position is moved by one position to the right.
+   *
+   * @param c Raw character code to set. Raw character is not interpreted as control character or escape.
+   *
+   * @return True if vertical scroll occurred.
+   */
+  bool setChar(char c);
+
+  /**
+   * @brief Sets a sequence of raw characters starting from current cursor position
+   *
+   * Cursor position is moved by the amount of characters set.
+   *
+   * @param buffer The buffer containing raw characters.
+   * @param count Number of characters to set.
+   *
+   * @return Number of vertical scrolls occurred.
+   */
+  int setChars(char const * buffer, int count);
+
+private:
+  Terminal * m_terminal;
+};
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// LineEditor
+
+
+/**
+ * @brief LineEditor is a single-line / multiple-rows editor which uses the Terminal object as input and output.
+ *
+ * The editor supports following control keys:
+ *
+ * \li <b>Left and Right Arrow keys</b>: Move cursor left and right, even across rows
+ * \li <b>CTRL + Left and Right Arrow keys</b>: Move cursor at the begining of prevous or next word
+ * \li <b>Home key</b>: Move cursor at the beginning of the line
+ * \li <b>End key</b>: Move cursor at the end of the line
+ * \li <b>Delete key</b>: Delete character at cursor
+ * \li <b>Insert key</b>: Enable/disable insert mode
+ * \li <b>Backspace key</b>: Delete character at left of the cursor
+ * \li <b>Enter/Return</b>: Move cursor at the beginning of the next line and exit editor
+ *
+ * Example:
+ *
+ *     Terminal.write("> ");  // show prompt
+ *     LineEditor ed(&Terminal);
+ *     char * txt = ed.get();
+ *     Terminal.printf("Your input is: %s\r\n", txt);
+ */
+class LineEditor {
+
+public:
+
+  /**
+   * @brief Object constructor
+   *
+   * @param terminal Pointer to Terminal object
+   */
+  LineEditor(Terminal * terminal);
+
+  ~LineEditor();
+
+  /**
+   * @brief Sets initial text
+   *
+   * Call this method if the input must have some text already inserted.
+   *
+   * @param text Initial text.
+   * @param moveCursor If true the cursor is moved at the end of initial text.
+   *
+   * Example:
+   * 
+   *     LineEditor ed(&Terminal);
+   *     ed.setText("Initial text ");
+   *     char * txt = ed.get();
+   *     Terminal.printf("Your input is: %s\r\n", txt);
+   */
+  void setText(char const * text, bool moveCursor = true);
+
+  /**
+   * @brief Sets initial text specifying length
+   *
+   * Call this method if the input must have some text already inserted.
+   *
+   * @param text Initial text.
+   * @param length Text length
+   * @param moveCursor If true the cursor is moved at the end of initial text.
+   */
+  void setText(char const * text, int length, bool moveCursor = true);
+
+  /**
+   * @brief Reads user input and return the inserted line
+   *
+   * This method returns when user press ENTER/RETURN or when the specified timeout has expired.
+   *
+   * @param maxLength Maximum amount of character the user can type. 0 = unlimited.
+   * @param timeOutMS Timeout in milliseconds. If timeout expires the cursor is not moved from its current position. -1 = no timeout.
+   *
+   * @return Returns what user typed and edited, or NULL on timeout.
+   */
+  char const * edit(int maxLength = 0, int timeOutMS = -1);
+
+  /**
+   * @brief Gets current content
+   *
+   * @return Returns what user typed.
+   */
+  char const * get() { return m_text; }
+
+  /**
+   * @brief Sets insert mode state
+   *
+   * @param value If True insert mode is enabled (default), if False insert mode is disabled.
+   */
+  void setInsertMode(bool value) { m_insertMode = value; }
+
+private:
+
+  void beginInput();
+  void endInput();
+  void setLength(int newLength);
+
+  Terminal *          m_terminal;
+  TerminalController  m_termctrl;
+  char *              m_text;
+  int                 m_textLength;
+  int                 m_allocated;
+  int16_t             m_inputPos;
+  int16_t             m_state;     // -1 = begin input, 0 = normal input, 1 = ESC, >=31 = CSI (actual value specified the third char if present)
+  int16_t             m_homeCol;
+  int16_t             m_homeRow;
+  bool                m_insertMode;
+};
+
 
 
 } // end of namespace

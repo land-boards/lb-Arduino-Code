@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -164,6 +164,11 @@ public:
   void clear();
 
   /**
+   * @brief Resets paint state and other display controller settings.
+   */
+  void reset();
+
+  /**
    * @brief Defines the scrolling region.
    *
    * A scrolling region is the rectangle area where Canvas.scroll() method can operate.
@@ -282,6 +287,31 @@ public:
    *      Canvas.setBrushColor(Color::BrightBlue);
    */
   void setBrushColor(RGB888 const & color);
+
+  /**
+   * @brief Sets pen width for lines, rectangles and paths
+   *
+   * @param value Pen width (minimum is 1).
+   *
+   * Example:
+   * 
+   *     Canvas.setPenWidth(4);
+   *     Canvas.drawLine(10, 10, 100, 10);
+   */
+  void setPenWidth(int value);
+
+  /**
+   * @nrief Sets line ends shape
+   *
+   * @param value Line ends shape.
+   *
+   * Example:
+   *
+   *     Canvas.setPenWidth(4);
+   *     Canvas.setLineEnds(LineEnds::Circle);
+   *     Canvas.drawLine(10, 10, 100, 10);
+   */
+  void setLineEnds(LineEnds value);
 
   /**
    * @brief Fills a single pixel with the pen color.
@@ -685,11 +715,7 @@ public:
   /**
    * @brief Draws a sequence of lines.
    *
-   * Because the path is drawn on VSync (vertical retracing) the provided array of points must survive until the path is completely painted.<br>
-   * To avoid it, application can disable drawing on vsync (calling VGAController.enableBackgroundPrimitiveExecution()) or just wait
-   * until all the drawing have been completed(calling Canvas.waitCompletion()).
-   *
-   * @param points A pointer to an array of Point objects.
+   * @param points A pointer to an array of Point objects. Points array is copied to a temporary buffer.
    * @param pointsCount Number of points in the array.
    *
    * Example:
@@ -697,18 +723,13 @@ public:
    *     Point points[3] = { {10, 10}, {20, 10}, {15, 20} };
    *     Canvas.setPenColor(Color::Red);
    *     Canvas.drawPath(points, 3);
-   *     Canvas.waitCompletion();
    */
   void drawPath(Point const * points, int pointsCount);
 
   /**
    * @brief Fills the polygon enclosed in a sequence of lines.
    *
-   * Because the path is drawn on VSync (vertical retracing) the provided array of points must survive until the path is completely painted.<br>
-   * To avoid it, application can disable drawing on vsync (calling VGAController.enableBackgroundPrimitiveExecution()) or just wait
-   * until all the drawing have been completed(calling Canvas.waitCompletion()).
-   *
-   * @param points A pointer to an array of Point objects.
+   * @param points A pointer to an array of Point objects. Points array is copied to a temporary buffer.
    * @param pointsCount Number of points in the array.
    *
    * Example:
@@ -716,7 +737,6 @@ public:
    *     Point points[3] = { {10, 10}, {20, 10}, {15, 20} };
    *     Canvas.setBrushColor(Color::Red);
    *     Canvas.fillPath(points, 3);
-   *     Canvas.waitCompletion();
    */
   void fillPath(Point const * points, int pointsCount);
 

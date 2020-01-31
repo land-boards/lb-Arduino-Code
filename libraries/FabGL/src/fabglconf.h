@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -43,8 +43,12 @@
 #define FABGLIB_DEFAULT_BLINK_PERIOD_MS 500
 
 
-/** Size of VGA controller primitives queue. */
+/** Size of display controller primitives queue */
 #define FABGLIB_EXEC_QUEUE_SIZE 1024
+
+
+/** Size (in bytes) of primitives dynamic buffers. Used by primitives like drawPath and fillPath to contain path points. */
+#define FABGLIB_PRIMITIVES_DYNBUFFERS_SIZE 512
 
 
 /** Number of characters the terminal can "write" without pause (increase if you have loss of characters in serial port). */
@@ -126,6 +130,7 @@
 #define FABGLIB_TERMINAL_DEBUG_REPORT_DESCS      0
 #define FABGLIB_TERMINAL_DEBUG_REPORT_DESCSALL   0
 #define FABGLIB_TERMINAL_DEBUG_REPORT_UNSUPPORT  1
+#define FABGLIB_TERMINAL_DEBUG_REPORT_ERRORS     1
 
 
 
@@ -229,6 +234,13 @@
 
 /** Modeline for OLED 128x32 */
 #define OLED_128x32 "\"OLED_128x32\" 128 32"
+
+/** Modeline for TFT 240x240 */
+#define TFT_240x240 "\"TFT_240x240\" 240 240"
+
+/** Modeline for TFT 240x320 */
+#define TFT_240x320 "\"TFT_240x320\" 240 320"
+
 
 // Thanks to Paul Rickards (http://biosrhythm.com)
 

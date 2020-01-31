@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -150,30 +150,6 @@ private:
   uint32_t   m_IFR;
   uint32_t   m_IER;
   uint32_t   m_ACR;
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// "tries" to emulate VIC6561 noise generator
-// derived from a reverse enginnered VHDL code: http://www.denial.shamani.dk/bb/viewtopic.php?t=8733&start=210
-
-class VICNoiseGenerator : public WaveformGenerator {
-public:
-  VICNoiseGenerator();
-
-  void setFrequency(int value);
-  uint16_t frequency() { return m_frequency; }
-
-  int getSample();
-
-private:
-  static const uint16_t LFSRINIT = 0x0202;
-  static const int      CLK      = 4433618;
-
-  uint16_t m_frequency;
-  uint16_t m_counter;
-  uint16_t m_LFSR;
-  uint16_t m_outSR;
 };
 
 

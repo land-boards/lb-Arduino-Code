@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -20,6 +20,14 @@
  */
 
 
+
+/*
+ * OLED - SDA => GPIO 4
+ * OLED - SCL => GPIO 15
+ */
+
+
+
 #include "fabgl.h"
 
 #include "bitmaps.h"
@@ -28,6 +36,9 @@
 #define OLED_SDA       GPIO_NUM_4
 #define OLED_SCL       GPIO_NUM_15
 #define OLED_ADDR      0x3C
+
+// if your display hasn't RESET set to GPIO_UNUSED
+#define OLED_RESET     GPIO_UNUSED  // ie Heltec has GPIO_NUM_16 for reset
 
 
 fabgl::I2C               I2C;
@@ -178,7 +189,7 @@ void setup()
 
   I2C.begin(OLED_SDA, OLED_SCL);
 
-  DisplayController.begin(&I2C, OLED_ADDR);
+  DisplayController.begin(&I2C, OLED_ADDR, OLED_RESET);
   DisplayController.setResolution(OLED_128x64);
 
   while (DisplayController.available() == false) {

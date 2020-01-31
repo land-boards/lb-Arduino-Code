@@ -1,3 +1,0 @@
-[submodule "src/ESP32Lib"]
-	path = src/ESP32Lib
-	url = https://github.com/bitluni/ESP32Lib.git

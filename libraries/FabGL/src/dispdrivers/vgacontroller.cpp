@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -93,6 +93,7 @@ void VGAController::begin(gpio_num_t redGPIO, gpio_num_t greenGPIO, gpio_num_t b
   setupGPIO(HSyncGPIO, VGA_HSYNC_BIT, GPIO_MODE_OUTPUT);
   setupGPIO(VSyncGPIO, VGA_VSYNC_BIT, GPIO_MODE_INPUT_OUTPUT);  // input/output so can be generated interrupt on falling/rising edge
 
+  RGB222::lowBitOnly = true;
   m_bitsPerChannel = 1;
 }
 
@@ -107,10 +108,8 @@ void VGAController::begin(gpio_num_t red1GPIO, gpio_num_t red0GPIO, gpio_num_t g
   setupGPIO(green1GPIO, VGA_GREEN_BIT + 1, GPIO_MODE_OUTPUT);
   setupGPIO(blue1GPIO,  VGA_BLUE_BIT + 1,  GPIO_MODE_OUTPUT);
 
+  RGB222::lowBitOnly = false;
   m_bitsPerChannel = 2;
-
-  // change RGB222 color conversion map to work well with Terminal
-  RGB222::optimizeFor64Colors();
 }
 
 
@@ -318,6 +317,8 @@ void VGAController::setResolution(VGATimings const& timings, int viewPortWidth, 
   m_timings = timings;
   setDoubleBuffered(doubleBuffered);
 
+  m_HVSync = packHVSync(false, false);
+
   m_HLineSize = m_timings.HFrontPorch + m_timings.HSyncPulse + m_timings.HBackPorch + m_timings.HVisibleArea;
 
   m_HBlankLine_withVSync = (uint8_t*) heap_caps_malloc(m_HLineSize, MALLOC_CAP_DMA);
@@ -453,7 +454,6 @@ void VGAController::fillVertBuffers(int offsetY)
 
         if (isViewport) {
           // visible, this is the viewport
-
           switch (m_timings.HStartingBlock) {
             case VGAScanStart::FrontPorch:
               // FRONTPORCH -> SYNC -> BACKPORCH -> VISIBLEAREA
@@ -674,7 +674,7 @@ uint8_t IRAM_ATTR VGAController::packHVSync(bool HSync, bool VSync)
 }
 
 
-uint8_t IRAM_ATTR VGAController::preparePixel(RGB222 rgb, bool HSync, bool VSync)
+uint8_t IRAM_ATTR VGAController::preparePixelWithSync(RGB222 rgb, bool HSync, bool VSync)
 {
   return packHVSync(HSync, VSync) | (rgb.B << VGA_BLUE_BIT) | (rgb.G << VGA_GREEN_BIT) | (rgb.R << VGA_RED_BIT);
 }
@@ -687,7 +687,7 @@ uint8_t IRAM_ATTR VGAController::preparePixel(RGB222 rgb, bool HSync, bool VSync
 // Returns next pos to fill (startPos + length)
 int VGAController::fill(uint8_t volatile * buffer, int startPos, int length, uint8_t red, uint8_t green, uint8_t blue, bool HSync, bool VSync)
 {
-  uint8_t pattern = preparePixel((RGB222){red, green, blue}, HSync, VSync);
+  uint8_t pattern = preparePixelWithSync((RGB222){red, green, blue}, HSync, VSync);
   for (int i = 0; i < length; ++i, ++startPos)
     VGA_PIXELINROW(buffer, startPos) = pattern;
   return startPos;
@@ -698,135 +698,56 @@ void IRAM_ATTR VGAController::VSyncInterrupt()
 {
   auto VGACtrl = VGAController::instance();
   int64_t startTime = VGACtrl->backgroundPrimitiveTimeoutEnabled() ? esp_timer_get_time() : 0;
-  bool isFirst = true;
+  Rect updateRect = Rect(SHRT_MAX, SHRT_MAX, SHRT_MIN, SHRT_MIN);
   do {
     Primitive prim;
     if (VGACtrl->getPrimitiveISR(&prim) == false)
       break;
 
-    if (prim.cmd == PrimitiveCmd::SwapBuffers && !isFirst) {
-      // SwapBuffers must be the first primitive executed at VSync. If not reinsert it and break execution to wait for next VSync.
-      VGACtrl->insertPrimitiveISR(&prim);
+    VGACtrl->execPrimitive(prim, updateRect);
+
+    if (VGACtrl->m_VSyncInterruptSuspended)
       break;
-    }
 
-    VGACtrl->execPrimitive(prim);
-
-    isFirst = false;
   } while (!VGACtrl->backgroundPrimitiveTimeoutEnabled() || (startTime + VGACtrl->m_maxVSyncISRTime > esp_timer_get_time()));
-  VGACtrl->showSprites();
+  VGACtrl->showSprites(updateRect);
 }
 
 
-void IRAM_ATTR VGAController::setPixelAt(PixelDesc const & pixelDesc)
+void IRAM_ATTR VGAController::setPixelAt(PixelDesc const & pixelDesc, Rect & updateRect)
 {
-  hideSprites();
-  uint8_t pattern = preparePixel(pixelDesc.color);
-
-  const int x = pixelDesc.pos.X + paintState().origin.X;
-  const int y = pixelDesc.pos.Y + paintState().origin.Y;
-
-  const int clipX1 = paintState().absClippingRect.X1;
-  const int clipY1 = paintState().absClippingRect.Y1;
-  const int clipX2 = paintState().absClippingRect.X2;
-  const int clipY2 = paintState().absClippingRect.Y2;
-
-  if (x >= clipX1 && x <= clipX2 && y >= clipY1 && y <= clipY2)
-    VGA_PIXEL(x, y) = pattern;
+  genericSetPixelAt(pixelDesc, updateRect,
+                    [&] (RGB888 const & color)          { return preparePixel(color); },
+                    [&] (int X, int Y, uint8_t pattern) { VGA_PIXEL(X, Y) = pattern; }
+                   );
 }
 
 
 // coordinates are absolute values (not relative to origin)
 // line clipped on current absolute clipping rectangle
-void IRAM_ATTR VGAController::drawLine(int X1, int Y1, int X2, int Y2, RGB888 color)
+void IRAM_ATTR VGAController::absDrawLine(int X1, int Y1, int X2, int Y2, RGB888 color)
 {
-  uint8_t pattern = preparePixel(color);
-
-  if (Y1 == Y2) {
-    // horizontal line
-    if (Y1 < paintState().absClippingRect.Y1 || Y1 > paintState().absClippingRect.Y2)
-      return;
-    if (X1 > X2)
-      tswap(X1, X2);
-    if (X1 > paintState().absClippingRect.X2 || X2 < paintState().absClippingRect.X1)
-      return;
-    X1 = iclamp(X1, paintState().absClippingRect.X1, paintState().absClippingRect.X2);
-    X2 = iclamp(X2, paintState().absClippingRect.X1, paintState().absClippingRect.X2);
-    uint8_t volatile * row = m_viewPort[Y1];
-    if (paintState().paintOptions.NOT) {
-      const uint8_t HVSync = packHVSync();
-      for (int x = X1; x <= X2; ++x) {
-        uint8_t * px = (uint8_t*) &VGA_PIXELINROW(row, x);
-        *px = HVSync | ~(*px);
-      }
-    } else {
-      for (int x = X1; x <= X2; ++x)
-        VGA_PIXELINROW(row, x) = pattern;
-    }
-  } else if (X1 == X2) {
-    // vertical line
-    if (X1 < paintState().absClippingRect.X1 || X1 > paintState().absClippingRect.X2)
-      return;
-    if (Y1 > Y2)
-      tswap(Y1, Y2);
-    if (Y1 > paintState().absClippingRect.Y2 || Y2 < paintState().absClippingRect.Y1)
-      return;
-    Y1 = iclamp(Y1, paintState().absClippingRect.Y1, paintState().absClippingRect.Y2);
-    Y2 = iclamp(Y2, paintState().absClippingRect.Y1, paintState().absClippingRect.Y2);
-    if (paintState().paintOptions.NOT) {
-      const uint8_t HVSync = packHVSync();
-      for (int y = Y1; y <= Y2; ++y) {
-        uint8_t * px = (uint8_t*) &VGA_PIXEL(X1, y);
-        *px = HVSync | ~(*px);
-      }
-    } else {
-      for (int y = Y1; y <= Y2; ++y)
-        VGA_PIXEL(X1, y) = pattern;
-    }
-  } else {
-    // other cases (Bresenham's algorithm)
-    // TODO: to optimize
-    //   Unfortunately here we cannot clip exactly using Sutherland-Cohen algorithm (as done before)
-    //   because the starting line (got from clipping algorithm) may not be the same of Bresenham's
-    //   line (think to continuing an existing line).
-    //   Possible solutions:
-    //      - "Yevgeny P. Kuzmin" algorithm:
-    //               https://stackoverflow.com/questions/40884680/how-to-use-bresenhams-line-drawing-algorithm-with-clipping
-    //               https://github.com/ktfh/ClippedLine/blob/master/clip.hpp
-    // For now Sutherland-Cohen algorithm is only used to check the line is actually visible,
-    // then test for every point inside the main Bresenham's loop.
-    if (!clipLine(X1, Y1, X2, Y2, paintState().absClippingRect, true))  // true = do not change line coordinates!
-      return;
-    const int dx = abs(X2 - X1);
-    const int dy = abs(Y2 - Y1);
-    const int sx = X1 < X2 ? 1 : -1;
-    const int sy = Y1 < Y2 ? 1 : -1;
-    int err = (dx > dy ? dx : -dy) / 2;
-    while (true) {
-      if (paintState().absClippingRect.contains(X1, Y1))
-        VGA_PIXEL(X1, Y1) = pattern;
-      if (X1 == X2 && Y1 == Y2)
-        break;
-      int e2 = err;
-      if (e2 > -dx) {
-        err -= dy;
-        X1 += sx;
-      }
-      if (e2 < dy) {
-        err += dx;
-        Y1 += sy;
-      }
-    }
-  }
+  genericAbsDrawLine(X1, Y1, X2, Y2, color,
+                     [&] (RGB888 const & color)                   { return preparePixel(color); },
+                     [&] (int Y, int X1, int X2, uint8_t pattern) { rawFillRow(Y, X1, X2, pattern); },
+                     [&] (int Y, int X1, int X2)                  { rawInvertRow(Y, X1, X2); },
+                     [&] (int X, int Y, uint8_t pattern)          { VGA_PIXEL(X, Y) = pattern; },
+                     [&] (int X, int Y)                           { VGA_INVERT_PIXEL(X, Y); }
+                     );
 }
 
 
 // parameters not checked
-void IRAM_ATTR VGAController::fillRow(int y, int x1, int x2, RGB888 color)
+void IRAM_ATTR VGAController::rawFillRow(int y, int x1, int x2, RGB888 color)
 {
-  uint8_t pattern = preparePixel(color);
+  rawFillRow(y, x1, x2, preparePixel(color));
+}
 
-  uint8_t * row = (uint8_t*) m_viewPort[y];
+
+// parameters not checked
+void IRAM_ATTR VGAController::rawFillRow(int y, int x1, int x2, uint8_t pattern)
+{
+  auto row = m_viewPort[y];
   // fill first bytes before full 32 bits word
   int x = x1;
   for (; x <= x2 && (x & 3) != 0; ++x) {
@@ -835,12 +756,23 @@ void IRAM_ATTR VGAController::fillRow(int y, int x1, int x2, RGB888 color)
   // fill whole 32 bits words (don't care about VGA_PIXELINROW adjusted alignment)
   if (x <= x2) {
     int sz = (x2 & ~3) - x;
-    memset(row + x, pattern, sz);
+    memset((void*)(row + x), pattern, sz);
     x += sz;
   }
   // fill last unaligned bytes
   for (; x <= x2; ++x) {
     VGA_PIXELINROW(row, x) = pattern;
+  }
+}
+
+
+// parameters not checked
+void IRAM_ATTR VGAController::rawInvertRow(int y, int x1, int x2)
+{
+  auto row = m_viewPort[y];
+  for (int x = x1; x <= x2; ++x) {
+    uint8_t * px = (uint8_t*) &VGA_PIXELINROW(row, x);
+    *px = m_HVSync | ~(*px);
   }
 }
 
@@ -866,97 +798,19 @@ void IRAM_ATTR VGAController::swapRows(int yA, int yB, int x1, int x2)
 }
 
 
-void IRAM_ATTR VGAController::drawEllipse(Size const & size)
+void IRAM_ATTR VGAController::drawEllipse(Size const & size, Rect & updateRect)
 {
-  hideSprites();
-  uint8_t pattern = paintState().paintOptions.swapFGBG ? preparePixel(paintState().brushColor) : preparePixel(paintState().penColor);
-
-  const int clipX1 = paintState().absClippingRect.X1;
-  const int clipY1 = paintState().absClippingRect.Y1;
-  const int clipX2 = paintState().absClippingRect.X2;
-  const int clipY2 = paintState().absClippingRect.Y2;
-
-  int x0 = paintState().position.X - size.width / 2;
-  int y0 = paintState().position.Y - size.height / 2;
-  int x1 = paintState().position.X + size.width / 2;
-  int y1 = paintState().position.Y + size.height / 2;
-
-  int a = abs (x1 - x0), b = abs (y1 - y0), b1 = b & 1;
-  int dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-  int err = dx + dy + b1 * a * a, e2;
-
-  if (x0 > x1) {
-    x0 = x1;
-    x1 += a;
-  }
-  if (y0 > y1)
-    y0 = y1;
-  y0 += (b + 1) / 2;
-  y1 = y0-b1;
-  a *= 8 * a;
-  b1 = 8 * b * b;
-  do {
-    if (y0 >= clipY1 && y0 <= clipY2) {
-      if (x1 >= clipX1 && x1 <= clipX2) {
-        // bottom-right semicircle
-        VGA_PIXEL(x1, y0) = pattern;
-      }
-      if (x0 >= clipX1 && x0 <= clipX2) {
-        // bottom-left semicircle
-        VGA_PIXEL(x0, y0) = pattern;
-      }
-    }
-    if (y1 >= clipY1 && y1 <= clipY2) {
-      if (x0 >= clipX1 && x0 <= clipX2) {
-        // top-left semicircle
-        VGA_PIXEL(x0, y1) = pattern;
-      }
-      if (x1 >= clipX1 && x1 <= clipX2) {
-        // top-right semicircle
-        VGA_PIXEL(x1, y1) = pattern;
-      }
-    }
-    e2 = 2 * err;
-    if (e2 >= dx) {
-      ++x0;
-      --x1;
-      err += dx += b1;
-    }
-    if (e2 <= dy) {
-      ++y0;
-      --y1;
-      err += dy += a;
-    }
-  } while (x0 <= x1);
-
-  while (y0 - y1 < b) {
-    int x = x0 - 1;
-    int y = y0;
-    if (x >= clipX1 && x <= clipX2 && y >= clipY1 && y <= clipY2)
-      VGA_PIXEL(x, y) = pattern;
-
-    x = x1 + 1;
-    y = y0++;
-    if (x >= clipX1 && x <= clipX2 && y >= clipY1 && y <= clipY2)
-      VGA_PIXEL(x, y) = pattern;
-
-    x = x0 - 1;
-    y = y1;
-    if (x >= clipX1 && x <= clipX2 && y >= clipY1 && y <= clipY2)
-      VGA_PIXEL(x, y) = pattern;
-
-    x = x1 + 1;
-    y = y1--;
-    if (x >= clipX1 && x <= clipX2 && y >= clipY1 && y <= clipY2)
-      VGA_PIXEL(x, y) = pattern;
-  }
+  genericDrawEllipse(size, updateRect,
+                     [&] (RGB888 const & color)          { return preparePixel(color); },
+                     [&] (int X, int Y, uint8_t pattern) { VGA_PIXEL(X, Y) = pattern; }
+                    );
 }
 
 
-void IRAM_ATTR VGAController::clear()
+void IRAM_ATTR VGAController::clear(Rect & updateRect)
 {
-  hideSprites();
-  uint8_t pattern = paintState().paintOptions.swapFGBG ? preparePixel(paintState().penColor) : preparePixel(paintState().brushColor);
+  hideSprites(updateRect);
+  uint8_t pattern = preparePixel(getActualBrushColor());
   for (int y = 0; y < m_viewPortHeight; ++y)
     memset((uint8_t*) m_viewPort[y], pattern, m_viewPortWidth);
 }
@@ -965,61 +819,16 @@ void IRAM_ATTR VGAController::clear()
 // scroll < 0 -> scroll UP
 // scroll > 0 -> scroll DOWN
 // Speciying horizontal scrolling region slow-down scrolling!
-void IRAM_ATTR VGAController::VScroll(int scroll)
+void IRAM_ATTR VGAController::VScroll(int scroll, Rect & updateRect)
 {
-  hideSprites();
-  RGB888 color = paintState().paintOptions.swapFGBG ? paintState().penColor : paintState().brushColor;
-  int Y1 = paintState().scrollingRegion.Y1;
-  int Y2 = paintState().scrollingRegion.Y2;
-  int X1 = paintState().scrollingRegion.X1;
-  int X2 = paintState().scrollingRegion.X2;
-  int height = Y2 - Y1 + 1;
-
-  if (scroll < 0) {
-
-    // scroll UP
-
-    for (int i = 0; i < height + scroll; ++i) {
-
-      // these are necessary to maintain invariate out of scrolling regions
-      if (X1 > 0)
-        swapRows(Y1 + i, Y1 + i - scroll, 0, X1 - 1);
-      if (X2 < m_viewPortWidth - 1)
-        swapRows(Y1 + i, Y1 + i - scroll, X2 + 1, m_viewPortWidth - 1);
-
-      // swap scan lines
-      tswap(m_viewPort[Y1 + i], m_viewPort[Y1 + i - scroll]);
-    }
-
-    // fill lower area with brush color
-    for (int i = height + scroll; i < height; ++i)
-      fillRow(Y1 + i, X1, X2, color);
-
-  } else if (scroll > 0) {
-
-    // scroll DOWN
-    for (int i = height - scroll - 1; i >= 0; --i) {
-
-      // these are necessary to maintain invariate out of scrolling regions
-      if (X1 > 0)
-        swapRows(Y1 + i, Y1 + i + scroll, 0, X1 - 1);
-      if (X2 < m_viewPortWidth - 1)
-        swapRows(Y1 + i, Y1 + i + scroll, X2 + 1, m_viewPortWidth - 1);
-
-      // swap scan lines
-      tswap(m_viewPort[Y1 + i], m_viewPort[Y1 + i + scroll]);
-    }
-
-    // fill upper area with brush color
-    for (int i = 0; i < scroll; ++i)
-      fillRow(Y1 + i, X1, X2, color);
-
-  }
+  genericVScroll(scroll, updateRect,
+                 [&] (int yA, int yB, int x1, int x2)        { swapRows(yA, yB, x1, x2); },              // swapRowsCopying
+                 [&] (int yA, int yB)                        { tswap(m_viewPort[yA], m_viewPort[yB]); }, // swapRowsPointers
+                 [&] (int y, int x1, int x2, RGB888 pattern) { rawFillRow(y, x1, x2, pattern); }         // rawFillRow
+                );
 
   if (scroll != 0) {
-
     // reassign DMA pointers
-
     int viewPortBuffersPerLine = 0;
     int linePos = 1;
     switch (m_timings.HStartingBlock) {
@@ -1041,6 +850,8 @@ void IRAM_ATTR VGAController::VScroll(int scroll)
         linePos = m_viewPortCol > 0 ? 1 : 0;
         break;
     }
+    const int Y1 = paintState().scrollingRegion.Y1;
+    const int Y2 = paintState().scrollingRegion.Y2;
     for (int i = Y1, idx = Y1 * m_timings.scanCount; i <= Y2; ++i)
       for (int scan = 0; scan < m_timings.scanCount; ++scan, ++idx)
         setDMABufferView(m_viewPortRow * m_timings.scanCount + idx * viewPortBuffersPerLine + linePos, i, scan, m_viewPort, false);
@@ -1052,10 +863,10 @@ void IRAM_ATTR VGAController::VScroll(int scroll)
 // Scrolling by other values requires up to three steps (scopose scrolling by 1, 2, 3 or 4): for example scrolling by 5 is scomposed to 4 and 1, scrolling
 // by 6 is 4 + 2, etc.
 // Horizontal scrolling region start and size (X2-X1+1) must be aligned to 32 bits, otherwise the unoptimized (very slow) version is used.
-void IRAM_ATTR VGAController::HScroll(int scroll)
+void IRAM_ATTR VGAController::HScroll(int scroll, Rect & updateRect)
 {
-  hideSprites();
-  uint8_t pattern8   = paintState().paintOptions.swapFGBG ? preparePixel(paintState().penColor) : preparePixel(paintState().brushColor);
+  hideSprites(updateRect);
+  uint8_t pattern8   = preparePixel(getActualBrushColor());
   uint16_t pattern16 = pattern8 << 8 | pattern8;
   uint32_t pattern32 = pattern16 << 16 | pattern16;
 
@@ -1193,356 +1004,44 @@ void IRAM_ATTR VGAController::HScroll(int scroll)
 }
 
 
-void IRAM_ATTR VGAController::drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor)
+void IRAM_ATTR VGAController::drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect)
 {
-  hideSprites();
-  if (!glyphOptions.bold && !glyphOptions.italic && !glyphOptions.blank && !glyphOptions.underline && !glyphOptions.doubleWidth && glyph.width <= 32)
-    drawGlyph_light(glyph, glyphOptions, penColor, brushColor);
-  else
-    drawGlyph_full(glyph, glyphOptions, penColor, brushColor);
+  genericDrawGlyph(glyph, glyphOptions, penColor, brushColor, updateRect,
+                   [&] (RGB888 const & color) { return preparePixel(color); },
+                   [&] (int y)                { return (uint8_t*) m_viewPort[y]; },
+                   [&] (uint8_t * row, int x, uint8_t pattern) { VGA_PIXELINROW(row, x) = pattern; }
+                  );
 }
 
 
-// TODO: Italic doesn't work well when clipping rect is specified
-void IRAM_ATTR VGAController::drawGlyph_full(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor)
+void IRAM_ATTR VGAController::invertRect(Rect const & rect, Rect & updateRect)
 {
-  const int clipX1 = paintState().absClippingRect.X1;
-  const int clipY1 = paintState().absClippingRect.Y1;
-  const int clipX2 = paintState().absClippingRect.X2;
-  const int clipY2 = paintState().absClippingRect.Y2;
-
-  const int origX = paintState().origin.X;
-  const int origY = paintState().origin.Y;
-
-  const int glyphX = glyph.X + origX;
-  const int glyphY = glyph.Y + origY;
-
-  if (glyphX > clipX2 || glyphY > clipY2)
-    return;
-
-  int16_t glyphWidth        = glyph.width;
-  int16_t glyphHeight       = glyph.height;
-  uint8_t const * glyphData = glyph.data;
-  int16_t glyphWidthByte    = (glyphWidth + 7) / 8;
-  int16_t glyphSize         = glyphHeight * glyphWidthByte;
-
-  bool fillBackground = glyphOptions.fillBackground;
-  bool bold           = glyphOptions.bold;
-  bool italic         = glyphOptions.italic;
-  bool blank          = glyphOptions.blank;
-  bool underline      = glyphOptions.underline;
-  int doubleWidth     = glyphOptions.doubleWidth;
-
-  // modify glyph to handle top half and bottom half double height
-  // doubleWidth = 1 is handled directly inside drawing routine
-  if (doubleWidth > 1) {
-    uint8_t * newGlyphData = (uint8_t*) alloca(glyphSize);
-    // doubling top-half or doubling bottom-half?
-    int offset = (doubleWidth == 2 ? 0 : (glyphHeight >> 1));
-    for (int y = 0; y < glyphHeight ; ++y)
-      for (int x = 0; x < glyphWidthByte; ++x)
-        newGlyphData[x + y * glyphWidthByte] = glyphData[x + (offset + (y >> 1)) * glyphWidthByte];
-    glyphData = newGlyphData;
-  }
-
-  // a very simple and ugly skew (italic) implementation!
-  int skewAdder = 0, skewH1 = 0, skewH2 = 0;
-  if (italic) {
-    skewAdder = 2;
-    skewH1 = glyphHeight / 3;
-    skewH2 = skewH1 * 2;
-  }
-
-  int16_t X1 = 0;
-  int16_t XCount = glyphWidth;
-  int16_t destX = glyphX;
-
-  if (destX < clipX1) {
-    X1 = (clipX1 - destX) / (doubleWidth ? 2 : 1);
-    destX = clipX1;
-  }
-  if (X1 >= glyphWidth)
-    return;
-
-  if (destX + XCount + skewAdder > clipX2 + 1)
-    XCount = clipX2 + 1 - destX - skewAdder;
-  if (X1 + XCount > glyphWidth)
-    XCount = glyphWidth - X1;
-
-  int16_t Y1 = 0;
-  int16_t YCount = glyphHeight;
-  int destY = glyphY;
-
-  if (destY < clipY1) {
-    Y1 = clipY1 - destY;
-    destY = clipY1;
-  }
-  if (Y1 >= glyphHeight)
-    return;
-
-  if (destY + YCount > clipY2 + 1)
-    YCount = clipY2 + 1 - destY;
-  if (Y1 + YCount > glyphHeight)
-    YCount = glyphHeight - Y1;
-
-  if (glyphOptions.invert ^ paintState().paintOptions.swapFGBG)
-    tswap(penColor, brushColor);
-
-  // a very simple and ugly reduce luminosity (faint) implementation!
-  if (glyphOptions.reduceLuminosity) {
-    if (penColor.R > 128) penColor.R = 128;
-    if (penColor.G > 128) penColor.G = 128;
-    if (penColor.B > 128) penColor.B = 128;
-  }
-
-  uint8_t penPattern   = preparePixel(penColor);
-  uint8_t brushPattern = preparePixel(brushColor);
-
-  for (int y = Y1; y < Y1 + YCount; ++y, ++destY) {
-
-    // true if previous pixel has been set
-    bool prevSet = false;
-
-    uint8_t * dstrow = (uint8_t*) m_viewPort[destY];
-    uint8_t const * srcrow = glyphData + y * glyphWidthByte;
-
-    if (underline && y == glyphHeight - FABGLIB_UNDERLINE_POSITION - 1) {
-
-      for (int x = X1, adestX = destX + skewAdder; x < X1 + XCount && adestX <= clipX2; ++x, ++adestX) {
-        VGA_PIXELINROW(dstrow, adestX) = blank ? brushPattern : penPattern;
-        if (doubleWidth) {
-          ++adestX;
-          if (adestX > clipX2)
-            break;
-          VGA_PIXELINROW(dstrow, adestX) = blank ? brushPattern : penPattern;
-        }
-      }
-
-    } else {
-
-      for (int x = X1, adestX = destX + skewAdder; x < X1 + XCount && adestX <= clipX2; ++x, ++adestX) {
-        if ((srcrow[x >> 3] << (x & 7)) & 0x80 && !blank) {
-          VGA_PIXELINROW(dstrow, adestX) = penPattern;
-          prevSet = true;
-        } else if (bold && prevSet) {
-          VGA_PIXELINROW(dstrow, adestX) = penPattern;
-          prevSet = false;
-        } else if (fillBackground) {
-          VGA_PIXELINROW(dstrow, adestX) = brushPattern;
-          prevSet = false;
-        } else {
-          prevSet = false;
-        }
-        if (doubleWidth) {
-          ++adestX;
-          if (adestX > clipX2)
-            break;
-          if (fillBackground)
-            VGA_PIXELINROW(dstrow, adestX) = prevSet ? penPattern : brushPattern;
-          else if (prevSet)
-            VGA_PIXELINROW(dstrow, adestX) = penPattern;
-        }
-      }
-
-    }
-
-    if (italic && (y == skewH1 || y == skewH2))
-      --skewAdder;
-
-  }
+  genericInvertRect(rect, updateRect,
+                    [&] (int Y, int X1, int X2) { rawInvertRow(Y, X1, X2); }
+                   );
 }
 
 
-// assume:
-//   glyph.width <= 32
-//   glyphOptions.fillBackground = 0 or 1
-//   glyphOptions.invert : 0 or 1
-//   glyphOptions.reduceLuminosity: 0 or 1
-//   glyphOptions.... others = 0
-//   paintState().paintOptions.swapFGBG: 0 or 1
-void IRAM_ATTR VGAController::drawGlyph_light(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor)
+void IRAM_ATTR VGAController::swapFGBG(Rect const & rect, Rect & updateRect)
 {
-  const int clipX1 = paintState().absClippingRect.X1;
-  const int clipY1 = paintState().absClippingRect.Y1;
-  const int clipX2 = paintState().absClippingRect.X2;
-  const int clipY2 = paintState().absClippingRect.Y2;
-
-  const int origX = paintState().origin.X;
-  const int origY = paintState().origin.Y;
-
-  const int glyphX = glyph.X + origX;
-  const int glyphY = glyph.Y + origY;
-
-  if (glyphX > clipX2 || glyphY > clipY2)
-    return;
-
-  int16_t glyphWidth        = glyph.width;
-  int16_t glyphHeight       = glyph.height;
-  uint8_t const * glyphData = glyph.data;
-  int16_t glyphWidthByte    = (glyphWidth + 7) / 8;
-
-  int16_t X1 = 0;
-  int16_t XCount = glyphWidth;
-  int16_t destX = glyphX;
-
-  int16_t Y1 = 0;
-  int16_t YCount = glyphHeight;
-  int destY = glyphY;
-
-  if (destX < clipX1) {
-    X1 = clipX1 - destX;
-    destX = clipX1;
-  }
-  if (X1 >= glyphWidth)
-    return;
-
-  if (destX + XCount > clipX2 + 1)
-    XCount = clipX2 + 1 - destX;
-  if (X1 + XCount > glyphWidth)
-    XCount = glyphWidth - X1;
-
-  if (destY < clipY1) {
-    Y1 = clipY1 - destY;
-    destY = clipY1;
-  }
-  if (Y1 >= glyphHeight)
-    return;
-
-  if (destY + YCount > clipY2 + 1)
-    YCount = clipY2 + 1 - destY;
-  if (Y1 + YCount > glyphHeight)
-    YCount = glyphHeight - Y1;
-
-  if (glyphOptions.invert ^ paintState().paintOptions.swapFGBG)
-    tswap(penColor, brushColor);
-
-  // a very simple and ugly reduce luminosity (faint) implementation!
-  if (glyphOptions.reduceLuminosity) {
-    if (penColor.R > 128) penColor.R = 128;
-    if (penColor.G > 128) penColor.G = 128;
-    if (penColor.B > 128) penColor.B = 128;
-  }
-
-  bool fillBackground = glyphOptions.fillBackground;
-
-  uint8_t penPattern   = preparePixel(penColor);
-  uint8_t brushPattern = preparePixel(brushColor);
-
-  for (int y = Y1; y < Y1 + YCount; ++y, ++destY) {
-    uint8_t * dstrow = (uint8_t*) m_viewPort[destY];
-    uint8_t const * srcrow = glyphData + y * glyphWidthByte;
-
-    uint32_t src = (srcrow[0] << 24) | (srcrow[1] << 16) | (srcrow[2] << 8) | (srcrow[3]);
-    src <<= X1;
-    if (fillBackground) {
-      // filled background
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, src <<= 1)
-        VGA_PIXELINROW(dstrow, adestX) = src & 0x80000000 ? penPattern : brushPattern;
-    } else {
-      // transparent background
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, src <<= 1)
-        if (src & 0x80000000)
-          VGA_PIXELINROW(dstrow, adestX) = penPattern;
-    }
-  }
-}
-
-
-void IRAM_ATTR VGAController::invertRect(Rect const & rect)
-{
-  hideSprites();
-
-  const uint8_t HVSync = packHVSync();
-
-  const int origX = paintState().origin.X;
-  const int origY = paintState().origin.Y;
-
-  const int clipX1 = paintState().absClippingRect.X1;
-  const int clipY1 = paintState().absClippingRect.Y1;
-  const int clipX2 = paintState().absClippingRect.X2;
-  const int clipY2 = paintState().absClippingRect.Y2;
-
-  const int x1 = iclamp(rect.X1 + origX, clipX1, clipX2);
-  const int y1 = iclamp(rect.Y1 + origY, clipY1, clipY2);
-  const int x2 = iclamp(rect.X2 + origX, clipX1, clipX2);
-  const int y2 = iclamp(rect.Y2 + origY, clipY1, clipY2);
-
-  for (int y = y1; y <= y2; ++y) {
-    uint8_t * row = (uint8_t*) m_viewPort[y];
-    for (int x = x1; x <= x2; ++x) {
-      uint8_t * px = (uint8_t*) &VGA_PIXELINROW(row, x);
-      *px = HVSync | ~(*px);
-    }
-  }
-}
-
-
-void IRAM_ATTR VGAController::swapFGBG(Rect const & rect)
-{
-  hideSprites();
-
-  uint8_t penPattern   = preparePixel(paintState().penColor);
-  uint8_t brushPattern = preparePixel(paintState().brushColor);
-
-  int origX = paintState().origin.X;
-  int origY = paintState().origin.Y;
-
-  int x1 = iclamp(rect.X1 + origX, 0, m_viewPortWidth - 1);
-  int y1 = iclamp(rect.Y1 + origY, 0, m_viewPortHeight - 1);
-  int x2 = iclamp(rect.X2 + origX, 0, m_viewPortWidth - 1);
-  int y2 = iclamp(rect.Y2 + origY, 0, m_viewPortHeight - 1);
-  for (int y = y1; y <= y2; ++y) {
-    uint8_t * row = (uint8_t*) m_viewPort[y];
-    for (int x = x1; x <= x2; ++x) {
-      uint8_t * px = (uint8_t*) &VGA_PIXELINROW(row, x);
-      if (*px == penPattern)
-        *px = brushPattern;
-      else if (*px == brushPattern)
-        *px = penPattern;
-    }
-  }
+  genericSwapFGBG(rect, updateRect,
+                  [&] (RGB888 const & color)                  { return preparePixel(color); },
+                  [&] (int y)                                 { return (uint8_t*) m_viewPort[y]; },
+                  [&] (uint8_t * row, int x)                  { return VGA_PIXELINROW(row, x); },
+                  [&] (uint8_t * row, int x, uint8_t pattern) { VGA_PIXELINROW(row, x) = pattern; }
+                 );
 }
 
 
 // Slow operation!
 // supports overlapping of source and dest rectangles
-void IRAM_ATTR VGAController::copyRect(Rect const & source)
+void IRAM_ATTR VGAController::copyRect(Rect const & source, Rect & updateRect)
 {
-  hideSprites();
-
-  const int clipX1 = paintState().absClippingRect.X1;
-  const int clipY1 = paintState().absClippingRect.Y1;
-  const int clipX2 = paintState().absClippingRect.X2;
-  const int clipY2 = paintState().absClippingRect.Y2;
-
-  int origX = paintState().origin.X;
-  int origY = paintState().origin.Y;
-
-  int srcX = source.X1 + origX;
-  int srcY = source.Y1 + origY;
-  int width  = source.X2 - source.X1 + 1;
-  int height = source.Y2 - source.Y1 + 1;
-  int destX = paintState().position.X;
-  int destY = paintState().position.Y;
-  int deltaX = destX - srcX;
-  int deltaY = destY - srcY;
-
-  int incX = deltaX < 0 ? 1 : -1;
-  int incY = deltaY < 0 ? 1 : -1;
-
-  int startX = deltaX < 0 ? destX : destX + width - 1;
-  int startY = deltaY < 0 ? destY : destY + height - 1;
-
-  for (int y = startY, i = 0; i < height; y += incY, ++i) {
-    if (y >= clipY1 && y <= clipY2) {
-      uint8_t * srcRow = (uint8_t*) m_viewPort[y - deltaY];
-      uint8_t * dstRow = (uint8_t*) m_viewPort[y];
-      for (int x = startX, j = 0; j < width; x += incX, ++j) {
-        if (x >= clipX1 && x <= clipX2)
-          VGA_PIXELINROW(dstRow, x) = VGA_PIXELINROW(srcRow, x - deltaX);
-      }
-    }
-  }
+  genericCopyRect(source, updateRect,
+                  [&] (int y)                                 { return (uint8_t*) m_viewPort[y]; },
+                  [&] (uint8_t * row, int x)                  { return VGA_PIXELINROW(row, x); },
+                  [&] (uint8_t * row, int x, uint8_t pattern) { VGA_PIXELINROW(row, x) = pattern; }
+                 );
 }
 
 
@@ -1575,141 +1074,51 @@ void VGAController::readScreen(Rect const & rect, RGB222 * destBuf)
 void VGAController::writeScreen(Rect const & rect, RGB222 * srcBuf)
 {
   uint8_t * sbuf = (uint8_t*) srcBuf;
-  const uint8_t HVSync = packHVSync();
   for (int y = rect.Y1; y <= rect.Y2; ++y) {
     uint8_t * row = (uint8_t*) m_viewPort[y];
     for (int x = rect.X1; x <= rect.X2; ++x, ++sbuf)
-      VGA_PIXELINROW(row, x) = *sbuf | HVSync;
+      VGA_PIXELINROW(row, x) = *sbuf | m_HVSync;
   }
 }
 
 
-void IRAM_ATTR VGAController::drawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount)
+void IRAM_ATTR VGAController::rawDrawBitmap_Native(int destX, int destY, Bitmap const * bitmap, int X1, int Y1, int XCount, int YCount)
 {
-  const int     width  = bitmap->width;
-  const uint8_t HVSync = packHVSync();
-
-  if (saveBackground) {
-
-    // save background and draw the bitmap
-    uint8_t foregroundColor = RGB222(bitmap->foregroundColor).pack();
-    uint8_t const * data = bitmap->data;
-    int rowlen = (bitmap->width + 7) / 8;
-    for (int y = Y1, adestY = destY; y < Y1 + YCount; ++y, ++adestY) {
-      uint8_t * dstrow = (uint8_t*) m_viewPort[adestY];
-      uint8_t * savePx = saveBackground + y * width + X1;
-      uint8_t const * src = data + y * rowlen;
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, ++savePx) {
-        if ((src[x >> 3] << (x & 7)) & 0x80) {
-          uint8_t * dstPx = &VGA_PIXELINROW(dstrow, adestX);
-          *savePx = *dstPx;
-          *dstPx = HVSync | foregroundColor;
-        } else {
-          *savePx = 0;
-        }
-      }
-    }
-
-  } else {
-
-    // just draw the bitmap
-    uint8_t foregroundColor = RGB222(bitmap->foregroundColor).pack();
-    uint8_t const * data = bitmap->data;
-    int rowlen = (bitmap->width + 7) / 8;
-    for (int y = Y1, adestY = destY; y < Y1 + YCount; ++y, ++adestY) {
-      uint8_t * dstrow = (uint8_t*) m_viewPort[adestY];
-      uint8_t const * src = data + y * rowlen;
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX) {
-        if ((src[x >> 3] << (x & 7)) & 0x80)
-          VGA_PIXELINROW(dstrow, adestX) = HVSync | foregroundColor;
-      }
-    }
-
-  }
+  genericRawDrawBitmap_Native(destX, destY, (uint8_t*) bitmap->data, bitmap->width, X1, Y1, XCount, YCount,
+                              [&] (int y)                             { return (uint8_t*) m_viewPort[y]; },         // rawGetRow
+                              [&] (uint8_t * row, int x, uint8_t src) { VGA_PIXELINROW(row, x) = m_HVSync | src; }  // rawSetPixelInRow
+                             );
 }
 
 
-void IRAM_ATTR VGAController::drawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount)
+void IRAM_ATTR VGAController::rawDrawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount)
 {
-  const int     width  = bitmap->width;
-  const uint8_t HVSync = packHVSync();
-
-  if (saveBackground) {
-
-    // save background and draw the bitmap
-    uint8_t const * data = bitmap->data;
-    for (int y = Y1, adestY = destY; y < Y1 + YCount; ++y, ++adestY) {
-      uint8_t * dstrow = (uint8_t*) m_viewPort[adestY];
-      uint8_t * savePx = saveBackground + y * width + X1;
-      uint8_t const * src = data + y * width + X1;
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, ++savePx, ++src) {
-        int alpha = *src >> 6;  // TODO?, alpha blending
-        if (alpha) {
-          uint8_t * dstPx = &VGA_PIXELINROW(dstrow, adestX);
-          *savePx = *dstPx;
-          *dstPx = HVSync | *src;
-        } else {
-          *savePx = 0;
-        }
-      }
-    }
-
-  } else {
-
-    // just draw the bitmap
-    uint8_t const * data = bitmap->data;
-    for (int y = Y1, adestY = destY; y < Y1 + YCount; ++y, ++adestY) {
-      uint8_t * dstrow = (uint8_t*) m_viewPort[adestY];
-      uint8_t const * src = data + y * width + X1;
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, ++src) {
-        int alpha = *src >> 6;  // TODO?, alpha blending
-        if (alpha)
-          VGA_PIXELINROW(dstrow, adestX) = HVSync | *src;
-      }
-    }
-
-  }
+  auto foregroundPattern = preparePixel(bitmap->foregroundColor);
+  genericRawDrawBitmap_Mask(destX, destY, bitmap, (uint8_t*)saveBackground, X1, Y1, XCount, YCount,
+                            [&] (int y)                { return (uint8_t*) m_viewPort[y]; },             // rawGetRow
+                            [&] (uint8_t * row, int x) { return VGA_PIXELINROW(row, x); },               // rawGetPixelInRow
+                            [&] (uint8_t * row, int x) { VGA_PIXELINROW(row, x) = foregroundPattern; }   // rawSetPixelInRow
+                           );
 }
 
 
-void IRAM_ATTR VGAController::drawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount)
+void IRAM_ATTR VGAController::rawDrawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount)
 {
-  const int     width  = bitmap->width;
-  const uint8_t HVSync = packHVSync();
+  genericRawDrawBitmap_RGBA2222(destX, destY, bitmap, (uint8_t*)saveBackground, X1, Y1, XCount, YCount,
+                                [&] (int y)                             { return (uint8_t*) m_viewPort[y]; },                   // rawGetRow
+                                [&] (uint8_t * row, int x)              { return VGA_PIXELINROW(row, x); },                     // rawGetPixelInRow
+                                [&] (uint8_t * row, int x, uint8_t src) { VGA_PIXELINROW(row, x) = m_HVSync | (src & 0x3f); }   // rawSetPixelInRow
+                               );
+}
 
-  if (saveBackground) {
 
-    // save background and draw the bitmap
-    RGBA8888 const * data = (RGBA8888 const *) bitmap->data;
-    for (int y = Y1, adestY = destY; y < Y1 + YCount; ++y, ++adestY) {
-      uint8_t * dstrow = (uint8_t*) m_viewPort[adestY];
-      uint8_t * savePx = saveBackground + y * width + X1;
-      RGBA8888 const * src = data + y * width + X1;
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, ++savePx, ++src) {
-        if (src->A) {
-          uint8_t * dstPx = &VGA_PIXELINROW(dstrow, adestX);
-          *savePx = *dstPx;
-          *dstPx = HVSync | (src->R >> 6) | (src->G >> 6 << 2) | (src->B >> 6 << 4);
-        } else {
-          *savePx = 0;
-        }
-      }
-    }
-
-  } else {
-
-    // just draw the bitmap
-    RGBA8888 const * data = (RGBA8888 const *) bitmap->data;
-    for (int y = Y1, adestY = destY; y < Y1 + YCount; ++y, ++adestY) {
-      uint8_t * dstrow = (uint8_t*) m_viewPort[adestY];
-      RGBA8888 const * src = data + y * width + X1;
-      for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, ++src) {
-        if (src->A)
-          VGA_PIXELINROW(dstrow, adestX) = HVSync | (src->R >> 6) | (src->G >> 6 << 2) | (src->B >> 6 << 4);
-      }
-    }
-
-  }
+void IRAM_ATTR VGAController::rawDrawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount)
+{
+  genericRawDrawBitmap_RGBA8888(destX, destY, bitmap, (uint8_t*)saveBackground, X1, Y1, XCount, YCount,
+                                 [&] (int y)                                      { return (uint8_t*) m_viewPort[y]; },   // rawGetRow
+                                 [&] (uint8_t * row, int x)                       { return VGA_PIXELINROW(row, x); },     // rawGetPixelInRow
+                                 [&] (uint8_t * row, int x, RGBA8888 const & src) { VGA_PIXELINROW(row, x) = m_HVSync | (src.R >> 6) | (src.G >> 6 << 2) | (src.B >> 6 << 4); }   // rawSetPixelInRow
+                                );
 }
 
 

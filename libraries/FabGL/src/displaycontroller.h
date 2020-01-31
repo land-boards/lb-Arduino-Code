@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -52,11 +52,19 @@ namespace fabgl {
   Notes:
     - all positions can have negative and outofbound coordinates. Shapes are always clipped correctly.
 */
-enum PrimitiveCmd {
+enum PrimitiveCmd : uint8_t {
+
+  // Needed to send the updated area of screen buffer on some displays (ie SSD1306)
+  Flush,
 
   // Refresh display. Some displays (ie SSD1306) aren't repainted if there aren't primitives
   // so posting Refresh allows to resend the screenbuffer
+  // params: rect (rectangle to refresh)
   Refresh,
+
+  // Reset paint state
+  // params: none
+  Reset,
 
   // Set current pen color
   // params: color
@@ -168,6 +176,14 @@ enum PrimitiveCmd {
   // Set clipping rectangle
   // params: rect
   SetClippingRect,
+
+  // Set pen width
+  // params: ivalue
+  SetPenWidth,
+
+  // Set line ends
+  // params: lineEnds
+  SetLineEnds,
 };
 
 
@@ -178,22 +194,22 @@ enum PrimitiveCmd {
  * First eight full implement all available colors when 1 bit per channel mode is used (having 8 colors).
  */
 enum Color {
-  Black,          /**< Equivalent to RGB222(0,0,0) and RGB888(0,0,0) */
-  Red,            /**< Equivalent to RGB222(2,0,0) and RGB888(128,0,0) */
-  Green,          /**< Equivalent to RGB222(0,2,0) and RGB888(0,128,0) */
-  Yellow,         /**< Equivalent to RGB222(2,2,0) and RGB888(128,128,0) */
-  Blue,           /**< Equivalent to RGB222(0,0,2) and RGB888(0,0,128) */
-  Magenta,        /**< Equivalent to RGB222(2,0,2) and RGB888(128,0,128) */
-  Cyan,           /**< Equivalent to RGB222(0,2,2) and RGB888(0,128,128) */
-  White,          /**< Equivalent to RGB222(2,2,2) and RGB888(128,128,128) */
-  BrightBlack,    /**< Equivalent to RGB222(1,1,1) and RGB888(64,64,64) */
-  BrightRed,      /**< Equivalent to RGB222(3,0,0) and RGB888(255,0,0) */
-  BrightGreen,    /**< Equivalent to RGB222(0,3,0) and RGB888(0,255,0) */
-  BrightYellow,   /**< Equivalent to RGB222(3,3,0) and RGB888(255,255,0) */
-  BrightBlue,     /**< Equivalent to RGB222(0,0,3) and RGB888(0,0,255) */
-  BrightMagenta,  /**< Equivalent to RGB222(3,0,3) and RGB888(255,0,255) */
-  BrightCyan,     /**< Equivalent to RGB222(0,3,3) and RGB888(0,255,255) */
-  BrightWhite,    /**< Equivalent to RGB222(3,3,3) and RGB888(255,255,255) */
+  Black,          /**< Equivalent to RGB888(0,0,0) */
+  Red,            /**< Equivalent to RGB888(128,0,0) */
+  Green,          /**< Equivalent to RGB888(0,128,0) */
+  Yellow,         /**< Equivalent to RGB888(128,128,0) */
+  Blue,           /**< Equivalent to RGB888(0,0,128) */
+  Magenta,        /**< Equivalent to RGB888(128,0,128) */
+  Cyan,           /**< Equivalent to RGB888(0,128,128) */
+  White,          /**< Equivalent to RGB888(128,128,128) */
+  BrightBlack,    /**< Equivalent to RGB888(64,64,64) */
+  BrightRed,      /**< Equivalent to RGB888(255,0,0) */
+  BrightGreen,    /**< Equivalent to RGB888(0,255,0) */
+  BrightYellow,   /**< Equivalent to RGB888(255,255,0) */
+  BrightBlue,     /**< Equivalent to RGB888(0,0,255) */
+  BrightMagenta,  /**< Equivalent to RGB888(255,0,255) */
+  BrightCyan,     /**< Equivalent to RGB888(0,255,255) */
+  BrightWhite,    /**< Equivalent to RGB888(255,255,255) */
 };
 
 
@@ -211,7 +227,7 @@ struct RGB888 {
   RGB888() : R(0), G(0), B(0) { }
   RGB888(Color color);
   RGB888(uint8_t red, uint8_t green, uint8_t blue) : R(red), G(green), B(blue) { }
-};
+} __attribute__ ((packed));
 
 
 inline bool operator==(RGB888 const& lhs, RGB888 const& rhs)
@@ -238,6 +254,7 @@ struct RGBA8888 {
   uint8_t B;  /**< The Blue channel  */
   uint8_t A;  /**< The Alpha channel */
 
+  RGBA8888() : R(0), G(0), B(0), A(0) { }
   RGBA8888(int red, int green, int blue, int alpha) : R(red), G(green), B(blue), A(alpha) { }
 };
 
@@ -255,12 +272,10 @@ struct RGB222 {
   uint8_t B : 2;  /**< The Blue channel  */
 
   RGB222() : R(0), G(0), B(0) { }
-  RGB222(Color color);
   RGB222(uint8_t red, uint8_t green, uint8_t blue) : R(red), G(green), B(blue) { }
   RGB222(RGB888 const & value);
 
-  static void optimizeFor64Colors();
-  uint8_t pack() { return R | (G << 2) | (B << 4); }
+  static bool lowBitOnly;  // true= 8 colors, false 64 colors
 };
 
 
@@ -299,13 +314,13 @@ struct RGBA2222 {
 struct Glyph {
   int16_t         X;      /**< Horizontal glyph coordinate */
   int16_t         Y;      /**< Vertical glyph coordinate */
-  int16_t         width;  /**< Glyph horizontal size */
-  int16_t         height; /**< Glyph vertical size */
+  uint8_t         width;  /**< Glyph horizontal size */
+  uint8_t         height; /**< Glyph vertical size */
   uint8_t const * data;   /**< Byte aligned binary data of the glyph. A 0 represents background or a transparent pixel. A 1 represents foreground. */
 
   Glyph() : X(0), Y(0), width(0), height(0), data(nullptr) { }
   Glyph(int X_, int Y_, int width_, int height_, uint8_t const * data_) : X(X_), Y(Y_), width(width_), height(height_), data(data_) { }
-};
+}  __attribute__ ((packed));
 
 
 
@@ -344,7 +359,7 @@ union GlyphOptions {
 
   /** @brief Helper method to set or reset foreground and background swapping */
   GlyphOptions & Invert(uint8_t value) { invert = value; return *this; }
-};
+} __attribute__ ((packed));
 
 
 
@@ -381,7 +396,7 @@ struct GlyphsBufferRenderInfo {
   GlyphsBuffer const * glyphsBuffer;
 
   GlyphsBufferRenderInfo(int itemX_, int itemY_, GlyphsBuffer const * glyphsBuffer_) : itemX(itemX_), itemY(itemY_), glyphsBuffer(glyphsBuffer_) { }
-};
+} __attribute__ ((packed));
 
 
 /** \ingroup Enumerations
@@ -390,6 +405,7 @@ struct GlyphsBufferRenderInfo {
 enum class NativePixelFormat : uint8_t {
   Mono,       /**< 1 bit per pixel. 0 = black, 1 = white */
   SBGR2222,   /**< 8 bit per pixel: VHBBGGRR (bit 7=VSync 6=HSync 5=B 4=B 3=G 2=G 1=R 0=R). Each color channel can have values from 0 to 3 (maxmum intensity). */
+  RGB565BE,   /**< 16 bit per pixel: RGB565 big endian. */
 };
 
 
@@ -398,14 +414,20 @@ enum class NativePixelFormat : uint8_t {
  */
 enum class PixelFormat : uint8_t {
   Undefined,  /**< Undefined pixel format */
+  Native,     /**< Native device pixel format */
   Mask,       /**< 1 bit per pixel. 0 = transparent, 1 = opaque (color must be specified apart) */
   RGBA2222,   /**< 8 bit per pixel: AABBGGRR (bit 7=A 6=A 5=B 4=B 3=G 2=G 1=R 0=R). AA = 0 fully transparent, AA = 3 fully opaque. Each color channel can have values from 0 to 3 (maxmum intensity). */
   RGBA8888    /**< 32 bits per pixel: RGBA (R=byte 0, G=byte1, B=byte2, A=byte3). Minimum value for each channel is 0, maximum is 255. */
 };
 
 
-// returns row length using the specified pixel format, in bytes
-int getRowLength(int width, PixelFormat format);
+/** \ingroup Enumerations
+* @brief This enum defines line ends when pen width is greater than 1
+*/
+enum class LineEnds : uint8_t {
+  None,    /**< No line ends */
+  Circle,  /**< Circle line ends */
+};
 
 
 /**
@@ -442,7 +464,7 @@ struct BitmapDrawingInfo {
   Bitmap const * bitmap;
 
   BitmapDrawingInfo(int X_, int Y_, Bitmap const * bitmap_) : X(X_), Y(Y_), bitmap(bitmap_) { }
-};
+} __attribute__ ((packed));
 
 
 /** \ingroup Enumerations
@@ -533,7 +555,8 @@ struct Sprite {
 struct Path {
   Point const * points;
   int           pointsCount;
-};
+  bool          freePoints; // deallocate points after drawing
+} __attribute__ ((packed));
 
 
 /**
@@ -544,13 +567,13 @@ struct PaintOptions {
   uint8_t NOT      : 1;  /**< If enabled performs NOT logical operator on destination. Implemented only for straight lines and non-filled rectangles. */
 
   PaintOptions() : swapFGBG(false), NOT(false) { }
-};
+} __attribute__ ((packed));
 
 
 struct PixelDesc {
   Point  pos;
   RGB888 color;
-};
+} __attribute__ ((packed));
 
 
 struct Primitive {
@@ -568,11 +591,13 @@ struct Primitive {
     BitmapDrawingInfo      bitmapDrawingInfo;
     Path                   path;
     PixelDesc              pixelDesc;
-  };
+    LineEnds               lineEnds;
+  } __attribute__ ((packed));
 
   Primitive() { }
   Primitive(PrimitiveCmd cmd_) : cmd(cmd_) { }
-};
+  Primitive(PrimitiveCmd cmd_, Rect const & rect_) : cmd(cmd_), rect(rect_) { }
+} __attribute__ ((packed));
 
 
 struct PaintState {
@@ -585,6 +610,8 @@ struct PaintState {
   Point        origin;
   Rect         clippingRect;    // relative clipping rectangle
   Rect         absClippingRect; // actual absolute clipping rectangle (calculated when setting "origin" or "clippingRect")
+  int16_t      penWidth;
+  LineEnds     lineEnds;
 };
 
 
@@ -638,7 +665,7 @@ public:
 
   PaintState & paintState() { return m_paintState; }
 
-  void addPrimitive(Primitive const & primitive);
+  void addPrimitive(Primitive & primitive);
 
   void primitivesExecutionWait();
 
@@ -775,57 +802,65 @@ protected:
 
   //// abstract methods
 
-  virtual void setPixelAt(PixelDesc const & pixelDesc) = 0;
+  virtual void setPixelAt(PixelDesc const & pixelDesc, Rect & updateRect) = 0;
 
-  virtual void drawLine(int X1, int Y1, int X2, int Y2, RGB888 color) = 0;
+  virtual void absDrawLine(int X1, int Y1, int X2, int Y2, RGB888 color) = 0;
 
-  virtual void fillRow(int y, int x1, int x2, RGB888 color) = 0;
+  virtual void rawFillRow(int y, int x1, int x2, RGB888 color) = 0;
 
-  virtual void drawEllipse(Size const & size) = 0;
+  virtual void drawEllipse(Size const & size, Rect & updateRect) = 0;
 
-  virtual void clear() = 0;
+  virtual void clear(Rect & updateRect) = 0;
 
-  virtual void VScroll(int scroll) = 0;
+  virtual void VScroll(int scroll, Rect & updateRect) = 0;
 
-  virtual void HScroll(int scroll) = 0;
+  virtual void HScroll(int scroll, Rect & updateRect) = 0;
 
-  virtual void drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor) = 0;
+  virtual void drawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect) = 0;
 
-  virtual void invertRect(Rect const & rect) = 0;
+  virtual void invertRect(Rect const & rect, Rect & updateRect) = 0;
 
-  virtual void swapFGBG(Rect const & rect) = 0;
+  virtual void swapFGBG(Rect const & rect, Rect & updateRect) = 0;
 
-  virtual void copyRect(Rect const & source) = 0;
+  virtual void copyRect(Rect const & source, Rect & updateRect) = 0;
 
   virtual void swapBuffers() = 0;
 
-  virtual PixelFormat getBitmapSavePixelFormat() = 0;
+  virtual int getBitmapSavePixelSize() = 0;
 
-  virtual void drawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount) = 0;
+  virtual void rawDrawBitmap_Native(int destX, int destY, Bitmap const * bitmap, int X1, int Y1, int XCount, int YCount) = 0;
 
-  virtual void drawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount) = 0;
+  virtual void rawDrawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount) = 0;
 
-  virtual void drawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, int X1, int Y1, int XCount, int YCount) = 0;
+  virtual void rawDrawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount) = 0;
+
+  virtual void rawDrawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, void * saveBackground, int X1, int Y1, int XCount, int YCount) = 0;
 
   //// implemented methods
 
-  void execPrimitive(Primitive const & prim);
+  void execPrimitive(Primitive const & prim, Rect & updateRect);
 
   void updateAbsoluteClippingRect();
 
-  void lineTo(Point const & position);
+  RGB888 getActualPenColor();
 
-  void drawRect(Rect const & rect);
+  RGB888 getActualBrushColor();
 
-  void drawPath(Path const & path);
+  void lineTo(Point const & position, Rect & updateRect);
 
-  void fillRect(Rect const & rect);
+  void drawRect(Rect const & rect, Rect & updateRect);
 
-  void fillEllipse(Size const & size);
+  void drawPath(Path const & path, Rect & updateRect);
 
-  void fillPath(Path const & path);
+  void absDrawThickLine(int X1, int Y1, int X2, int Y2, int penWidth, RGB888 const & color);
 
-  void renderGlyphsBuffer(GlyphsBufferRenderInfo const & glyphsBufferRenderInfo);
+  void fillRect(Rect const & rect, RGB888 const & color, Rect & updateRect);
+
+  void fillEllipse(int centerX, int centerY, Size const & size, RGB888 const & color, Rect & updateRect);
+
+  void fillPath(Path const & path, RGB888 const & color, Rect & updateRect);
+
+  void renderGlyphsBuffer(GlyphsBufferRenderInfo const & glyphsBufferRenderInfo, Rect & updateRect);
 
   void setSprites(Sprite * sprites, int count, int spriteSize);
 
@@ -833,11 +868,13 @@ protected:
 
   int spritesCount() { return m_spritesCount; }
 
-  void hideSprites();
+  void hideSprites(Rect & updateRect);
 
-  void showSprites();
+  void showSprites(Rect & updateRect);
 
-  void drawBitmap(int destX, int destY, Bitmap const * bitmap, uint8_t * saveBackground, bool ignoreClippingRect);
+  void drawBitmap(BitmapDrawingInfo const & bitmapDrawingInfo, Rect & updateRect);
+
+  void absDrawBitmap(int destX, int destY, Bitmap const * bitmap, void * saveBackground, bool ignoreClippingRect);
 
   void setDoubleBuffered(bool value) { m_doubleBuffered = value; }
 
@@ -847,19 +884,18 @@ protected:
 
   void waitForPrimitives();
 
-  void insertPrimitiveISR(Primitive * primitive);
-
-  void insertPrimitive(Primitive * primitive, int timeOutMS = -1);
-
   Sprite * mouseCursor() { return &m_mouseCursor; }
 
   void resetPaintState();
 
 private:
 
+  void primitiveReplaceDynamicBuffers(Primitive & primitive);
+
+
   PaintState             m_paintState;
 
-  bool                   m_doubleBuffered;
+  volatile bool          m_doubleBuffered;
   volatile QueueHandle_t m_execQueue;
 
   bool                   m_backgroundPrimitiveExecutionEnabled; // when False primitives are execute immediately
@@ -875,10 +911,847 @@ private:
   int16_t                m_mouseHotspotX;
   int16_t                m_mouseHotspotY;
 
+  // memory pool used to allocate buffers of primitives
+  LightMemoryPool        m_primDynMemPool;
+
 };
 
 
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GenericDisplayController
+
+
+class GenericDisplayController : public DisplayController {
+
+protected:
+
+
+  template <typename TPreparePixel, typename TRawSetPixel>
+  void genericSetPixelAt(PixelDesc const & pixelDesc, Rect & updateRect, TPreparePixel preparePixel, TRawSetPixel rawSetPixel)
+  {
+    const int x = pixelDesc.pos.X + paintState().origin.X;
+    const int y = pixelDesc.pos.Y + paintState().origin.Y;
+
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    if (x >= clipX1 && x <= clipX2 && y >= clipY1 && y <= clipY2) {
+      updateRect = updateRect.merge(Rect(x, y, x, y));
+      hideSprites(updateRect);
+      rawSetPixel(x, y, preparePixel(pixelDesc.color));
+    }
+  }
+
+
+  // coordinates are absolute values (not relative to origin)
+  // line clipped on current absolute clipping rectangle
+  template <typename TPreparePixel, typename TRawFillRow, typename TRawInvertRow, typename TRawSetPixel, typename TRawInvertPixel>
+  void genericAbsDrawLine(int X1, int Y1, int X2, int Y2, RGB888 const & color, TPreparePixel preparePixel, TRawFillRow rawFillRow, TRawInvertRow rawInvertRow, TRawSetPixel rawSetPixel, TRawInvertPixel rawInvertPixel)
+  {
+    if (paintState().penWidth > 1) {
+      absDrawThickLine(X1, Y1, X2, Y2, paintState().penWidth, color);
+      return;
+    }
+    auto pattern = preparePixel(color);
+    if (Y1 == Y2) {
+      // horizontal line
+      if (Y1 < paintState().absClippingRect.Y1 || Y1 > paintState().absClippingRect.Y2)
+        return;
+      if (X1 > X2)
+        tswap(X1, X2);
+      if (X1 > paintState().absClippingRect.X2 || X2 < paintState().absClippingRect.X1)
+        return;
+      X1 = iclamp(X1, paintState().absClippingRect.X1, paintState().absClippingRect.X2);
+      X2 = iclamp(X2, paintState().absClippingRect.X1, paintState().absClippingRect.X2);
+      if (paintState().paintOptions.NOT)
+        rawInvertRow(Y1, X1, X2);
+      else
+        rawFillRow(Y1, X1, X2, pattern);
+    } else if (X1 == X2) {
+      // vertical line
+      if (X1 < paintState().absClippingRect.X1 || X1 > paintState().absClippingRect.X2)
+        return;
+      if (Y1 > Y2)
+        tswap(Y1, Y2);
+      if (Y1 > paintState().absClippingRect.Y2 || Y2 < paintState().absClippingRect.Y1)
+        return;
+      Y1 = iclamp(Y1, paintState().absClippingRect.Y1, paintState().absClippingRect.Y2);
+      Y2 = iclamp(Y2, paintState().absClippingRect.Y1, paintState().absClippingRect.Y2);
+      if (paintState().paintOptions.NOT) {
+        for (int y = Y1; y <= Y2; ++y)
+          rawInvertPixel(X1, y);
+      } else {
+        for (int y = Y1; y <= Y2; ++y)
+          rawSetPixel(X1, y, pattern);
+      }
+    } else {
+      // other cases (Bresenham's algorithm)
+      // TODO: to optimize
+      //   Unfortunately here we cannot clip exactly using Sutherland-Cohen algorithm (as done before)
+      //   because the starting line (got from clipping algorithm) may not be the same of Bresenham's
+      //   line (think to continuing an existing line).
+      //   Possible solutions:
+      //      - "Yevgeny P. Kuzmin" algorithm:
+      //               https://stackoverflow.com/questions/40884680/how-to-use-bresenhams-line-drawing-algorithm-with-clipping
+      //               https://github.com/ktfh/ClippedLine/blob/master/clip.hpp
+      // For now Sutherland-Cohen algorithm is only used to check the line is actually visible,
+      // then test for every point inside the main Bresenham's loop.
+      if (!clipLine(X1, Y1, X2, Y2, paintState().absClippingRect, true))  // true = do not change line coordinates!
+        return;
+      const int dx = abs(X2 - X1);
+      const int dy = abs(Y2 - Y1);
+      const int sx = X1 < X2 ? 1 : -1;
+      const int sy = Y1 < Y2 ? 1 : -1;
+      int err = (dx > dy ? dx : -dy) / 2;
+      while (true) {
+        if (paintState().absClippingRect.contains(X1, Y1)) {
+          if (paintState().paintOptions.NOT)
+            rawInvertPixel(X1, Y1);
+          else
+            rawSetPixel(X1, Y1, pattern);
+        }
+        if (X1 == X2 && Y1 == Y2)
+          break;
+        int e2 = err;
+        if (e2 > -dx) {
+          err -= dy;
+          X1 += sx;
+        }
+        if (e2 < dy) {
+          err += dx;
+          Y1 += sy;
+        }
+      }
+    }
+  }
+
+
+  // McIlroy's algorithm
+  template <typename TPreparePixel, typename TRawSetPixel>
+  void genericDrawEllipse(Size const & size, Rect & updateRect, TPreparePixel preparePixel, TRawSetPixel rawSetPixel)
+  {
+    auto pattern = preparePixel(getActualPenColor());
+
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    const int centerX = paintState().position.X;
+    const int centerY = paintState().position.Y;
+
+    const int halfWidth  = size.width / 2;
+    const int halfHeight = size.height / 2;
+
+    updateRect = updateRect.merge(Rect(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight));
+    hideSprites(updateRect);
+
+    const int a2 = halfWidth * halfWidth;
+    const int b2 = halfHeight * halfHeight;
+    const int crit1 = -(a2 / 4 + halfWidth % 2 + b2);
+    const int crit2 = -(b2 / 4 + halfHeight % 2 + a2);
+    const int crit3 = -(b2 / 4 + halfHeight % 2);
+    const int d2xt = 2 * b2;
+    const int d2yt = 2 * a2;
+    int x = 0;          // travels from 0 up to halfWidth
+    int y = halfHeight; // travels from halfHeight down to 0
+    int t = -a2 * y;
+    int dxt = 2 * b2 * x;
+    int dyt = -2 * a2 * y;
+
+    while (y >= 0 && x <= halfWidth) {
+      const int col1 = centerX - x;
+      const int col2 = centerX + x;
+      const int row1 = centerY - y;
+      const int row2 = centerY + y;
+
+      if (col1 >= clipX1 && col1 <= clipX2) {
+        if (row1 >= clipY1 && row1 <= clipY2)
+          rawSetPixel(col1, row1, pattern);
+        if (row2 >= clipY1 && row2 <= clipY2)
+          rawSetPixel(col1, row2, pattern);
+      }
+      if (col2 >= clipX1 && col2 <= clipX2) {
+        if (row1 >= clipY1 && row1 <= clipY2)
+          rawSetPixel(col2, row1, pattern);
+        if (row2 >= clipY1 && row2 <= clipY2)
+          rawSetPixel(col2, row2, pattern);
+      }
+
+      if (t + b2 * x <= crit1 || t + a2 * y <= crit3) {
+        x++;
+        dxt += d2xt;
+        t += dxt;
+      } else if (t - a2 * y > crit2) {
+        y--;
+        dyt += d2yt;
+        t += dyt;
+      } else {
+        x++;
+        dxt += d2xt;
+        t += dxt;
+        y--;
+        dyt += d2yt;
+        t += dyt;
+      }
+    }
+  }
+
+
+  template <typename TPreparePixel, typename TRawGetRow, typename TRawSetPixelInRow>
+  void genericDrawGlyph(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect, TPreparePixel preparePixel, TRawGetRow rawGetRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    if (!glyphOptions.bold && !glyphOptions.italic && !glyphOptions.blank && !glyphOptions.underline && !glyphOptions.doubleWidth && glyph.width <= 32)
+      genericDrawGlyph_light(glyph, glyphOptions, penColor, brushColor, updateRect, preparePixel, rawGetRow, rawSetPixelInRow);
+    else
+      genericDrawGlyph_full(glyph, glyphOptions, penColor, brushColor, updateRect, preparePixel, rawGetRow, rawSetPixelInRow);
+  }
+
+
+  // TODO: Italic doesn't work well when clipping rect is specified
+  template <typename TPreparePixel, typename TRawGetRow, typename TRawSetPixelInRow>
+  void genericDrawGlyph_full(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect, TPreparePixel preparePixel, TRawGetRow rawGetRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    const int origX = paintState().origin.X;
+    const int origY = paintState().origin.Y;
+
+    const int glyphX = glyph.X + origX;
+    const int glyphY = glyph.Y + origY;
+
+    if (glyphX > clipX2 || glyphY > clipY2)
+      return;
+
+    int16_t glyphWidth        = glyph.width;
+    int16_t glyphHeight       = glyph.height;
+    uint8_t const * glyphData = glyph.data;
+    int16_t glyphWidthByte    = (glyphWidth + 7) / 8;
+    int16_t glyphSize         = glyphHeight * glyphWidthByte;
+
+    bool fillBackground = glyphOptions.fillBackground;
+    bool bold           = glyphOptions.bold;
+    bool italic         = glyphOptions.italic;
+    bool blank          = glyphOptions.blank;
+    bool underline      = glyphOptions.underline;
+    int doubleWidth     = glyphOptions.doubleWidth;
+
+    // modify glyph to handle top half and bottom half double height
+    // doubleWidth = 1 is handled directly inside drawing routine
+    if (doubleWidth > 1) {
+      uint8_t * newGlyphData = (uint8_t*) alloca(glyphSize);
+      // doubling top-half or doubling bottom-half?
+      int offset = (doubleWidth == 2 ? 0 : (glyphHeight >> 1));
+      for (int y = 0; y < glyphHeight ; ++y)
+        for (int x = 0; x < glyphWidthByte; ++x)
+          newGlyphData[x + y * glyphWidthByte] = glyphData[x + (offset + (y >> 1)) * glyphWidthByte];
+      glyphData = newGlyphData;
+    }
+
+    // a very simple and ugly skew (italic) implementation!
+    int skewAdder = 0, skewH1 = 0, skewH2 = 0;
+    if (italic) {
+      skewAdder = 2;
+      skewH1 = glyphHeight / 3;
+      skewH2 = skewH1 * 2;
+    }
+
+    int16_t X1 = 0;
+    int16_t XCount = glyphWidth;
+    int16_t destX = glyphX;
+
+    if (destX < clipX1) {
+      X1 = (clipX1 - destX) / (doubleWidth ? 2 : 1);
+      destX = clipX1;
+    }
+    if (X1 >= glyphWidth)
+      return;
+
+    if (destX + XCount + skewAdder > clipX2 + 1)
+      XCount = clipX2 + 1 - destX - skewAdder;
+    if (X1 + XCount > glyphWidth)
+      XCount = glyphWidth - X1;
+
+    int16_t Y1 = 0;
+    int16_t YCount = glyphHeight;
+    int destY = glyphY;
+
+    if (destY < clipY1) {
+      Y1 = clipY1 - destY;
+      destY = clipY1;
+    }
+    if (Y1 >= glyphHeight)
+      return;
+
+    if (destY + YCount > clipY2 + 1)
+      YCount = clipY2 + 1 - destY;
+    if (Y1 + YCount > glyphHeight)
+      YCount = glyphHeight - Y1;
+
+    updateRect = updateRect.merge(Rect(destX, destY, destX + XCount + skewAdder - 1, destY + YCount - 1));
+    hideSprites(updateRect);
+
+    if (glyphOptions.invert ^ paintState().paintOptions.swapFGBG)
+      tswap(penColor, brushColor);
+
+    // a very simple and ugly reduce luminosity (faint) implementation!
+    if (glyphOptions.reduceLuminosity) {
+      if (penColor.R > 128) penColor.R = 128;
+      if (penColor.G > 128) penColor.G = 128;
+      if (penColor.B > 128) penColor.B = 128;
+    }
+
+    auto penPattern   = preparePixel(penColor);
+    auto brushPattern = preparePixel(brushColor);
+
+    for (int y = Y1; y < Y1 + YCount; ++y, ++destY) {
+
+      // true if previous pixel has been set
+      bool prevSet = false;
+
+      auto dstrow = rawGetRow(destY);
+      auto srcrow = glyphData + y * glyphWidthByte;
+
+      if (underline && y == glyphHeight - FABGLIB_UNDERLINE_POSITION - 1) {
+
+        for (int x = X1, adestX = destX + skewAdder; x < X1 + XCount && adestX <= clipX2; ++x, ++adestX) {
+          rawSetPixelInRow(dstrow, adestX, blank ? brushPattern : penPattern);
+          if (doubleWidth) {
+            ++adestX;
+            if (adestX > clipX2)
+              break;
+            rawSetPixelInRow(dstrow, adestX, blank ? brushPattern : penPattern);
+          }
+        }
+
+      } else {
+
+        for (int x = X1, adestX = destX + skewAdder; x < X1 + XCount && adestX <= clipX2; ++x, ++adestX) {
+          if ((srcrow[x >> 3] << (x & 7)) & 0x80 && !blank) {
+            rawSetPixelInRow(dstrow, adestX, penPattern);
+            prevSet = true;
+          } else if (bold && prevSet) {
+            rawSetPixelInRow(dstrow, adestX, penPattern);
+            prevSet = false;
+          } else if (fillBackground) {
+            rawSetPixelInRow(dstrow, adestX, brushPattern);
+            prevSet = false;
+          } else {
+            prevSet = false;
+          }
+          if (doubleWidth) {
+            ++adestX;
+            if (adestX > clipX2)
+              break;
+            if (fillBackground)
+              rawSetPixelInRow(dstrow, adestX, prevSet ? penPattern : brushPattern);
+            else if (prevSet)
+              rawSetPixelInRow(dstrow, adestX, penPattern);
+          }
+        }
+
+      }
+
+      if (italic && (y == skewH1 || y == skewH2))
+        --skewAdder;
+
+    }
+  }
+
+
+  // assume:
+  //   glyph.width <= 32
+  //   glyphOptions.fillBackground = 0 or 1
+  //   glyphOptions.invert : 0 or 1
+  //   glyphOptions.reduceLuminosity: 0 or 1
+  //   glyphOptions.... others = 0
+  //   paintState().paintOptions.swapFGBG: 0 or 1
+  template <typename TPreparePixel, typename TRawGetRow, typename TRawSetPixelInRow>
+  void genericDrawGlyph_light(Glyph const & glyph, GlyphOptions glyphOptions, RGB888 penColor, RGB888 brushColor, Rect & updateRect, TPreparePixel preparePixel, TRawGetRow rawGetRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    const int origX = paintState().origin.X;
+    const int origY = paintState().origin.Y;
+
+    const int glyphX = glyph.X + origX;
+    const int glyphY = glyph.Y + origY;
+
+    if (glyphX > clipX2 || glyphY > clipY2)
+      return;
+
+    int16_t glyphWidth        = glyph.width;
+    int16_t glyphHeight       = glyph.height;
+    uint8_t const * glyphData = glyph.data;
+    int16_t glyphWidthByte    = (glyphWidth + 7) / 8;
+
+    int16_t X1 = 0;
+    int16_t XCount = glyphWidth;
+    int16_t destX = glyphX;
+
+    int16_t Y1 = 0;
+    int16_t YCount = glyphHeight;
+    int destY = glyphY;
+
+    if (destX < clipX1) {
+      X1 = clipX1 - destX;
+      destX = clipX1;
+    }
+    if (X1 >= glyphWidth)
+      return;
+
+    if (destX + XCount > clipX2 + 1)
+      XCount = clipX2 + 1 - destX;
+    if (X1 + XCount > glyphWidth)
+      XCount = glyphWidth - X1;
+
+    if (destY < clipY1) {
+      Y1 = clipY1 - destY;
+      destY = clipY1;
+    }
+    if (Y1 >= glyphHeight)
+      return;
+
+    if (destY + YCount > clipY2 + 1)
+      YCount = clipY2 + 1 - destY;
+    if (Y1 + YCount > glyphHeight)
+      YCount = glyphHeight - Y1;
+
+    updateRect = updateRect.merge(Rect(destX, destY, destX + XCount - 1, destY + YCount - 1));
+    hideSprites(updateRect);
+
+    if (glyphOptions.invert ^ paintState().paintOptions.swapFGBG)
+      tswap(penColor, brushColor);
+
+    // a very simple and ugly reduce luminosity (faint) implementation!
+    if (glyphOptions.reduceLuminosity) {
+      if (penColor.R > 128) penColor.R = 128;
+      if (penColor.G > 128) penColor.G = 128;
+      if (penColor.B > 128) penColor.B = 128;
+    }
+
+    bool fillBackground = glyphOptions.fillBackground;
+
+    auto penPattern   = preparePixel(penColor);
+    auto brushPattern = preparePixel(brushColor);
+
+    for (int y = Y1; y < Y1 + YCount; ++y, ++destY) {
+      auto dstrow = rawGetRow(destY);
+      uint8_t const * srcrow = glyphData + y * glyphWidthByte;
+
+      uint32_t src = (srcrow[0] << 24) | (srcrow[1] << 16) | (srcrow[2] << 8) | (srcrow[3]);
+      src <<= X1;
+      if (fillBackground) {
+        // filled background
+        for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, src <<= 1)
+          rawSetPixelInRow(dstrow, adestX, src & 0x80000000 ? penPattern : brushPattern);
+      } else {
+        // transparent background
+        for (int x = X1, adestX = destX; x < X1 + XCount; ++x, ++adestX, src <<= 1)
+          if (src & 0x80000000)
+            rawSetPixelInRow(dstrow, adestX, penPattern);
+      }
+    }
+  }
+
+
+  template <typename TRawInvertRow>
+  void genericInvertRect(Rect const & rect, Rect & updateRect, TRawInvertRow rawInvertRow)
+  {
+    const int origX = paintState().origin.X;
+    const int origY = paintState().origin.Y;
+
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    const int x1 = iclamp(rect.X1 + origX, clipX1, clipX2);
+    const int y1 = iclamp(rect.Y1 + origY, clipY1, clipY2);
+    const int x2 = iclamp(rect.X2 + origX, clipX1, clipX2);
+    const int y2 = iclamp(rect.Y2 + origY, clipY1, clipY2);
+
+    updateRect = updateRect.merge(Rect(x1, y1, x2, y2));
+    hideSprites(updateRect);
+
+    for (int y = y1; y <= y2; ++y)
+      rawInvertRow(y, x1, x2);
+  }
+
+
+  template <typename TPreparePixel, typename TRawGetRow, typename TRawGetPixelInRow, typename TRawSetPixelInRow>
+  void genericSwapFGBG(Rect const & rect, Rect & updateRect, TPreparePixel preparePixel, TRawGetRow rawGetRow, TRawGetPixelInRow rawGetPixelInRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    auto penPattern   = preparePixel(paintState().penColor);
+    auto brushPattern = preparePixel(paintState().brushColor);
+
+    int origX = paintState().origin.X;
+    int origY = paintState().origin.Y;
+
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    const int x1 = iclamp(rect.X1 + origX, clipX1, clipX2);
+    const int y1 = iclamp(rect.Y1 + origY, clipY1, clipY2);
+    const int x2 = iclamp(rect.X2 + origX, clipX1, clipX2);
+    const int y2 = iclamp(rect.Y2 + origY, clipY1, clipY2);
+
+    updateRect = updateRect.merge(Rect(x1, y1, x2, y2));
+    hideSprites(updateRect);
+
+    for (int y = y1; y <= y2; ++y) {
+      auto row = rawGetRow(y);
+      for (int x = x1; x <= x2; ++x) {
+        auto px = rawGetPixelInRow(row, x);
+        if (px == penPattern)
+          rawSetPixelInRow(row, x, brushPattern);
+        else if (px == brushPattern)
+          rawSetPixelInRow(row, x, penPattern);
+      }
+    }
+  }
+
+
+  template <typename TRawGetRow, typename TRawGetPixelInRow, typename TRawSetPixelInRow>
+  void genericCopyRect(Rect const & source, Rect & updateRect, TRawGetRow rawGetRow, TRawGetPixelInRow rawGetPixelInRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int clipX1 = paintState().absClippingRect.X1;
+    const int clipY1 = paintState().absClippingRect.Y1;
+    const int clipX2 = paintState().absClippingRect.X2;
+    const int clipY2 = paintState().absClippingRect.Y2;
+
+    int origX = paintState().origin.X;
+    int origY = paintState().origin.Y;
+
+    int srcX = source.X1 + origX;
+    int srcY = source.Y1 + origY;
+    int width  = source.X2 - source.X1 + 1;
+    int height = source.Y2 - source.Y1 + 1;
+    int destX = paintState().position.X;
+    int destY = paintState().position.Y;
+    int deltaX = destX - srcX;
+    int deltaY = destY - srcY;
+
+    int incX = deltaX < 0 ? 1 : -1;
+    int incY = deltaY < 0 ? 1 : -1;
+
+    int startX = deltaX < 0 ? destX : destX + width - 1;
+    int startY = deltaY < 0 ? destY : destY + height - 1;
+
+    updateRect = updateRect.merge(Rect(srcX, srcY, srcX + width - 1, srcY + height - 1));
+    updateRect = updateRect.merge(Rect(destX, destY, destX + width - 1, destY + height - 1));
+    hideSprites(updateRect);
+
+    for (int y = startY, i = 0; i < height; y += incY, ++i) {
+      if (y >= clipY1 && y <= clipY2) {
+        auto srcRow = rawGetRow(y - deltaY);
+        auto dstRow = rawGetRow(y);
+        for (int x = startX, j = 0; j < width; x += incX, ++j) {
+          if (x >= clipX1 && x <= clipX2)
+            rawSetPixelInRow(dstRow, x, rawGetPixelInRow(srcRow, x - deltaX));
+        }
+      }
+    }
+  }
+
+
+  template <typename TRawGetRow, typename TRawSetPixelInRow, typename TDataType>
+  void genericRawDrawBitmap_Native(int destX, int destY, TDataType * data, int width, int X1, int Y1, int XCount, int YCount,
+                                   TRawGetRow rawGetRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int yEnd = Y1 + YCount;
+    const int xEnd = X1 + XCount;
+    for (int y = Y1; y < yEnd; ++y, ++destY) {
+      auto dstrow = rawGetRow(destY);
+      auto src = data + y * width + X1;
+      for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX, ++src)
+        rawSetPixelInRow(dstrow, adestX, *src);
+    }
+  }
+
+
+
+  template <typename TRawGetRow, typename TRawGetPixelInRow, typename TRawSetPixelInRow, typename TBackground>
+  void genericRawDrawBitmap_Mask(int destX, int destY, Bitmap const * bitmap, TBackground * saveBackground, int X1, int Y1, int XCount, int YCount,
+                                 TRawGetRow rawGetRow, TRawGetPixelInRow rawGetPixelInRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int width = bitmap->width;
+    const int yEnd  = Y1 + YCount;
+    const int xEnd  = X1 + XCount;
+    auto data = bitmap->data;
+    const int rowlen = (bitmap->width + 7) / 8;
+
+    if (saveBackground) {
+
+      // save background and draw the bitmap
+      for (int y = Y1; y < yEnd; ++y, ++destY) {
+        auto dstrow = rawGetRow(destY);
+        auto savePx = saveBackground + y * width + X1;
+        auto src = data + y * rowlen;
+        for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX, ++savePx) {
+          *savePx = rawGetPixelInRow(dstrow, adestX);
+          if ((src[x >> 3] << (x & 7)) & 0x80)
+            rawSetPixelInRow(dstrow, adestX);
+        }
+      }
+
+    } else {
+
+      // just draw the bitmap
+      for (int y = Y1; y < yEnd; ++y, ++destY) {
+        auto dstrow = rawGetRow(destY);
+        auto src = data + y * rowlen;
+        for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX) {
+          if ((src[x >> 3] << (x & 7)) & 0x80)
+            rawSetPixelInRow(dstrow, adestX);
+        }
+      }
+
+    }
+  }
+
+
+  template <typename TRawGetRow, typename TRawGetPixelInRow, typename TRawSetPixelInRow, typename TBackground>
+  void genericRawDrawBitmap_RGBA2222(int destX, int destY, Bitmap const * bitmap, TBackground * saveBackground, int X1, int Y1, int XCount, int YCount,
+                                     TRawGetRow rawGetRow, TRawGetPixelInRow rawGetPixelInRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int width  = bitmap->width;
+    const int yEnd   = Y1 + YCount;
+    const int xEnd   = X1 + XCount;
+    auto data = bitmap->data;
+
+    if (saveBackground) {
+
+      // save background and draw the bitmap
+      for (int y = Y1; y < yEnd; ++y, ++destY) {
+        auto dstrow = rawGetRow(destY);
+        auto savePx = saveBackground + y * width + X1;
+        auto src = data + y * width + X1;
+        for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX, ++savePx, ++src) {
+          *savePx = rawGetPixelInRow(dstrow, adestX);
+          if (*src & 0xc0)  // alpha > 0 ?
+            rawSetPixelInRow(dstrow, adestX, *src);
+        }
+      }
+
+    } else {
+
+      // just draw the bitmap
+      for (int y = Y1; y < yEnd; ++y, ++destY) {
+        auto dstrow = rawGetRow(destY);
+        auto src = data + y * width + X1;
+        for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX, ++src) {
+          if (*src & 0xc0)  // alpha > 0 ?
+            rawSetPixelInRow(dstrow, adestX, *src);
+        }
+      }
+
+    }
+  }
+
+
+  template <typename TRawGetRow, typename TRawGetPixelInRow, typename TRawSetPixelInRow, typename TBackground>
+  void genericRawDrawBitmap_RGBA8888(int destX, int destY, Bitmap const * bitmap, TBackground * saveBackground, int X1, int Y1, int XCount, int YCount,
+                                     TRawGetRow rawGetRow, TRawGetPixelInRow rawGetPixelInRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    const int width = bitmap->width;
+    const int yEnd  = Y1 + YCount;
+    const int xEnd  = X1 + XCount;
+    auto data = (RGBA8888 const *) bitmap->data;
+
+    if (saveBackground) {
+
+      // save background and draw the bitmap
+      for (int y = Y1; y < yEnd; ++y, ++destY) {
+        auto dstrow = rawGetRow(destY);
+        auto savePx = saveBackground + y * width + X1;
+        auto src = data + y * width + X1;
+        for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX, ++savePx, ++src) {
+          *savePx = rawGetPixelInRow(dstrow, adestX);
+          if (src->A)
+            rawSetPixelInRow(dstrow, adestX, *src);
+        }
+      }
+
+    } else {
+
+      // just draw the bitmap
+      for (int y = Y1; y < yEnd; ++y, ++destY) {
+        auto dstrow = rawGetRow(destY);
+        auto src = data + y * width + X1;
+        for (int x = X1, adestX = destX; x < xEnd; ++x, ++adestX, ++src) {
+          if (src->A)
+            rawSetPixelInRow(dstrow, adestX, *src);
+        }
+      }
+
+    }
+  }
+
+
+  // Scroll is done copying and filling rows
+  // scroll < 0 -> scroll UP
+  // scroll > 0 -> scroll DOWN
+  template <typename TRawCopyRow, typename TRawFillRow>
+  void genericVScroll(int scroll, Rect & updateRect,
+                      TRawCopyRow rawCopyRow, TRawFillRow rawFillRow)
+  {
+    hideSprites(updateRect);
+    RGB888 color = getActualBrushColor();
+    int Y1 = paintState().scrollingRegion.Y1;
+    int Y2 = paintState().scrollingRegion.Y2;
+    int X1 = paintState().scrollingRegion.X1;
+    int X2 = paintState().scrollingRegion.X2;
+    int height = Y2 - Y1 + 1;
+
+    if (scroll < 0) {
+
+      // scroll UP
+
+      for (int i = 0; i < height + scroll; ++i) {
+        // copy X1..X2 of (Y1 + i - scroll) to (Y1 + i)
+        rawCopyRow(X1, X2, (Y1 + i - scroll), (Y1 + i));
+      }
+      // fill lower area with brush color
+      for (int i = height + scroll; i < height; ++i)
+        rawFillRow(Y1 + i, X1, X2, color);
+
+    } else if (scroll > 0) {
+
+      // scroll DOWN
+      for (int i = height - scroll - 1; i >= 0; --i) {
+        // copy X1..X2 of (Y1 + i) to (Y1 + i + scroll)
+        rawCopyRow(X1, X2, (Y1 + i), (Y1 + i + scroll));
+      }
+
+      // fill upper area with brush color
+      for (int i = 0; i < scroll; ++i)
+        rawFillRow(Y1 + i, X1, X2, color);
+
+    }
+  }
+
+
+  // scroll is done swapping rows and rows pointers
+  // scroll < 0 -> scroll UP
+  // scroll > 0 -> scroll DOWN
+  template <typename TSwapRowsCopying, typename TSwapRowsPointers, typename TRawFillRow>
+  void genericVScroll(int scroll, Rect & updateRect,
+                      TSwapRowsCopying swapRowsCopying, TSwapRowsPointers swapRowsPointers, TRawFillRow rawFillRow)
+  {
+    hideSprites(updateRect);
+    RGB888 color = getActualBrushColor();
+    const int Y1 = paintState().scrollingRegion.Y1;
+    const int Y2 = paintState().scrollingRegion.Y2;
+    const int X1 = paintState().scrollingRegion.X1;
+    const int X2 = paintState().scrollingRegion.X2;
+    const int height = Y2 - Y1 + 1;
+
+    const int viewPortWidth = getViewPortWidth();
+
+    if (scroll < 0) {
+
+      // scroll UP
+
+      for (int i = 0; i < height + scroll; ++i) {
+
+        // these are necessary to maintain invariate out of scrolling regions
+        if (X1 > 0)
+          swapRowsCopying(Y1 + i, Y1 + i - scroll, 0, X1 - 1);
+        if (X2 < viewPortWidth - 1)
+          swapRowsCopying(Y1 + i, Y1 + i - scroll, X2 + 1, viewPortWidth - 1);
+
+        // swap scan lines
+        swapRowsPointers(Y1 + i, Y1 + i - scroll);
+      }
+
+      // fill lower area with brush color
+      for (int i = height + scroll; i < height; ++i)
+        rawFillRow(Y1 + i, X1, X2, color);
+
+    } else if (scroll > 0) {
+
+      // scroll DOWN
+      for (int i = height - scroll - 1; i >= 0; --i) {
+
+        // these are necessary to maintain invariate out of scrolling regions
+        if (X1 > 0)
+          swapRowsCopying(Y1 + i, Y1 + i + scroll, 0, X1 - 1);
+        if (X2 < viewPortWidth - 1)
+          swapRowsCopying(Y1 + i, Y1 + i + scroll, X2 + 1, viewPortWidth - 1);
+
+        // swap scan lines
+        swapRowsPointers(Y1 + i, Y1 + i + scroll);
+      }
+
+      // fill upper area with brush color
+      for (int i = 0; i < scroll; ++i)
+        rawFillRow(Y1 + i, X1, X2, color);
+
+    }
+  }
+
+
+
+  // Scroll is done copying and filling columns
+  // scroll < 0 -> scroll LEFT
+  // scroll > 0 -> scroll RIGHT
+  template <typename TPreparePixel, typename TRawGetRow, typename TRawGetPixelInRow, typename TRawSetPixelInRow>
+  void genericHScroll(int scroll, Rect & updateRect,
+                      TPreparePixel preparePixel, TRawGetRow rawGetRow, TRawGetPixelInRow rawGetPixelInRow, TRawSetPixelInRow rawSetPixelInRow)
+  {
+    hideSprites(updateRect);
+    auto pattern = preparePixel(getActualBrushColor());
+
+    int Y1 = paintState().scrollingRegion.Y1;
+    int Y2 = paintState().scrollingRegion.Y2;
+    int X1 = paintState().scrollingRegion.X1;
+    int X2 = paintState().scrollingRegion.X2;
+
+    if (scroll < 0) {
+      // scroll left
+      for (int y = Y1; y <= Y2; ++y) {
+        auto row = rawGetRow(y);
+        for (int x = X1; x <= X2 + scroll; ++x) {
+          auto c = rawGetPixelInRow(row, x - scroll);
+          rawSetPixelInRow(row, x, c);
+        }
+        // fill right area with brush color
+        for (int x = X2 + 1 + scroll; x <= X2; ++x)
+          rawSetPixelInRow(row, x, pattern);
+      }
+    } else if (scroll > 0) {
+      // scroll right
+      for (int y = Y1; y <= Y2; ++y) {
+        auto row = rawGetRow(y);
+        for (int x = X2 - scroll; x >= X1; --x) {
+          auto c = rawGetPixelInRow(row, x);
+          rawSetPixelInRow(row, x + scroll, c);
+        }
+        // fill left area with brush color
+        for (int x = X1; x < X1 + scroll; ++x)
+          rawSetPixelInRow(row, x, pattern);
+      }
+    }
+  }
+
+
+
+
+};
 
 
 

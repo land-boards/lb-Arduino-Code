@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -26,6 +26,19 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
+
+#include "rom/ets_sys.h"
+#include "esp_attr.h"
+#include "esp_intr.h"
+#include "rom/uart.h"
+#include "soc/uart_reg.h"
+#include "soc/uart_struct.h"
+#include "soc/io_mux_reg.h"
+#include "soc/gpio_sig_map.h"
+#include "soc/dport_reg.h"
+#include "soc/rtc.h"
+#include "esp_intr_alloc.h"
+
 
 #include "fabutils.h"
 #include "terminal.h"
@@ -131,8 +144,9 @@ void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
   m_cursorState   = false;
   m_emuState.cursorEnabled = false;
 
+  m_mutex = xSemaphoreCreateMutex();
+
   // blink support
-  m_blinkTimerMutex = xSemaphoreCreateMutex();
   m_blinkTimer = xTimerCreate("", pdMS_TO_TICKS(FABGLIB_DEFAULT_BLINK_PERIOD_MS), pdTRUE, this, blinkTimerFunc);
   xTimerStart(m_blinkTimer, portMAX_DELAY);
 
@@ -145,6 +159,7 @@ void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
 
   m_serialPort = nullptr;
   m_keyboardReaderTaskHandle = nullptr;
+  m_uart = false;
 
   m_outputQueue = nullptr;
 
@@ -169,6 +184,124 @@ void Terminal::connectSerialPort(HardwareSerial & serialPort, bool autoXONXOFF)
   // just in case a reset occurred after an XOFF
   if (m_autoXONOFF)
     send(ASCII_XON);
+}
+
+
+// returns number of bytes received (in the UART2 rx fifo buffer)
+inline int uartGetRXFIFOCount()
+{
+  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  return uart->status.rxfifo_cnt | ((int)(uart->mem_cnt_status.rx_cnt) << 8);
+}
+
+
+// flushes TX buffer of UART2
+static void uartFlushTXFIFO()
+{
+  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  while (uart->status.txfifo_cnt || uart->status.st_utx_out)
+    ;
+}
+
+
+// flushes RX buffer of UART2
+static void uartFlushRXFIFO()
+{
+  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  while (uartGetRXFIFOCount() != 0 || uart->mem_rx_status.wr_addr != uart->mem_rx_status.rd_addr)
+    uart->fifo.rw_byte;
+}
+
+
+// look into input queue (m_inputQueue): if there is space for new incoming bytes send XON and reenable uart RX interrupts
+void Terminal::uartCheckInputQueueForFlowControl()
+{
+  if (m_autoXONOFF) {
+    uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+    if (uxQueueMessagesWaiting(m_inputQueue) == 0 && uart->int_ena.rxfifo_full == 0) {
+      if (m_XOFF) {
+        m_XOFF = false;
+        uart->flow_conf.send_xon = 1; // send XON
+      }
+      uart->int_ena.rxfifo_full = 1;
+    }
+  }
+}
+
+
+// connect to UART2
+void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int txPin, FlowControl flowControl, bool inverted)
+{
+  Serial2.end();
+
+  m_uart = true;
+  m_autoXONOFF = (flowControl == FlowControl::Software);
+
+  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+
+  DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
+  DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
+
+  // flush
+  uartFlushTXFIFO();
+  uartFlushRXFIFO();
+
+  // set baud rate
+  uint32_t clk_div = (getApbFrequency() << 4) / baud;
+  uart->clk_div.div_int  = clk_div >> 4;
+  uart->clk_div.div_frag = clk_div & 0xf;
+
+  // frame
+  uart->conf0.val = config;
+  if (uart->conf0.stop_bit_num == 0x3) {
+    uart->conf0.stop_bit_num = 1;
+    uart->rs485_conf.dl1_en  = 1;
+  }
+
+  // RX Pin
+  pinMode(rxPin, INPUT);
+  pinMatrixInAttach(rxPin, U2RXD_IN_IDX, inverted);
+
+  // RX interrupt
+  uart->conf1.rxfifo_full_thrhd = 1;  // an interrupt for each character received
+  uart->conf1.rx_tout_thrhd = 2;      // actually not used
+  uart->conf1.rx_tout_en    = 0;      // timeout not enabled
+  uart->int_ena.rxfifo_full = 1;      // interrupt on FIFO full (1 character - see rxfifo_full_thrhd)
+  uart->int_ena.frm_err     = 1;      // interrupt on frame error
+  uart->int_ena.rxfifo_tout = 0;      // no interrupt on rx timeout (see rx_tout_en and rx_tout_thrhd)
+  uart->int_ena.parity_err  = 1;      // interrupt on rx parity error
+  uart->int_ena.rxfifo_ovf  = 1;      // interrupt on rx overflow
+  uart->int_clr.val = 0xffffffff;
+  esp_intr_alloc(ETS_UART2_INTR_SOURCE, 0, uart_isr, this, nullptr);
+
+  // setup FIFOs size
+  uart->mem_conf.rx_size = 3;  // RX: 384 bytes (this is the max for UART2)
+  uart->mem_conf.tx_size = 1;  // TX: 128 bytes
+
+  // TX Pin
+  pinMode(txPin, OUTPUT);
+  pinMatrixOutAttach(txPin, U2TXD_OUT_IDX, inverted, false);
+
+  // Flow Control
+  uart->flow_conf.sw_flow_con_en = 0;
+  uart->flow_conf.xonoff_del     = 0;
+  if (flowControl == FlowControl::Software) {
+    // we actually use manual software control, using send_xon/send_xoff bits to send control characters
+    // because we have to check both RX-FIFO and input queue
+    uart->swfc_conf.xon_threshold  = 0;
+    uart->swfc_conf.xoff_threshold = 0;
+    uart->swfc_conf.xon_char  = ASCII_XON;
+    uart->swfc_conf.xoff_char = ASCII_XOFF;
+    // send an XON right now
+    m_XOFF = true;
+    uart->flow_conf.send_xon = 1;
+  }
+
+  // APB Change callback (TODO?)
+  //addApbChangeCallback(this, uart_on_apb_change);
+
+  if (m_keyboard->isKeyboardAvailable())
+    xTaskCreate(&keyboardReaderTask, "", FABGLIB_KEYBOARD_READER_TASK_STACK_SIZE, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
 }
 
 
@@ -248,7 +381,7 @@ void Terminal::end()
   vTaskDelete(m_keyboardReaderTaskHandle);
 
   xTimerDelete(m_blinkTimer, portMAX_DELAY);
-  vSemaphoreDelete(m_blinkTimerMutex);
+  vSemaphoreDelete(m_mutex);
 
   clearSavedCursorStates();
 
@@ -269,7 +402,7 @@ void Terminal::reset()
   log("reset()\n");
   #endif
 
-  xSemaphoreTake(m_blinkTimerMutex, portMAX_DELAY);
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
   m_resetRequested = false;
 
   m_emuState.originMode            = false;
@@ -287,6 +420,7 @@ void Terminal::reset()
   m_emuState.backarrowKeyMode      = false;
   m_emuState.ANSIMode              = true;
   m_emuState.VT52GraphicsMode      = false;
+  m_emuState.allowFabGLSequences   = 0;
   m_emuState.characterSetIndex     = 0;  // Select G0
   for (int i = 0; i < 4; ++i)
     m_emuState.characterSet[i] = 1;     // G0, G1, G2 and G3 = USASCII
@@ -331,7 +465,7 @@ void Terminal::reset()
 
   int_clear();
 
-  xSemaphoreGive(m_blinkTimerMutex);
+  xSemaphoreGive(m_mutex);
 }
 
 
@@ -438,9 +572,11 @@ void Terminal::reverseVideo(bool value)
 }
 
 
-void Terminal::clear()
+void Terminal::clear(bool moveCursor)
 {
   Print::write("\e[2J");
+  if (moveCursor)
+    Print::write("\e[1;1H");
 }
 
 
@@ -490,6 +626,24 @@ bool Terminal::moveDown()
     return true;
   setCursorPos(m_emuState.cursorX, m_emuState.cursorY + 1);
   return false;
+}
+
+
+// Move cursor at left or right, wrapping lines if necessary
+void Terminal::move(int offset)
+{
+  int pos = m_emuState.cursorX - 1 + (m_emuState.cursorY - 1) * m_columns + offset;  // pos is zero based
+  int newY = pos / m_columns + 1;
+  int newX = pos % m_columns + 1;
+  if (newY < m_emuState.scrollingRegionTop) {
+    newX = 1;
+    newY = m_emuState.scrollingRegionTop;
+  }
+  if (newY > m_emuState.scrollingRegionDown) {
+    newX = m_columns;
+    newY = m_emuState.scrollingRegionDown;
+  }
+  setCursorPos(newX, newY);
 }
 
 
@@ -556,7 +710,7 @@ void Terminal::blinkTimerFunc(TimerHandle_t xTimer)
 {
   Terminal * term = (Terminal*) pvTimerGetTimerID(xTimer);
 
-  if (xSemaphoreTake(term->m_blinkTimerMutex, 0) == pdTRUE) {
+  if (xSemaphoreTake(term->m_mutex, 0) == pdTRUE) {
 
     // cursor blink
     if (term->m_emuState.cursorEnabled && term->m_emuState.cursorBlinkingEnabled)
@@ -566,7 +720,7 @@ void Terminal::blinkTimerFunc(TimerHandle_t xTimer)
     if (term->m_blinkingTextEnabled)
       term->blinkText();
 
-    xSemaphoreGive(term->m_blinkTimerMutex);
+    xSemaphoreGive(term->m_mutex);
 
   }
 }
@@ -756,6 +910,43 @@ void Terminal::updateCanvasScrollingRegion()
 }
 
 
+// Insert a blank space at current position, moving next "charsToMove" characters to the right (even on multiple lines).
+// Characters after "charsToMove" length are overwritter.
+// Vertical scroll may occurs (in this case returns "True")
+bool Terminal::multilineInsertChar(int charsToMove)
+{
+  bool scrolled = false;
+  int col = m_emuState.cursorX;
+  int row = m_emuState.cursorY;
+  if (m_emuState.cursorPastLastCol) {
+    ++row;
+    col = 1;
+  }
+  uint32_t lastColItem = 0;
+  while (charsToMove > 0) {
+    uint32_t * rowPtr = m_glyphsBuffer.map + (row - 1) * m_columns;
+    uint32_t lItem = rowPtr[m_columns - 1];
+    insertAt(col, row, 1);
+    if (row > m_emuState.cursorY) {
+      rowPtr[0] = lastColItem;
+      refresh(1, row);
+    }
+    lastColItem = lItem;
+    charsToMove -= m_columns - col;
+    col = 1;
+    if (charsToMove > 0 && row == m_emuState.scrollingRegionDown) {
+      scrolled = true;
+      scrollUp();
+      setCursorPos(m_emuState.cursorX, m_emuState.cursorY - 1);
+    } else {
+      ++row;
+    }
+    m_canvas->waitCompletion(false);
+  }
+  return scrolled;
+}
+
+
 // inserts specified number of blank spaces at the specified row and column. Characters moved past the right border are lost.
 void Terminal::insertAt(int column, int row, int count)
 {
@@ -785,6 +976,35 @@ void Terminal::insertAt(int column, int row, int count)
 }
 
 
+void Terminal::multilineDeleteChar(int charsToMove)
+{
+  int col = m_emuState.cursorX;
+  int row = m_emuState.cursorY;
+  if (m_emuState.cursorPastLastCol) {
+    ++row;
+    col = 1;
+  }
+
+  // at least one char must be deleted
+  if (charsToMove == 0)
+    deleteAt(col, row, 1);
+
+  while (charsToMove > 0) {
+    deleteAt(col, row, 1);
+    charsToMove -= m_columns - col;
+    if (charsToMove > 0) {
+      m_canvas->waitCompletion(false);
+      uint32_t * lastItem  = m_glyphsBuffer.map + (row - 1) * m_columns + (m_columns - 1);
+      lastItem[0] = lastItem[1];
+      refresh(m_columns, row);
+    }
+    col = 1;
+    ++row;
+    m_canvas->waitCompletion(false);
+  }
+}
+
+
 // deletes "count" characters from specified "row", starting from "column", scrolling left remaining characters
 void Terminal::deleteAt(int column, int row, int count)
 {
@@ -792,21 +1012,19 @@ void Terminal::deleteAt(int column, int row, int count)
   logFmt("deleteAt(%d, %d, %d)\n", column, row, count);
   #endif
 
-  count = tmin((int)m_columns, count);
+  count = imin(m_columns - column + 1, count);
 
   // move characters on the right using canvas
   int charWidth = getCharWidthAt(row);
-//logFmt("charWidth=%d\n", charWidth);
-//logFmt("m_canvas->setScrollingRegion(%d, %d, %d, %d)\n", (column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
   m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
-//logFmt("m_canvas->scroll(%d, 0)\n\n", -count * charWidth);
   m_canvas->scroll(-count * charWidth, 0);
   updateCanvasScrollingRegion();  // restore original scrolling region
 
   // move characters in the screen buffer
   uint32_t * rowPtr = m_glyphsBuffer.map + (row - 1) * m_columns;
-  for (int i = 0; i < m_columns - count; ++i)
-    rowPtr[column - 1 + i] = rowPtr[column + i + count - 1];
+  int itemsToMove = m_columns - column - count + 1;
+  for (int i = 0; i < itemsToMove; ++i)
+    rowPtr[column - 1 + i] = rowPtr[column - 1 + i + count];
 
   // fill blank characters
   GlyphOptions glyphOptions = m_glyphOptions;
@@ -875,6 +1093,7 @@ void Terminal::saveCursorState()
   #endif
 
   TerminalCursorState * s = (TerminalCursorState*) malloc(sizeof(TerminalCursorState));
+
   if (s) {
     *s = (TerminalCursorState) {
       .next              = m_savedCursorStateList,
@@ -890,6 +1109,10 @@ void Terminal::saveCursorState()
     if (s->tabStop)
       memcpy(s->tabStop, m_emuState.tabStop, m_columns);
     m_savedCursorStateList = s;
+  } else {
+    #if FABGLIB_TERMINAL_DEBUG_REPORT_ERRORS
+    log("ERROR: Unable to alloc TerminalCursorState\n");
+    #endif
   }
 }
 
@@ -915,6 +1138,7 @@ void Terminal::restoreCursorState()
 
     TerminalCursorState * next = m_savedCursorStateList->next;
 
+    free(m_savedCursorStateList->tabStop);
     free(m_savedCursorStateList);
     m_savedCursorStateList = next;
   }
@@ -938,6 +1162,13 @@ void Terminal::useAlternateScreenBuffer(bool value)
     m_emuState.cursorPastLastCol = false;
     refresh();
   }
+}
+
+
+void Terminal::localInsert(uint8_t c)
+{
+  if (m_outputQueue)
+    xQueueSendToFront(m_outputQueue, &c, portMAX_DELAY);
 }
 
 
@@ -972,12 +1203,30 @@ int Terminal::available()
 
 int Terminal::read()
 {
+  return read(-1);
+}
+
+
+int Terminal::read(int timeOutMS)
+{
   if (m_outputQueue) {
     char c;
-    xQueueReceive(m_outputQueue, &c, portMAX_DELAY);
+    xQueueReceive(m_outputQueue, &c, msToTicks(timeOutMS));
     return c;
   } else
     return -1;
+}
+
+
+bool Terminal::waitFor(int value, int timeOutMS)
+{
+  TimeOut timeout;
+  while (!timeout.expired(timeOutMS)) {
+    int c = read(timeOutMS);
+    if (c == value)
+      return true;
+  }
+  return false;
 }
 
 
@@ -1023,6 +1272,56 @@ void Terminal::pollSerialPort()
 }
 
 
+void IRAM_ATTR Terminal::uart_isr(void *arg)
+{
+  Terminal * term = (Terminal*) arg;
+  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+
+  // look for overflow or RX errors
+  if (uart->int_st.rxfifo_ovf || uart->int_st.frm_err || uart->int_st.parity_err) {
+    // reset RX-FIFO, because hardware bug rxfifo_rst cannot be used, so just flush
+    uartFlushRXFIFO();
+    // reset interrupt flags
+    uart->int_clr.rxfifo_ovf = 1;
+    uart->int_clr.frm_err    = 1;
+    uart->int_clr.parity_err = 1;
+    return;
+  }
+
+  // software flow control?
+  if (term->m_autoXONOFF) {
+    // send XOFF/XON looking at RX FIFO occupation
+    int count = uartGetRXFIFOCount();
+    if (count > 300 && !term->m_XOFF) {
+      uart->flow_conf.send_xoff = 1; // send XOFF
+      term->m_XOFF = true;
+    } else if (count < 20 && term->m_XOFF) {
+      uart->flow_conf.send_xon = 1;  // send XON
+      term->m_XOFF = false;
+    }
+  }
+
+  // main receive loop
+  while (uartGetRXFIFOCount() != 0 || uart->mem_rx_status.wr_addr != uart->mem_rx_status.rd_addr) {
+    // look for enough room in input queue
+    if (term->m_autoXONOFF && xQueueIsQueueFullFromISR(term->m_inputQueue)) {
+      if (!term->m_XOFF) {
+        uart->flow_conf.send_xoff = 1;  // send XOFF
+        term->m_XOFF = true;
+      }
+      // block further interrupts
+      uart->int_ena.rxfifo_full = 0;
+      break;
+    }
+    // add to input queue
+    term->addToInputQueue(uart->fifo.rw_byte, true);
+  }
+
+  // clear interrupt flag
+  uart->int_clr.rxfifo_full = 1;
+}
+
+
 // send a character to m_serialPort or m_outputQueue
 void Terminal::send(char c)
 {
@@ -1034,6 +1333,13 @@ void Terminal::send(char c)
     while (m_serialPort->availableForWrite() == 0)
       vTaskDelay(1 / portTICK_PERIOD_MS);
     m_serialPort->write(c);
+  }
+
+  if (m_uart) {
+    uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+    while (uart->status.txfifo_cnt == 0x7F)
+      ;
+    uart->fifo.rw_byte = c;
   }
 
   localWrite(c);  // write to m_outputQueue
@@ -1054,6 +1360,15 @@ void Terminal::send(char const * str)
       #endif
 
       ++str;
+    }
+  }
+
+  if (m_uart) {
+    uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+    while (*str) {
+      while (uart->status.txfifo_cnt == 0x7F)
+        ;
+      uart->fifo.rw_byte = *str++;
     }
   }
 
@@ -1085,17 +1400,31 @@ int Terminal::availableForWrite()
 }
 
 
-size_t Terminal::write(uint8_t c)
+bool Terminal::addToInputQueue(char c, bool fromISR)
+{
+  if (fromISR)
+    return xQueueSendToBackFromISR(m_inputQueue, &c, nullptr);
+  else
+    return xQueueSendToBack(m_inputQueue, &c, portMAX_DELAY);
+}
+
+
+void Terminal::write(char c, bool fromISR)
 {
   if (m_termInfo == nullptr)
-    xQueueSendToBack(m_inputQueue, &c, portMAX_DELAY);  // send unprocessed
+    addToInputQueue(c, fromISR);  // send unprocessed
   else
-    convHandleTranslation(c);
+    convHandleTranslation(c, fromISR);
 
   #if FABGLIB_TERMINAL_DEBUG_REPORT_IN_CODES
   logFmt("<= %02X  %s%c\n", (int)c, (c <= ASCII_SPC ? CTRLCHAR_TO_STR[(int)c] : ""), (c > ASCII_SPC ? c : ASCII_SPC));
   #endif
+}
 
+
+size_t Terminal::write(uint8_t c)
+{
+  write(c, false);
   return 1;
 }
 
@@ -1146,7 +1475,7 @@ void Terminal::setTerminalType(TermType value)
 }
 
 
-void Terminal::convHandleTranslation(uint8_t c)
+void Terminal::convHandleTranslation(uint8_t c, bool fromISR)
 {
   if (m_convMatchedCount > 0 || c < 32 || c == 0x7f || c == '~') {
 
@@ -1170,99 +1499,99 @@ void Terminal::convHandleTranslation(uint8_t c)
         if (item->termSeqLen == m_convMatchedCount) {
           // full match, send related ANSI sequences (and resets m_convMatchedCount and m_convMatchedItem)
           for (ConvCtrl const * ctrl = item->convCtrl; *ctrl != ConvCtrl::END; ++ctrl)
-            convSendCtrl(*ctrl);
+            convSendCtrl(*ctrl, fromISR);
         }
         return;
       }
     }
 
     // no match, send received stuff as is
-    convQueue();
+    convQueue(nullptr, fromISR);
   } else
-    xQueueSendToBack(m_inputQueue, &c, portMAX_DELAY);
+    addToInputQueue(c, fromISR);
 }
 
 
-void Terminal::convSendCtrl(ConvCtrl ctrl)
+void Terminal::convSendCtrl(ConvCtrl ctrl, bool fromISR)
 {
   switch (ctrl) {
     case ConvCtrl::CarriageReturn:
-      convQueue("\x0d");
+      convQueue("\x0d", fromISR);
       break;
     case ConvCtrl::LineFeed:
-      convQueue("\x0a");
+      convQueue("\x0a", fromISR);
       break;
     case ConvCtrl::CursorLeft:
-      convQueue("\e[D");
+      convQueue("\e[D", fromISR);
       break;
     case ConvCtrl::CursorUp:
-      convQueue("\e[A");
+      convQueue("\e[A", fromISR);
       break;
     case ConvCtrl::CursorRight:
-      convQueue("\e[C");
+      convQueue("\e[C", fromISR);
       break;
     case ConvCtrl::EraseToEndOfScreen:
-      convQueue("\e[J");
+      convQueue("\e[J", fromISR);
       break;
     case ConvCtrl::EraseToEndOfLine:
-      convQueue("\e[K");
+      convQueue("\e[K", fromISR);
       break;
     case ConvCtrl::CursorHome:
-      convQueue("\e[H");
+      convQueue("\e[H", fromISR);
       break;
     case ConvCtrl::AttrNormal:
-      convQueue("\e[0m");
+      convQueue("\e[0m", fromISR);
       break;
     case ConvCtrl::AttrBlank:
-      convQueue("\e[8m");
+      convQueue("\e[8m", fromISR);
       break;
     case ConvCtrl::AttrBlink:
-      convQueue("\e[5m");
+      convQueue("\e[5m", fromISR);
       break;
     case ConvCtrl::AttrBlinkOff:
-      convQueue("\e[25m");
+      convQueue("\e[25m", fromISR);
       break;
     case ConvCtrl::AttrReverse:
-      convQueue("\e[7m");
+      convQueue("\e[7m", fromISR);
       break;
     case ConvCtrl::AttrReverseOff:
-      convQueue("\e[27m");
+      convQueue("\e[27m", fromISR);
       break;
     case ConvCtrl::AttrUnderline:
-      convQueue("\e[4m");
+      convQueue("\e[4m", fromISR);
       break;
     case ConvCtrl::AttrUnderlineOff:
-      convQueue("\e[24m");
+      convQueue("\e[24m", fromISR);
       break;
     case ConvCtrl::AttrReduce:
-      convQueue("\e[2m");
+      convQueue("\e[2m", fromISR);
       break;
     case ConvCtrl::AttrReduceOff:
-      convQueue("\e[22m");
+      convQueue("\e[22m", fromISR);
       break;
     case ConvCtrl::InsertLine:
-      convQueue("\e[L");
+      convQueue("\e[L", fromISR);
       break;
     case ConvCtrl::InsertChar:
-      convQueue("\e[@");
+      convQueue("\e[@", fromISR);
       break;
     case ConvCtrl::DeleteLine:
-      convQueue("\e[M");
+      convQueue("\e[M", fromISR);
       break;
     case ConvCtrl::DeleteCharacter:
-      convQueue("\e[P");
+      convQueue("\e[P", fromISR);
       break;
     case ConvCtrl::CursorOn:
-      convQueue("\e[?25h");
+      convQueue("\e[?25h", fromISR);
       break;
     case ConvCtrl::CursorOff:
-      convQueue("\e[?25l");
+      convQueue("\e[?25l", fromISR);
       break;
     case ConvCtrl::SaveCursor:
-      convQueue("\e[?1048h");
+      convQueue("\e[?1048h", fromISR);
       break;
     case ConvCtrl::RestoreCursor:
-      convQueue("\e[?1048l");
+      convQueue("\e[?1048l", fromISR);
       break;
     case ConvCtrl::CursorPos:
     case ConvCtrl::CursorPos2:
@@ -1271,7 +1600,7 @@ void Terminal::convSendCtrl(ConvCtrl ctrl)
       int y = (ctrl == ConvCtrl::CursorPos ? m_convMatchedChars[2] - 31 : m_convMatchedChars[3] + 1);
       int x = (ctrl == ConvCtrl::CursorPos ? m_convMatchedChars[3] - 31 : m_convMatchedChars[2] + 1);
       sprintf(s, "\e[%d;%dH", y, x);
-      convQueue(s);
+      convQueue(s, fromISR);
       break;
     }
 
@@ -1282,18 +1611,14 @@ void Terminal::convSendCtrl(ConvCtrl ctrl)
 
 
 // queue m_termMatchedChars[] or specified string
-void Terminal::convQueue(const char * str)
+void Terminal::convQueue(const char * str, bool fromISR)
 {
   if (str) {
     for (; *str; ++str)
-      xQueueSendToBack(m_inputQueue, str, portMAX_DELAY);
+      addToInputQueue(*str, fromISR);
   } else {
     for (int i = 0; i <= m_convMatchedCount; ++i) {
-
-      //if (m_convMatchedChars[i] != 0x0d && m_convMatchedChars[i] != 0x0a)
-      //  Serial.printf("0x%x %c\n", m_convMatchedChars[i], m_convMatchedChars[i]);
-
-      xQueueSendToBack(m_inputQueue, m_convMatchedChars + i, portMAX_DELAY);
+      addToInputQueue(m_convMatchedChars[i], fromISR);
     }
   }
   m_convMatchedCount = 0;
@@ -1302,13 +1627,18 @@ void Terminal::convQueue(const char * str)
 
 
 // set specified character at current cursor position
-void Terminal::setChar(char c)
+// return true if vertical scroll happened
+bool Terminal::setChar(char c)
 {
+  bool vscroll = false;
+
   if (m_emuState.cursorPastLastCol) {
     if (m_emuState.wraparound) {
       setCursorPos(1, m_emuState.cursorY); // this sets m_emuState.cursorPastLastCol = false
-      if (moveDown())
+      if (moveDown()) {
         scrollUp();
+        vscroll = true;
+      }
     }
   }
 
@@ -1341,6 +1671,8 @@ void Terminal::setChar(char c)
   } else {
     setCursorPos(m_emuState.cursorX + 1, m_emuState.cursorY);
   }
+
+  return vscroll;
 }
 
 
@@ -1422,6 +1754,9 @@ char Terminal::getNextCode(bool processCtrlCodes)
     char c;
     xQueueReceive(m_inputQueue, &c, portMAX_DELAY);
 
+    if (m_uart)
+      uartCheckInputQueueForFlowControl();
+
     // inside an ESC sequence we may find control characters!
     if (processCtrlCodes && ISCTRLCHAR(c))
       execCtrlCode(c);
@@ -1444,7 +1779,7 @@ void Terminal::consumeInputQueue()
 {
   char c = getNextCode(false);  // blocking call. false: do not process ctrl chars
 
-  xSemaphoreTake(m_blinkTimerMutex, portMAX_DELAY);
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
 
   m_prevCursorEnabled = int_enableCursor(false);
   m_prevBlinkingTextEnabled = enableBlinkingText(false);
@@ -1466,7 +1801,7 @@ void Terminal::consumeInputQueue()
   enableBlinkingText(m_prevBlinkingTextEnabled);
   int_enableCursor(m_prevCursorEnabled);
 
-  xSemaphoreGive(m_blinkTimerMutex);
+  xSemaphoreGive(m_mutex);
 
   if (m_resetRequested)
     reset();
@@ -1559,6 +1894,12 @@ void Terminal::consumeESC()
   if (c == '[') {
     // ESC [ : start of CSI sequence
     consumeCSI();
+    return;
+  }
+
+  if (c == 0xFF && m_emuState.allowFabGLSequences > 0) {
+    // ESC 0xFF : FabGL specific sequence
+    consumeFabGLSeq();
     return;
   }
 
@@ -1907,7 +2248,7 @@ void Terminal::consumeCSI()
       int newX = m_emuState.cursorX - tmax(1, params[0]);
       if (m_emuState.reverseWraparoundMode && newX < 1) {
         newX = -newX;
-        int newY = m_emuState.cursorY - newX / 80 - 1;
+        int newY = m_emuState.cursorY - newX / m_columns - 1;
         if (newY < 1)
           newY = m_rows + newY;
         newX = m_columns - (newX % m_columns);
@@ -2009,7 +2350,7 @@ void Terminal::consumeCSI()
       }
       break;
 
-    // ESC [ Ps n : DSR, Devie Status Report
+    // ESC [ Ps n : DSR, Device Status Report
     case 'n':
       switch (params[0]) {
         // Status Report
@@ -2059,7 +2400,6 @@ void Terminal::consumeCSIQUOT(int * params, int paramsCount)
         m_emuState.ctrlBits = 7;
       else
         m_emuState.ctrlBits = 8;
-      //Serial.printf("Conf. level = %d, ctrl bits = %d\n", m_emuState.conformanceLevel, m_emuState.ctrlBits);
       break;
 
     // ESC [ Ps " q : DECSCA, Select character protection attribute
@@ -2118,7 +2458,6 @@ void Terminal::consumeDECPrivateModes(int const * params, int paramsCount, char 
     // DECANM (default on): ANSI Mode (off = VT52 Mode)
     case 2:
       m_emuState.ANSIMode = set;
-      //if (!set) Serial.write("VT52 Mode\n");
       break;
 
     // ESC [ ? 3 h
@@ -2235,6 +2574,16 @@ void Terminal::consumeDECPrivateModes(int const * params, int paramsCount, char 
         useAlternateScreenBuffer(false);
         restoreCursorState();
       }
+      break;
+
+    // ESC [ ? 7999 h
+    // ESC [ ? 7999 l
+    // Allows enhanced FabGL sequences (default disabled)
+    // This set is "incremental". This is actually disabled when the counter reach 0.
+    case 7999:
+      m_emuState.allowFabGLSequences += set ? 1 : -1;
+      if (m_emuState.allowFabGLSequences < 0)
+        m_emuState.allowFabGLSequences = 0;
       break;
 
     default:
@@ -2452,7 +2801,6 @@ void Terminal::consumeESCVT52()
     case '<':
       m_emuState.ANSIMode = true;
       m_emuState.conformanceLevel = 1;
-      //Serial.write("ANSI Mode\n");
       break;
 
     // ESC A : Cursor Up
@@ -2548,6 +2896,183 @@ void Terminal::consumeESCVT52()
 }
 
 
+// consume FabGL specific sequence (ESC 0xFF ....)
+void Terminal::consumeFabGLSeq()
+{
+  #if FABGLIB_TERMINAL_DEBUG_REPORT_ESC
+  log("ESC 0xFF");
+  #endif
+
+  char c = getNextCode(false);   // false: don't process ctrl chars
+
+  // process command in "c"
+  switch (c) {
+
+    // Get cursor horizontal position (1 = leftmost pos)
+    // Seq:
+    //    ESC 0xFF FABGL_ENTERM_GETCURSORCOL
+    // params:
+    //    none
+    // return:
+    //    byte: 0xFE   (reply tag)
+    //    byte: column
+    case FABGL_ENTERM_GETCURSORCOL:
+      send(0xFE);
+      send(m_emuState.cursorX);
+      break;
+
+    // Get cursor vertical position (1 = topmost pos)
+    // Seq:
+    //    ESC 0xFF FABGL_ENTERM_GETCURSORROW
+    // params:
+    //    none
+    // return:
+    //    byte: 0xFE   (reply tag)
+    //    byte: row
+    case FABGL_ENTERM_GETCURSORROW:
+      send(0xFE);
+      send(m_emuState.cursorY);
+      break;
+
+    // Get cursor position
+    // Seq:
+    //    ESC 0xFF FABGL_ENTERM_GETCURSORPOS
+    // params:
+    //    none
+    // return:
+    //    byte: 0xFE   (reply tag)
+    //    byte: column
+    //    byte: row
+    case FABGL_ENTERM_GETCURSORPOS:
+      send(0xFE);
+      send(m_emuState.cursorX);
+      send(m_emuState.cursorY);
+      break;
+
+    // Set cursor position
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_SETCURSORPOS COL ROW
+    // params:
+    //   COL (byte): column (1 = first column)
+    //   ROW (byte): row (1 = first row)
+    case FABGL_ENTERM_SETCURSORPOS:
+    {
+      uint8_t col = getNextCode(false);
+      uint8_t row = getNextCode(false);
+      setCursorPos(col, getAbsoluteRow(row));
+      break;
+    }
+
+    // Insert a blank space at current position, moving next CHARSTOMOVE characters to the right (even on multiple lines).
+    // Advances cursor by one position. Characters after CHARSTOMOVE length are overwritter.
+    // Vertical scroll may occurs.
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_INSERTSPACE CHARSTOMOVE_L CHARSTOMOVE_H
+    // params:
+    //   CHARSTOMOVE_L, CHARSTOMOVE_H (byte): number of chars to move to the right by one position
+    // return:
+    //    byte: 0xFE   (reply tag)
+    //    byte: 0 = vertical scroll not occurred, 1 = vertical scroll occurred
+    case FABGL_ENTERM_INSERTSPACE:
+    {
+      uint8_t charsToMove_L = getNextCode(false);
+      uint8_t charsToMove_H = getNextCode(false);
+      bool scroll = multilineInsertChar(charsToMove_L | charsToMove_H << 8);
+      send(0xFE);
+      send(scroll);
+      break;
+    }
+
+    // Delete character at current position, moving next CHARSTOMOVE characters to the left (even on multiple lines).
+    // Characters after CHARSTOMOVE are filled with spaces.
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_DELETECHAR CHARSTOMOVE_L CHARSTOMOVE_H
+    // params:
+    //   CHARSTOMOVE_L, CHARSTOMOVE_H (byte): number of chars to move to the left by one position
+    case FABGL_ENTERM_DELETECHAR:
+    {
+      uint8_t charsToMove_L = getNextCode(false);
+      uint8_t charsToMove_H = getNextCode(false);
+      multilineDeleteChar(charsToMove_L | charsToMove_H << 8);
+      break;
+    }
+
+    // Move cursor at left, wrapping lines if necessary
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_CURSORLEFT COUNT_L COUNT_H
+    // params:
+    //   COUNT_L, COUNT_H (byte): number of positions to move to the left
+    case FABGL_ENTERM_CURSORLEFT:
+    {
+      uint8_t count_L = getNextCode(false);
+      uint8_t count_H = getNextCode(false);
+      move(-(count_L | count_H << 8));
+      break;
+    }
+
+    // Move cursor at right, wrapping lines if necessary
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_CURSORRIGHT COUNT
+    // params:
+    //   COUNT (byte): number of positions to move to the right
+    case FABGL_ENTERM_CURSORRIGHT:
+    {
+      uint8_t count_L = getNextCode(false);
+      uint8_t count_H = getNextCode(false);
+      move(count_L | count_H << 8);
+      break;
+    }
+
+    // Sets char CHAR at current position and advance one position. Scroll if necessary.
+    // This do not interpret character as a special code, but just sets it.
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_SETCHAR CHAR
+    // params:
+    //   CHAR (byte): character to set
+    // return:
+    //    byte: 0xFE   (reply tag)
+    //    byte: 0 = vertical scroll not occurred, 1 = vertical scroll occurred
+    case FABGL_ENTERM_SETCHAR:
+    {
+      bool scroll = setChar(getNextCode(false));
+      send(0xFE);
+      send(scroll);
+      break;
+    }
+
+    // Sets a sequence of chars starting from current position and advancing the cursor for each character. Scroll if necessary.
+    // This do not interpret character as a special code, but just sets it.
+    // Seq:
+    //   ESC 0xFF FABGL_ENTERM_SETCHARS COUNT_L COUNT_H ...chars...
+    // params:
+    //   COUNT_L, COUNT_H (byte): number of characters to sets
+    //   ...chars... (bytes): the characters to sets
+    // return:
+    //    byte: 0xFE   (reply tag)
+    //    byte: 0 = vertical scroll not occurred, >0 = number of vertical scrolls occurred
+    case FABGL_ENTERM_SETCHARS:
+    {
+      uint8_t count_L = getNextCode(false);
+      uint8_t count_H = getNextCode(false);
+      int count = count_L | count_H << 8;
+      int scrolls = 0;
+      for (int i = 0; i < count; ++i)
+        scrolls += setChar(getNextCode(false));
+      send(0xFE);
+      send(scrolls);
+      break;
+    }
+
+    default:
+      #if FABGLIB_TERMINAL_DEBUG_REPORT_UNSUPPORT
+      logFmt("Unknown: ESC 0xFF %02x\n", c);
+      #endif
+      break;
+  }
+}
+
+
+
 void Terminal::keyboardReaderTask(void * pvParameters)
 {
   Terminal * term = (Terminal*) pvParameters;
@@ -2563,6 +3088,8 @@ void Terminal::keyboardReaderTask(void * pvParameters)
         continue; // don't repeat
       term->m_lastPressedKey = vk;
 
+      xSemaphoreTake(term->m_mutex, portMAX_DELAY);
+
       if (term->m_termInfo == nullptr) {
         if (term->m_emuState.ANSIMode)
           term->ANSIDecodeVirtualKey(vk);
@@ -2570,6 +3097,8 @@ void Terminal::keyboardReaderTask(void * pvParameters)
           term->VT52DecodeVirtualKey(vk);
       } else
         term->TermDecodeVirtualKey(vk);
+
+      xSemaphoreGive(term->m_mutex);
 
     } else {
       // !keyDown
@@ -2907,6 +3436,383 @@ void Terminal::TermDecodeVirtualKey(VirtualKey vk)
   if (ascii > -1)
     send(ascii);
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TerminalController
+
+
+TerminalController::TerminalController(Terminal * terminal)
+  : m_terminal(terminal)
+{
+}
+
+
+TerminalController::~TerminalController()
+{
+}
+
+
+void TerminalController::begin()
+{
+  // enable fabgl sequences
+  m_terminal->write("\e[?7999h");
+}
+
+
+void TerminalController::end()
+{
+  // disable (if not enabled before) fabgl sequences
+  m_terminal->write("\e[?7999l");
+}
+
+
+void TerminalController::setCursorPos(int col, int row)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_SETCURSORPOS);
+  m_terminal->write(col);
+  m_terminal->write(row);
+}
+
+
+void TerminalController::cursorLeft(int count)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_CURSORLEFT);
+  m_terminal->write(count & 0xff);
+  m_terminal->write(count >> 8);
+}
+
+
+void TerminalController::cursorRight(int count)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_CURSORRIGHT);
+  m_terminal->write(count & 0xff);
+  m_terminal->write(count >> 8);
+}
+
+
+void TerminalController::getCursorPos(int * col, int * row)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_GETCURSORPOS);
+  m_terminal->waitFor(0xFE);
+  *col = m_terminal->read(-1);
+  *row = m_terminal->read(-1);
+}
+
+
+int TerminalController::getCursorCol()
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_GETCURSORCOL);
+  m_terminal->waitFor(0xFE);
+  return m_terminal->read(-1);
+}
+
+
+int TerminalController::getCursorRow()
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_GETCURSORROW);
+  m_terminal->waitFor(0xFE);
+  return m_terminal->read(-1);
+}
+
+
+bool TerminalController::multilineInsertChar(int charsToMove)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_INSERTSPACE);
+  m_terminal->write(charsToMove & 0xff);
+  m_terminal->write(charsToMove >> 8);
+  m_terminal->waitFor(0xFE);
+  return m_terminal->read(-1);
+}
+
+
+void TerminalController::multilineDeleteChar(int charsToMove)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_DELETECHAR);
+  m_terminal->write(charsToMove & 0xff);
+  m_terminal->write(charsToMove >> 8);
+}
+
+
+bool TerminalController::setChar(char c)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_SETCHAR);
+  m_terminal->write(c);
+  m_terminal->waitFor(0xFE);
+  return m_terminal->read(-1);
+}
+
+
+int TerminalController::setChars(char const * buffer, int count)
+{
+  m_terminal->write(FABGL_ENTERM_CMD);
+  m_terminal->write(FABGL_ENTERM_SETCHARS);
+  m_terminal->write(count & 0xff);
+  m_terminal->write(count >> 8);
+  for (int i = 0; i < count; ++i, ++buffer)
+    m_terminal->write(*buffer);
+  m_terminal->waitFor(0xFE);
+  return m_terminal->read(-1);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// LineEditor
+
+
+LineEditor::LineEditor(Terminal * terminal)
+  : m_terminal(terminal),
+    m_termctrl(terminal),
+    m_text(nullptr),
+    m_textLength(0),
+    m_allocated(0),
+    m_state(-1),
+    m_insertMode(true)
+{
+}
+
+
+LineEditor::~LineEditor()
+{
+  free(m_text);
+}
+
+
+void LineEditor::setLength(int newLength)
+{
+  if (m_allocated < newLength) {
+    int allocated = imax(m_allocated * 2, newLength);
+    m_text = (char*) realloc(m_text, allocated + 1);
+    memset(m_text + m_allocated, 0, allocated - m_allocated + 1);
+    m_allocated = allocated;
+  }
+  m_textLength = newLength;
+}
+
+
+void LineEditor::setText(char const * text, bool moveCursor)
+{
+  setText(text, strlen(text), moveCursor);
+}
+
+
+void LineEditor::setText(char const * text, int length, bool moveCursor)
+{
+  setLength(length);
+  memcpy(m_text, text, length);
+  m_text[length] = 0;
+  m_state = -1;
+  m_inputPos = moveCursor ? length : 0;
+}
+
+
+void LineEditor::beginInput()
+{
+  m_termctrl.begin();
+  m_homeCol = m_termctrl.getCursorCol();
+  m_homeRow = m_termctrl.getCursorRow();
+  if (m_text) {
+    // m_inputPos already set by setText()
+    m_homeRow -= m_termctrl.setChars(m_text, strlen(m_text));
+    if (m_inputPos == 0)
+      m_termctrl.setCursorPos(m_homeCol, m_homeRow);
+  } else {
+    m_inputPos = 0;
+  }
+  m_state = 0;
+}
+
+
+void LineEditor::endInput()
+{
+  m_termctrl.end();
+  m_state = -1;
+}
+
+
+char const * LineEditor::edit(int maxLength, int timeOutMS)
+{
+
+  // init?
+  if (m_state == -1)
+    beginInput();
+
+  while (true) {
+
+    int c = m_terminal->read(timeOutMS);
+
+    // timeout?
+    if (c < 0)
+      return nullptr;
+
+    if (m_state == 1) {
+
+      // ESC mode
+
+      switch (c) {
+
+        // "ESC [" => switch to CSI mode
+        case '[':
+          m_state = 31;
+          break;
+
+        default:
+          m_state = 0;
+          break;
+
+      }
+
+    } else if (m_state >= 31) {
+
+      // CSI mode
+
+      switch (c) {
+
+        // "ESC [ D" : cursor Left
+        case 'D':
+          if (m_inputPos > 0) {
+            int count = 1;
+            if (m_terminal->keyboard()->isVKDown(VK_LCTRL)) {
+              // CTRL + Cursor Left => start of previous word
+              while (m_inputPos - count > 0 && (m_text[m_inputPos - count] == ASCII_SPC || m_text[m_inputPos - count - 1] != ASCII_SPC))
+                ++count;
+            }
+            m_termctrl.cursorLeft(count);
+            m_inputPos -= count;
+          }
+          m_state = 0;
+          break;
+
+        // "ESC [ C" : cursor right
+        case 'C':
+          if (m_inputPos < m_textLength) {
+            int count = 1;
+            if (m_terminal->keyboard()->isVKDown(VK_LCTRL)) {
+              // CTRL + Cursor Right => start of next word
+              while (m_text[m_inputPos + count] && (m_text[m_inputPos + count] == ASCII_SPC || m_text[m_inputPos + count - 1] != ASCII_SPC))
+                ++count;
+            }
+            m_termctrl.cursorRight(count);
+            m_inputPos += count;
+          }
+          m_state = 0;
+          break;
+
+        // '1'...'6' : special chars (PageUp, Insert, Home...)
+        case '1' ... '6':
+          // requires ending '~'
+          m_state = c;
+          break;
+
+        // '~'
+        case '~':
+          switch (m_state) {
+
+            // Home
+            case '1':
+              m_termctrl.setCursorPos(m_homeCol, m_homeRow);
+              m_inputPos = 0;
+              break;
+
+            // End
+            case '4':
+              m_termctrl.cursorRight(m_textLength - m_inputPos);
+              m_inputPos = m_textLength;
+              break;
+
+            // Delete
+            case '3':
+              if (m_inputPos < m_textLength) {
+                memmove(m_text + m_inputPos, m_text + m_inputPos + 1, m_textLength - m_inputPos);
+                m_termctrl.multilineDeleteChar(m_textLength - m_inputPos - 1);
+                --m_textLength;
+              }
+              break;
+
+            // Insert
+            case '2':
+              m_insertMode = !m_insertMode;
+              break;
+
+          }
+          m_state = 0;
+          break;
+
+        default:
+          m_state = 0;
+          break;
+
+      }
+
+    } else {
+
+      // normal mode
+
+      switch (c) {
+
+        // ESC, switch to ESC mode
+        case 0x1B:
+          m_state = 1;
+          break;
+
+        // DEL, delete character at left
+        case 0x7F:
+          if (m_inputPos > 0) {
+            m_termctrl.cursorLeft(1);
+            m_termctrl.multilineDeleteChar(m_textLength - m_inputPos);
+            memmove(m_text + m_inputPos - 1, m_text + m_inputPos, m_textLength - m_inputPos + 1);
+            --m_inputPos;
+            --m_textLength;
+          }
+          break;
+
+        // CR, newline and return the inserted text
+        case 0x0D:
+          m_termctrl.cursorRight(m_textLength - m_inputPos);
+          m_terminal->write("\r\n");
+          endInput();
+          return m_text;
+
+        // insert printable chars
+        case 32 ... 126:
+        case 128 ... 255:
+          // TODO: should we stop input when text length reach the full screen (minus home pos)?
+          if (maxLength == 0 || m_inputPos < maxLength) {
+            // update internal buffer
+            if (m_insertMode || m_inputPos == m_textLength) {
+              setLength(m_textLength + 1);
+              memmove(m_text + m_inputPos + 1, m_text + m_inputPos, m_textLength - m_inputPos);
+            }
+            m_text[m_inputPos++] = c;
+            // update terminal
+            if (m_insertMode && m_inputPos < m_textLength) {
+              if (m_termctrl.multilineInsertChar(m_textLength - m_inputPos))
+                --m_homeRow;  // scrolled
+            }
+            if (m_termctrl.setChar(c))
+              --m_homeRow;  // scrolled
+          }
+          break;
+
+      }
+    }
+
+  }
+}
+
 
 
 } // end of namespace

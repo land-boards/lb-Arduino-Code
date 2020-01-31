@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -307,7 +307,7 @@ MouseStatus Mouse::getNextStatus(int timeOutMS)
 {
   MouseStatus status;
   if (m_absoluteQueue)
-    xQueueReceive(m_absoluteQueue, &status, timeOutMS < 0 ? portMAX_DELAY : pdMS_TO_TICKS(timeOutMS));
+    xQueueReceive(m_absoluteQueue, &status, msToTicks(timeOutMS));
   return status;
 }
 

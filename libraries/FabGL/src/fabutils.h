@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -36,6 +36,10 @@
 
 
 namespace fabgl {
+
+
+
+#define GPIO_UNUSED GPIO_NUM_MAX
 
 
 
@@ -134,7 +138,7 @@ struct Point {
   Point neg() const                { return Point(-X, -Y); }
   bool operator==(Point const & r) { return X == r.X && Y == r.Y; }
   bool operator!=(Point const & r) { return X != r.X || Y != r.Y; }
-};
+} __attribute__ ((packed));
 
 
 /**
@@ -146,7 +150,7 @@ struct Size {
 
   Size() : width(0), height(0) { }
   Size(int width_, int height_) : width(width_), height(height_) { }
-};
+} __attribute__ ((packed));
 
 
 
@@ -185,7 +189,8 @@ struct Rect {
   bool contains(Rect const & rect) const         { return (rect.X1 >= X1) && (rect.Y1 >= Y1) && (rect.X2 <= X2) && (rect.Y2 <= Y2); }
   bool contains(Point const & point) const       { return point.X >= X1 && point.Y >= Y1 && point.X <= X2 && point.Y <= Y2; }
   bool contains(int x, int y) const              { return x >= X1 && y >= Y1 && x <= X2 && y <= Y2; }
-};
+  Rect merge(Rect const & rect) const            { return Rect(imin(rect.X1, X1), imin(rect.Y1, Y1), imax(rect.X2, X2), imax(rect.Y2, Y2)); }
+} __attribute__ ((packed));
 
 
 
@@ -371,6 +376,38 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////////
+// LightMemoryPool
+// Each allocated block starts with a two bytes header (int16_t). Bit 15 is allocation flag (0=free, 1=allocated).
+// Bits 14..0 represent the block size.
+// The maximum size of a block is 32767 bytes.
+// free() just marks the block header as free.
+
+class LightMemoryPool {
+public:
+  LightMemoryPool(int poolSize);
+  ~LightMemoryPool();
+  void * alloc(int size);
+  void free(void * mem) { if (mem) markFree((uint8_t*)mem - m_mem - 2); }
+
+  bool memCheck();
+  int totFree();      // get total free memory
+  int totAllocated(); // get total allocated memory
+  int largestFree();
+
+private:
+
+  void mark(int pos, int16_t size, bool allocated);
+  void markFree(int pos) { m_mem[pos + 1] &= 0x7f; }
+  int16_t getSize(int pos);
+  bool isFree(int pos);
+
+  uint8_t * m_mem;
+  int       m_poolSize;
+};
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
 // FileBrowser
 
 
@@ -380,6 +417,16 @@ private:
 struct DirItem {
   bool isDir;          /**< True if this is a directory, false if this is an ordinary file */
   char const * name;   /**< File or directory name */
+};
+
+
+/** \ingroup Enumerations
+* @brief This enum defines drive types (SPIFFS or SD Card)
+*/
+enum class DriveType {
+  None,    /**< Unspecified */
+  SPIFFS,  /**< SPIFFS (Flash) */
+  SDCard,  /**< SD Card */
 };
 
 
@@ -477,20 +524,155 @@ public:
   void rename(char const * oldName, char const * newName);
 
   /**
-   * @brief Compose a full file path given a relative name
+   * @brief Composes a full file path given a relative name
    *
    * @param name Relative file name
    * @param outPath Where to place the full path. This can be NULL (used to calculate required buffer size).
    * @param maxlen Maximum size of outPath string. This can be 0 when outPath is NULL.
    *
-   * @return Required outPath size
+   * @return Required outPath size.
    */
   int getFullPath(char const * name, char * outPath = nullptr, int maxlen = 0);
+
+  /**
+   * @brief Returns the drive type of current directory
+   *
+   * @return Drive type.
+   */
+  DriveType getCurrentDriveType();
+
+  /**
+   * @brief Returns the drive type of specified path
+   *
+   * @param path Path
+   *
+   * @return Drive type.
+   */
+  static DriveType getDriveType(char const * path);
+
+  /**
+   * @brief Formats SPIFFS or SD Card
+   *
+   * The filesystem must be already mounted before calling Format().
+   * The formatted filesystem results unmounted at the end of formatting, so remount is necessary.
+   *
+   * @param driveType Type of support (SPI-Flash or SD Card).
+   * @param drive Drive number (Can be 0 when only one filesystem is mounted at the time)
+   *
+   * @return Returns True on success.
+   *
+   * Example:
+   *
+   *     // Format SPIFFS and remount it
+   *     FileBrowser::format(fabgl::DriveType::SPIFFS, 0);
+   *     FileBrowser::mountSPIFFS(false, "/spiffs");
+   */
+  static bool format(DriveType driveType, int drive);
+
+  /**
+   * @brief Mounts filesystem on SD Card
+   *
+   * @param formatOnFail Formats SD Card when it cannot be mounted.
+   * @param mountPath Mount directory (ex. "/sdcard").
+   * @param maxFiles Number of files that can be open at the time (default 4).
+   * @param allocationUnitSize Allocation unit size (default 16K).
+   * @param MISO Pin for MISO signal (default 16).
+   * @param MOSI Pin for MOSI signal (default 17).
+   * @param CLK Pin for CLK signal (default 14).
+   * @param CS Pin for CS signal (default 13).
+   *
+   * @return Returns True on success.
+   *
+   * Example:
+   *
+   *     // Mount SD Card
+   *     FileBrowser::mountSDCard(false, "/sdcard");
+   */
+  static bool mountSDCard(bool formatOnFail, char const * mountPath, int maxFiles = 4, int allocationUnitSize = 16 * 1024, int MISO = 16, int MOSI = 17, int CLK = 14, int CS = 13);
+
+  /**
+   * @brief Remounts SDCard filesystem, using the same parameters
+   *
+   * @return Returns True on success.
+   */
+  static bool remountSDCard();
+
+  /**
+   * @brief Unmounts filesystem on SD Card
+   */
+  static void unmountSDCard();
+
+  /**
+   * @brief Mounts filesystem on SPIFFS (Flash)
+   *
+   * @param formatOnFail Formats SD Card when it cannot be mounted.
+   * @param mountPath Mount directory (ex. "/spiffs").
+   * @param maxFiles Number of files that can be open at the time (default 4).
+   *
+   * @return Returns True on success.
+   *
+   * Example:
+   *
+   *     // Mount SD Card
+   *     FileBrowser::mountSPIFFS(false, "/spiffs");
+   */
+  static bool mountSPIFFS(bool formatOnFail, char const * mountPath, int maxFiles = 4);
+
+  /**
+   * @brief Remounts SPIFFS filesystem, using the same parameters
+   *
+   * @return Returns True on success.
+   */
+  static bool remountSPIFFS();
+
+  /**
+   * @brief Unmounts filesystem on SPIFFS (Flash)
+   */
+  static void unmountSPIFFS();
+
+  /**
+   * @brief Gets total and free space on a filesystem
+   *
+   * @param driveType Type of support (SPI-Flash or SD Card).
+   * @param drive Drive number (Can be 0 when only one filesystem is mounted at the time).
+   * @param total Total space on the filesystem in bytes.
+   * @param used Used space on the filesystem in bytes.
+   *
+   * @return Returns True on success.
+   *
+   * Example:
+   *
+   *     // print used and free space on SPIFFS (Flash)
+   *     int64_t total, used;
+   *     FileBrowser::getFSInfo(fabgl::DriveType::SPIFFS, 0, &total, &used);
+   *     Serial.printf("%lld KiB used, %lld KiB free", used / 1024, (total - used) / 1024);
+   *
+   *     // print used and free space on SD Card
+   *     int64_t total, used;
+   *     FileBrowser::getFSInfo(fabgl::DriveType::SDCard, 0, &total, &used);
+   *     Serial.printf("%lld KiB used, %lld KiB free", used / 1024, (total - used) / 1024);
+   */
+  static bool getFSInfo(DriveType driveType, int drive, int64_t * total, int64_t * used);
 
 private:
 
   void clear();
   int countDirEntries(int * namesLength);
+
+  // SPIFFS static infos
+  static bool         s_SPIFFSMounted;
+  static char const * s_SPIFFSMountPath;
+  static int          s_SPIFFSMaxFiles;
+
+  // SD Card static infos
+  static bool         s_SDCardMounted;
+  static char const * s_SDCardMountPath;
+  static int          s_SDCardMaxFiles;
+  static int          s_SDCardAllocationUnitSize;
+  static int8_t       s_SDCardMISO;
+  static int8_t       s_SDCardMOSI;
+  static int8_t       s_SDCardCLK;
+  static int8_t       s_SDCardCS;
 
   char *    m_dir;
   int       m_count;
@@ -523,6 +705,50 @@ void free32(void * ptr);
 
 void suspendInterrupts();
 void resumeInterrupts();
+
+
+inline gpio_num_t int2gpio(int gpio)
+{
+  return gpio == -1 ? GPIO_UNUSED : (gpio_num_t)gpio;
+}
+
+
+// milliseconds to FreeRTOS ticks.
+// ms = -1 => maximum delay (portMAX_DELAY)
+uint32_t msToTicks(int ms);
+
+
+enum class ChipPackage {
+  Unknown,
+  ESP32D0WDQ6,
+  ESP32D0WDQ5,
+  ESP32D2WDQ5,
+  ESP32PICOD4,
+};
+
+
+ChipPackage getChipPackage();
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// AutoSuspendInterrupts
+
+
+/**
+ * @brief Helper class to disable fabgl interrupts and automatically resume them on scope exit
+ *
+ * Example:
+ *
+ *     void func() {
+ *       AutoSuspendInterrupts autoInt; // now fabgl interrupts are suspended
+ *       ...do something...
+ *     }  // on exit interrupts are resumed
+ */
+struct AutoSuspendInterrupts {
+  AutoSuspendInterrupts() { suspendInterrupts(); }
+  ~AutoSuspendInterrupts() { resumeInterrupts(); }
+};
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////

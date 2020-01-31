@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -57,7 +57,7 @@ namespace fabgl {
 /** @brief Base abstract class for waveform generators. A waveform generator can be seen as an audio channel that will be mixed by SoundGenerator. */
 class WaveformGenerator {
 public:
-  WaveformGenerator() : next(nullptr), m_sampleRate(0), m_volume(100), m_enabled(false) { }
+  WaveformGenerator() : next(nullptr), m_sampleRate(0), m_volume(100), m_enabled(false), m_duration(-1), m_autoDestroy(false), m_autoDetach(false) { }
 
   virtual ~WaveformGenerator() { }
 
@@ -67,6 +67,38 @@ public:
    * @param value Frequency in Hertz
    */
   virtual void setFrequency(int value) = 0;
+
+  /**
+   * @brief Sets number of samples to play
+   *
+   * @param value Number of samples to play. -1 = infinite.
+   */
+  void setDuration(uint32_t value) { m_duration = value; }
+
+  /**
+   * @brief Returns number of remaining samples to play
+   *
+   * @return Number of remaining samples to play. -1 = infinite.
+   */
+  uint32_t duration() { return m_duration; }
+
+  /**
+   * @brief Sets autodetach mode
+   *
+   * @value if true: this object needs to be detached from the sound generator when there are no more samples to play.
+   */
+  void setAutoDetach(bool value) { m_autoDetach = value; }
+
+  bool autoDetach() { return m_autoDetach; }
+
+  /**
+   * @brief Sets autodestroy mode
+   *
+   * @value if true: this object needs to be destroyed by the sound generat or when there are no more samples to play. This will set also setAutoDetach(true).
+   */
+  void setAutoDestroy(bool value) { m_autoDestroy = value; m_autoDetach |= value; }
+
+  bool autoDestroy() { return m_autoDestroy; }
 
   /**
    * @brief Gets next sample
@@ -123,10 +155,17 @@ public:
 
   WaveformGenerator * next;
 
+protected:
+
+  void decDuration() { --m_duration; if (m_duration == 0) m_enabled = false; }
+
 private:
   uint16_t m_sampleRate;
   int8_t   m_volume;
-  int8_t   m_enabled; // 0 = disabled, 1 = enabled
+  int8_t   m_enabled;   // 0 = disabled, 1 = enabled
+  uint32_t m_duration;  // number of samples to play (-1 = infinite)
+  bool     m_autoDestroy; // if true: this object needs to be destroyed by the sound generator when there are no more samples to play
+  bool     m_autoDetach;  // if true: this object needs to be autodetached from the sound generator when there are no more samples to play
 };
 
 
@@ -220,6 +259,36 @@ private:
 };
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+// "tries" to emulate VIC6561 noise generator
+// derived from a reverse enginnered VHDL code: http://www.denial.shamani.dk/bb/viewtopic.php?t=8733&start=210
+
+/**
+ * @brief Emulates VIC6561 (VIC20) noise generator
+ *
+ * Inspired from a reverse enginnered VHDL code: http://www.denial.shamani.dk/bb/viewtopic.php?t=8733&start=210
+ */
+class VICNoiseGenerator : public WaveformGenerator {
+public:
+  VICNoiseGenerator();
+
+  void setFrequency(int value);
+  uint16_t frequency() { return m_frequency; }
+
+  int getSample();
+
+private:
+  static const uint16_t LFSRINIT = 0x0202;
+  static const int      CLK      = 4433618;
+
+  uint16_t m_frequency;
+  uint16_t m_counter;
+  uint16_t m_LFSR;
+  uint16_t m_outSR;
+};
+
+
+
 /**
  * @brief Samples generator
  *
@@ -248,13 +317,13 @@ private:
  *
  * The GPIO used for audio output is GPIO-25. See @ref confAudio "Configuring Audio port" for audio connection sample schema.
  *
- * Here is supported sound generators:
- * SineWaveformGenerator
- * SquareWaveformGenerator
- * TriangleWaveformGenerator
- * SawtoothWaveformGenerator
- * NoiseWaveformGenerator
- * SamplesGenerator
+ * Here is a list of supported sound generators:
+ * - SineWaveformGenerator
+ * - SquareWaveformGenerator
+ * - TriangleWaveformGenerator
+ * - SawtoothWaveformGenerator
+ * - NoiseWaveformGenerator
+ * - SamplesGenerator
  */
 class SoundGenerator {
 
@@ -284,6 +353,54 @@ public:
    *     soundGenerator.play(true);
    */
   bool play(bool value);
+
+  /**
+   * @brief Plays the specified samples
+   *
+   * Starts immediately to play the specified samples. It is not required to call play().
+   * This method returns without wait the end of sound.
+   *
+   * @param data Samples to play.
+   * @param length Number of samples to play.
+   * @param volume Volume value. Minimum is 0, maximum is 127.
+   * @param durationMS Duration in milliseconds. 0 = untile end of samples, -1 = infinite loop.
+   *
+   * @return Pointer to SamplesGenerator object. Lifetime of this object is limited to the duration.
+   */
+  SamplesGenerator * playSamples(int8_t const * data, int length, int volume = 100, int durationMS = 0);
+
+  /**
+   * @brief Plays the specified waveform
+   *
+   * Starts immediately to play the specified waveform. It is not required to call play().
+   * This method returns without wait the end of sound.
+   *
+   * @param waveform Waveform to play.
+   * @param frequency Frequency in Hertz.
+   * @param durationMS Duration in milliseconds.
+   * @param volume Volume value. Minimum is 0, maximum is 127.
+   *
+   * Example:
+   *
+   *     // plays a sinewave at 500Hz for 200 milliseconds
+   *     soundGen.playSound(SineWaveformGenerator(), 500, 200);
+   *
+   *     // plays a C Major chord for 1 second
+   *     soundGen.playSound(SineWaveformGenerator(), 262, 1000);  // C
+   *     soundGen.playSound(SineWaveformGenerator(), 330, 1000);  // E
+   *     soundGen.playSound(SineWaveformGenerator(), 392, 1000);  // G
+   */
+  template <typename T>
+  void playSound(T const & waveform, int frequency, int durationMS, int volume = 100) {
+    auto wf = new T(waveform);
+    attach(wf);
+    wf->setFrequency(frequency);
+    wf->setVolume(volume);
+    wf->setAutoDestroy(true);
+    wf->setDuration(m_sampleRate / 1000 * durationMS);
+    wf->enable(true);
+    play(true);
+  }
 
   /**
    * @brief Determines whether sound generator is playing
@@ -336,6 +453,7 @@ private:
   static void waveGenTask(void * arg);
   bool suspendPlay(bool value);
   void mutizeOutput();
+  void detachNoSuspend(WaveformGenerator * value);
 
 
   TaskHandle_t        m_waveGenTaskHandle;

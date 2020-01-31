@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -20,43 +20,38 @@
  */
 
 
+/*
+ * Optional SD Card connections:
+ *   MISO => GPIO 16
+ *   MOSI => GPIO 17
+ *   CLK  => GPIO 14
+ *   CS   => GPIO 13
+ *
+ * To change above assignment fill other paramaters of FileBrowser::mountSDCard().
+ */
+
+
+
 #include <Preferences.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include "esp_spiffs.h"
-#include "esp_task_wdt.h"
 #include <stdio.h>
-
-
 
 #include "fabgl.h"
 #include "fabui.h"
 
 
 
+#define FORMAT_ON_FAIL     true
+
+#define SPIFFS_MOUNT_PATH  "/flash"
+#define SDCARD_MOUNT_PATH  "/SD"
+
+
 Preferences preferences;
 
-fabgl::VGAController VGAController;
+fabgl::VGAController DisplayController;
 fabgl::PS2Controller PS2Controller;
-
-
-
-void initSPIFFS()
-{
-  static bool initDone = false;
-  if (!initDone) {
-    // setup SPIFFS
-    esp_vfs_spiffs_conf_t conf = {
-        .base_path = "/spiffs",
-        .partition_label = NULL,
-        .max_files = 4,
-        .format_if_mount_failed = true
-    };
-    fabgl::suspendInterrupts();
-    esp_vfs_spiffs_register(&conf);
-    fabgl::resumeInterrupts();
-  }
-}
 
 
 class MyApp : public uiApp {
@@ -72,8 +67,11 @@ class MyApp : public uiApp {
     frame->frameProps().hasCloseButton = false;
 
     // file browser
-    fileBrowser = new uiFileBrowser(frame, Point(10, 25), Size(140, 200));
-    fileBrowser->setDirectory("/spiffs");
+    fileBrowser = new uiFileBrowser(frame, Point(10, 25), Size(140, 180));
+    fileBrowser->setDirectory("/");
+    fileBrowser->onChange = [&]() {
+      updateFreeSpaceLabel();
+    };
 
     // create directory button
     auto createDirBtn = new uiButton(frame, "Create Dir", Point(160, 25), Size(90, 20));
@@ -82,8 +80,7 @@ class MyApp : public uiApp {
       char dirname[MAXSTRLEN + 1] = "";
       if (inputBox("Create Directory", "Name", dirname, MAXSTRLEN, "Create", "Cancel") == uiMessageBoxResult::Button1) {
         fileBrowser->content().makeDirectory(dirname);
-        fileBrowser->update();
-        updateFreeSpaceLabel();
+        updateBrowser();
       }
     };
 
@@ -96,12 +93,10 @@ class MyApp : public uiApp {
         int len = fileBrowser->content().getFullPath(filename);
         char fullpath[len];
         fileBrowser->content().getFullPath(filename, fullpath, len);
-        fabgl::suspendInterrupts();
+        AutoSuspendInterrupts autoInt;
         FILE * f = fopen(fullpath, "wb");
         fclose(f);
-        fabgl::resumeInterrupts();
-        fileBrowser->update();
-        updateFreeSpaceLabel();
+        updateBrowser();
       }
     };
 
@@ -113,7 +108,7 @@ class MyApp : public uiApp {
       strcpy(filename, fileBrowser->filename());
       if (inputBox("Rename File", "New name", filename, maxlen, "Rename", "Cancel") == uiMessageBoxResult::Button1) {
         fileBrowser->content().rename(fileBrowser->filename(), filename);
-        fileBrowser->update();
+        updateBrowser();
       }
     };
 
@@ -122,21 +117,16 @@ class MyApp : public uiApp {
     deleteBtn->onClick = [&]() {
       if (messageBox("Delete file/directory", "Are you sure?", "Yes", "Cancel") == uiMessageBoxResult::Button1) {
         fileBrowser->content().remove( fileBrowser->filename() );
-        fileBrowser->update();
-        updateFreeSpaceLabel();
+        updateBrowser();
       }
     };
 
     // format button
     auto formatBtn = new uiButton(frame, "Format", Point(160, 125), Size(90, 20));
     formatBtn->onClick = [&]() {
-      if (messageBox("Format SPIFFS", "Are you sure?", "Yes", "Cancel") == uiMessageBoxResult::Button1) {
-        fabgl::suspendInterrupts();
-        esp_task_wdt_init(45, false);
-        esp_spiffs_format(nullptr);
-        fabgl::resumeInterrupts();
-        fileBrowser->update();
-        updateFreeSpaceLabel();
+      if (messageBox("Format sdcard", "Are you sure?", "Yes", "Cancel") == uiMessageBoxResult::Button1) {
+        FileBrowser::format(fileBrowser->content().getCurrentDriveType(), 0);
+        updateBrowser();
       }
     };
 
@@ -147,10 +137,9 @@ class MyApp : public uiApp {
       char psw[32]  = "";
       if (inputBox("WiFi Connect", "Network Name", SSID, sizeof(SSID), "OK", "Cancel") == uiMessageBoxResult::Button1 &&
           inputBox("WiFi Connect", "Password", psw, sizeof(psw), "OK", "Cancel") == uiMessageBoxResult::Button1) {
-        fabgl::suspendInterrupts();
+        AutoSuspendInterrupts autoInt;
         preferences.putString("SSID", SSID);
         preferences.putString("WiFiPsw", psw);
-        fabgl::resumeInterrupts();
         connectWiFi();
       }
     };
@@ -176,13 +165,19 @@ class MyApp : public uiApp {
     setFocusedWindow(fileBrowser);
   }
 
+  void updateBrowser()
+  {
+    fileBrowser->update();
+    updateFreeSpaceLabel();
+  }
+
   // connect to wifi using SSID and PSW from Preferences
   void connectWiFi()
   {
     WiFiStatusLbl->setText("WiFi Not Connected");
     WiFiStatusLbl->labelStyle().textColor = RGB888(255, 0, 0);
     char SSID[32], psw[32];
-    fabgl::suspendInterrupts();
+    AutoSuspendInterrupts autoInt;
     if (preferences.getString("SSID", SSID, sizeof(SSID)) && preferences.getString("WiFiPsw", psw, sizeof(psw))) {
       WiFi.begin(SSID, psw);
       for (int i = 0; i < 16 && WiFi.status() != WL_CONNECTED; ++i) {
@@ -194,7 +189,6 @@ class MyApp : public uiApp {
         WiFiStatusLbl->labelStyle().textColor = RGB888(0, 128, 0);
       }
     }
-    fabgl::resumeInterrupts();
     WiFiStatusLbl->update();
   }
 
@@ -222,28 +216,26 @@ class MyApp : public uiApp {
           size_t size = stream->available();
           if (size) {
             int c = stream->readBytes(buf, fabgl::imin(sizeof(buf), size));
-            fabgl::suspendInterrupts();
+            AutoSuspendInterrupts autoInt;
             fwrite(buf, c, 1, f);
-            fabgl::resumeInterrupts();
             if (len > 0)
               len -= c;
           }
         }
 
-        fabgl::suspendInterrupts();
+        AutoSuspendInterrupts autoInt;
         fclose(f);
-        fabgl::resumeInterrupts();
 
-        fileBrowser->update();
+        updateBrowser();
       }
     }
   }
 
-  // show used and free SPIFFS space
+  // show used and free SD space
   void updateFreeSpaceLabel() {
-    size_t total = 0, used = 0;
-    esp_spiffs_info(NULL, &total, &used);
-    freeSpaceLbl->setTextFmt("%d bytes used, %d bytes free", used, total - used);
+    int64_t total, used;
+    FileBrowser::getFSInfo(fileBrowser->content().getCurrentDriveType(), 0, &total, &used);
+    freeSpaceLbl->setTextFmt("%lld KiB used, %lld KiB free", used / 1024, (total - used) / 1024);
     freeSpaceLbl->update();
   }
 
@@ -252,34 +244,34 @@ class MyApp : public uiApp {
 
 void setup()
 {
-  Serial.begin(115200); delay(500); Serial.write("\n\n\n"); // DEBUG ONLY
+  //Serial.begin(115200); delay(500); Serial.write("\n\n\n"); // DEBUG ONLY
 
   preferences.begin("FileBrowser", false);
+  preferences.clear();
 
   PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1, KbdMode::GenerateVirtualKeys);
 
-  VGAController.begin();
+  DisplayController.begin();
 
-  // maintain LOW!!! otherwise there isn't enough memory for WiFi!!!
-  VGAController.setResolution(VGA_400x300_60Hz);
+  // keep LOW!!! otherwise there isn't enough memory for WiFi!!!
+  DisplayController.setResolution(VGA_400x300_60Hz);
 
   // adjust this to center screen in your monitor
-  //VGAController.moveScreen(-6, 0);
+  //DisplayController.moveScreen(-6, 0);
 
-  Canvas cv(&VGAController);
+  Canvas cv(&DisplayController);
   cv.clear();
-  cv.drawText(50, 170, "Initializing SPIFFS...");
+  cv.drawText(50, 170, "Initializing...");
   cv.waitCompletion();
-  initSPIFFS();
-  cv.clear();
-  cv.drawText(50, 170, "Connecting WiFi...");
-  cv.waitCompletion();
+
+  FileBrowser::mountSDCard(FORMAT_ON_FAIL, SDCARD_MOUNT_PATH);
+  FileBrowser::mountSPIFFS(FORMAT_ON_FAIL, SPIFFS_MOUNT_PATH);
 }
 
 
 void loop()
 {
-  app.run(&VGAController);
+  app.run(&DisplayController);
 }
 
 
