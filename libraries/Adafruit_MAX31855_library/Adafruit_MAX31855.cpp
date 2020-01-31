@@ -1,61 +1,91 @@
-/*************************************************** 
-  This is a library for the Adafruit Thermocouple Sensor w/MAX31855K
-
-  Designed specifically to work with the Adafruit Thermocouple Sensor
-  ----> https://www.adafruit.com/products/269
-
-  These displays use SPI to communicate, 3 pins are required to  
-  interface
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
-  BSD license, all text above must be included in any redistribution
- ****************************************************/
+/*!
+ * @file Adafruit_MAX31855.cpp
+ *
+ * @mainpage Adafruit MAX31855 Thermocouple Breakout Driver
+ *
+ * @section intro_sec Introduction
+ *
+ * This is the documentation for Adafruit's MAX31855 thermocouple breakout
+ * driver for the Arduino platform.  It is designed specifically to work with
+ * the Adafruit MAX31855 breakout: https://www.adafruit.com/products/269
+ *
+ * This breakout uses SPI to communicate, 3 pins are required
+ * to interface with the breakout.
+ *
+ * Adafruit invests time and resources providing this open source code,
+ * please support Adafruit and open-source hardware by purchasing
+ * products from Adafruit!
+ *
+ * @section dependencies Dependencies
+ *
+ * This library depends on <a
+ * href="https://github.com/adafruit/Adafruit_BusIO"> Adafruit_BusIO</a> being
+ * present on your system. Please make sure you have installed the latest
+ * version before using this library.
+ *
+ * @section author Author
+ *
+ * Written by Limor Fried/Ladyada for Adafruit Industries.
+ *
+ * @section license License
+ *
+ * BSD license, all text above must be included in any redistribution.
+ *
+ */
 
 #include "Adafruit_MAX31855.h"
 #ifdef __AVR
-  #include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 #elif defined(ESP8266)
-  #include <pgmspace.h>
+#include <pgmspace.h>
 #endif
 
 #include <stdlib.h>
-#include <SPI.h>
 
+/**************************************************************************/
+/*!
+    @brief  Instantiates a new Adafruit_MAX31855 class using software SPI.
 
+    @param _sclk The pin to use for SPI Serial Clock.
+    @param _cs The pin to use for SPI Chip Select.
+    @param _miso The pin to use for SPI Master In Slave Out.
+*/
+/**************************************************************************/
 Adafruit_MAX31855::Adafruit_MAX31855(int8_t _sclk, int8_t _cs, int8_t _miso) {
-  sclk = _sclk;
-  cs = _cs;
-  miso = _miso;
+  spi_dev = Adafruit_SPIDevice(_cs, _sclk, _miso, -1, 4000000);
 
   initialized = false;
 }
 
+/**************************************************************************/
+/*!
+    @brief  Instantiates a new Adafruit_MAX31855 class using hardware SPI.
+
+    @param _cs The pin to use for SPI Chip Select.
+*/
+/**************************************************************************/
 Adafruit_MAX31855::Adafruit_MAX31855(int8_t _cs) {
-  cs = _cs;
-  sclk = miso = -1;
+  spi_dev = Adafruit_SPIDevice(_cs, 4000000);
 
   initialized = false;
 }
 
-void Adafruit_MAX31855::begin(void) {
-  //define pin modes
-  pinMode(cs, OUTPUT);
-  digitalWrite(cs, HIGH);
+/**************************************************************************/
+/*!
+    @brief  Setup the HW
 
-  if (sclk == -1) {
-    // hardware SPI
-    //start and configure hardware SPI
-    SPI.begin();
-  } else {
-    pinMode(sclk, OUTPUT); 
-    pinMode(miso, INPUT);
-  }
-  initialized = true;
-}
+    @return True if the device was successfully initialized, otherwise false.
+*/
+/**************************************************************************/
+void Adafruit_MAX31855::begin(void) { initialized = spi_dev.begin(); }
 
+/**************************************************************************/
+/*!
+    @brief  Read the internal temperature.
+
+    @return The internal temperature in degrees Celsius.
+*/
+/**************************************************************************/
 double Adafruit_MAX31855::readInternal(void) {
   uint32_t v;
 
@@ -73,41 +103,47 @@ double Adafruit_MAX31855::readInternal(void) {
     internal = tmp;
   }
   internal *= 0.0625; // LSB = 0.0625 degrees
-  //Serial.print("\tInternal Temp: "); Serial.println(internal);
+  // Serial.print("\tInternal Temp: "); Serial.println(internal);
   return internal;
 }
 
+/**************************************************************************/
+/*!
+    @brief  Read the thermocouple temperature.
+
+    @return The thermocouple temperature in degrees Celsius.
+*/
+/**************************************************************************/
 double Adafruit_MAX31855::readCelsius(void) {
 
   int32_t v;
 
   v = spiread32();
 
-  //Serial.print("0x"); Serial.println(v, HEX);
+  // Serial.print("0x"); Serial.println(v, HEX);
 
   /*
   float internal = (v >> 4) & 0x7FF;
   internal *= 0.0625;
-  if ((v >> 4) & 0x800) 
+  if ((v >> 4) & 0x800)
     internal *= -1;
   Serial.print("\tInternal Temp: "); Serial.println(internal);
   */
 
   if (v & 0x7) {
     // uh oh, a serious problem!
-    return NAN; 
+    return NAN;
   }
 
   if (v & 0x80000000) {
     // Negative value, drop the lower 18 bits and explicitly extend sign bits.
-    v = 0xFFFFC000 | ((v >> 18) & 0x00003FFFF);
-  }
-  else {
+    v = 0xFFFFC000 | ((v >> 18) & 0x00003FFF);
+  } else {
     // Positive value, just drop the lower 18 bits.
     v >>= 18;
   }
-  //Serial.println(v, HEX);
-  
+  // Serial.println(v, HEX);
+
   double centigrade = v;
 
   // LSB = 0.25 degrees C
@@ -115,11 +151,23 @@ double Adafruit_MAX31855::readCelsius(void) {
   return centigrade;
 }
 
-uint8_t Adafruit_MAX31855::readError() {
-  return spiread32() & 0x7;
-}
+/**************************************************************************/
+/*!
+    @brief  Read the error state.
 
-double Adafruit_MAX31855::readFarenheit(void) {
+    @return The error state.
+*/
+/**************************************************************************/
+uint8_t Adafruit_MAX31855::readError() { return spiread32() & 0x7; }
+
+/**************************************************************************/
+/*!
+    @brief  Read the thermocouple temperature.
+
+    @return The thermocouple temperature in degrees Fahrenheit.
+*/
+/**************************************************************************/
+double Adafruit_MAX31855::readFahrenheit(void) {
   float f = readCelsius();
   f *= 9.0;
   f /= 5.0;
@@ -127,52 +175,34 @@ double Adafruit_MAX31855::readFarenheit(void) {
   return f;
 }
 
-uint32_t Adafruit_MAX31855::spiread32(void) { 
+/**************************************************************************/
+/*!
+    @brief  Read 4 bytes (32 bits) from breakout over SPI.
+
+    @return The raw 32 bit value read.
+*/
+/**************************************************************************/
+uint32_t Adafruit_MAX31855::spiread32(void) {
   int i;
   uint32_t d = 0;
+  uint8_t buf[4];
 
   // backcompatibility!
-  if (! initialized) {
+  if (!initialized) {
     begin();
   }
 
-  digitalWrite(cs, LOW);
-  delay(1);
+  spi_dev.read(buf, 4);
 
-  if(sclk == -1) {
-    // hardware SPI
+  d = buf[0];
+  d <<= 8;
+  d |= buf[1];
+  d <<= 8;
+  d |= buf[2];
+  d <<= 8;
+  d |= buf[3];
 
-    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
+  // Serial.println(d, HEX);
 
-    d = SPI.transfer(0);
-    d <<= 8;
-    d |= SPI.transfer(0);
-    d <<= 8;
-    d |= SPI.transfer(0);
-    d <<= 8;
-    d |= SPI.transfer(0);
-
-    SPI.endTransaction();
-  } else {
-    // software SPI
-
-    digitalWrite(sclk, LOW);
-    delay(1);
-
-    for (i=31; i>=0; i--) {
-      digitalWrite(sclk, LOW);
-      delay(1);
-      d <<= 1;
-      if (digitalRead(miso)) {
-	d |= 1;
-      }
-      
-      digitalWrite(sclk, HIGH);
-      delay(1);
-    }
-  }
-
-  digitalWrite(cs, HIGH);
-  //Serial.println(d, HEX);
   return d;
 }
