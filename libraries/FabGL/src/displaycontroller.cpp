@@ -324,8 +324,7 @@ Bitmap::~Bitmap()
 DisplayController::DisplayController()
   : m_primDynMemPool(FABGLIB_PRIMITIVES_DYNBUFFERS_SIZE)
 {
-  m_execQueue = xQueueCreate(FABGLIB_EXEC_QUEUE_SIZE, sizeof(Primitive));
-
+  m_execQueue                           = nullptr;
   m_backgroundPrimitiveExecutionEnabled = true;
   m_sprites                             = nullptr;
   m_spritesCount                        = 0;
@@ -339,6 +338,16 @@ DisplayController::DisplayController()
 DisplayController::~DisplayController()
 {
   vQueueDelete(m_execQueue);
+}
+
+
+void DisplayController::setDoubleBuffered(bool value)
+{
+  m_doubleBuffered = value;
+  if (m_execQueue)
+    vQueueDelete(m_execQueue);
+  // on double buffering a queue of single element is enough and necessary (see addPrimitive() for details)
+  m_execQueue = xQueueCreate(value ? 1 : FABGLIB_EXEC_QUEUE_SIZE, sizeof(Primitive));
 }
 
 
@@ -363,9 +372,15 @@ void DisplayController::addPrimitive(Primitive & primitive)
   if ((m_backgroundPrimitiveExecutionEnabled && m_doubleBuffered == false) || primitive.cmd == PrimitiveCmd::SwapBuffers) {
     primitiveReplaceDynamicBuffers(primitive);
     xQueueSendToBack(m_execQueue, &primitive, portMAX_DELAY);
+
+    if (m_doubleBuffered) {
+      // wait notufy from PrimitiveCmd::SwapBuffers executor
+      ulTaskNotifyTake(true, portMAX_DELAY);
+    }
+
   } else {
     Rect updateRect = Rect(SHRT_MAX, SHRT_MAX, SHRT_MIN, SHRT_MIN);
-    execPrimitive(primitive, updateRect);
+    execPrimitive(primitive, updateRect, false);
     showSprites(updateRect);
   }
 }
@@ -454,7 +469,7 @@ void IRAM_ATTR DisplayController::processPrimitives()
   Rect updateRect = Rect(SHRT_MAX, SHRT_MAX, SHRT_MIN, SHRT_MIN);
   Primitive prim;
   while (xQueueReceive(m_execQueue, &prim, 0) == pdTRUE)
-    execPrimitive(prim, updateRect);
+    execPrimitive(prim, updateRect, false);
   showSprites(updateRect);
   resumeBackgroundPrimitiveExecution();
   Primitive p(PrimitiveCmd::Refresh, updateRect);
@@ -625,7 +640,7 @@ void DisplayController::setMouseCursorPos(int X, int Y)
 }
 
 
-void IRAM_ATTR DisplayController::execPrimitive(Primitive const & prim, Rect & updateRect)
+void IRAM_ATTR DisplayController::execPrimitive(Primitive const & prim, Rect & updateRect, bool insideISR)
 {
   switch (prim.cmd) {
     case PrimitiveCmd::Flush:
@@ -712,6 +727,10 @@ void IRAM_ATTR DisplayController::execPrimitive(Primitive const & prim, Rect & u
     case PrimitiveCmd::SwapBuffers:
       swapBuffers();
       updateRect = updateRect.merge(Rect(0, 0, getViewPortWidth() - 1, getViewPortHeight() - 1));
+      if (insideISR)
+        vTaskNotifyGiveFromISR(prim.notifyTask, nullptr);
+      else
+        xTaskNotifyGive(prim.notifyTask);
       break;
     case PrimitiveCmd::DrawPath:
       drawPath(prim.path, updateRect);

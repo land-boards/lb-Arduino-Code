@@ -93,7 +93,7 @@ public:
   TFTController(TFTController const&) = delete;
   void operator=(TFTController const&)   = delete;
 
-  TFTController(int controllerWidth = 240, int controllerHeight = 320, TFTOrientation orientation = TFTOrientation::Rotate0, bool reverseHorizontal = false);
+  TFTController();
 
   ~TFTController();
 
@@ -244,7 +244,16 @@ public:
    *     // rotate by 180 degrees
    *     DisplayController.setOrientation(fabgl::TFTOrientation::Rotate180);
    */
-  void setOrientation(TFTOrientation value);
+  void setOrientation(TFTOrientation value, bool force = false);
+
+  /**
+   * @brief Inverts horizontal axis
+   *
+   * Default value depends by the specific display.
+   *
+   * @param value True inverts horizontal axis.
+   */
+  void setReverseHorizontal(bool value);
 
 
 protected:
@@ -346,10 +355,7 @@ protected:
 
   spi_device_handle_t m_SPIDevHandle;
 
-  // when double buffer is enabled the "drawing" view port is always m_viewPort, while the "visible" view port is always m_viewPortVisible
-  // when double buffer is not enabled then m_viewPort = m_viewPortVisible
   uint16_t * *       m_viewPort;
-  uint16_t * *       m_viewPortVisible;
 
   int16_t            m_screenWidth;
   int16_t            m_screenHeight;

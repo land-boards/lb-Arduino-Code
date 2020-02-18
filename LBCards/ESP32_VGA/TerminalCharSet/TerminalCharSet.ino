@@ -19,19 +19,26 @@
   along with FabGL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "fabgl.h"
 
-fabgl::VGAController VGAController;
+
+
+
+
+fabgl::VGAController DisplayController;
 fabgl::Terminal      Terminal;
+
 
 void setup()
 {
-  VGAController.begin();
-  VGAController.setResolution(VGA_640x350_70HzAlt1);
-  //VGAController.setResolution(VGA_640x240_60Hz);    // select to have more free memory
+  DisplayController.begin();
+  DisplayController.setResolution(VGA_640x350_70HzAlt1);
+  //DisplayController.setResolution(VGA_640x240_60Hz);    // select to have more free memory
 
-  Terminal.begin(&VGAController);
+  Terminal.begin(&DisplayController);
 }
+
 
 void slowPrintf(const char * format, ...)
 {

@@ -19,19 +19,23 @@
   along with FabGL.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "fabgl.h"
+
 
 fabgl::VGAController DisplayController;
 fabgl::PS2Controller PS2Controller;
 fabgl::Terminal      Terminal;
 
-// DGG - FabGL changed UART_RX to 34, changed back to 12
-#define UART_RX 12
+
+#define UART_RX 34
 #define UART_TX 2
 
 #define UART_BAUD     115200
 #define UART_CONF     SERIAL_8N1
 #define UART_FLOWCTRL FlowControl::Software
+
+
 
 void setup()
 {

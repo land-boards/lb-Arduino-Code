@@ -46,17 +46,15 @@ namespace fabgl {
 
 
 class ST7789Controller : public TFTController {
-public:
-  ST7789Controller(int controllerWidth = 240, int controllerHeight = 320, TFTOrientation orientation = TFTOrientation::Rotate0, bool reverseHorizontal = false)
-    : TFTController(controllerWidth, controllerHeight, orientation, reverseHorizontal)
-  {
-  }
 protected:
   void softReset();
 };
 
 
-
+class ILI9341Controller : public TFTController {
+protected:
+  void softReset();
+};
 
 
 
