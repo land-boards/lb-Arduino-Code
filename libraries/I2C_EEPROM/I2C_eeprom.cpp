@@ -117,7 +117,7 @@ uint16_t I2C_eeprom::readBlock(const uint16_t memoryAddress, uint8_t* buffer, co
     uint16_t rv = 0;
     while (len > 0)
     {
-        uint8_t cnt = min(len, I2C_TWIBUFFERSIZE);
+        uint16_t cnt = min(len, (uint16_t) I2C_TWIBUFFERSIZE);
         rv += _ReadBlock(addr, buffer, cnt);
         addr += cnt;
         buffer += cnt;
@@ -186,8 +186,8 @@ int I2C_eeprom::_pageBlock(const uint16_t memoryAddress, uint8_t* buffer, uint16
     while (len > 0)		// was length
     {
         uint8_t bytesUntilPageBoundary = this->_pageSize - addr % this->_pageSize;
-        uint8_t cnt = min(len, bytesUntilPageBoundary);
-        cnt = min(cnt, I2C_TWIBUFFERSIZE);
+        uint8_t cnt = min(len, (uint16_t) bytesUntilPageBoundary);
+        cnt = min(cnt, (uint8_t) I2C_TWIBUFFERSIZE);
 		
         int rv = _WriteBlock(addr, buffer, cnt);
         if (rv != 0) return rv;

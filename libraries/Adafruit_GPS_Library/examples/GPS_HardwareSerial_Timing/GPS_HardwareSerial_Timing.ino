@@ -34,9 +34,10 @@ Adafruit_GPS GPS(&GPSSerial);
 
 #ifdef NMEA_EXTENSIONS
 // Create another GPS object to hold the state of the boat, with no
-// communications, so don't call Boat.begin() in setup. We will build some fake
-// sentences from the Boat data to feed to GPS for testing.
-Adafruit_GPS Boat(&GPSSerial);
+// communications, so you don't need to call Boat.begin() in setup. 
+// We will build some fake sentences from the Boat data to feed to 
+// GPS for testing.
+Adafruit_GPS Boat;
 #endif
 
 // Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
@@ -100,9 +101,6 @@ void loop() // run over and over again
       return; // we can fail to parse a sentence in which case we should just
               // wait for another
   }
-  // if millis() or timer wraps around, we'll just reset it
-  if (timer > millis())
-    timer = millis();
 
   // approximately every 2 seconds or so, random intervals, print out the
   // current stats

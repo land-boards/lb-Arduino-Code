@@ -14,12 +14,17 @@ void printnvram(uint8_t address) {
 }
 
 void setup () {
+  Serial.begin(57600);
 
 #ifndef ESP8266
-  while (!Serial); // for Leonardo/Micro/Zero
+  while (!Serial); // wait for serial port to connect. Needed for native USB
 #endif
-  Serial.begin(57600);
-  rtc.begin();
+
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    Serial.flush();
+    abort();
+  }
 
   // Print old RAM contents on startup.
   Serial.println("Current NVRAM values:");

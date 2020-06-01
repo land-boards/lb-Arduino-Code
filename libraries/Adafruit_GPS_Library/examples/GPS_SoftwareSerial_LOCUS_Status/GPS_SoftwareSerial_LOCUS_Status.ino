@@ -29,7 +29,7 @@ Adafruit_GPS GPS(&mySerial);
 // this keeps track of whether we're using the interrupt
 // off by default!
 #ifndef ESP8266 // Sadly not on ESP8266
-boolean usingInterrupt = false;
+bool usingInterrupt = false;
 #endif
 
 void setup()
@@ -68,7 +68,7 @@ void setup()
   }
 }
 
-uint32_t updateTime = 1000;
+uint32_t timer = 0;
 
 void loop()                     // run over and over again
 {
@@ -77,9 +77,9 @@ void loop()                     // run over and over again
   if ((c) && (GPSECHO))
     Serial.write(c);
 
-  if (millis() > updateTime)
+  if (millis() - timer > 1000)
   {
-    updateTime = millis() + 1000;
+    timer = millis();
     if (GPS.LOCUS_ReadStatus()) {
        Serial.print("\n\nLog #");
        Serial.print(GPS.LOCUS_serial, DEC);
@@ -108,7 +108,7 @@ void loop()                     // run over and over again
       Serial.print((int)GPS.LOCUS_percent); Serial.print("% Used ");
 
     }//if (GPS.LOCUS_ReadStatus())
-  }//if (millis() > updateTime)
+  }//if (millis() - timer > 1000)
 }//loop
 
 
@@ -127,7 +127,7 @@ ISR(TIMER0_COMPA_vect) {
 #endif
 }
 
-void useInterrupt(boolean v) {
+void useInterrupt(bool v) {
   if (v) {
     // Timer0 is already used for millis() - we'll just interrupt somewhere
     // in the middle and call the "Compare A" function above
