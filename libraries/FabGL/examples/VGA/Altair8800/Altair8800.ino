@@ -334,10 +334,10 @@ void setup()
     DisplayController.setResolution(VGA_640x200_70Hz);
 
   // uncomment to adjust screen alignment and size
-  //VGAController.shrinkScreen(5, 0);
-  //VGAController.moveScreen(-1, 0);
+  //DisplayController.shrinkScreen(5, 0);
+  //DisplayController.moveScreen(-1, 0);
 
-  Terminal.begin(&VGAController);
+  Terminal.begin(&DisplayController);
   Terminal.connectLocally();      // to use Terminal.read(), available(), etc..
 
   Terminal.setBackgroundColor(Color::Black);
@@ -431,7 +431,7 @@ void loop()
   // CPU speed
   altair.setRealSpeed(preferences.getBool("realSpeed", false));
 
-  CPU cpu = (preferences.getInt("CPU", DefaultCPU) == 1 ? Z80 : i8080);
+  CPU cpu = (preferences.getInt("CPU", DefaultCPU) == 1 ? CPU::Z80 : CPU::i8080);
   altair.run(cpu, Altair88DiskBootROMRun);
 }
 

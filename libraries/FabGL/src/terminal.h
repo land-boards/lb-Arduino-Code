@@ -217,20 +217,6 @@ namespace fabgl {
 
 
 
-#define FABGL_ENTERM_CMD "\e\xff"
-
-#define FABGL_ENTERM_GETCURSORPOS  1
-#define FABGL_ENTERM_GETCURSORCOL  2
-#define FABGL_ENTERM_GETCURSORROW  3
-#define FABGL_ENTERM_SETCURSORPOS  4
-#define FABGL_ENTERM_INSERTSPACE   5
-#define FABGL_ENTERM_DELETECHAR    6
-#define FABGL_ENTERM_CURSORLEFT    7
-#define FABGL_ENTERM_CURSORRIGHT   8
-#define FABGL_ENTERM_SETCHAR       9
-#define FABGL_ENTERM_SETCHARS     10
-
-
 
 /** \ingroup Enumerations
  * @brief This enum defines various serial port flow control methods
@@ -258,6 +244,30 @@ struct TerminalCursorState {
 enum KeypadMode {
   Application,  // DECKPAM
   Numeric,      // DECKPNM
+};
+
+
+/** \ingroup Enumerations
+ * @brief This enum defines a character style
+ */
+enum CharStyle {
+  Bold,               /**< Bold */
+  ReducedLuminosity,  /**< Reduced luminosity */
+  Italic,             /**< Italic */
+  Underline,          /**< Underlined */
+  Blink,              /**< Blinking text */
+  Blank,              /**< Invisible text */
+  Inverse,            /**< Swap background and foreground colors */
+};
+
+
+/** \ingroup Enumerations
+ * @brief This enum defines terminal transition effect
+ */
+enum class TerminalTransition {
+  None,
+  LeftToRight,    /**< Left to right */
+  RightToLeft,    /**< Right to left */
 };
 
 
@@ -337,7 +347,7 @@ struct EmuState {
   // VT52 Graphics Mode
   bool         VT52GraphicsMode;
 
-  // Allow FabGL specific sequences (ESC 0xFF .....)
+  // Allow FabGL specific sequences (ESC FABGL_ENTERM_CODE .....)
   int          allowFabGLSequences;  // >0 allow, 0 = don't allow
 };
 
@@ -528,6 +538,13 @@ public:
   void connectLocally();
 
   /**
+   * @brief Avoids using of terminal locally.
+   *
+   * This is the opposite of connectLocally().
+   */
+  void disconnectLocally();
+
+  /**
    * @brief Injects keys into the keyboard queue.
    *
    * Characters added with localWrite() will be received with read(), available() and peek() methods.
@@ -537,15 +554,6 @@ public:
   void localWrite(uint8_t c);
 
   /**
-   * @brief Injects keys into the keyboard queue.
-   *
-   * Characters inserted with localWrite() will be received with read(), available() and peek() methods.
-   *
-   * @param c ASCII code to inject into the queue.
-   */
-  void localInsert(uint8_t c);
-
-  /**
    * @brief Injects a string of keys into the keyboard queue.
    *
    * Characters added with localWrite() will be received with read(), available() and peek() methods.
@@ -553,6 +561,25 @@ public:
    * @param str A string of ASCII codes to inject into the queue.
    */
   void localWrite(char const * str);
+
+  /**
+   * @brief Injects keys into the keyboard queue.
+   *
+   * Characters inserted with localInsert() will be received with read(), available() and peek() methods.
+   *
+   * @param c ASCII code to inject into the queue.
+   */
+  void localInsert(uint8_t c);
+
+  /**
+   * @brief Injects keys into the keyboard queue.
+   *
+   * This is the same of localInsert().
+   * Characters inserted with localWrite() will be received with read(), available() and peek() methods.
+   *
+   * @param c ASCII code to inject into the queue.
+   */
+  void unRead(uint8_t c) { localInsert(c); }
 
   /**
    * @brief Sets the stream where to output debugging logs.
@@ -665,15 +692,6 @@ public:
    * @return The size (in characters) of remaining space in the display queue.
    */
   int availableForWrite();
-
-  /**
-   * @brief Sets the terminal type to emulate specifying conversion tables
-   *
-   * @param value Conversione tables for the terminal to emulate. nullptr = native ANSI/VT terminal.
-   *
-   * Default and native is ANSI/VT100 mode. Other terminals are emulated translating to native mode.
-   */
-  void setTerminalType(TermInfo const * value);
 
   /**
    * @brief Sets the terminal type to emulate
@@ -794,6 +812,62 @@ public:
    */
   Keyboard * keyboard() { return m_keyboard; }
 
+  /**
+   * @brief Gets associated canvas object.
+   *
+   * @return The Canvas object.
+   */
+  Canvas * canvas() { return m_canvas; }
+
+  /**
+   * @brief Activate this terminal for input and output.
+   *
+   * Only one terminal can be active at the time, for input and output.
+   * Use this method to activate a terminal. This method de-activates currently active terminal.
+   *
+   * @param transition Optional transition effect
+   */
+  void activate(TerminalTransition transition = TerminalTransition::None);
+
+  /**
+   * @brief Determines if this terminal is active or not.
+   *
+   * @return True is this terminal is active for input and output.
+   */
+  bool isActive() { return s_activeTerminal == this; }
+
+
+
+  // statics (used for common default properties)
+
+
+  /**
+   * @brief Number of characters the terminal can "write" without pause (increase if you have loss of characters in serial port).
+   *
+   * Application should change before begin() method.
+   *
+   * Default value is FABGLIB_DEFAULT_TERMINAL_INPUT_QUEUE_SIZE (defined in fabglconf.h)
+   */
+  static int inputQueueSize;
+
+  /**
+   * @brief Stack size of the task that processes Terminal input stream.
+   *
+   * Application should change before begin() method.
+   *
+   * Default value is FABGLIB_DEFAULT_TERMINAL_INPUT_CONSUMER_TASK_STACK_SIZE (defined in fabglconf.h)
+   */
+  static int inputConsumerTaskStackSize;
+
+  /**
+   * @brief Stack size of the task that reads keys from keyboard and send ANSI/VT codes to output stream in Terminal.
+   *
+   * Application should change before begin() method.
+   *
+   * Default value is FABGLIB_DEFAULT_TERMINAL_KEYBOARD_READER_TASK_STACK_SIZE (defined in fabglconf.h)
+   */
+  static int keyboardReaderTaskStackSize;
+
 
 private:
 
@@ -834,7 +908,7 @@ private:
   void restoreCursorState();
   void clearSavedCursorStates();
 
-  void erase(int X1, int Y1, int X2, int Y2, char c, bool maintainDoubleWidth, bool selective);
+  void erase(int X1, int Y1, int X2, int Y2, uint8_t c, bool maintainDoubleWidth, bool selective);
 
   void consumeInputQueue();
   void consumeESC();
@@ -842,13 +916,13 @@ private:
   void consumeFabGLSeq();
   void consumeCSIQUOT(int * params, int paramsCount);
   void consumeCSISPC(int * params, int paramsCount);
-  char consumeParamsAndGetCode(int * params, int * paramsCount, bool * questionMarkFound);
-  void consumeDECPrivateModes(int const * params, int paramsCount, char c);
+  uint8_t consumeParamsAndGetCode(int * params, int * paramsCount, bool * questionMarkFound);
+  void consumeDECPrivateModes(int const * params, int paramsCount, uint8_t c);
   void consumeDCS();
   void execSGRParameters(int const * params, int paramsCount);
   void consumeESCVT52();
 
-  void execCtrlCode(char c);
+  void execCtrlCode(uint8_t c);
 
   static void charsConsumerTask(void * pvParameters);
   static void keyboardReaderTask(void * pvParameters);
@@ -861,9 +935,9 @@ private:
 
   static void IRAM_ATTR uart_isr(void *arg);
 
-  char getNextCode(bool processCtrlCodes);
+  uint8_t getNextCode(bool processCtrlCodes);
 
-  bool setChar(char c);
+  bool setChar(uint8_t c);
   GlyphOptions getGlyphOptionsAt(int X, int Y);
 
   void insertAt(int column, int row, int count);
@@ -884,13 +958,13 @@ private:
 
   void useAlternateScreenBuffer(bool value);
 
-  void send(char c);
+  void send(uint8_t c);
   void send(char const * str);
   void sendCSI();
   void sendDCS();
   void sendSS3();
-  void sendCursorKeyCode(char c);
-  void sendKeypadCursorKeyCode(char applicationCode, const char * numericCode);
+  void sendCursorKeyCode(uint8_t c);
+  void sendKeypadCursorKeyCode(uint8_t applicationCode, const char * numericCode);
 
   void ANSIDecodeVirtualKey(VirtualKey vk);
   void VT52DecodeVirtualKey(VirtualKey vk);
@@ -900,13 +974,24 @@ private:
   void convQueue(const char * str, bool fromISR);
   void TermDecodeVirtualKey(VirtualKey vk);
 
-  bool addToInputQueue(char c, bool fromISR);
+  bool addToInputQueue(uint8_t c, bool fromISR);
+  bool insertToInputQueue(uint8_t c, bool fromISR);
 
-  void write(char c, bool fromISR);
+  void write(uint8_t c, bool fromISR);
 
   //static void uart_on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb);
 
   void uartCheckInputQueueForFlowControl();
+
+  void enableFabGLSequences(bool value);
+
+  void int_setTerminalType(TermType value);
+  void int_setTerminalType(TermInfo const * value);
+
+
+  // indicates which is the active terminal when there are multiple instances of Terminal
+  static Terminal *  s_activeTerminal;
+
 
   DisplayController * m_displayController;
   Canvas *           m_canvas;
@@ -993,9 +1078,16 @@ private:
   VirtualKey                m_lastPressedKey;
 
   uint8_t                   m_convMatchedCount;
-  char                      m_convMatchedChars[EmuTerminalMaxChars];
+  uint8_t                   m_convMatchedChars[EmuTerminalMaxChars];
   TermInfoVideoConv const * m_convMatchedItem;
   TermInfo const *          m_termInfo;
+
+  // last char added with write()
+  volatile uint8_t          m_lastWrittenChar;
+
+  // when a FabGL sequence has been detected in write()
+  volatile bool             m_writeDetectedFabGLSeq;
+  volatile int              m_writeFabGLSeqLength;
 
 };
 
@@ -1009,11 +1101,12 @@ private:
 /**
  * @brief TerminalController allows direct controlling of the Terminal object without using escape sequences
  *
+ * TerminalController needs FabGL specific sequences to be enabled (this is the default).
+ *
  * Example:
  *
  *     // Writes "Hello" at 10, 10
  *     TerminalController termctrl(&Terminal);
- *     termctrl.begin();
  *     termctrl.setCursorPos(10, 10);
  *     Terminal.write("Hello");
  */
@@ -1024,21 +1117,18 @@ public:
   /**
    * @brief Object constructor
    *
-   * @param terminal The Terminal instance to control.
+   * @param terminal The Terminal instance to control. If not specified you have to set delegates.
    */
-  TerminalController(Terminal * terminal);
+  TerminalController(Terminal * terminal = nullptr);
 
   ~TerminalController();
 
   /**
-   * @brief Initializes TerminalController operations
+   * @brief Set destination terminal
+   *
+   * @param terminal The Terminal instance to control. If not specified you have to set delegates.
    */
-  void begin();
-
-  /**
-   * @brief Finalizes TerminalController operations
-   */
-  void end();
+  void setTerminal(Terminal * terminal = nullptr);
 
   /**
    * @brief Sets current cursor position
@@ -1121,21 +1211,82 @@ public:
    *
    * @return True if vertical scroll occurred.
    */
-  bool setChar(char c);
+  bool setChar(uint8_t c);
 
   /**
-   * @brief Sets a sequence of raw characters starting from current cursor position
+   * @brief Checks if a virtual key is currently down
    *
-   * Cursor position is moved by the amount of characters set.
+   * @param vk Virtual key code
    *
-   * @param buffer The buffer containing raw characters.
-   * @param count Number of characters to set.
-   *
-   * @return Number of vertical scrolls occurred.
+   * @return True is the specified key is pressed
    */
-  int setChars(char const * buffer, int count);
+  bool isVKDown(VirtualKey vk);
+
+  /**
+   * @brief Disables FabGL specific sequences
+   */
+  void disableFabGLSequences();
+
+  /**
+   * @brief Sets the terminal type to emulate
+   *
+   * @param value A terminal to emulate
+   */
+  void setTerminalType(TermType value);
+
+  /**
+   * @brief Sets foreground color
+   *
+   * @param value Foreground color
+   */
+  void setForegroundColor(Color value);
+
+  /**
+   * @brief Sets background color
+   *
+   * @param value Background color
+   */
+  void setBackgroundColor(Color value);
+
+  /**
+   * @brief Enables or disables specified character style
+   *
+   * @param style Style to enable or disable
+   * @param enabled If true the style is enabled, if false the style is disabled
+   */
+  void setCharStyle(CharStyle style, bool enabled);
+
+
+  //// Delegates ////
+
+  /**
+   * @brief Read character delegate
+   *
+   * This delegate is called whenever a character needs to be read, and no Terminal has been specified.
+   * The delegate should block until a character is received.
+   *
+   * First parameter represents a pointer to the receiving character code.
+   */
+  Delegate<int *> onRead;
+
+  /**
+   * @brief Write character delegate
+   *
+   * This delegate is called whenever a character needs to be written, and no Terminal has been specified.
+   *
+   * First parameter represents the character code to send.
+   */
+  Delegate<int> onWrite;
+
 
 private:
+
+  void waitFor(int value);
+  void write(uint8_t c);
+  void write(char const * str);
+  int read();
+
+
   Terminal * m_terminal;
 };
 
@@ -1144,6 +1295,15 @@ private:
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // LineEditor
+
+
+/** \ingroup Enumerations
+ * @brief Special character specified in on values from LineEditor::onSpecialChar delegate
+ */
+enum class LineEditorSpecialChar {
+  CursorUp,    /**< Cursor Up */
+  CursorDown,  /**< Cursor Down */
+};
 
 
 /**
@@ -1184,6 +1344,7 @@ public:
    * @brief Sets initial text
    *
    * Call this method if the input must have some text already inserted.
+   * This method can be also called during editing to replace current text.
    *
    * @param text Initial text.
    * @param moveCursor If true the cursor is moved at the end of initial text.
@@ -1201,6 +1362,7 @@ public:
    * @brief Sets initial text specifying length
    *
    * Call this method if the input must have some text already inserted.
+   * This method can be also called during editing to replace current text.
    *
    * @param text Initial text.
    * @param length Text length
@@ -1209,16 +1371,24 @@ public:
   void setText(char const * text, int length, bool moveCursor = true);
 
   /**
+   * @brief Simulates user typing
+   *
+   * This method simulates user typing. Unlike setText, this methods allows control characters and generates onChar events.
+   *
+   * @param text Text to type
+   */
+  void typeText(char const * text);
+
+  /**
    * @brief Reads user input and return the inserted line
    *
-   * This method returns when user press ENTER/RETURN or when the specified timeout has expired.
+   * This method returns when user press ENTER/RETURN.
    *
    * @param maxLength Maximum amount of character the user can type. 0 = unlimited.
-   * @param timeOutMS Timeout in milliseconds. If timeout expires the cursor is not moved from its current position. -1 = no timeout.
    *
-   * @return Returns what user typed and edited, or NULL on timeout.
+   * @return Returns what user typed and edited.
    */
-  char const * edit(int maxLength = 0, int timeOutMS = -1);
+  char const * edit(int maxLength = 0);
 
   /**
    * @brief Gets current content
@@ -1234,11 +1404,72 @@ public:
    */
   void setInsertMode(bool value) { m_insertMode = value; }
 
+
+  // delegates
+
+  /**
+   * @brief Read character delegate
+   *
+   * This delegate is called whenever a character needs to be read, and no Terminal has been specified.
+   * The delegate should block until a character is received.
+   *
+   * First parameter represents a pointer to the receiving character code.
+   */
+  Delegate<int *> onRead;
+
+  /**
+   * @brief Write character delegate
+   *
+   * This delegate is called whenever a character needs to be written, and no Terminal has been specified.
+   *
+   * First parameter represents the character code to send.
+   */
+  Delegate<int> onWrite;
+
+  /**
+   * @brief A delegate called whenever a character has been received
+   *
+   * First parameter represents a pointer to the receiving character code.
+   */
+  Delegate<int *>  onChar;
+
+  /**
+   * @brief A delegate called whenever carriage return has been pressed
+   *
+   * First parameter specifies the action to perform when ENTER has been pressed:
+   *
+   *    0 = new line and end editing (default)
+   *    1 = end editing
+   *    2 = continue editing
+   */
+  Delegate<int *> onCarriageReturn;
+
+  /**
+   * @brief A delegate called whenever a special character has been pressed
+   *
+   * First parameter receives the special key pressed. The type is LineEditorSpecialChar.
+   */
+  Delegate<LineEditorSpecialChar> onSpecialChar;
+
+
 private:
 
   void beginInput();
   void endInput();
   void setLength(int newLength);
+
+  void write(uint8_t c);
+  int read();
+
+  void performCursorUp();
+  void performCursorDown();
+  void performCursorLeft();
+  void performCursorRight();
+  void performCursorHome();
+  void performCursorEnd();
+  void performDeleteRight();
+  void performDeleteLeft();
+
 
   Terminal *          m_terminal;
   TerminalController  m_termctrl;
@@ -1246,10 +1477,12 @@ private:
   int                 m_textLength;
   int                 m_allocated;
   int16_t             m_inputPos;
-  int16_t             m_state;     // -1 = begin input, 0 = normal input, 1 = ESC, >=31 = CSI (actual value specified the third char if present)
+  int16_t             m_state;     // -1 = begin input, 0 = normal input, 1 = ESC, 2 = CTRL-Q, >=31 = CSI (actual value specifies the third char if present)
   int16_t             m_homeCol;
   int16_t             m_homeRow;
   bool                m_insertMode;
+  char *              m_typeText;
+  int                 m_typingIndex;
 };
 
 

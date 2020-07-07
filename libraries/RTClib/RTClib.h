@@ -79,6 +79,7 @@ public:
   DateTime(const DateTime &copy);
   DateTime(const char *date, const char *time);
   DateTime(const __FlashStringHelper *date, const __FlashStringHelper *time);
+  DateTime(const char *iso8601date);
   bool isValid() const;
   char *toString(char *buffer);
 
@@ -306,6 +307,9 @@ public:
   void disableAlarm(uint8_t alarm_num);
   void clearAlarm(uint8_t alarm_num);
   bool alarmFired(uint8_t alarm_num);
+  void enable32K(void);
+  void disable32K(void);
+  bool isEnabled32K(void);
   static float getTemperature(); // in Celcius degree
 };
 

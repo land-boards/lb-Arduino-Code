@@ -94,16 +94,128 @@ const char * CTRLCHAR_TO_STR[] = {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK
                                   "XOFF", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US", "SPC"};
 
 
+#define FABGL_ENTERM_CODE           0xFE
+#define FABGL_ENTERM_CMD            "\e\xFE"
+#define FABGL_ENTERM_REPLYCODE      0xFD
+
+
+#define FABGL_ENTERM_GETCURSORPOS   0x01
+#define FABGL_ENTERM_GETCURSORCOL   0x02
+#define FABGL_ENTERM_GETCURSORROW   0x03
+#define FABGL_ENTERM_SETCURSORPOS   0x04
+#define FABGL_ENTERM_INSERTSPACE    0x05
+#define FABGL_ENTERM_DELETECHAR     0x06
+#define FABGL_ENTERM_CURSORLEFT     0x07
+#define FABGL_ENTERM_CURSORRIGHT    0x08
+#define FABGL_ENTERM_SETCHAR        0x09
+#define FABGL_ENTERM_ISVKDOWN       0x0A
+#define FABGL_ENTERM_DISABLEFABSEQ  0x0B
+#define FABGL_ENTERM_SETTERMTYPE    0x0C
+#define FABGL_ENTERM_SETFGCOLOR     0x0D
+#define FABGL_ENTERM_SETBGCOLOR     0X0E
+#define FABGL_ENTERM_SETCHARSTYLE   0x0F
+
+
+// each fabgl specific sequence has a fixed length, specified here:
+const uint8_t FABGLSEQLENGTH[] = { 0,  // invalid
+                                   3,  // FABGL_ENTERM_GETCURSORPOS
+                                   3,  // FABGL_ENTERM_GETCURSORCOL
+                                   3,  // FABGL_ENTERM_GETCURSORROW
+                                   5,  // FABGL_ENTERM_SETCURSORPOS
+                                   5,  // FABGL_ENTERM_INSERTSPACE
+                                   5,  // FABGL_ENTERM_DELETECHAR
+                                   5,  // FABGL_ENTERM_CURSORLEFT
+                                   5,  // FABGL_ENTERM_CURSORRIGHT
+                                   4,  // FABGL_ENTERM_SETCHAR
+                                   4,  // FABGL_ENTERM_ISVKDOWN
+                                   3,  // FABGL_ENTERM_DISABLEFABSEQ
+                                   4,  // FABGL_ENTERM_SETTERMTYPE
+                                   4,  // FABGL_ENTERM_SETFGCOLOR
+                                   4,  // FABGL_ENTERM_SETBGCOLOR
+                                   5,  // FABGL_ENTERM_SETCHARSTYLE
+                                  };
+
+
+
+
+
+
+
+
+
+
+Terminal * Terminal::s_activeTerminal = nullptr;
+
+
+int Terminal::inputQueueSize = FABGLIB_DEFAULT_TERMINAL_INPUT_QUEUE_SIZE;
+
+int Terminal::inputConsumerTaskStackSize = FABGLIB_DEFAULT_TERMINAL_INPUT_CONSUMER_TASK_STACK_SIZE;
+
+int Terminal::keyboardReaderTaskStackSize = FABGLIB_DEFAULT_TERMINAL_KEYBOARD_READER_TASK_STACK_SIZE;
+
+
 
 Terminal::Terminal()
-  : m_canvas(nullptr)
+  : m_canvas(nullptr),
+    m_mutex(nullptr)
 {
+  if (s_activeTerminal == nullptr)
+    s_activeTerminal = this;
 }
 
 
 Terminal::~Terminal()
 {
-  delete m_canvas;
+  // end() called?
+  if (m_mutex)
+    end();
+
+}
+
+
+void Terminal::activate(TerminalTransition transition)
+{
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
+  if (s_activeTerminal != this) {
+
+    if (s_activeTerminal && transition != TerminalTransition::None) {
+      s_activeTerminal = nullptr;
+      AutoSuspendInterrupts autoInt;
+      switch (transition) {
+        case TerminalTransition::LeftToRight:
+          for (int x = 0; x < m_columns; ++x) {
+            m_canvas->scroll(m_font.width, 0);
+            m_canvas->setOrigin(-m_font.width * (m_columns - x - 1), 0);
+            for (int y = 0; y < m_rows; ++y)
+              m_canvas->renderGlyphsBuffer(m_columns - x - 1, y, &m_glyphsBuffer);
+            m_canvas->waitCompletion(false);
+            delayMicroseconds(2000);
+          }
+          break;
+        case TerminalTransition::RightToLeft:
+          for (int x = 0; x < m_columns; ++x) {
+            m_canvas->scroll(-m_font.width, 0);
+            m_canvas->setOrigin(m_font.width * (m_columns - x - 1), 0);
+            for (int y = 0; y < m_rows; ++y)
+              m_canvas->renderGlyphsBuffer(x, y, &m_glyphsBuffer);
+            m_canvas->waitCompletion(false);
+            delayMicroseconds(2000);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    s_activeTerminal = this;
+    vTaskResume(m_keyboardReaderTaskHandle);
+    m_canvas->setGlyphOptions(m_glyphOptions);
+    m_canvas->setBrushColor(m_emuState.backgroundColor);
+    m_canvas->setPenColor(m_emuState.foregroundColor);
+    updateCanvasScrollingRegion();
+    refresh();
+  }
+  xSemaphoreGive(m_mutex);
 }
 
 
@@ -126,8 +238,6 @@ void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
   m_emuState.tabStop = nullptr;
   m_font.data = nullptr;
 
-  set132ColumnMode(false);
-
   m_savedCursorStateList = nullptr;
 
   m_alternateScreenBuffer = false;
@@ -136,23 +246,30 @@ void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
   m_autoXONOFF = false;
   m_XOFF = false;
 
+  m_lastWrittenChar = 0;
+
+  m_writeDetectedFabGLSeq = false;
+  m_writeFabGLSeqLength = 0;
+
   // conformance level
   m_emuState.conformanceLevel = 4; // VT400
   m_emuState.ctrlBits = 7;
 
   // cursor setup
-  m_cursorState   = false;
+  m_cursorState = false;
   m_emuState.cursorEnabled = false;
 
   m_mutex = xSemaphoreCreateMutex();
+
+  set132ColumnMode(false);
 
   // blink support
   m_blinkTimer = xTimerCreate("", pdMS_TO_TICKS(FABGLIB_DEFAULT_BLINK_PERIOD_MS), pdTRUE, this, blinkTimerFunc);
   xTimerStart(m_blinkTimer, portMAX_DELAY);
 
   // queue and task to consume input characters
-  m_inputQueue = xQueueCreate(FABGLIB_TERMINAL_INPUT_QUEUE_SIZE, sizeof(uint8_t));
-  xTaskCreate(&charsConsumerTask, "", FABGLIB_CHARS_CONSUMER_TASK_STACK_SIZE, this, FABGLIB_CHARS_CONSUMER_TASK_PRIORITY, &m_charsConsumerTaskHandle);
+  m_inputQueue = xQueueCreate(Terminal::inputQueueSize, sizeof(uint8_t));
+  xTaskCreate(&charsConsumerTask, "", Terminal::inputConsumerTaskStackSize, this, FABGLIB_CHARS_CONSUMER_TASK_PRIORITY, &m_charsConsumerTaskHandle);
 
   m_defaultBackgroundColor = Color::Black;
   m_defaultForegroundColor = Color::White;
@@ -169,6 +286,35 @@ void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
 }
 
 
+void Terminal::end()
+{
+  if (m_keyboardReaderTaskHandle)
+    vTaskDelete(m_keyboardReaderTaskHandle);
+
+  xTimerDelete(m_blinkTimer, portMAX_DELAY);
+
+  clearSavedCursorStates();
+
+  vTaskDelete(m_charsConsumerTaskHandle);
+  vQueueDelete(m_inputQueue);
+
+  if (m_outputQueue)
+    vQueueDelete(m_outputQueue);
+
+  freeFont();
+  freeTabStops();
+  freeGlyphsMap();
+
+  vSemaphoreDelete(m_mutex);
+  m_mutex = nullptr;
+
+  delete m_canvas;
+
+  if (isActive())
+    s_activeTerminal = nullptr;
+}
+
+
 void Terminal::connectSerialPort(HardwareSerial & serialPort, bool autoXONXOFF)
 {
   if (m_serialPort)
@@ -176,10 +322,10 @@ void Terminal::connectSerialPort(HardwareSerial & serialPort, bool autoXONXOFF)
   m_serialPort = &serialPort;
   m_autoXONOFF = autoXONXOFF;
 
-  m_serialPort->setRxBufferSize(FABGLIB_TERMINAL_INPUT_QUEUE_SIZE);
+  m_serialPort->setRxBufferSize(Terminal::inputQueueSize);
 
-  if (m_keyboard->isKeyboardAvailable())
-    xTaskCreate(&keyboardReaderTask, "", FABGLIB_KEYBOARD_READER_TASK_STACK_SIZE, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
+  if (!m_keyboardReaderTaskHandle && m_keyboard->isKeyboardAvailable())
+    xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
 
   // just in case a reset occurred after an XOFF
   if (m_autoXONOFF)
@@ -301,7 +447,7 @@ void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int 
   //addApbChangeCallback(this, uart_on_apb_change);
 
   if (m_keyboard->isKeyboardAvailable())
-    xTaskCreate(&keyboardReaderTask, "", FABGLIB_KEYBOARD_READER_TASK_STACK_SIZE, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
+    xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
 }
 
 
@@ -309,7 +455,15 @@ void Terminal::connectLocally()
 {
   m_outputQueue = xQueueCreate(FABGLIB_TERMINAL_OUTPUT_QUEUE_SIZE, sizeof(uint8_t));
   if (!m_keyboardReaderTaskHandle && m_keyboard->isKeyboardAvailable())
-    xTaskCreate(&keyboardReaderTask, "", FABGLIB_KEYBOARD_READER_TASK_STACK_SIZE, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
+    xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
+}
+
+
+void Terminal::disconnectLocally()
+{
+  if (m_outputQueue)
+    vQueueDelete(m_outputQueue);
+  m_outputQueue = nullptr;
 }
 
 
@@ -320,6 +474,8 @@ void Terminal::logFmt(const char * format, ...)
     va_start(ap, format);
     int size = vsnprintf(nullptr, 0, format, ap) + 1;
     if (size > 0) {
+      va_end(ap);
+      va_start(ap, format);
       char buf[size + 1];
       vsnprintf(buf, size, format, ap);
       m_logStream->write(buf);
@@ -376,26 +532,6 @@ void Terminal::freeGlyphsMap()
 }
 
 
-void Terminal::end()
-{
-  vTaskDelete(m_keyboardReaderTaskHandle);
-
-  xTimerDelete(m_blinkTimer, portMAX_DELAY);
-  vSemaphoreDelete(m_mutex);
-
-  clearSavedCursorStates();
-
-  vTaskDelete(m_charsConsumerTaskHandle);
-  vQueueDelete(m_inputQueue);
-
-  vQueueDelete(m_outputQueue);
-
-  freeFont();
-  freeTabStops();
-  freeGlyphsMap();
-}
-
-
 void Terminal::reset()
 {
   #if FABGLIB_TERMINAL_DEBUG_REPORT_DESCS
@@ -420,7 +556,7 @@ void Terminal::reset()
   m_emuState.backarrowKeyMode      = false;
   m_emuState.ANSIMode              = true;
   m_emuState.VT52GraphicsMode      = false;
-  m_emuState.allowFabGLSequences   = 0;
+  m_emuState.allowFabGLSequences   = 1;  // enabled for default
   m_emuState.characterSetIndex     = 0;  // Select G0
   for (int i = 0; i < 4; ++i)
     m_emuState.characterSet[i] = 1;     // G0, G1, G2 and G3 = USASCII
@@ -512,10 +648,11 @@ void Terminal::flush(bool waitVSync)
   #if FABGLIB_TERMINAL_DEBUG_REPORT_DESCS
   log("flush()\n");
   #endif
-
-  while (uxQueueMessagesWaiting(m_inputQueue) > 0)
-    ;
-  m_canvas->waitCompletion(waitVSync);
+  if (isActive()) {
+    while (uxQueueMessagesWaiting(m_inputQueue) > 0)
+      ;
+    m_canvas->waitCompletion(waitVSync);
+  }
 }
 
 
@@ -535,14 +672,19 @@ void Terminal::setBackgroundColor(Color color, bool setAsDefault)
 {
   if (setAsDefault)
     m_defaultBackgroundColor = color;
-  Print::printf("\e[%dm", (int)color + (color < Color::BrightBlack ? 40 : 92));
+  //Print::printf("\e[%dm", (int)color + (color < Color::BrightBlack ? 40 : 92));  <--- removed to reduce stack size
+  write("\e[");
+  char buf[4];
+  write(itoa((int)color + (color < Color::BrightBlack ? 40 : 92), buf, 10));
+  write('m');
 }
 
 
 void Terminal::int_setBackgroundColor(Color color)
 {
   m_emuState.backgroundColor = color;
-  m_canvas->setBrushColor(color);
+  if (isActive())
+    m_canvas->setBrushColor(color);
 }
 
 
@@ -550,14 +692,19 @@ void Terminal::setForegroundColor(Color color, bool setAsDefault)
 {
   if (setAsDefault)
     m_defaultForegroundColor = color;
-  Print::printf("\e[%dm", (int)color + (color < Color::BrightBlack ? 30 : 82));
+  //Print::printf("\e[%dm", (int)color + (color < Color::BrightBlack ? 30 : 82));    <--- removed to reduce stack size
+  write("\e[");
+  char buf[4];
+  write(itoa((int)color + (color < Color::BrightBlack ? 30 : 82), buf, 10));
+  write('m');
 }
 
 
 void Terminal::int_setForegroundColor(Color color)
 {
   m_emuState.foregroundColor = color;
-  m_canvas->setPenColor(color);
+  if (isActive())
+    m_canvas->setPenColor(color);
 }
 
 
@@ -565,9 +712,10 @@ void Terminal::reverseVideo(bool value)
 {
   if (m_paintOptions.swapFGBG != value) {
     m_paintOptions.swapFGBG = value;
-    m_canvas->setPaintOptions(m_paintOptions);
-
-    m_canvas->swapRectangle(0, 0, m_canvas->getWidth() - 1, m_canvas->getHeight() - 1);
+    if (isActive()) {
+      m_canvas->setPaintOptions(m_paintOptions);
+      m_canvas->swapRectangle(0, 0, m_canvas->getWidth() - 1, m_canvas->getHeight() - 1);
+    }
   }
 }
 
@@ -586,7 +734,8 @@ void Terminal::int_clear()
   log("int_clear()\n");
   #endif
 
-  m_canvas->clear();
+  if (isActive())
+    m_canvas->clear();
   clearMap(m_glyphsBuffer.map);
 }
 
@@ -686,11 +835,15 @@ bool Terminal::int_enableCursor(bool value)
   if (m_emuState.cursorEnabled != value) {
     m_emuState.cursorEnabled = value;
     if (m_emuState.cursorEnabled) {
-      if (uxQueueMessagesWaiting(m_inputQueue) == 0)
-        blinkCursor();  // just to show the cursor immediately
+      if (uxQueueMessagesWaiting(m_inputQueue) == 0) {
+        // just to show the cursor before next blink
+        blinkCursor();
+      }
     } else {
-      if (m_cursorState)
-        blinkCursor(); // make sure cursor is hidden
+      if (m_cursorState) {
+        // make sure cursor is hidden
+        blinkCursor();
+      }
     }
   }
   return prev;
@@ -710,8 +863,7 @@ void Terminal::blinkTimerFunc(TimerHandle_t xTimer)
 {
   Terminal * term = (Terminal*) pvTimerGetTimerID(xTimer);
 
-  if (xSemaphoreTake(term->m_mutex, 0) == pdTRUE) {
-
+  if (term->isActive() && xSemaphoreTake(term->m_mutex, 0) == pdTRUE) {
     // cursor blink
     if (term->m_emuState.cursorEnabled && term->m_emuState.cursorBlinkingEnabled)
       term->blinkCursor();
@@ -728,50 +880,54 @@ void Terminal::blinkTimerFunc(TimerHandle_t xTimer)
 
 void Terminal::blinkCursor()
 {
-  m_cursorState = !m_cursorState;
-  int X = (m_emuState.cursorX - 1) * m_font.width;
-  int Y = (m_emuState.cursorY - 1) * m_font.height;
-  switch (m_emuState.cursorStyle) {
-    case 0 ... 2:
-      // block cursor
-      m_canvas->swapRectangle(X, Y, X + m_font.width - 1, Y + m_font.height - 1);
-      break;
-    case 3 ... 4:
-      // underline cursor
-      m_canvas->swapRectangle(X, Y + m_font.height - 2, X + m_font.width - 1, Y + m_font.height - 1);
-      break;
-    case 5 ... 6:
-      // bar cursor
-      m_canvas->swapRectangle(X, Y, X + 1, Y + m_font.height - 1);
-      break;
+  if (isActive()) {
+    m_cursorState = !m_cursorState;
+    int X = (m_emuState.cursorX - 1) * m_font.width;
+    int Y = (m_emuState.cursorY - 1) * m_font.height;
+    switch (m_emuState.cursorStyle) {
+      case 0 ... 2:
+        // block cursor
+        m_canvas->swapRectangle(X, Y, X + m_font.width - 1, Y + m_font.height - 1);
+        break;
+      case 3 ... 4:
+        // underline cursor
+        m_canvas->swapRectangle(X, Y + m_font.height - 2, X + m_font.width - 1, Y + m_font.height - 1);
+        break;
+      case 5 ... 6:
+        // bar cursor
+        m_canvas->swapRectangle(X, Y, X + 1, Y + m_font.height - 1);
+        break;
+    }
   }
 }
 
 
 void Terminal::blinkText()
 {
-  m_blinkingTextVisible = !m_blinkingTextVisible;
-  bool keepEnabled = false;
-  int rows = m_rows;
-  int cols = m_columns;
-  m_canvas->beginUpdate();
-  for (int y = 0; y < rows; ++y) {
-    uint32_t * itemPtr = m_glyphsBuffer.map + y * cols;
-    for (int x = 0; x < cols; ++x, ++itemPtr) {
-      // character to blink?
-      GlyphOptions glyphOptions = glyphMapItem_getOptions(itemPtr);
-      if (glyphOptions.userOpt1) {
-        glyphOptions.blank = !m_blinkingTextVisible;
-        glyphMapItem_setOptions(itemPtr, glyphOptions);
-        refresh(x + 1, y + 1);
-        keepEnabled = true;
+  if (isActive()) {
+    m_blinkingTextVisible = !m_blinkingTextVisible;
+    bool keepEnabled = false;
+    int rows = m_rows;
+    int cols = m_columns;
+    m_canvas->beginUpdate();
+    for (int y = 0; y < rows; ++y) {
+      uint32_t * itemPtr = m_glyphsBuffer.map + y * cols;
+      for (int x = 0; x < cols; ++x, ++itemPtr) {
+        // character to blink?
+        GlyphOptions glyphOptions = glyphMapItem_getOptions(itemPtr);
+        if (glyphOptions.userOpt1) {
+          glyphOptions.blank = !m_blinkingTextVisible;
+          glyphMapItem_setOptions(itemPtr, glyphOptions);
+          refresh(x + 1, y + 1);
+          keepEnabled = true;
+        }
       }
+      m_canvas->waitCompletion(false);
     }
-    m_canvas->waitCompletion(false);
+    m_canvas->endUpdate();
+    if (!keepEnabled)
+      m_blinkingTextEnabled = false;
   }
-  m_canvas->endUpdate();
-  if (!keepEnabled)
-    m_blinkingTextEnabled = false;
 }
 
 
@@ -821,12 +977,14 @@ void Terminal::scrollDown()
   log("scrollDown\n");
   #endif
 
-  // scroll down using canvas
-  if (m_emuState.smoothScroll) {
-    for (int i = 0; i < m_font.height; ++i)
-      m_canvas->scroll(0, 1);
-  } else
-    m_canvas->scroll(0, m_font.height);
+  if (isActive()) {
+    // scroll down using canvas
+    if (m_emuState.smoothScroll) {
+      for (int i = 0; i < m_font.height; ++i)
+        m_canvas->scroll(0, 1);
+    } else
+      m_canvas->scroll(0, m_font.height);
+  }
 
   // move down scren buffer
   for (int y = m_emuState.scrollingRegionDown - 1; y > m_emuState.scrollingRegionTop - 1; --y)
@@ -859,12 +1017,14 @@ void Terminal::scrollUp()
   log("scrollUp\n");
   #endif
 
-  // scroll up using canvas
-  if (m_emuState.smoothScroll) {
-    for (int i = 0; i < m_font.height; ++i)
-      m_canvas->scroll(0, -1);
-  } else
-    m_canvas->scroll(0, -m_font.height);
+  if (isActive()) {
+    // scroll up using canvas
+    if (m_emuState.smoothScroll) {
+      for (int i = 0; i < m_font.height; ++i)
+        m_canvas->scroll(0, -1);
+    } else
+      m_canvas->scroll(0, -m_font.height);
+  }
 
   // move up screen buffer
   for (int y = m_emuState.scrollingRegionTop - 1; y < m_emuState.scrollingRegionDown - 1; ++y)
@@ -906,7 +1066,8 @@ void Terminal::setScrollingRegion(int top, int down, bool resetCursorPos)
 
 void Terminal::updateCanvasScrollingRegion()
 {
-  m_canvas->setScrollingRegion(0, (m_emuState.scrollingRegionTop - 1) * m_font.height, m_canvas->getWidth() - 1, m_emuState.scrollingRegionDown * m_font.height - 1);
+  if (isActive())
+    m_canvas->setScrollingRegion(0, (m_emuState.scrollingRegionTop - 1) * m_font.height, m_canvas->getWidth() - 1, m_emuState.scrollingRegionDown * m_font.height - 1);
 }
 
 
@@ -941,7 +1102,8 @@ bool Terminal::multilineInsertChar(int charsToMove)
     } else {
       ++row;
     }
-    m_canvas->waitCompletion(false);
+    if (isActive())
+      m_canvas->waitCompletion(false);
   }
   return scrolled;
 }
@@ -956,11 +1118,13 @@ void Terminal::insertAt(int column, int row, int count)
 
   count = tmin((int)m_columns, count);
 
-  // move characters on the right using canvas
-  int charWidth = getCharWidthAt(row);
-  m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
-  m_canvas->scroll(count * charWidth, 0);
-  updateCanvasScrollingRegion();  // restore original scrolling region
+  if (isActive()) {
+    // move characters on the right using canvas
+    int charWidth = getCharWidthAt(row);
+    m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
+    m_canvas->scroll(count * charWidth, 0);
+    updateCanvasScrollingRegion();  // restore original scrolling region
+  }
 
   // move characters in the screen buffer
   uint32_t * rowPtr = m_glyphsBuffer.map + (row - 1) * m_columns;
@@ -993,14 +1157,16 @@ void Terminal::multilineDeleteChar(int charsToMove)
     deleteAt(col, row, 1);
     charsToMove -= m_columns - col;
     if (charsToMove > 0) {
-      m_canvas->waitCompletion(false);
+      if (isActive())
+        m_canvas->waitCompletion(false);
       uint32_t * lastItem  = m_glyphsBuffer.map + (row - 1) * m_columns + (m_columns - 1);
       lastItem[0] = lastItem[1];
       refresh(m_columns, row);
     }
     col = 1;
     ++row;
-    m_canvas->waitCompletion(false);
+    if (isActive())
+      m_canvas->waitCompletion(false);
   }
 }
 
@@ -1014,11 +1180,13 @@ void Terminal::deleteAt(int column, int row, int count)
 
   count = imin(m_columns - column + 1, count);
 
-  // move characters on the right using canvas
-  int charWidth = getCharWidthAt(row);
-  m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
-  m_canvas->scroll(-count * charWidth, 0);
-  updateCanvasScrollingRegion();  // restore original scrolling region
+  if (isActive()) {
+    // move characters on the right using canvas
+    int charWidth = getCharWidthAt(row);
+    m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
+    m_canvas->scroll(-count * charWidth, 0);
+    updateCanvasScrollingRegion();  // restore original scrolling region
+  }
 
   // move characters in the screen buffer
   uint32_t * rowPtr = m_glyphsBuffer.map + (row - 1) * m_columns;
@@ -1038,7 +1206,7 @@ void Terminal::deleteAt(int column, int row, int count)
 // Coordinates are cursor coordinates (1,1  = top left)
 // maintainDoubleWidth = true: Maintains line attributes (double width)
 // selective = true: erase only characters with userOpt1 = 0
-void Terminal::erase(int X1, int Y1, int X2, int Y2, char c, bool maintainDoubleWidth, bool selective)
+void Terminal::erase(int X1, int Y1, int X2, int Y2, uint8_t c, bool maintainDoubleWidth, bool selective)
 {
   #if FABGLIB_TERMINAL_DEBUG_REPORT_DESCS
   logFmt("erase(%d, %d, %d, %d, %d, %d)\n", X1, Y1, X2, Y2, (int)c, (int)maintainDoubleWidth);
@@ -1049,9 +1217,11 @@ void Terminal::erase(int X1, int Y1, int X2, int Y2, char c, bool maintainDouble
   X2 = tclamp(X2 - 1, 0, (int)m_columns - 1);
   Y2 = tclamp(Y2 - 1, 0, (int)m_rows - 1);
 
-  if (c == ASCII_SPC && !selective) {
-    int charWidth = getCharWidthAt(m_emuState.cursorY);
-    m_canvas->fillRectangle(X1 * charWidth, Y1 * m_font.height, (X2 + 1) * charWidth - 1, (Y2 + 1) * m_font.height - 1);
+  if (isActive()) {
+    if (c == ASCII_SPC && !selective) {
+      int charWidth = getCharWidthAt(m_emuState.cursorY);
+      m_canvas->fillRectangle(X1 * charWidth, Y1 * m_font.height, (X2 + 1) * charWidth - 1, (Y2 + 1) * m_font.height - 1);
+    }
   }
 
   GlyphOptions glyphOptions = {.value = 0};
@@ -1068,6 +1238,14 @@ void Terminal::erase(int X1, int Y1, int X2, int Y2, char c, bool maintainDouble
   }
   if (c != ASCII_SPC || selective)
     refresh(X1 + 1, Y1 + 1, X2 + 1, Y2 + 1);
+}
+
+
+void Terminal::enableFabGLSequences(bool value)
+{
+  m_emuState.allowFabGLSequences += value ? 1 : -1;
+  if (m_emuState.allowFabGLSequences < 0)
+    m_emuState.allowFabGLSequences = 0;
 }
 
 
@@ -1131,7 +1309,8 @@ void Terminal::restoreCursorState()
     if (m_savedCursorStateList->tabStop)
       memcpy(m_emuState.tabStop, m_savedCursorStateList->tabStop, m_columns);
     m_glyphOptions = m_savedCursorStateList->glyphOptions;
-    m_canvas->setGlyphOptions(m_glyphOptions);
+    if (isActive())
+      m_canvas->setGlyphOptions(m_glyphOptions);
     m_emuState.characterSetIndex = m_savedCursorStateList->characterSetIndex;
     for (int i = 0; i < 4; ++i)
       m_emuState.characterSet[i] = m_savedCursorStateList->characterSet[i];
@@ -1210,7 +1389,7 @@ int Terminal::read()
 int Terminal::read(int timeOutMS)
 {
   if (m_outputQueue) {
-    char c;
+    uint8_t c;
     xQueueReceive(m_outputQueue, &c, msToTicks(timeOutMS));
     return c;
   } else
@@ -1314,7 +1493,7 @@ void IRAM_ATTR Terminal::uart_isr(void *arg)
       break;
     }
     // add to input queue
-    term->addToInputQueue(uart->fifo.rw_byte, true);
+    term->write(uart->fifo.rw_byte, true);
   }
 
   // clear interrupt flag
@@ -1323,7 +1502,7 @@ void IRAM_ATTR Terminal::uart_isr(void *arg)
 
 
 // send a character to m_serialPort or m_outputQueue
-void Terminal::send(char c)
+void Terminal::send(uint8_t c)
 {
   #if FABGLIB_TERMINAL_DEBUG_REPORT_OUT_CODES
   logFmt("=> %02X  %s%c\n", (int)c, (c <= ASCII_SPC ? CTRLCHAR_TO_STR[(int)c] : ""), (c > ASCII_SPC ? c : ASCII_SPC));
@@ -1400,7 +1579,7 @@ int Terminal::availableForWrite()
 }
 
 
-bool Terminal::addToInputQueue(char c, bool fromISR)
+bool Terminal::addToInputQueue(uint8_t c, bool fromISR)
 {
   if (fromISR)
     return xQueueSendToBackFromISR(m_inputQueue, &c, nullptr);
@@ -1409,12 +1588,38 @@ bool Terminal::addToInputQueue(char c, bool fromISR)
 }
 
 
-void Terminal::write(char c, bool fromISR)
+bool Terminal::insertToInputQueue(uint8_t c, bool fromISR)
 {
-  if (m_termInfo == nullptr)
+  if (fromISR)
+    return xQueueSendToFrontFromISR(m_inputQueue, &c, nullptr);
+  else
+    return xQueueSendToFront(m_inputQueue, &c, portMAX_DELAY);
+}
+
+
+void Terminal::write(uint8_t c, bool fromISR)
+{
+  if (m_termInfo == nullptr || m_writeDetectedFabGLSeq)
     addToInputQueue(c, fromISR);  // send unprocessed
   else
     convHandleTranslation(c, fromISR);
+
+  // this is necessary to avoid to call convHandleTranslation() in the middle of FabGL specific sequence (which can have binary data inside)
+  if (m_writeDetectedFabGLSeq) {
+    if (m_writeFabGLSeqLength == 0) {
+      m_writeFabGLSeqLength = FABGLSEQLENGTH[c] - 3;
+    } else {
+      --m_writeFabGLSeqLength;
+    }
+    if (m_writeFabGLSeqLength == 0) {
+      m_writeDetectedFabGLSeq = false;
+    }
+  } else if (m_emuState.allowFabGLSequences && m_lastWrittenChar == ASCII_ESC && c == FABGL_ENTERM_CODE) {
+    m_writeDetectedFabGLSeq = true;
+    m_writeFabGLSeqLength = 0;
+  }
+
+  m_lastWrittenChar = c;
 
   #if FABGLIB_TERMINAL_DEBUG_REPORT_IN_CODES
   logFmt("<= %02X  %s%c\n", (int)c, (c <= ASCII_SPC ? CTRLCHAR_TO_STR[(int)c] : ""), (c > ASCII_SPC ? c : ASCII_SPC));
@@ -1437,39 +1642,58 @@ int Terminal::write(const uint8_t * buffer, int size)
 }
 
 
-void Terminal::setTerminalType(TermInfo const * value)
+void Terminal::setTerminalType(TermType value)
 {
-  m_termInfo = nullptr;
-  write("\e[?2h");  // disable VT52 mode
-  if (value != nullptr)
-    write(value->initString);
-  m_termInfo = value;
+  // doesn't set it immediately, serialize into the queue
+  TerminalController(this).setTerminalType(value);
 }
 
 
-void Terminal::setTerminalType(TermType value)
+void Terminal::int_setTerminalType(TermInfo const * value)
+{
+  // disable VT52 mode
+  m_emuState.ANSIMode = true;
+  m_emuState.conformanceLevel = 4;
+
+  m_termInfo = nullptr;
+
+  if (value != nullptr) {
+    // need to "insert" initString in reverse order
+    auto s = value->initString;
+    for (int i = strlen(s) - 1; i >= 0; --i)
+      insertToInputQueue(s[i], false);
+
+    m_termInfo = value;
+  }
+}
+
+
+void Terminal::int_setTerminalType(TermType value)
 {
   switch (value) {
     case TermType::ANSI_VT:
-      setTerminalType(nullptr);
+      int_setTerminalType(nullptr);
       break;
     case TermType::ADM3A:
-      setTerminalType(&term_ADM3A);
+      int_setTerminalType(&term_ADM3A);
       break;
     case TermType::ADM31:
-      setTerminalType(&term_ADM31);
+      int_setTerminalType(&term_ADM31);
       break;
     case TermType::Hazeltine1500:
-      setTerminalType(&term_Hazeltine1500);
+      int_setTerminalType(&term_Hazeltine1500);
       break;
     case TermType::Osborne:
-      setTerminalType(&term_Osborne);
+      int_setTerminalType(&term_Osborne);
       break;
     case TermType::Kaypro:
-      setTerminalType(&term_Kaypro);
+      int_setTerminalType(&term_Kaypro);
       break;
     case TermType::VT52:
-      setTerminalType(&term_VT52);
+      int_setTerminalType(&term_VT52);
+      break;
+    case TermType::ANSILegacy:
+      int_setTerminalType(&term_ANSILegacy);
       break;
   }
 }
@@ -1628,7 +1852,7 @@ void Terminal::convQueue(const char * str, bool fromISR)
 
 // set specified character at current cursor position
 // return true if vertical scroll happened
-bool Terminal::setChar(char c)
+bool Terminal::setChar(uint8_t c)
 {
   bool vscroll = false;
 
@@ -1652,19 +1876,21 @@ bool Terminal::setChar(char c)
   glyphOptions.doubleWidth = glyphMapItem_getOptions(mapItemPtr).doubleWidth;
   *mapItemPtr = GLYPHMAP_ITEM_MAKE(c, m_emuState.backgroundColor, m_emuState.foregroundColor, glyphOptions);
 
-  if (glyphOptions.value != m_glyphOptions.value)
-    m_canvas->setGlyphOptions(glyphOptions);
+  if (isActive()) {
+    if (glyphOptions.value != m_glyphOptions.value)
+      m_canvas->setGlyphOptions(glyphOptions);
 
-  int x = (m_emuState.cursorX - 1) * m_font.width * (glyphOptions.doubleWidth ? 2 : 1);
-  int y = (m_emuState.cursorY - 1) * m_font.height;
-  m_canvas->drawGlyph(x, y, m_font.width, m_font.height, m_font.data, c);
+    int x = (m_emuState.cursorX - 1) * m_font.width * (glyphOptions.doubleWidth ? 2 : 1);
+    int y = (m_emuState.cursorY - 1) * m_font.height;
+    m_canvas->drawGlyph(x, y, m_font.width, m_font.height, m_font.data, c);
 
-  if (glyphOptions.value != m_glyphOptions.value)
-    m_canvas->setGlyphOptions(m_glyphOptions);
+    if (glyphOptions.value != m_glyphOptions.value)
+      m_canvas->setGlyphOptions(m_glyphOptions);
 
-  // blinking text?
-  if (m_glyphOptions.userOpt1)
-    m_prevBlinkingTextEnabled = true; // consumeInputQueue() will set the value
+    // blinking text?
+    if (m_glyphOptions.userOpt1)
+      m_prevBlinkingTextEnabled = true; // consumeInputQueue() will set the value
+  }
 
   if (m_emuState.cursorX == m_columns) {
     m_emuState.cursorPastLastCol = true;
@@ -1693,7 +1919,8 @@ void Terminal::refresh(int X, int Y)
   logFmt("refresh(%d, %d)\n", X, Y);
   #endif
 
-  m_canvas->renderGlyphsBuffer(X - 1, Y - 1, &m_glyphsBuffer);
+  if (isActive())
+    m_canvas->renderGlyphsBuffer(X - 1, Y - 1, &m_glyphsBuffer);
 }
 
 
@@ -1703,10 +1930,12 @@ void Terminal::refresh(int X1, int Y1, int X2, int Y2)
   logFmt("refresh(%d, %d, %d, %d)\n", X1, Y1, X2, Y2);
   #endif
 
-  for (int y = Y1 - 1; y < Y2; ++y) {
-    for (int x = X1 - 1; x < X2; ++x)
-      m_canvas->renderGlyphsBuffer(x, y, &m_glyphsBuffer);
-    m_canvas->waitCompletion(false);
+  if (isActive()) {
+    for (int y = Y1 - 1; y < Y2; ++y) {
+      for (int x = X1 - 1; x < X2; ++x)
+        m_canvas->renderGlyphsBuffer(x, y, &m_glyphsBuffer);
+      m_canvas->waitCompletion(false);
+    }
   }
 }
 
@@ -1748,10 +1977,10 @@ GlyphOptions Terminal::getGlyphOptionsAt(int X, int Y)
 
 
 // blocking operation
-char Terminal::getNextCode(bool processCtrlCodes)
+uint8_t Terminal::getNextCode(bool processCtrlCodes)
 {
   while (true) {
-    char c;
+    uint8_t c;
     xQueueReceive(m_inputQueue, &c, portMAX_DELAY);
 
     if (m_uart)
@@ -1777,7 +2006,7 @@ void Terminal::charsConsumerTask(void * pvParameters)
 
 void Terminal::consumeInputQueue()
 {
-  char c = getNextCode(false);  // blocking call. false: do not process ctrl chars
+  uint8_t c = getNextCode(false);  // blocking call. false: do not process ctrl chars
 
   xSemaphoreTake(m_mutex, portMAX_DELAY);
 
@@ -1808,7 +2037,7 @@ void Terminal::consumeInputQueue()
 }
 
 
-void Terminal::execCtrlCode(char c)
+void Terminal::execCtrlCode(uint8_t c)
 {
   switch (c) {
 
@@ -1889,7 +2118,7 @@ void Terminal::consumeESC()
     return;
   }
 
-  char c = getNextCode(true);   // true: process ctrl chars
+  uint8_t c = getNextCode(true);   // true: process ctrl chars
 
   if (c == '[') {
     // ESC [ : start of CSI sequence
@@ -1897,8 +2126,8 @@ void Terminal::consumeESC()
     return;
   }
 
-  if (c == 0xFF && m_emuState.allowFabGLSequences > 0) {
-    // ESC 0xFF : FabGL specific sequence
+  if (c == FABGL_ENTERM_CODE && m_emuState.allowFabGLSequences > 0) {
+    // ESC FABGL_ENTERM_CODE : FabGL specific sequence
     consumeFabGLSeq();
     return;
   }
@@ -2052,7 +2281,7 @@ void Terminal::consumeESC()
 // a parameter is a number. Parameters are separated by ';'. Example: "5;27;3"
 // first parameter has index 0
 // params array must have up to FABGLIB_MAX_CSI_PARAMS
-char Terminal::consumeParamsAndGetCode(int * params, int * paramsCount, bool * questionMarkFound)
+uint8_t Terminal::consumeParamsAndGetCode(int * params, int * paramsCount, bool * questionMarkFound)
 {
   // get parameters until maximum size reached or a command character has been found
   *paramsCount = 1; // one parameter is always assumed (even if not exists)
@@ -2060,7 +2289,7 @@ char Terminal::consumeParamsAndGetCode(int * params, int * paramsCount, bool * q
   int * p = params;
   *p = 0;
   while (true) {
-    char c = getNextCode(true);  // true: process ctrl chars
+    uint8_t c = getNextCode(true);  // true: process ctrl chars
 
     #if FABGLIB_TERMINAL_DEBUG_REPORT_ESC
     log(c);
@@ -2109,7 +2338,7 @@ void Terminal::consumeCSI()
   bool questionMarkFound;
   int params[FABGLIB_MAX_CSI_PARAMS];
   int paramsCount;
-  char c = consumeParamsAndGetCode(params, &paramsCount, &questionMarkFound);
+  uint8_t c = consumeParamsAndGetCode(params, &paramsCount, &questionMarkFound);
 
   // ESC [ ? ... h
   // ESC [ ? ... l
@@ -2389,7 +2618,7 @@ void Terminal::consumeCSI()
 // consume CSI " sequences
 void Terminal::consumeCSIQUOT(int * params, int paramsCount)
 {
-  char c = getNextCode(true);  // true: process ctrl chars
+  uint8_t c = getNextCode(true);  // true: process ctrl chars
 
   switch (c) {
 
@@ -2414,7 +2643,7 @@ void Terminal::consumeCSIQUOT(int * params, int paramsCount)
 // consume CSI SPC sequences
 void Terminal::consumeCSISPC(int * params, int paramsCount)
 {
-  char c = getNextCode(true);  // true: process ctrl chars
+  uint8_t c = getNextCode(true);  // true: process ctrl chars
 
   switch (c) {
 
@@ -2441,7 +2670,7 @@ void Terminal::consumeCSISPC(int * params, int paramsCount)
 // ESC [ ? # h     <- set
 // ESC [ ? # l     <- reset
 // "c" can be "h" or "l"
-void Terminal::consumeDECPrivateModes(int const * params, int paramsCount, char c)
+void Terminal::consumeDECPrivateModes(int const * params, int paramsCount, uint8_t c)
 {
   bool set = (c == 'h');
   switch (params[0]) {
@@ -2581,9 +2810,7 @@ void Terminal::consumeDECPrivateModes(int const * params, int paramsCount, char 
     // Allows enhanced FabGL sequences (default disabled)
     // This set is "incremental". This is actually disabled when the counter reach 0.
     case 7999:
-      m_emuState.allowFabGLSequences += set ? 1 : -1;
-      if (m_emuState.allowFabGLSequences < 0)
-        m_emuState.allowFabGLSequences = 0;
+      enableFabGLSequences(set);
       break;
 
     default:
@@ -2718,7 +2945,8 @@ void Terminal::execSGRParameters(int const * params, int paramsCount)
 
     }
   }
-  m_canvas->setGlyphOptions(m_glyphOptions);
+  if (isActive())
+    m_canvas->setGlyphOptions(m_glyphOptions);
 }
 
 
@@ -2734,14 +2962,14 @@ void Terminal::consumeDCS()
   bool questionMarkFound;
   int params[FABGLIB_MAX_CSI_PARAMS];
   int paramsCount;
-  char c = consumeParamsAndGetCode(params, &paramsCount, &questionMarkFound);
+  uint8_t c = consumeParamsAndGetCode(params, &paramsCount, &questionMarkFound);
 
   // get DCS content up to ST
-  char content[FABGLIB_MAX_DCS_CONTENT];
+  uint8_t content[FABGLIB_MAX_DCS_CONTENT];
   int contentLength = 0;
   content[contentLength++] = c;
   while (true) {
-    char c = getNextCode(false);  // false: do notprocess ctrl chars, ESC needed here
+    uint8_t c = getNextCode(false);  // false: do notprocess ctrl chars, ESC needed here
     if (c == ASCII_ESC) {
       if (getNextCode(false) == '\\')
         break;  // ST found
@@ -2789,11 +3017,18 @@ void Terminal::consumeDCS()
 
 void Terminal::consumeESCVT52()
 {
-  char c = getNextCode(false);
+  uint8_t c = getNextCode(false);
 
   #if FABGLIB_TERMINAL_DEBUG_REPORT_ESC
   logFmt("ESC%c\n", c);
   #endif
+
+  // this allows fabgl sequences even in VT52 mode
+  if (c == FABGL_ENTERM_CODE && m_emuState.allowFabGLSequences > 0) {
+    // ESC FABGL_ENTERM_CODE : FabGL specific sequence
+    consumeFabGLSeq();
+    return;
+  }
 
   switch (c) {
 
@@ -2896,62 +3131,62 @@ void Terminal::consumeESCVT52()
 }
 
 
-// consume FabGL specific sequence (ESC 0xFF ....)
+// consume FabGL specific sequence (ESC FABGL_ENTERM_CODE ....)
 void Terminal::consumeFabGLSeq()
 {
   #if FABGLIB_TERMINAL_DEBUG_REPORT_ESC
-  log("ESC 0xFF");
+  log("ESC FABGL_ENTERM_CODE");
   #endif
 
-  char c = getNextCode(false);   // false: don't process ctrl chars
+  uint8_t c = getNextCode(false);   // false: don't process ctrl chars
 
   // process command in "c"
   switch (c) {
 
     // Get cursor horizontal position (1 = leftmost pos)
     // Seq:
-    //    ESC 0xFF FABGL_ENTERM_GETCURSORCOL
+    //    ESC FABGL_ENTERM_CODE FABGL_ENTERM_GETCURSORCOL
     // params:
     //    none
     // return:
-    //    byte: 0xFE   (reply tag)
+    //    byte: FABGL_ENTERM_REPLYCODE   (reply tag)
     //    byte: column
     case FABGL_ENTERM_GETCURSORCOL:
-      send(0xFE);
+      send(FABGL_ENTERM_REPLYCODE);
       send(m_emuState.cursorX);
       break;
 
     // Get cursor vertical position (1 = topmost pos)
     // Seq:
-    //    ESC 0xFF FABGL_ENTERM_GETCURSORROW
+    //    ESC FABGL_ENTERM_CODE FABGL_ENTERM_GETCURSORROW
     // params:
     //    none
     // return:
-    //    byte: 0xFE   (reply tag)
+    //    byte: FABGL_ENTERM_REPLYCODE   (reply tag)
     //    byte: row
     case FABGL_ENTERM_GETCURSORROW:
-      send(0xFE);
+      send(FABGL_ENTERM_REPLYCODE);
       send(m_emuState.cursorY);
       break;
 
     // Get cursor position
     // Seq:
-    //    ESC 0xFF FABGL_ENTERM_GETCURSORPOS
+    //    ESC FABGL_ENTERM_CODE FABGL_ENTERM_GETCURSORPOS
     // params:
     //    none
     // return:
-    //    byte: 0xFE   (reply tag)
+    //    byte: FABGL_ENTERM_REPLYCODE   (reply tag)
     //    byte: column
     //    byte: row
     case FABGL_ENTERM_GETCURSORPOS:
-      send(0xFE);
+      send(FABGL_ENTERM_REPLYCODE);
       send(m_emuState.cursorX);
       send(m_emuState.cursorY);
       break;
 
     // Set cursor position
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_SETCURSORPOS COL ROW
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_SETCURSORPOS COL ROW
     // params:
     //   COL (byte): column (1 = first column)
     //   ROW (byte): row (1 = first row)
@@ -2967,18 +3202,18 @@ void Terminal::consumeFabGLSeq()
     // Advances cursor by one position. Characters after CHARSTOMOVE length are overwritter.
     // Vertical scroll may occurs.
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_INSERTSPACE CHARSTOMOVE_L CHARSTOMOVE_H
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_INSERTSPACE CHARSTOMOVE_L CHARSTOMOVE_H
     // params:
     //   CHARSTOMOVE_L, CHARSTOMOVE_H (byte): number of chars to move to the right by one position
     // return:
-    //    byte: 0xFE   (reply tag)
+    //    byte: FABGL_ENTERM_REPLYCODE   (reply tag)
     //    byte: 0 = vertical scroll not occurred, 1 = vertical scroll occurred
     case FABGL_ENTERM_INSERTSPACE:
     {
       uint8_t charsToMove_L = getNextCode(false);
       uint8_t charsToMove_H = getNextCode(false);
       bool scroll = multilineInsertChar(charsToMove_L | charsToMove_H << 8);
-      send(0xFE);
+      send(FABGL_ENTERM_REPLYCODE);
       send(scroll);
       break;
     }
@@ -2986,7 +3221,7 @@ void Terminal::consumeFabGLSeq()
     // Delete character at current position, moving next CHARSTOMOVE characters to the left (even on multiple lines).
     // Characters after CHARSTOMOVE are filled with spaces.
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_DELETECHAR CHARSTOMOVE_L CHARSTOMOVE_H
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_DELETECHAR CHARSTOMOVE_L CHARSTOMOVE_H
     // params:
     //   CHARSTOMOVE_L, CHARSTOMOVE_H (byte): number of chars to move to the left by one position
     case FABGL_ENTERM_DELETECHAR:
@@ -2999,7 +3234,7 @@ void Terminal::consumeFabGLSeq()
 
     // Move cursor at left, wrapping lines if necessary
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_CURSORLEFT COUNT_L COUNT_H
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_CURSORLEFT COUNT_L COUNT_H
     // params:
     //   COUNT_L, COUNT_H (byte): number of positions to move to the left
     case FABGL_ENTERM_CURSORLEFT:
@@ -3012,7 +3247,7 @@ void Terminal::consumeFabGLSeq()
 
     // Move cursor at right, wrapping lines if necessary
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_CURSORRIGHT COUNT
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_CURSORRIGHT COUNT_L COUNT_H
     // params:
     //   COUNT (byte): number of positions to move to the right
     case FABGL_ENTERM_CURSORRIGHT:
@@ -3026,46 +3261,111 @@ void Terminal::consumeFabGLSeq()
     // Sets char CHAR at current position and advance one position. Scroll if necessary.
     // This do not interpret character as a special code, but just sets it.
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_SETCHAR CHAR
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_SETCHAR CHAR
     // params:
     //   CHAR (byte): character to set
     // return:
-    //    byte: 0xFE   (reply tag)
+    //    byte: FABGL_ENTERM_REPLYCODE   (reply tag)
     //    byte: 0 = vertical scroll not occurred, 1 = vertical scroll occurred
     case FABGL_ENTERM_SETCHAR:
     {
       bool scroll = setChar(getNextCode(false));
-      send(0xFE);
+      send(FABGL_ENTERM_REPLYCODE);
       send(scroll);
       break;
     }
 
-    // Sets a sequence of chars starting from current position and advancing the cursor for each character. Scroll if necessary.
-    // This do not interpret character as a special code, but just sets it.
+    // Return virtual key state
     // Seq:
-    //   ESC 0xFF FABGL_ENTERM_SETCHARS COUNT_L COUNT_H ...chars...
+    //    ESC FABGL_ENTERM_CODE FABGL_ENTERM_ISVKDOWN VKCODE
     // params:
-    //   COUNT_L, COUNT_H (byte): number of characters to sets
-    //   ...chars... (bytes): the characters to sets
+    //    VKCODE : virtual key code to check
     // return:
-    //    byte: 0xFE   (reply tag)
-    //    byte: 0 = vertical scroll not occurred, >0 = number of vertical scrolls occurred
-    case FABGL_ENTERM_SETCHARS:
+    //    byte: FABGL_ENTERM_REPLYCODE   (reply tag)
+    //    byte: 0 = key is up, 1 = key is down
+    case FABGL_ENTERM_ISVKDOWN:
     {
-      uint8_t count_L = getNextCode(false);
-      uint8_t count_H = getNextCode(false);
-      int count = count_L | count_H << 8;
-      int scrolls = 0;
-      for (int i = 0; i < count; ++i)
-        scrolls += setChar(getNextCode(false));
-      send(0xFE);
-      send(scrolls);
+      VirtualKey vk = (VirtualKey) getNextCode(false);
+      send(FABGL_ENTERM_REPLYCODE);
+      send(keyboard()->isVKDown(vk) ? 1 : 0);
+      break;
+    }
+
+    // Disable FabGL sequences
+    // Seq:
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_DISABLEFABSEQ
+    case FABGL_ENTERM_DISABLEFABSEQ:
+      enableFabGLSequences(false);
+      break;
+
+    // Set terminal type
+    // Seq:
+    //    ESC FABGL_ENTERM_CODE FABGL_ENTERM_SETTERMTYPE TERMINDEX
+    // params:
+    //    TERMINDEX : index of terminal to emulate (TermType)
+    case FABGL_ENTERM_SETTERMTYPE:
+      int_setTerminalType((TermType) getNextCode(false));
+      break;
+
+    // Set foreground color
+    // Seq:
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_SETFGCOLOR COLORINDEX
+    // params:
+    //   COLORINDEX : 0..15 (index of Color enum)
+    case FABGL_ENTERM_SETFGCOLOR:
+      int_setForegroundColor((Color) getNextCode(false));
+      break;
+
+    // Set background color
+    // Seq:
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_SETBGCOLOR COLORINDEX
+    // params:
+    //   COLORINDEX : 0..15 (index of Color enum)
+    case FABGL_ENTERM_SETBGCOLOR:
+      int_setBackgroundColor((Color) getNextCode(false));
+      break;
+
+    // Set char style
+    // Seq:
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_SETCHARSTYLE STYLEINDEX ENABLE
+    // params:
+    //   STYLEINDEX : 0 = bold, 1 = reduce luminosity, 2 = italic, 3 = underline, 4 = blink, 5 = blank, 6 = inverse
+    //   ENABLE     : 0 = disable, 1 = enable
+    case FABGL_ENTERM_SETCHARSTYLE:
+    {
+      int idx = getNextCode(false);
+      int val = getNextCode(false);
+      switch (idx) {
+        case 0: // bold
+          m_glyphOptions.bold = val;
+          break;
+        case 1: // reduce luminosity
+          m_glyphOptions.reduceLuminosity = val;
+          break;
+        case 2: // italic
+          m_glyphOptions.italic = val;
+          break;
+        case 3: // underline
+          m_glyphOptions.underline = val;
+          break;
+        case 4: // blink
+          m_glyphOptions.userOpt1 = val;
+          break;
+        case 5: // blank
+          m_glyphOptions.blank = val;
+          break;
+        case 6: // inverse
+          m_glyphOptions.invert = val;
+          break;
+      }
+      if (isActive())
+        m_canvas->setGlyphOptions(m_glyphOptions);
       break;
     }
 
     default:
       #if FABGLIB_TERMINAL_DEBUG_REPORT_UNSUPPORT
-      logFmt("Unknown: ESC 0xFF %02x\n", c);
+      logFmt("Unknown: ESC FABGL_ENTERM_CODE %02x\n", c);
       #endif
       break;
   }
@@ -3079,37 +3379,47 @@ void Terminal::keyboardReaderTask(void * pvParameters)
 
   while (true) {
 
+    if (!term->isActive())
+      vTaskSuspend(NULL);
+
     bool keyDown;
     VirtualKey vk = term->m_keyboard->getNextVirtualKey(&keyDown);
 
-    if (keyDown) {
+    if (term->isActive()) {
 
-      if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == vk)
-        continue; // don't repeat
-      term->m_lastPressedKey = vk;
+      if (keyDown) {
 
-      xSemaphoreTake(term->m_mutex, portMAX_DELAY);
+        if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == vk)
+          continue; // don't repeat
+        term->m_lastPressedKey = vk;
 
-      if (term->m_termInfo == nullptr) {
-        if (term->m_emuState.ANSIMode)
-          term->ANSIDecodeVirtualKey(vk);
-        else
-          term->VT52DecodeVirtualKey(vk);
-      } else
-        term->TermDecodeVirtualKey(vk);
+        xSemaphoreTake(term->m_mutex, portMAX_DELAY);
 
-      xSemaphoreGive(term->m_mutex);
+        if (term->m_termInfo == nullptr) {
+          if (term->m_emuState.ANSIMode)
+            term->ANSIDecodeVirtualKey(vk);
+          else
+            term->VT52DecodeVirtualKey(vk);
+        } else
+          term->TermDecodeVirtualKey(vk);
+
+        xSemaphoreGive(term->m_mutex);
+
+      } else {
+        // !keyDown
+        term->m_lastPressedKey = VK_NONE;
+      }
 
     } else {
-      // !keyDown
-      term->m_lastPressedKey = VK_NONE;
+      // not active, reinject back
+      term->m_keyboard->injectVirtualKey(vk, keyDown, true);
     }
 
   }
 }
 
 
-void Terminal::sendCursorKeyCode(char c)
+void Terminal::sendCursorKeyCode(uint8_t c)
 {
   if (m_emuState.cursorKeysMode)
     sendSS3();
@@ -3119,7 +3429,7 @@ void Terminal::sendCursorKeyCode(char c)
 }
 
 
-void Terminal::sendKeypadCursorKeyCode(char applicationCode, const char * numericCode)
+void Terminal::sendKeypadCursorKeyCode(uint8_t applicationCode, const char * numericCode)
 {
   if (m_emuState.keypadMode == KeypadMode::Application) {
     sendSS3();
@@ -3455,115 +3765,180 @@ TerminalController::~TerminalController()
 }
 
 
-void TerminalController::begin()
+void TerminalController::setTerminal(Terminal * terminal)
 {
-  // enable fabgl sequences
-  m_terminal->write("\e[?7999h");
+  m_terminal = terminal;
 }
 
 
-void TerminalController::end()
+void TerminalController::write(uint8_t c)
 {
-  // disable (if not enabled before) fabgl sequences
-  m_terminal->write("\e[?7999l");
+  if (m_terminal)
+    m_terminal->write(c);
+  else
+    onWrite(c);
+}
+
+
+void TerminalController::write(char const * str)
+{
+  while (*str)
+    write(*str++);
+}
+
+
+int TerminalController::read()
+{
+  if (m_terminal)
+    return m_terminal->read(-1);
+  else {
+    int c;
+    onRead(&c);
+    return c;
+  }
+}
+
+
+void TerminalController::waitFor(int value)
+{
+  while (true)
+    if (read() == value)
+      return;
 }
 
 
 void TerminalController::setCursorPos(int col, int row)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_SETCURSORPOS);
-  m_terminal->write(col);
-  m_terminal->write(row);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_SETCURSORPOS);
+  write(col);
+  write(row);
 }
 
 
 void TerminalController::cursorLeft(int count)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_CURSORLEFT);
-  m_terminal->write(count & 0xff);
-  m_terminal->write(count >> 8);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_CURSORLEFT);
+  write(count & 0xff);
+  write(count >> 8);
 }
 
 
 void TerminalController::cursorRight(int count)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_CURSORRIGHT);
-  m_terminal->write(count & 0xff);
-  m_terminal->write(count >> 8);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_CURSORRIGHT);
+  write(count & 0xff);
+  write(count >> 8);
 }
 
 
 void TerminalController::getCursorPos(int * col, int * row)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_GETCURSORPOS);
-  m_terminal->waitFor(0xFE);
-  *col = m_terminal->read(-1);
-  *row = m_terminal->read(-1);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_GETCURSORPOS);
+  waitFor(FABGL_ENTERM_REPLYCODE);
+  *col = read();
+  *row = read();
 }
 
 
 int TerminalController::getCursorCol()
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_GETCURSORCOL);
-  m_terminal->waitFor(0xFE);
-  return m_terminal->read(-1);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_GETCURSORCOL);
+  waitFor(FABGL_ENTERM_REPLYCODE);
+  return read();
 }
 
 
 int TerminalController::getCursorRow()
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_GETCURSORROW);
-  m_terminal->waitFor(0xFE);
-  return m_terminal->read(-1);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_GETCURSORROW);
+  waitFor(FABGL_ENTERM_REPLYCODE);
+  return read();
 }
 
 
 bool TerminalController::multilineInsertChar(int charsToMove)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_INSERTSPACE);
-  m_terminal->write(charsToMove & 0xff);
-  m_terminal->write(charsToMove >> 8);
-  m_terminal->waitFor(0xFE);
-  return m_terminal->read(-1);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_INSERTSPACE);
+  write(charsToMove & 0xff);
+  write(charsToMove >> 8);
+  waitFor(FABGL_ENTERM_REPLYCODE);
+  return read();
 }
 
 
 void TerminalController::multilineDeleteChar(int charsToMove)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_DELETECHAR);
-  m_terminal->write(charsToMove & 0xff);
-  m_terminal->write(charsToMove >> 8);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_DELETECHAR);
+  write(charsToMove & 0xff);
+  write(charsToMove >> 8);
 }
 
 
-bool TerminalController::setChar(char c)
+bool TerminalController::setChar(uint8_t c)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_SETCHAR);
-  m_terminal->write(c);
-  m_terminal->waitFor(0xFE);
-  return m_terminal->read(-1);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_SETCHAR);
+  write(c);
+  waitFor(FABGL_ENTERM_REPLYCODE);
+  return read();
 }
 
 
-int TerminalController::setChars(char const * buffer, int count)
+bool TerminalController::isVKDown(VirtualKey vk)
 {
-  m_terminal->write(FABGL_ENTERM_CMD);
-  m_terminal->write(FABGL_ENTERM_SETCHARS);
-  m_terminal->write(count & 0xff);
-  m_terminal->write(count >> 8);
-  for (int i = 0; i < count; ++i, ++buffer)
-    m_terminal->write(*buffer);
-  m_terminal->waitFor(0xFE);
-  return m_terminal->read(-1);
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_ISVKDOWN);
+  write((uint8_t)vk);
+  waitFor(FABGL_ENTERM_REPLYCODE);
+  return read();
+}
+
+
+void TerminalController::disableFabGLSequences()
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_DISABLEFABSEQ);
+}
+
+
+void TerminalController::setTerminalType(TermType value)
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_SETTERMTYPE);
+  write((int)value);
+}
+
+
+void TerminalController::setForegroundColor(Color value)
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_SETFGCOLOR);
+  write((int)value);
+}
+
+
+void TerminalController::setBackgroundColor(Color value)
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_SETBGCOLOR);
+  write((int)value);
+}
+
+
+void TerminalController::setCharStyle(CharStyle style, bool enabled)
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_SETCHARSTYLE);
+  write((int)style);
+  write(enabled ? 1 : 0);
 }
 
 
@@ -3580,26 +3955,39 @@ LineEditor::LineEditor(Terminal * terminal)
     m_textLength(0),
     m_allocated(0),
     m_state(-1),
-    m_insertMode(true)
+    m_insertMode(true),
+    m_typeText(nullptr),
+    m_typingIndex(0)
 {
 }
 
 
 LineEditor::~LineEditor()
 {
+  if (m_typeText)
+    free(m_typeText);
   free(m_text);
 }
 
 
 void LineEditor::setLength(int newLength)
 {
-  if (m_allocated < newLength) {
+  if (m_allocated < newLength || m_allocated == 0) {
     int allocated = imax(m_allocated * 2, newLength);
     m_text = (char*) realloc(m_text, allocated + 1);
     memset(m_text + m_allocated, 0, allocated - m_allocated + 1);
     m_allocated = allocated;
   }
   m_textLength = newLength;
+}
+
+
+void LineEditor::typeText(char const * text)
+{
+  if (m_typeText)
+    free(m_typeText);
+  m_typeText = strdup(text);
+  m_typingIndex = 0;
 }
 
 
@@ -3611,22 +3999,56 @@ void LineEditor::setText(char const * text, bool moveCursor)
 
 void LineEditor::setText(char const * text, int length, bool moveCursor)
 {
+  if (m_state > -1) {
+    // already editing, replace previous text
+    m_termctrl.setCursorPos(m_homeCol, m_homeRow);
+    for (int i = 0; i < m_textLength; ++i)
+      m_termctrl.setChar(' ');
+    m_termctrl.setCursorPos(m_homeCol, m_homeRow);
+    for (int i = 0; i < length; ++i)
+      m_homeRow -= m_termctrl.setChar(text[i]);
+  }
   setLength(length);
   memcpy(m_text, text, length);
   m_text[length] = 0;
-  m_state = -1;
   m_inputPos = moveCursor ? length : 0;
+}
+
+
+void LineEditor::write(uint8_t c)
+{
+  if (m_terminal)
+    m_terminal->write(c);
+  else
+    onWrite(c);
+}
+
+
+int LineEditor::read()
+{
+  if (m_terminal)
+    return m_terminal->read(-1);
+  else {
+    int c;
+    onRead(&c);
+    return c;
+  }
 }
 
 
 void LineEditor::beginInput()
 {
-  m_termctrl.begin();
+  if (m_terminal == nullptr) {
+    // in case a terminal has been not specified, we need to use onRead and onWrite delegates
+    m_termctrl.onRead  = [&](int * c) { onRead(c); };
+    m_termctrl.onWrite = [&](int c)   { onWrite(c); };
+  }
   m_homeCol = m_termctrl.getCursorCol();
   m_homeRow = m_termctrl.getCursorRow();
   if (m_text) {
     // m_inputPos already set by setText()
-    m_homeRow -= m_termctrl.setChars(m_text, strlen(m_text));
+    for (int i = 0, len = strlen(m_text); i < len; ++i)
+      m_homeRow -= m_termctrl.setChar(m_text[i]);
     if (m_inputPos == 0)
       m_termctrl.setCursorPos(m_homeCol, m_homeRow);
   } else {
@@ -3638,7 +4060,6 @@ void LineEditor::beginInput()
 
 void LineEditor::endInput()
 {
-  m_termctrl.end();
   m_state = -1;
   if (m_text == nullptr) {
     m_text = (char*) malloc(1);
@@ -3647,7 +4068,85 @@ void LineEditor::endInput()
 }
 
 
-char const * LineEditor::edit(int maxLength, int timeOutMS)
+void LineEditor::performCursorUp()
+{
+  onSpecialChar(LineEditorSpecialChar::CursorUp);
+}
+
+
+void LineEditor::performCursorDown()
+{
+  onSpecialChar(LineEditorSpecialChar::CursorDown);
+}
+
+
+void LineEditor::performCursorLeft()
+{
+  if (m_inputPos > 0) {
+    int count = 1;
+    if (m_termctrl.isVKDown(VK_LCTRL)) {
+      // CTRL + Cursor Left => start of previous word
+      while (m_inputPos - count > 0 && (m_text[m_inputPos - count] == ASCII_SPC || m_text[m_inputPos - count - 1] != ASCII_SPC))
+        ++count;
+    }
+    m_termctrl.cursorLeft(count);
+    m_inputPos -= count;
+  }
+}
+
+
+void LineEditor::performCursorRight()
+{
+  if (m_inputPos < m_textLength) {
+    int count = 1;
+    if (m_termctrl.isVKDown(VK_LCTRL)) {
+      // CTRL + Cursor Right => start of next word
+      while (m_text[m_inputPos + count] && (m_text[m_inputPos + count] == ASCII_SPC || m_text[m_inputPos + count - 1] != ASCII_SPC))
+        ++count;
+    }
+    m_termctrl.cursorRight(count);
+    m_inputPos += count;
+  }
+}
+
+
+void LineEditor::performCursorHome()
+{
+  m_termctrl.setCursorPos(m_homeCol, m_homeRow);
+  m_inputPos = 0;
+}
+
+
+void LineEditor::performCursorEnd()
+{
+  m_termctrl.cursorRight(m_textLength - m_inputPos);
+  m_inputPos = m_textLength;
+}
+
+
+void LineEditor::performDeleteRight()
+{
+  if (m_inputPos < m_textLength) {
+    memmove(m_text + m_inputPos, m_text + m_inputPos + 1, m_textLength - m_inputPos);
+    m_termctrl.multilineDeleteChar(m_textLength - m_inputPos - 1);
+    --m_textLength;
+  }
+}
+
+
+void LineEditor::performDeleteLeft()
+{
+  if (m_inputPos > 0) {
+    m_termctrl.cursorLeft(1);
+    m_termctrl.multilineDeleteChar(m_textLength - m_inputPos);
+    memmove(m_text + m_inputPos - 1, m_text + m_inputPos, m_textLength - m_inputPos + 1);
+    --m_inputPos;
+    --m_textLength;
+  }
+}
+
+
+char const * LineEditor::edit(int maxLength)
 {
 
   // init?
@@ -3656,7 +4155,20 @@ char const * LineEditor::edit(int maxLength, int timeOutMS)
 
   while (true) {
 
-    int c = m_terminal->read(timeOutMS);
+    int c;
+
+    if (m_typeText) {
+      c = m_typeText[m_typingIndex++];
+      if (c == 0) {
+        free(m_typeText);
+        m_typeText = nullptr;
+        continue;
+      }
+    } else {
+      c = read();
+    }
+
+    onChar(&c);
 
     // timeout?
     if (c < 0)
@@ -3679,39 +4191,52 @@ char const * LineEditor::edit(int maxLength, int timeOutMS)
 
       }
 
+    } else if (m_state == 2) {
+
+      // CTRL-Q mode
+
+      switch (c) {
+
+        // CTRL-Q S => WordStar Home
+        case 'S':
+          performCursorHome();
+          break;
+
+        // CTRL-Q D => WordStar End
+        case 'D':
+          performCursorEnd();
+          break;
+
+      }
+      m_state = 0;
+
     } else if (m_state >= 31) {
 
       // CSI mode
 
       switch (c) {
 
+        // "ESC [ A" : cursor Up
+        case 'A':
+          performCursorUp();
+          m_state = 0;
+          break;
+
+        // "ESC [ B" : cursor Down
+        case 'B':
+          performCursorUp();
+          m_state = 0;
+          break;
+
         // "ESC [ D" : cursor Left
         case 'D':
-          if (m_inputPos > 0) {
-            int count = 1;
-            if (m_terminal->keyboard()->isVKDown(VK_LCTRL)) {
-              // CTRL + Cursor Left => start of previous word
-              while (m_inputPos - count > 0 && (m_text[m_inputPos - count] == ASCII_SPC || m_text[m_inputPos - count - 1] != ASCII_SPC))
-                ++count;
-            }
-            m_termctrl.cursorLeft(count);
-            m_inputPos -= count;
-          }
+          performCursorLeft();
           m_state = 0;
           break;
 
         // "ESC [ C" : cursor right
         case 'C':
-          if (m_inputPos < m_textLength) {
-            int count = 1;
-            if (m_terminal->keyboard()->isVKDown(VK_LCTRL)) {
-              // CTRL + Cursor Right => start of next word
-              while (m_text[m_inputPos + count] && (m_text[m_inputPos + count] == ASCII_SPC || m_text[m_inputPos + count - 1] != ASCII_SPC))
-                ++count;
-            }
-            m_termctrl.cursorRight(count);
-            m_inputPos += count;
-          }
+          performCursorRight();
           m_state = 0;
           break;
 
@@ -3727,23 +4252,17 @@ char const * LineEditor::edit(int maxLength, int timeOutMS)
 
             // Home
             case '1':
-              m_termctrl.setCursorPos(m_homeCol, m_homeRow);
-              m_inputPos = 0;
+              performCursorHome();
               break;
 
             // End
             case '4':
-              m_termctrl.cursorRight(m_textLength - m_inputPos);
-              m_inputPos = m_textLength;
+              performCursorEnd();
               break;
 
             // Delete
             case '3':
-              if (m_inputPos < m_textLength) {
-                memmove(m_text + m_inputPos, m_text + m_inputPos + 1, m_textLength - m_inputPos);
-                m_termctrl.multilineDeleteChar(m_textLength - m_inputPos - 1);
-                --m_textLength;
-              }
+              performDeleteRight();
               break;
 
             // Insert
@@ -3768,27 +4287,62 @@ char const * LineEditor::edit(int maxLength, int timeOutMS)
       switch (c) {
 
         // ESC, switch to ESC mode
-        case 0x1B:
+        case ASCII_ESC:
           m_state = 1;
           break;
 
+        // CTRL-Q, switch to CTRL-Q mode
+        case ASCII_CTRLQ:
+          m_state = 2;
+          break;
+
         // DEL, delete character at left
-        case 0x7F:
-          if (m_inputPos > 0) {
-            m_termctrl.cursorLeft(1);
-            m_termctrl.multilineDeleteChar(m_textLength - m_inputPos);
-            memmove(m_text + m_inputPos - 1, m_text + m_inputPos, m_textLength - m_inputPos + 1);
-            --m_inputPos;
-            --m_textLength;
-          }
+        case ASCII_DEL:
+        case ASCII_BS:  // alias CTRL-H / backspace
+          performDeleteLeft();
+          break;
+
+        // CTRL-G, delete character at right
+        case ASCII_CTRLG:
+          performDeleteRight();
           break;
 
         // CR, newline and return the inserted text
-        case 0x0D:
-          m_termctrl.cursorRight(m_textLength - m_inputPos);
-          m_terminal->write("\r\n");
-          endInput();
-          return m_text;
+        case ASCII_CR:
+        {
+          int op = 0;
+          onCarriageReturn(&op);
+          if (op < 2) {
+            m_termctrl.cursorRight(m_textLength - m_inputPos);
+            if (op == 0) {
+              write('\r');
+              write('\n');
+            }
+            endInput();
+            return m_text;
+          } else
+            break;
+        }
+
+        // CTRL-E, WordStar UP
+        case ASCII_CTRLE:
+          performCursorUp();
+          break;
+
+        // CTRL-X, WordStar DOWN
+        case ASCII_CTRLX:
+          performCursorDown();
+          break;
+
+        // CTRL-S, WordStar LEFT
+        case ASCII_CTRLS:
+          performCursorLeft();
+          break;
+
+        // CTRL-D, WordStar RIGHT
+        case ASCII_CTRLD:
+          performCursorRight();
+          break;
 
         // insert printable chars
         case 32 ... 126:

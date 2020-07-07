@@ -51,6 +51,8 @@ void slowPrintf(const char * format, ...)
   va_start(ap, format);
   int size = vsnprintf(nullptr, 0, format, ap) + 1;
   if (size > 0) {
+    va_end(ap);
+    va_start(ap, format);
     char buf[size + 1];
     vsnprintf(buf, size, format, ap);
     for (int i = 0; i < size; ++i) {
@@ -80,7 +82,7 @@ void demo1()
 void demo2()
 {
   Terminal.write("\e[40;32m"); // background: black, foreground: green
-  slowPrintf("8 or 64 colors supported (depends by GPIOs used)\r\n");
+  slowPrintf("8 or 64 colors supported\r\n");
   slowPrintf("ANSI colors:\r\n");
   // foregrounds
   Terminal.write("\e[31mRED\t"); delay(500);

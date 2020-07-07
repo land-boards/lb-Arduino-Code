@@ -29,7 +29,7 @@ namespace fabgl {
 
 
 const TermInfoKbdConv kbdConv_Generic[] = {
-  // Cursor Up => CTRL-E, WordStar left
+  // Cursor Up => CTRL-E, WordStar Up
   { VK_UP, "\x05" },
 
   // Cursor Down => CTRL-X, WordStar Down
@@ -459,6 +459,25 @@ const TermInfoVideoConv videoConv_VT52[] = {
 const TermInfo term_VT52 = {
   "\e[?2l",         // <= set VT52 mode
   videoConv_VT52,
+  kbdConv_Generic
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ANSI Legacy
+
+
+// sorted by TermSeq name
+const TermInfoVideoConv videoConv_ANSILegacy[] = {
+
+  // Last item marker
+  { nullptr, 0, { } },
+};
+
+
+const TermInfo term_ANSILegacy = {
+  "",
+  videoConv_ANSILegacy,
   kbdConv_Generic
 };
 

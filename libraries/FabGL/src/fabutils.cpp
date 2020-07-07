@@ -174,6 +174,19 @@ ChipPackage getChipPackage()
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// converts '\' or '/' to newSep
+
+void replacePathSep(char * path, char newSep)
+{
+  for (; *path; ++path)
+    if (*path == '\\' || *path == '/')
+      *path = newSep;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Sutherland-Cohen line clipping algorithm
 
@@ -267,6 +280,21 @@ void removeRectangle(Stack<Rect> & rects, Rect const & mainRect, Rect const & re
   // right rectangle
   if (mainRect.X2 > rectToRemove.X2)
     rects.push(Rect(rectToRemove.X2 + 1, tmax(rectToRemove.Y1, mainRect.Y1), mainRect.X2, tmin(rectToRemove.Y2, mainRect.Y2)));
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Rect
+
+Rect IRAM_ATTR Rect::merge(Rect const & rect) const
+{
+  return Rect(imin(rect.X1, X1), imin(rect.Y1, Y1), imax(rect.X2, X2), imax(rect.Y2, Y2));
+}
+
+
+Rect IRAM_ATTR Rect::intersection(Rect const & rect) const
+{
+  return Rect(tmax(X1, rect.X1), tmax(Y1, rect.Y1), tmin(X2, rect.X2), tmin(Y2, rect.Y2));
 }
 
 
@@ -423,11 +451,11 @@ void StringList::select(int index, bool value)
 
 char const * FileBrowser::s_SPIFFSMountPath;
 bool         FileBrowser::s_SPIFFSMounted = false;
-int          FileBrowser::s_SPIFFSMaxFiles;
+size_t       FileBrowser::s_SPIFFSMaxFiles;
 
 char const * FileBrowser::s_SDCardMountPath;
 bool         FileBrowser::s_SDCardMounted = false;
-int          FileBrowser::s_SDCardMaxFiles;
+size_t       FileBrowser::s_SDCardMaxFiles;
 int          FileBrowser::s_SDCardAllocationUnitSize;
 int8_t       FileBrowser::s_SDCardMISO;
 int8_t       FileBrowser::s_SDCardMOSI;
@@ -450,6 +478,9 @@ FileBrowser::FileBrowser()
 FileBrowser::~FileBrowser()
 {
   clear();
+
+  free(m_dir);
+  m_dir = nullptr;
 }
 
 
@@ -466,11 +497,13 @@ void FileBrowser::clear()
 
 
 // set absolute directory (full path must be specified)
-void FileBrowser::setDirectory(const char * path)
+bool FileBrowser::setDirectory(const char * path)
 {
-  free(m_dir);
-  m_dir = strdup(path);
-  reload();
+  if (m_dir == nullptr || strcmp(path, m_dir) != 0) {
+    free(m_dir);
+    m_dir = strdup(path);
+  }
+  return reload();
 }
 
 
@@ -479,7 +512,7 @@ void FileBrowser::setDirectory(const char * path)
 //   "dirname": go inside the specified sub directory
 void FileBrowser::changeDirectory(const char * subdir)
 {
-  if (!m_dir)
+  if (!m_dir || strlen(subdir) == 0)
     return;
   if (strcmp(subdir, "..") == 0) {
     // go to parent directory
@@ -493,7 +526,7 @@ void FileBrowser::changeDirectory(const char * subdir)
     }
   } else {
     // go to sub directory
-    int oldLen = strcmp(m_dir, "/") == 0 ? 0 : strlen(m_dir);
+    auto oldLen = strcmp(m_dir, "/") == 0 ? 0 : strlen(m_dir);
     char * newDir = (char*) malloc(oldLen + 1 + strlen(subdir) + 1);  // m_dir + '/' + subdir + 0
     strcpy(newDir, m_dir);
     newDir[oldLen] = '/';
@@ -531,7 +564,8 @@ int FileBrowser::countDirEntries(int * namesLength)
           ++c;
         }
       }
-      closedir(dirp);
+      if (dirp)
+        closedir(dirp);
     }
 
   }
@@ -540,13 +574,93 @@ int FileBrowser::countDirEntries(int * namesLength)
 }
 
 
-bool FileBrowser::exists(char const * name)
+bool FileBrowser::exists(char const * name, bool caseSensitive)
 {
-  for (int i = 0; i < m_count; ++i)
-    if (strcmp(name, m_items[i].name) == 0)
-      return true;
+  if (caseSensitive) {
+    for (int i = 0; i < m_count; ++i)
+      if (strcmp(name, m_items[i].name) == 0)
+        return true;
+  } else {
+    for (int i = 0; i < m_count; ++i)
+      if (strcasecmp(name, m_items[i].name) == 0)
+        return true;
+  }
   return false;
 }
+
+
+size_t FileBrowser::fileSize(char const * name)
+{
+  size_t size = 0;
+  char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
+  sprintf(fullpath, "%s/%s", m_dir, name);
+  AutoSuspendInterrupts autoInt;
+  auto fr = fopen(fullpath, "rb");
+  if (fr) {
+    fseek(fr, 0, SEEK_END);
+    size = ftell(fr);
+    fclose(fr);
+  }
+  return size;
+}
+
+
+bool FileBrowser::fileCreationDate(char const * name, int * year, int * month, int * day, int * hour, int * minutes, int * seconds)
+{
+  char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
+  sprintf(fullpath, "%s/%s", m_dir, name);
+  AutoSuspendInterrupts autoInt;
+  struct stat s;
+  if (stat(fullpath, &s))
+    return false;
+  auto tm  = *localtime((time_t*)&s.st_ctime);  // I know, this is not create date, but status change. Anyway I cannot find "st_birthtimespec"
+  *year    = 1900 + tm.tm_year;
+  *month   = 1 + tm.tm_mon;
+  *day     = tm.tm_mday;
+  *hour    = tm.tm_hour;
+  *minutes = tm.tm_min;
+  *seconds = imin(tm.tm_sec, 59); // [0, 61] (until C99), [0, 60] (since C99)
+  return true;
+}
+
+
+bool FileBrowser::fileUpdateDate(char const * name, int * year, int * month, int * day, int * hour, int * minutes, int * seconds)
+{
+  char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
+  sprintf(fullpath, "%s/%s", m_dir, name);
+  AutoSuspendInterrupts autoInt;
+  struct stat s;
+  if (stat(fullpath, &s))
+    return false;
+  auto tm  = *localtime((time_t*)&s.st_mtime);
+  *year    = 1900 + tm.tm_year;
+  *month   = 1 + tm.tm_mon;
+  *day     = tm.tm_mday;
+  *hour    = tm.tm_hour;
+  *minutes = tm.tm_min;
+  *seconds = imin(tm.tm_sec, 59); // [0, 61] (until C99), [0, 60] (since C99)
+  return true;
+}
+
+
+bool FileBrowser::fileAccessDate(char const * name, int * year, int * month, int * day, int * hour, int * minutes, int * seconds)
+{
+  char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
+  sprintf(fullpath, "%s/%s", m_dir, name);
+  AutoSuspendInterrupts autoInt;
+  struct stat s;
+  if (stat(fullpath, &s))
+    return false;
+  auto tm  = *localtime((time_t*)&s.st_atime);
+  *year    = 1900 + tm.tm_year;
+  *month   = 1 + tm.tm_mon;
+  *day     = tm.tm_mday;
+  *hour    = tm.tm_hour;
+  *minutes = tm.tm_min;
+  *seconds = imin(tm.tm_sec, 59); // [0, 61] (until C99), [0, 60] (since C99)
+  return true;
+}
+
 
 
 int DirComp(const void * i1, const void * i2)
@@ -560,8 +674,10 @@ int DirComp(const void * i1, const void * i2)
 }
 
 
-void FileBrowser::reload()
+bool FileBrowser::reload()
 {
+  bool retval = true;
+
   clear();
   int namesAlloc;
   int c = countDirEntries(&namesAlloc);
@@ -591,6 +707,7 @@ void FileBrowser::reload()
     ++m_count;
 
     AutoSuspendInterrupts autoInt;
+    int hiddenFilesCount = 0;
     auto dirp = opendir(m_dir);
     while (dirp) {
       auto dp = readdir(dirp);
@@ -602,7 +719,7 @@ void FileBrowser::reload()
         auto slashPos = strchr(dp->d_name, '/');
         if (slashPos) {
           // yes, this is a simulated dir. Trunc and avoid to insert it twice
-          int len = slashPos - dp->d_name;
+          auto len = slashPos - dp->d_name;
           strncpy(sname, dp->d_name, len);
           sname[len] = 0;
           if (!exists(sname)) {
@@ -611,21 +728,35 @@ void FileBrowser::reload()
             sname += len + 1;
             ++m_count;
           }
-        } else if (m_includeHiddenFiles || dp->d_name[0] != '.') {
-          strcpy(sname, dp->d_name);
-          di->name  = sname;
-          di->isDir = (dp->d_type == DT_DIR);
-          sname += strlen(sname) + 1;
-          ++m_count;
+        } else {
+          bool isHidden = dp->d_name[0] == '.';
+          if (!isHidden || m_includeHiddenFiles) {
+            strcpy(sname, dp->d_name);
+            di->name  = sname;
+            di->isDir = (dp->d_type == DT_DIR);
+            sname += strlen(sname) + 1;
+            ++m_count;
+          }
+          if (isHidden)
+            ++hiddenFilesCount;
         }
       }
     }
-    closedir(dirp);
+    if (dirp)
+      closedir(dirp);
+    else
+      retval = false;
+
+    // for SPIFFS "opendir" returns always true, even for not existing dirs. An hidden file means there is the SPIFFS directory placeholder
+    if (m_count == 1 && hiddenFilesCount == 0 && getDriveType(m_dir) == DriveType::SPIFFS)
+      retval = false; // no hidden files, so the directory doesn't exist
 
   }
 
   if (m_sorted)
     qsort(m_items, m_count, sizeof(DirItem), DirComp);
+
+  return retval;
 }
 
 
@@ -639,12 +770,32 @@ void FileBrowser::makeDirectory(char const * dirname)
     if (getCurrentDriveType() == DriveType::SPIFFS) {
       // simulated directory, puts an hidden placeholder
       char fullpath[strlen(m_dir) + 3 + 2 * dirnameLen + 1];
-      sprintf(fullpath, "%s/%s/.%s", m_dir, dirname, dirname);
-      FILE * f = fopen(fullpath, "wb");
-      fclose(f);
+      auto name = dirname;
+      while (*name) {
+        auto next = name + 1;
+        while (*next && *next != '\\' && *next != '/')
+          ++next;
+        strcpy(fullpath, m_dir);
+        if (dirname != name) {
+          strcat(fullpath, "/");
+          strncat(fullpath, dirname, name - dirname - 1);
+        }
+        strcat(fullpath, "/");
+        strncat(fullpath, name, next - name);
+        strcat(fullpath, "/.");
+        strncat(fullpath, name, next - name);
+        replacePathSep(fullpath, '/');
+        FILE * f = fopen(fullpath, "wb");
+        fclose(f);
+        if (*next == 0)
+          break;
+        name = next + 1;
+      }
+
     } else {
       char fullpath[strlen(m_dir) + 1 + dirnameLen + 1];
       sprintf(fullpath, "%s/%s", m_dir, dirname);
+      replacePathSep(fullpath, '/');
       mkdir(fullpath, ACCESSPERMS);
     }
   }
@@ -663,7 +814,12 @@ void FileBrowser::remove(char const * name)
   int r = unlink(fullpath);
 
   if (r != 0) {
-    // failed
+    // failed, try to remove directory
+    r = rmdir(fullpath);
+  }
+
+  if (r != 0) {
+    // failed, try simulated directory in SPIFFS
     if (getCurrentDriveType() == DriveType::SPIFFS) {
       // simulated directory
       // maybe this is a directory, remove ".dir" file
@@ -703,11 +859,92 @@ void FileBrowser::rename(char const * oldName, char const * newName)
 }
 
 
+// return a full path
+char * FileBrowser::createTempFilename()
+{
+  constexpr int FLEN = 6;
+  auto ret = (char*) malloc(strlen(m_dir) + 1 + FLEN + 4 + 1);
+  while (true) {
+    char name[FLEN + 1] = { 0 };
+    for (int i = 0; i < FLEN; ++i)
+      name[i] = 65 + (rand() % 26);
+    sprintf(ret, "%s/%s.TMP", m_dir, name);
+    if (!exists(name))
+      return ret;
+  }
+}
+
+
+bool FileBrowser::truncate(char const * name, size_t size)
+{
+  constexpr size_t BUFLEN = 512;
+
+  char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
+  sprintf(fullpath, "%s/%s", m_dir, name);
+
+  // in future maybe...
+  //::truncate(name, size);
+
+  bool retval = false;
+
+  AutoSuspendInterrupts autoInt;
+
+  // for now...
+  char * tempFilename = createTempFilename();
+  if (::rename(fullpath, tempFilename) == 0) {
+    void * buf = malloc(BUFLEN);
+    if (buf) {
+      auto fr = fopen(tempFilename, "rb");
+      if (fr) {
+        auto fw = fopen(fullpath, "wb");
+        if (fw) {
+
+          while (size > 0) {
+            auto l = fread(buf, 1, tmin(size, BUFLEN), fr);
+            if (l == 0)
+              break;
+            fwrite(buf, 1, l, fw);
+            size -= l;
+          }
+
+          // just in case truncate is used to expand the file
+          for (; size > 0; --size)
+            fputc(0, fw);
+
+          retval = true;
+          fclose(fw);
+        }
+        fclose(fr);
+      }
+    }
+    free(buf);
+    unlink(tempFilename);
+  }
+  free(tempFilename);
+  return retval;
+}
+
+
 // concatenates current directory and specified name and store result into fullpath
 // Specifying outPath=nullptr returns required length
 int FileBrowser::getFullPath(char const * name, char * outPath, int maxlen)
 {
   return (outPath ? snprintf(outPath, maxlen, "%s/%s", m_dir, name) : snprintf(nullptr, 0, "%s/%s", m_dir, name)) + 1;
+}
+
+
+FILE * FileBrowser::openFile(char const * filename, char const * mode)
+{
+  AutoSuspendInterrupts autoInt;
+  
+  char fullpath[strlen(m_dir) + 1 + strlen(filename) + 1];
+  strcpy(fullpath, m_dir);
+  strcat(fullpath, "/");
+  strcat(fullpath, filename);
+
+  replacePathSep(fullpath, '/');
+
+  return fopen(fullpath, mode);
 }
 
 
@@ -778,7 +1015,7 @@ bool FileBrowser::format(DriveType driveType, int drive)
 }
 
 
-bool FileBrowser::mountSDCard(bool formatOnFail, char const * mountPath, int maxFiles, int allocationUnitSize, int MISO, int MOSI, int CLK, int CS)
+bool FileBrowser::mountSDCard(bool formatOnFail, char const * mountPath, size_t maxFiles, int allocationUnitSize, int MISO, int MOSI, int CLK, int CS)
 {
   if (getChipPackage() == ChipPackage::ESP32PICOD4 && (MISO == 16 || MOSI == 17))
     return false; // PICO-D4 uses pins 16 and 17 for Flash
@@ -823,14 +1060,14 @@ bool FileBrowser::remountSDCard()
 }
 
 
-bool FileBrowser::mountSPIFFS(bool formatOnFail, char const * mountPath, int maxFiles)
+bool FileBrowser::mountSPIFFS(bool formatOnFail, char const * mountPath, size_t maxFiles)
 {
   s_SPIFFSMountPath = mountPath;
   s_SPIFFSMaxFiles  = maxFiles;
   esp_vfs_spiffs_conf_t conf = {
       .base_path              = mountPath,
       .partition_label        = nullptr,
-      .max_files              = 4,
+      .max_files              = maxFiles,
       .format_if_mount_failed = true
   };
   AutoSuspendInterrupts autoSuspendInt;

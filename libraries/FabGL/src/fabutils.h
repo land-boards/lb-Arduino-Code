@@ -184,12 +184,12 @@ struct Rect {
   Rect vShrink(int value) const                  { return Rect(X1, Y1 + value, X2, Y2 - value); }
   Rect resize(int width, int height) const       { return Rect(X1, Y1, X1 + width - 1, Y1 + height - 1); }
   Rect resize(Size size) const                   { return Rect(X1, Y1, X1 + size.width - 1, Y1 + size.height - 1); }
-  Rect intersection(Rect const & rect) const     { return Rect(tmax(X1, rect.X1), tmax(Y1, rect.Y1), tmin(X2, rect.X2), tmin(Y2, rect.Y2)); }
+  Rect intersection(Rect const & rect) const;
   bool intersects(Rect const & rect) const       { return X1 <= rect.X2 && X2 >= rect.X1 && Y1 <= rect.Y2 && Y2 >= rect.Y1; }
   bool contains(Rect const & rect) const         { return (rect.X1 >= X1) && (rect.Y1 >= Y1) && (rect.X2 <= X2) && (rect.Y2 <= Y2); }
   bool contains(Point const & point) const       { return point.X >= X1 && point.Y >= Y1 && point.X <= X2 && point.Y <= Y2; }
   bool contains(int x, int y) const              { return x >= X1 && y >= Y1 && x <= X2 && y <= Y2; }
-  Rect merge(Rect const & rect) const            { return Rect(imin(rect.X1, X1), imin(rect.Y1, Y1), imax(rect.X2, X2), imax(rect.Y2, Y2)); }
+  Rect merge(Rect const & rect) const;
 } __attribute__ ((packed));
 
 
@@ -432,6 +432,8 @@ enum class DriveType {
 
 /**
  * @brief FileBrowser allows basic file system operations (dir, mkdir, remove and rename)
+ *
+ * Note: SPIFFS filenames (including fullpath) cannot exceed SPIFFS_OBJ_NAME_LEN (32 bytes) size.
  */
 class FileBrowser {
 public:
@@ -443,20 +445,24 @@ public:
    * @brief Sets absolute directory path
    *
    * @param path Absolute directory path (ie "/spiffs")
+   *
+   * @return True on success
    */
-  void setDirectory(const char * path);    // set absolute path
+  bool setDirectory(const char * path);
 
   /**
    * @brief Sets relative directory path
    *
    * @param subdir Relative directory path (ie "subdir")
    */
-  void changeDirectory(const char * subdir); // set relative path
+  void changeDirectory(const char * subdir);
 
   /**
    * @brief Reloads directory content
+   *
+   * @return True on successful reload.
    */
-  void reload();
+  bool reload();
 
   /**
    * @brief Determines absolute path of current directory
@@ -485,10 +491,65 @@ public:
    * @brief Determines if a file exists
    *
    * @param name Relative file or directory name
+   * @param caseSensitive If true (default) comparison is case sensitive
    *
    * @return True if the file exists
    */
-  bool exists(char const * name);
+  bool exists(char const * name, bool caseSensitive = true);
+
+  /**
+   * @brief Determines file size
+   *
+   * @param name Relative file name
+   *
+   * @return File size in bytes
+   */
+  size_t fileSize(char const * name);
+
+  /**
+   * @brief Gets file creation date and time
+   *
+   * @param name Relative file name
+   * @param year Pointer to year
+   * @param month Pointer to month (1..12)
+   * @param day Pointer to day (1..31)
+   * @param hour Pointer to hour (0..23)
+   * @param minutes Pointer to minutes (0..59)
+   * @param seconds Pointer to seconds (0..59, or 60)
+   *
+   * @return True on success
+   */
+  bool fileCreationDate(char const * name, int * year, int * month, int * day, int * hour, int * minutes, int * seconds);
+
+  /**
+   * @brief Gets file update date and time
+   *
+   * @param name Relative file name
+   * @param year Pointer to year
+   * @param month Pointer to month (1..12)
+   * @param day Pointer to day (1..31)
+   * @param hour Pointer to hour (0..23)
+   * @param minutes Pointer to minutes (0..59)
+   * @param seconds Pointer to seconds (0..59, or 60)
+   *
+   * @return True on success
+   */
+  bool fileUpdateDate(char const * name, int * year, int * month, int * day, int * hour, int * minutes, int * seconds);
+
+  /**
+   * @brief Gets file access date and time
+   *
+   * @param name Relative file name
+   * @param year Pointer to year
+   * @param month Pointer to month (1..12)
+   * @param day Pointer to day (1..31)
+   * @param hour Pointer to hour (0..23)
+   * @param minutes Pointer to minutes (0..59)
+   * @param seconds Pointer to seconds (0..59, or 60)
+   *
+   * @return True on success
+   */
+  bool fileAccessDate(char const * name, int * year, int * month, int * day, int * hour, int * minutes, int * seconds);
 
   /**
    * @brief Determines if the items are sorted
@@ -524,6 +585,23 @@ public:
   void rename(char const * oldName, char const * newName);
 
   /**
+   * @brief Truncates a file to the specified size
+   *
+   * @param name Relative file name
+   * @param size New size in bytes
+   *
+   * @return Returns true on success.
+   */
+  bool truncate(char const * name, size_t size);
+
+  /**
+   * @brief Creates a random temporary filename, with absolute path
+   *
+   * @return Pointer to temporary string. It must be freed using free().
+   */
+  char * createTempFilename();
+
+  /**
    * @brief Composes a full file path given a relative name
    *
    * @param name Relative file name
@@ -533,6 +611,16 @@ public:
    * @return Required outPath size.
    */
   int getFullPath(char const * name, char * outPath = nullptr, int maxlen = 0);
+
+  /**
+   * @brief Opens a file from current directory
+   *
+   * @param filename Name of file to open
+   * @param mode Open mode (like the fopen mode)
+   *
+   * @return Same result of fopen C function
+   */
+  FILE * openFile(char const * filename, char const * mode);
 
   /**
    * @brief Returns the drive type of current directory
@@ -588,7 +676,7 @@ public:
    *     // Mount SD Card
    *     FileBrowser::mountSDCard(false, "/sdcard");
    */
-  static bool mountSDCard(bool formatOnFail, char const * mountPath, int maxFiles = 4, int allocationUnitSize = 16 * 1024, int MISO = 16, int MOSI = 17, int CLK = 14, int CS = 13);
+  static bool mountSDCard(bool formatOnFail, char const * mountPath, size_t maxFiles = 4, int allocationUnitSize = 16 * 1024, int MISO = 16, int MOSI = 17, int CLK = 14, int CS = 13);
 
   /**
    * @brief Remounts SDCard filesystem, using the same parameters
@@ -616,7 +704,7 @@ public:
    *     // Mount SD Card
    *     FileBrowser::mountSPIFFS(false, "/spiffs");
    */
-  static bool mountSPIFFS(bool formatOnFail, char const * mountPath, int maxFiles = 4);
+  static bool mountSPIFFS(bool formatOnFail, char const * mountPath, size_t maxFiles = 4);
 
   /**
    * @brief Remounts SPIFFS filesystem, using the same parameters
@@ -662,12 +750,12 @@ private:
   // SPIFFS static infos
   static bool         s_SPIFFSMounted;
   static char const * s_SPIFFSMountPath;
-  static int          s_SPIFFSMaxFiles;
+  static size_t       s_SPIFFSMaxFiles;
 
   // SD Card static infos
   static bool         s_SDCardMounted;
   static char const * s_SDCardMountPath;
-  static int          s_SDCardMaxFiles;
+  static size_t       s_SDCardMaxFiles;
   static int          s_SDCardAllocationUnitSize;
   static int8_t       s_SDCardMISO;
   static int8_t       s_SDCardMOSI;
@@ -730,6 +818,16 @@ enum class ChipPackage {
 ChipPackage getChipPackage();
 
 
+/**
+ * @brief Replaces path separators
+ *
+ * @param path Path with separators to replace
+ * @param newSep New separator character
+ */
+void replacePathSep(char * path, char newSep);
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 // AutoSuspendInterrupts
 
@@ -745,8 +843,11 @@ ChipPackage getChipPackage();
  *     }  // on exit interrupts are resumed
  */
 struct AutoSuspendInterrupts {
-  AutoSuspendInterrupts() { suspendInterrupts(); }
-  ~AutoSuspendInterrupts() { resumeInterrupts(); }
+  AutoSuspendInterrupts() : suspended(true) { suspendInterrupts(); }
+  ~AutoSuspendInterrupts() { resume(); }
+  void resume() { if (suspended) resumeInterrupts(); suspended = false; }
+
+  bool suspended;
 };
 
 
@@ -945,6 +1046,74 @@ enum VirtualKey {
 
   VK_LAST,            // marks the last virtual key
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// ASCII control characters
+
+#define ASCII_NUL   0x00   // Null
+#define ASCII_SOH   0x01   // Start of Heading
+#define ASCII_CTRLA 0x01   // CTRL-A
+#define ASCII_STX   0x02   // Start of Text
+#define ASCII_CTRLB 0x02   // CTRL-B
+#define ASCII_ETX   0x03   // End Of Text
+#define ASCII_CTRLC 0x03   // CTRL-C
+#define ASCII_EOT   0x04   // End Of Transmission
+#define ASCII_CTRLD 0x04   // CTRL-D
+#define ASCII_ENQ   0x05   // Enquiry
+#define ASCII_CTRLE 0x05   // CTRL-E
+#define ASCII_ACK   0x06   // Acknowledge
+#define ASCII_CTRLF 0x06   // CTRL-F
+#define ASCII_BEL   0x07   // Bell
+#define ASCII_CTRLG 0x07   // CTRL-G
+#define ASCII_BS    0x08   // Backspace
+#define ASCII_CTRLH 0x08   // CTRL-H
+#define ASCII_HT    0x09   // Horizontal Tab
+#define ASCII_TAB   0x09   // Horizontal Tab
+#define ASCII_CTRLI 0x09   // CTRL-I
+#define ASCII_LF    0x0A   // Line Feed
+#define ASCII_CTRLJ 0x0A   // CTRL-J
+#define ASCII_VT    0x0B   // Vertical Tab
+#define ASCII_CTRLK 0x0B   // CTRL-K
+#define ASCII_FF    0x0C   // Form Feed
+#define ASCII_CTRLL 0x0C   // CTRL-L
+#define ASCII_CR    0x0D   // Carriage Return
+#define ASCII_CTRLM 0x0D   // CTRL-M
+#define ASCII_SO    0x0E   // Shift Out
+#define ASCII_CTRLN 0x0E   // CTRL-N
+#define ASCII_SI    0x0F   // Shift In
+#define ASCII_CTRLO 0x0F   // CTRL-O
+#define ASCII_DLE   0x10   // Data Link Escape
+#define ASCII_CTRLP 0x10   // CTRL-P
+#define ASCII_DC1   0x11   // Device Control 1
+#define ASCII_CTRLQ 0x11   // CTRL-Q
+#define ASCII_XON   0x11   // Transmission On
+#define ASCII_DC2   0x12   // Device Control 2
+#define ASCII_CTRLR 0x12   // CTRL-R
+#define ASCII_DC3   0x13   // Device Control 3
+#define ASCII_XOFF  0x13   // Transmission Off
+#define ASCII_CTRLS 0x13   // CTRL-S
+#define ASCII_DC4   0x14   // Device Control 4
+#define ASCII_CTRLT 0x14   // CTRL-T
+#define ASCII_NAK   0x15   // Negative Acknowledge
+#define ASCII_CTRLU 0x15   // CTRL-U
+#define ASCII_SYN   0x16   // Synchronous Idle
+#define ASCII_CTRLV 0x16   // CTRL-V
+#define ASCII_ETB   0x17   // End-of-Transmission-Block
+#define ASCII_CTRLW 0x17   // CTRL-W
+#define ASCII_CAN   0x18   // Cancel
+#define ASCII_CTRLX 0x18   // CTRL-X
+#define ASCII_EM    0x19   // End of Medium
+#define ASCII_CTRLY 0x19   // CTRL-Y
+#define ASCII_SUB   0x1A   // Substitute
+#define ASCII_CTRLZ 0x1A   // CTRL-Z
+#define ASCII_ESC   0x1B   // Escape
+#define ASCII_FS    0x1C   // File Separator
+#define ASCII_GS    0x1D   // Group Separator
+#define ASCII_RS    0x1E   // Record Separator
+#define ASCII_US    0x1F   // Unit Separator
+#define ASCII_SPC   0x20   // Space
+#define ASCII_DEL   0x7F   // Delete
 
 
 } // end of namespace

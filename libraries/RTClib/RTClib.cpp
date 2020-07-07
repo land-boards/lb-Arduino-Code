@@ -369,6 +369,40 @@ DateTime::DateTime(const __FlashStringHelper *date,
 
 /**************************************************************************/
 /*!
+    @brief  Constructor for creating a DateTime from an ISO8601 date string.
+
+    This constructor expects its parameters to be a string in the
+    https://en.wikipedia.org/wiki/ISO_8601 format, e.g:
+
+    "2020-06-25T15:29:37"
+
+    Usage:
+
+    ```
+    DateTime dt("2020-06-25T15:29:37");
+    ```
+
+    @note The year must be > 2000, as only the yOff is considered.
+
+    @param iso8601dateTime
+           A dateTime string in iso8601 format,
+           e.g. "2020-06-25T15:29:37".
+
+*/
+/**************************************************************************/
+DateTime::DateTime(const char *iso8601dateTime) {
+  char ref[] = "2000-01-01T00:00:00";
+  memcpy(ref, iso8601dateTime, min(strlen(ref), strlen(iso8601dateTime)));
+  yOff = conv2d(ref + 2);
+  m = conv2d(ref + 5);
+  d = conv2d(ref + 8);
+  hh = conv2d(ref + 11);
+  mm = conv2d(ref + 14);
+  ss = conv2d(ref + 17);
+}
+
+/**************************************************************************/
+/*!
     @brief  Check whether this DateTime is valid.
     @return true if valid, false if not.
 */
@@ -1516,4 +1550,41 @@ void RTC_DS3231::clearAlarm(uint8_t alarm_num) {
 bool RTC_DS3231::alarmFired(uint8_t alarm_num) {
   uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
   return (status >> (alarm_num - 1)) & 0x1;
+}
+
+/**************************************************************************/
+/*!
+    @brief  Enable 32KHz Output
+    @details The 32kHz output is enabled by default. It requires an external
+    pull-up resistor to function correctly
+*/
+/**************************************************************************/
+void RTC_DS3231::enable32K(void) {
+  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  status |= (0x1 << 0x03);
+  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, status);
+  // Serial.println(read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG), BIN);
+}
+
+/**************************************************************************/
+/*!
+    @brief  Disable 32KHz Output
+*/
+/**************************************************************************/
+void RTC_DS3231::disable32K(void) {
+  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  status &= ~(0x1 << 0x03);
+  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, status);
+  // Serial.println(read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG), BIN);
+}
+
+/**************************************************************************/
+/*!
+    @brief  Get status of 32KHz Output
+    @return True if enabled otherwise false
+*/
+/**************************************************************************/
+bool RTC_DS3231::isEnabled32K(void) {
+  uint8_t status = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  return (status >> 0x03) & 0x1;
 }

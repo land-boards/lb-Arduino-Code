@@ -61,8 +61,7 @@ Adafruit_STMPE610::Adafruit_STMPE610(uint8_t cspin, uint8_t mosipin,
  *  @param  *theSPI
  *          spi object
  */
-Adafruit_STMPE610::Adafruit_STMPE610(uint8_t cspin, 
-                                     SPIClass *theSPI) {
+Adafruit_STMPE610::Adafruit_STMPE610(uint8_t cspin, SPIClass *theSPI) {
   _CS = cspin;
   _MOSI = _MISO = _CLK = -1;
   _spi = theSPI;
