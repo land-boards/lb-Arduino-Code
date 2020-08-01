@@ -774,7 +774,7 @@ uint8_t testProto16(void)
       UUTI2CMux8.setI2CChannel(4,1);
       for (port = 0; port < 4; port++)
       {
-        i2cio8Card4.writeLED(port, HIGH);
+        i2cio8Card5.writeLED(port, HIGH);
         delay(250);
         i2cio8Card5.writeLED(port, LOW);
       }
@@ -782,7 +782,7 @@ uint8_t testProto16(void)
       UUTI2CMux8.setI2CChannel(5,1);
       for (port = 0; port < 4; port++)
       {
-        i2cio8Card4.writeLED(port, HIGH);
+        i2cio8Card6.writeLED(port, HIGH);
         delay(250);
         i2cio8Card6.writeLED(port, LOW);
       }
@@ -790,7 +790,7 @@ uint8_t testProto16(void)
       UUTI2CMux8.setI2CChannel(6,1);
       for (port = 0; port < 4; port++)
       {
-        i2cio8Card4.writeLED(port, HIGH);
+        i2cio8Card7.writeLED(port, HIGH);
         delay(250);
         i2cio8Card7.writeLED(port, LOW);
       }
@@ -800,7 +800,7 @@ uint8_t testProto16(void)
       {
         i2cio8Card8.writeLED(port, HIGH);
         delay(250);
-        i2cio8Card4.writeLED(port, LOW);
+        i2cio8Card8.writeLED(port, LOW);
       }
       UUTI2CMux8.setI2CChannel(7,0);
       if (Serial.available() > 0)
