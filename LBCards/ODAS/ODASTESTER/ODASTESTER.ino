@@ -155,20 +155,28 @@ void setup()
       UUTI2CMux8.begin(0);                   // testing external I2C-RPT-01 card
       UUTI2CMux8.setI2CChannel(0,1); 
       i2cio8Card1.begin(0);                  // Requires I2CIO8 cards connected to external I2C-RPT-01 card
+      UUTI2CMux8.setI2CChannel(0,0);
       UUTI2CMux8.setI2CChannel(1,1); 
       i2cio8Card2.begin(0);
+      UUTI2CMux8.setI2CChannel(1,0);
       UUTI2CMux8.setI2CChannel(2,1); 
       i2cio8Card3.begin(0);
+      UUTI2CMux8.setI2CChannel(2,0);
       UUTI2CMux8.setI2CChannel(3,1); 
       i2cio8Card4.begin(0);
+      UUTI2CMux8.setI2CChannel(3,0);
       UUTI2CMux8.setI2CChannel(4,1); 
       i2cio8Card5.begin(0);
+      UUTI2CMux8.setI2CChannel(4,0);
       UUTI2CMux8.setI2CChannel(5,1); 
-      i2cio8Card4.begin(0);
-      UUTI2CMux8.setI2CChannel(5,1); 
+      i2cio8Card6.begin(0);
+      UUTI2CMux8.setI2CChannel(5,0);
+      UUTI2CMux8.setI2CChannel(6,1); 
       i2cio8Card7.begin(0);
+      UUTI2CMux8.setI2CChannel(6,0);
       UUTI2CMux8.setI2CChannel(7,1); 
       i2cio8Card8.begin(0);
+      UUTI2CMux8.setI2CChannel(7,0);
       break;
   }
   Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));
