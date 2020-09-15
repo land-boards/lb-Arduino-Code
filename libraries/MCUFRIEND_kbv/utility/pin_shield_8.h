@@ -11,6 +11,21 @@
 #define LPC1768 1768
 #define LPC2103 2103
 #define LPC2148 2148
+
+#define ISTARGET_NUCLEO64 (0 \
+        || defined(TARGET_NUCLEO_F072RB) \
+        || defined(TARGET_NUCLEO_F103RB) \
+        || defined(TARGET_NUCLEO_F401RE) \
+        || defined(TARGET_NUCLEO_F411RE) \
+        || defined(TARGET_NUCLEO_F446RE) \
+        || defined(TARGET_NUCLEO_L433RC_P) \
+        || defined(TARGET_NUCLEO_L476RG) \
+        )
+
+#define ISTARGET_NUCLEO144 (0 \
+        || defined(TARGET_NUCLEO_F767ZI) \
+        )
+
 //#warning Using pin_SHIELD_8.h
 
 #if 0
@@ -56,7 +71,7 @@
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
 
-	// configure macros for the data pins
+    // configure macros for the data pins
 #define write_8(d) { \
         GPIOA->REGS(BSRR) = 0x0703 << 16; \
         GPIOB->REGS(BSRR) = 0x00E0 << 16; \
@@ -83,7 +98,50 @@
 #define setWriteDir() {GP_OUT(GPIOA, CRH, 0xFFF); GP_OUT(GPIOA, CRL, 0xFF); GP_OUT(GPIOB, CRL, 0xFFF00000); }
 #define setReadDir()  {GP_INP(GPIOA, CRH, 0xFFF); GP_INP(GPIOA, CRL, 0xFF); GP_INP(GPIOB, CRL, 0xFFF00000); }
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG) || defined(TARGET_NUCLEO_F446RE)
+#elif defined(NUCLEO144) || ISTARGET_NUCLEO144
+#if __MBED__
+#warning MBED knows everything
+#elif defined(STM32F767xx)
+  #include <STM32F7XX.h>
+#endif
+
+#define REGS(x) x
+// configure macros for the data pins
+#define DMASK ((1<<15))                         //#1
+#define EMASK ((1<<13)|(1<<11)|(1<<9))          //#3, #5, #6
+#define FMASK ((1<<12)|(1<<15)|(1<<14)|(1<<13)) //#0, #2, #4, #7
+
+#define write_8(d) { \
+        GPIOD->REGS(BSRR) = DMASK << 16; \
+        GPIOE->REGS(BSRR) = EMASK << 16; \
+        GPIOF->REGS(BSRR) = FMASK << 16; \
+        GPIOD->REGS(BSRR) = (  ((d) & (1<<1)) << 14); \
+        GPIOE->REGS(BSRR) = (  ((d) & (1<<3)) << 10) \
+                            | (((d) & (1<<5)) << 6) \
+                            | (((d) & (1<<6)) << 3); \
+        GPIOF->REGS(BSRR) = (  ((d) & (1<<0)) << 12) \
+                            | (((d) & (1<<2)) << 13) \
+                            | (((d) & (1<<4)) << 10) \
+                            | (((d) & (1<<7)) << 6); \
+    }
+
+#define read_8() (       (  (  (GPIOF->REGS(IDR) & (1<<12)) >> 12) \
+                            | ((GPIOD->REGS(IDR) & (1<<15)) >> 14) \
+                            | ((GPIOF->REGS(IDR) & (1<<15)) >> 13) \
+                            | ((GPIOE->REGS(IDR) & (1<<13)) >> 10) \
+                            | ((GPIOF->REGS(IDR) & (1<<14)) >> 10) \
+                            | ((GPIOE->REGS(IDR) & (1<<11)) >> 6) \
+                            | ((GPIOE->REGS(IDR) & (1<<9))  >> 3) \
+                            | ((GPIOF->REGS(IDR) & (1<<13)) >> 6)))
+
+
+//                                             PD15                PE13,PE11,PE9          PF15,PF14,PF13,PF12
+#define setWriteDir() { setReadDir(); \
+                        GPIOD->MODER |=  0x40000000; GPIOE->MODER |=  0x04440000; GPIOF->MODER |=  0x55000000; }
+#define setReadDir()  { GPIOD->MODER &= ~0xC0000000; GPIOE->MODER &= ~0x0CCC0000; GPIOF->MODER &= ~0xFF000000; }
+    
+
+#elif defined(NUCLEO) || ISTARGET_NUCLEO64
 #if __MBED__
 #warning MBED knows everything
 #elif defined(STM32F072xB)
@@ -94,7 +152,7 @@
   #else
   #include <STM32F1XX.h>
   #endif
-#elif defined(STM32L476xx)
+#elif defined(STM32L476xx) || defined(STM32L433xx)
   #include <STM32L4XX.h>
 #elif defined(STM32F401xE) || defined(STM32F411xE) || defined(STM32F446xx)
   #include <STM32F4XX.h>
@@ -377,6 +435,38 @@
                       PORTA.WRCONFIG.reg = (DMASK>>16) | (1<<17) | (1<<28) | (1<<30) | (1<<31); \
                         }       
 #endif
+
+//####################################### DUE ############################
+#elif defined(__SAM3X8E__)      //regular UNO shield on DUE
+ // configure macros for data bus
+#define BMASK         (1<<25)
+#define CMASK         (0xBF << 21)
+#define write_8(x)   {  PIOB->PIO_CODR = BMASK; PIOC->PIO_CODR = CMASK; \
+                        PIOB->PIO_SODR = (((x) & (1<<2)) << 23); \
+                        PIOC->PIO_SODR = (((x) & (1<<0)) << 22) \
+                                       | (((x) & (1<<1)) << 20) \
+                                       | (((x) & (1<<3)) << 25) \
+                                       | (((x) & (1<<4)) << 22) \
+                                       | (((x) & (1<<5)) << 20) \
+                                       | (((x) & (1<<6)) << 18) \
+                                       | (((x) & (1<<7)) << 16); \
+					 }
+
+#define read_8()      ( ((PIOC->PIO_PDSR & (1<<22)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<21)) >> 20)\
+                      | ((PIOB->PIO_PDSR & (1<<25)) >> 23)\
+                      | ((PIOC->PIO_PDSR & (1<<28)) >> 25)\
+                      | ((PIOC->PIO_PDSR & (1<<26)) >> 22)\
+                      | ((PIOC->PIO_PDSR & (1<<25)) >> 20)\
+                      | ((PIOC->PIO_PDSR & (1<<24)) >> 18)\
+                      | ((PIOC->PIO_PDSR & (1<<23)) >> 16)\
+                      )
+#define setWriteDir() { PIOB->PIO_OER = BMASK; PIOC->PIO_OER = CMASK; }
+#define setReadDir()  { \
+                          PMC->PMC_PCER0 = (1 << ID_PIOB)|(1 << ID_PIOC);\
+						  PIOB->PIO_ODR = BMASK; PIOC->PIO_ODR = CMASK;\
+						}
+
 #else
 #error MCU unselected
 #endif        // MCUs

@@ -27,7 +27,7 @@
 /**
  * @file
  *
- * @brief This file contains fabgl::DisplayController definition.
+ * @brief This file contains fabgl::BitmappedDisplayController definition.
  */
 
 
@@ -361,6 +361,9 @@ union GlyphOptions {
 
   /** @brief Helper method to set or reset foreground and background swapping */
   GlyphOptions & Invert(uint8_t value) { invert = value; return *this; }
+
+  /** @brief Helper method to set or reset foreground and background swapping */
+  GlyphOptions & Blank(uint8_t value) { blank = value; return *this; }
 } __attribute__ ((packed));
 
 
@@ -376,10 +379,19 @@ union GlyphOptions {
 #define GLYPHMAP_FGCOLOR_BIT 12
 #define GLYPHMAP_OPTIONS_BIT 16
 #define GLYPHMAP_ITEM_MAKE(index, bgColor, fgColor, options) (((uint32_t)(index) << GLYPHMAP_INDEX_BIT) | ((uint32_t)(bgColor) << GLYPHMAP_BGCOLOR_BIT) | ((uint32_t)(fgColor) << GLYPHMAP_FGCOLOR_BIT) | ((uint32_t)((options).value) << GLYPHMAP_OPTIONS_BIT))
+
 inline uint8_t glyphMapItem_getIndex(uint32_t const volatile * mapItem) { return *mapItem >> GLYPHMAP_INDEX_BIT & 0xFF; }
+inline uint8_t glyphMapItem_getIndex(uint32_t const & mapItem)          { return mapItem >> GLYPHMAP_INDEX_BIT & 0xFF; }
+
 inline Color glyphMapItem_getBGColor(uint32_t const volatile * mapItem) { return (Color)(*mapItem >> GLYPHMAP_BGCOLOR_BIT & 0x0F); }
+inline Color glyphMapItem_getBGColor(uint32_t const & mapItem)          { return (Color)(mapItem >> GLYPHMAP_BGCOLOR_BIT & 0x0F); }
+
 inline Color glyphMapItem_getFGColor(uint32_t const volatile * mapItem) { return (Color)(*mapItem >> GLYPHMAP_FGCOLOR_BIT & 0x0F); }
+inline Color glyphMapItem_getFGColor(uint32_t const & mapItem)          { return (Color)(mapItem >> GLYPHMAP_FGCOLOR_BIT & 0x0F); }
+
 inline GlyphOptions glyphMapItem_getOptions(uint32_t const volatile * mapItem) { return (GlyphOptions){.value = (uint16_t)(*mapItem >> GLYPHMAP_OPTIONS_BIT & 0xFFFF)}; }
+inline GlyphOptions glyphMapItem_getOptions(uint32_t const & mapItem)          { return (GlyphOptions){.value = (uint16_t)(mapItem >> GLYPHMAP_OPTIONS_BIT & 0xFFFF)}; }
+
 inline void glyphMapItem_setOptions(uint32_t volatile * mapItem, GlyphOptions const & options) { *mapItem = (*mapItem & ~((uint32_t)0xFFFF << GLYPHMAP_OPTIONS_BIT)) | ((uint32_t)(options.value) << GLYPHMAP_OPTIONS_BIT); }
 
 struct GlyphsBuffer {
@@ -408,6 +420,7 @@ enum class NativePixelFormat : uint8_t {
   Mono,       /**< 1 bit per pixel. 0 = black, 1 = white */
   SBGR2222,   /**< 8 bit per pixel: VHBBGGRR (bit 7=VSync 6=HSync 5=B 4=B 3=G 2=G 1=R 0=R). Each color channel can have values from 0 to 3 (maxmum intensity). */
   RGB565BE,   /**< 16 bit per pixel: RGB565 big endian. */
+  PALETTE16,  /**< 4 bit palette (16 colors), packed as two pixels per byte. */
 };
 
 
@@ -619,31 +632,29 @@ struct PaintState {
 
 
 
+/** \ingroup Enumerations
+ * @brief This enum defines types of display controllers
+ */
+enum class DisplayControllerType {
+  Textual,      /**< The display controller can represents text only */
+  Bitmapped,    /**< The display controller can represents text and bitmapped graphics */
+};
+
+
 
 /**
- * @brief Represents the base abstract class for display controllers
+ * @brief Represents the base abstract class for all display controllers
  */
-class DisplayController {
+class BaseDisplayController {
 
 public:
 
-  DisplayController();
-
-  ~DisplayController();
-
   /**
-   * @brief Determines horizontal size of the viewport.
+   * @brief Determines the display controller type
    *
-   * @return Horizontal size of the viewport.
+   * @return Display controller type.
    */
-  virtual int getViewPortWidth() = 0;
-
-  /**
-   * @brief Determines vertical size of the viewport.
-   *
-   * @return Vertical size of the viewport.
-   */
-  virtual int getViewPortHeight() = 0;
+  virtual DisplayControllerType controllerType() = 0;
 
   /**
    * @brief Determines the screen width in pixels.
@@ -658,6 +669,57 @@ public:
    * @return Screen height in pixels.
    */
   virtual int getScreenHeight() = 0;
+};
+
+
+
+/**
+ * @brief Represents the base abstract class for textual display controllers
+ */
+class TextualDisplayController : public BaseDisplayController {
+
+public:
+
+    DisplayControllerType controllerType() { return DisplayControllerType::Textual; }
+
+    virtual int getColumns() = 0;
+    virtual int getRows() = 0;
+    virtual void adjustMapSize(int * columns, int * rows) = 0;
+    virtual void setTextMap(uint32_t const * map, int rows) = 0;
+    virtual void enableCursor(bool value) = 0;
+    virtual void setCursorPos(int row, int col) = 0;      // row and col starts from 0
+    virtual void setCursorForeground(Color value) = 0;
+    virtual void setCursorBackground(Color value) = 0;
+};
+
+
+
+/**
+ * @brief Represents the base abstract class for bitmapped display controllers
+ */
+class BitmappedDisplayController : public BaseDisplayController {
+
+public:
+
+  BitmappedDisplayController();
+
+  ~BitmappedDisplayController();
+
+  DisplayControllerType controllerType() { return DisplayControllerType::Bitmapped; }
+
+  /**
+   * @brief Determines horizontal size of the viewport.
+   *
+   * @return Horizontal size of the viewport.
+   */
+  virtual int getViewPortWidth() = 0;
+
+  /**
+   * @brief Determines vertical size of the viewport.
+   *
+   * @return Vertical size of the viewport.
+   */
+  virtual int getViewPortHeight() = 0;
 
   /**
    * @brief Represents the native pixel format used by this display.
@@ -727,7 +789,7 @@ public:
    * A sprite is an image that keeps background unchanged.<br>
    * There is no limit to the number of active sprites, but flickering and slow
    * refresh happens when a lot of sprites (or large sprites) are visible.<br>
-   * To empty the list of active sprites call DisplayController.removeSprites().
+   * To empty the list of active sprites call BitmappedDisplayController.removeSprites().
    *
    * @param sprites The list of sprites to make currently active.
    * @param count Number of sprites in the list.
@@ -762,14 +824,14 @@ public:
    * Screen is automatically updated whenever a primitive is painted (look at Canvas).<br>
    * When a sprite updates its image or its position (or any other property) it is required
    * to force a refresh using this method.<br>
-   * DisplayController.refreshSprites() is required also when using the double buffered mode, to paint sprites.
+   * BitmappedDisplayController.refreshSprites() is required also when using the double buffered mode, to paint sprites.
    */
   void refreshSprites();
 
   /**
-   * @brief Determines whether DisplayController is on double buffered mode.
+   * @brief Determines whether BitmappedDisplayController is on double buffered mode.
    *
-   * @return True if DisplayController is on double buffered mode.
+   * @return True if BitmappedDisplayController is on double buffered mode.
    */
   bool isDoubleBuffered() { return m_doubleBuffered; }
 
@@ -937,10 +999,10 @@ private:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// GenericDisplayController
+// GenericBitmappedDisplayController
 
 
-class GenericDisplayController : public DisplayController {
+class GenericBitmappedDisplayController : public BitmappedDisplayController {
 
 protected:
 

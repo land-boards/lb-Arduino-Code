@@ -43,7 +43,7 @@
 Supervisor * Supervisor::s_singleton = nullptr;
 
 
-Supervisor::Supervisor(DisplayController * displayController)
+Supervisor::Supervisor(BaseDisplayController * displayController)
   : m_displayController(displayController),
     m_activeSessionID(-1)
 {
@@ -68,28 +68,34 @@ Supervisor::~Supervisor()
 Terminal * Supervisor::createTerminal()
 {
   Terminal * term = new Terminal;
-  term->begin(m_displayController);
+  if (!term->begin(m_displayController)) {
+    // failed to initialize terminal
+    delete term;
+    return nullptr;
+  }
   term->connectLocally();      // to use Terminal.read(), available(), etc..
-  term->setTerminalType(TermType::ANSILegacy);
-  term->setBackgroundColor(Color::Black);
-  term->setForegroundColor(Color::BrightGreen);
-  term->clear();
-  term->enableCursor(true);
   return term;
 }
 
 
 void Supervisor::activateSession(int id)
 {
-  if (m_sessions[id].thread == nullptr) {
+  if (m_sessions[id].terminal == nullptr) {
     m_sessions[id].terminal = createTerminal();
-    xTaskCreate(&sessionThread, "", SESSIONTHREAD_STACK_SIZE, &m_sessions[id], SESSIONTHREAD_TASK_PRIORITY, &m_sessions[id].thread);
+    if (m_sessions[id].terminal == nullptr)
+      return; // failed
   }
 
   auto trans = (m_activeSessionID == -1 ? TerminalTransition::None : (id < m_activeSessionID ? TerminalTransition::LeftToRight : TerminalTransition::RightToLeft));
-
   m_sessions[id].terminal->activate(trans);
   m_activeSessionID = id;
+
+  if (m_sessions[id].thread == nullptr) {
+    if (CoreUsage::busiestCore() == -1)
+      xTaskCreate(&sessionThread, "", SESSIONTHREAD_STACK_SIZE, &m_sessions[id], SESSIONTHREAD_TASK_PRIORITY, &m_sessions[id].thread);
+    else
+      xTaskCreatePinnedToCore(&sessionThread, "", SESSIONTHREAD_STACK_SIZE, &m_sessions[id], SESSIONTHREAD_TASK_PRIORITY, &m_sessions[id].thread, CoreUsage::quietCore());
+  }
 }
 
 
@@ -143,6 +149,14 @@ void Supervisor::sessionThread(void * arg)
 
   AbortReason abortReason = AbortReason::NoAbort;
 
+  auto term = session->terminal;
+
+  term->setTerminalType(TermType::ANSILegacy);
+  term->setBackgroundColor(Color::Black);
+  term->setForegroundColor(Color::BrightGreen);
+  term->clear();
+  term->enableCursor(true);
+
   while (true) {
 
     if (HAL::systemFree() < SESSION_MIN_MEM) {
@@ -154,7 +168,7 @@ void Supervisor::sessionThread(void * arg)
 
     session->hal = &hal;
 
-    hal.setTerminal(session->terminal);
+    hal.setTerminal(term);
 
     instance()->onNewSession(&hal);
 
@@ -177,26 +191,26 @@ void Supervisor::sessionThread(void * arg)
       // should never reach this!
       break;
     case AbortReason::OutOfMemory:
-      session->terminal->write("\r\n\nOut of memory, session aborted.\r\n");
+      term->write("\r\n\nOut of memory, session aborted.\r\n");
       break;
     case AbortReason::GeneralFailure:
-      session->terminal->write("\r\n\nGeneral failure, session aborted.\r\n");
+      term->write("\r\n\nGeneral failure, session aborted.\r\n");
       break;
     case AbortReason::AuxTerm:
-      session->terminal->write("\r\n\nOpening UART terminal...\r\n");
-      session->terminal->disconnectLocally();
-      session->terminal->connectSerialPort(UART_BAUD, UART_CONF, UART_RX, UART_TX, UART_FLOWCTRL);
+      term->write("\r\n\nOpening UART terminal...\r\n");
+      term->disconnectLocally();
+      term->connectSerialPort(UART_BAUD, UART_CONF, UART_RX, UART_TX, UART_FLOWCTRL);
       vTaskDelete(NULL);
       break;
     case AbortReason::SessionClosed:
-      session->terminal->write("\r\n\nSession closed.");
+      term->write("\r\n\nSession closed.");
       break;
   }
 
-  session->terminal->flush();
+  term->flush();
 
-  session->terminal->end();
-  delete session->terminal;
+  term->end();
+  delete term;
 
   session->terminal = nullptr;
   session->thread = nullptr;

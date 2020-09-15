@@ -27,10 +27,14 @@
 
 #include <IRremote.h>
 
-int RECV_PIN = 11;
+#if defined(ESP32)
+int IR_RECEIVE_PIN = 15;
+#else
+int IR_RECEIVE_PIN = 11;
+#endif
 int LED_PIN = 3;
 
-IRrecv irrecv(RECV_PIN);
+IRrecv irrecv(IR_RECEIVE_PIN);
 IRsend irsend;
 
 decode_results results;
@@ -43,14 +47,25 @@ int mode;
 
 void setup()
 {
-  Serial.begin(9600);
-  // Check RECV_PIN to decide if we're RECEIVER or SENDER
-  if (digitalRead(RECV_PIN) == HIGH) {
+  Serial.begin(115200);
+  #if defined(__AVR_ATmega32U4__)
+    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
+#endif
+#if defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#endif
+    // Just to know which program is running on my Arduino
+    Serial.println(F("START " __FILE__ " from " __DATE__));
+    
+  // Check IR_RECEIVE_PIN to decide if we're RECEIVER or SENDER
+  if (digitalRead(IR_RECEIVE_PIN) == HIGH) {
     mode = RECEIVER;
     irrecv.enableIRIn();
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
     Serial.println("Receiver mode");
+    Serial.print(F("Ready to receive IR signals at pin "));
+    Serial.println(IR_RECEIVE_PIN);
   } 
   else {
     mode = SENDER;
@@ -64,10 +79,10 @@ void setup()
 void waitForGap(int gap) {
   Serial.println("Waiting for gap");
   while (1) {
-    while (digitalRead(RECV_PIN) == LOW) { 
+    while (digitalRead(IR_RECEIVE_PIN) == LOW) { 
     }
     unsigned long time = millis();
-    while (digitalRead(RECV_PIN) == HIGH) {
+    while (digitalRead(IR_RECEIVE_PIN) == HIGH) {
       if (millis() - time > gap) {
         return;
       }
@@ -106,10 +121,10 @@ void dump(decode_results *results) {
 
   for (int i = 0; i < count; i++) {
     if ((i % 2) == 1) {
-      Serial.print(results->rawbuf[i]*USECPERTICK, DEC);
+      Serial.print(results->rawbuf[i]*MICROS_PER_TICK, DEC);
     } 
     else {
-      Serial.print(-(int)results->rawbuf[i]*USECPERTICK, DEC);
+      Serial.print(-(int)results->rawbuf[i]*MICROS_PER_TICK, DEC);
     }
     Serial.print(" ");
   }
@@ -203,13 +218,13 @@ void testRaw(char *label, unsigned int *rawbuf, int rawlen) {
       return;
     }
     for (int i = 0; i < rawlen; i++) {
-      long got = results.rawbuf[i+1] * USECPERTICK;
+      long got = results.rawbuf[i+1] * MICROS_PER_TICK;
       // Adjust for extra duration of marks
       if (i % 2 == 0) { 
-        got -= MARK_EXCESS;
+        got -= MARK_EXCESS_MICROS;
       } 
       else {
-        got += MARK_EXCESS;
+        got += MARK_EXCESS_MICROS;
       }
       // See if close enough, within 25%
       if (rawbuf[i] * 1.25 < got || got * 1.25 < rawbuf[i]) {

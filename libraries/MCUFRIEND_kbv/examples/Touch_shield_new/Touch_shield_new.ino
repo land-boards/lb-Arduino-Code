@@ -149,7 +149,7 @@ void loop()
                 break;
             case 3:
                 xpos = map(tp.y, TS_BOT, TS_TOP, 0, tft.width());
-                ypos = map(tp.y, TS_LEFT, TS_RT, 0, tft.height());
+                ypos = map(tp.x, TS_LEFT, TS_RT, 0, tft.height());
                 break;
         }
 

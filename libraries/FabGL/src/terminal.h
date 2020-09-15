@@ -315,7 +315,7 @@ struct EmuState {
 
   // DECSCLM (Smooth scroll)
   // Smooth scroll is effective only when vertical sync refresh is enabled,
-  // hence must be DisplayController.enableBackgroundPrimitiveExecution(true),
+  // hence must be BitmappedDisplayController.enableBackgroundPrimitiveExecution(true),
   // that is the default.
   bool         smoothScroll;
 
@@ -449,9 +449,13 @@ public:
    * Applications should call this method before any other method call and after resolution has been set.
    *
    * @param displayController The output display controller
+   * @param maxColumns Maximum number of columns (-1 = depends by the display horizontal resolution)
+   * @param maxRows Maximum number of rows (-1 = depends by the display vertical resolution)
    * @param keyboard Keyboard device. nullptr = gets from PS2Controller
+   *
+   * @return False on fail to allocate required memory
    */
-  void begin(DisplayController * displayController, Keyboard * keyboard = nullptr);
+  bool begin(BaseDisplayController * displayController, int maxColumns = -1, int maxRows = -1, Keyboard * keyboard = nullptr);
 
   /**
    * @brief Finalizes the terminal.
@@ -493,6 +497,7 @@ public:
    * loop to do something other.<br>
    * <br>
    * This is the preferred way to connect the Terminal with a serial port.<br>
+   * You may call connectSerialPort whenever a parameters needs to be changed (except for rx and tx pins).
    *
    * @param baud Baud rate.
    * @param config Defines word length, parity and stop bits. Example: SERIAL_8N1.
@@ -820,7 +825,7 @@ public:
   Canvas * canvas() { return m_canvas; }
 
   /**
-   * @brief Activate this terminal for input and output.
+   * @brief Activates this terminal for input and output.
    *
    * Only one terminal can be active at the time, for input and output.
    * Use this method to activate a terminal. This method de-activates currently active terminal.
@@ -830,11 +835,27 @@ public:
   void activate(TerminalTransition transition = TerminalTransition::None);
 
   /**
+   * @brief Deactivates this terminal.
+   */
+  void deactivate();
+
+  /**
    * @brief Determines if this terminal is active or not.
    *
    * @return True is this terminal is active for input and output.
    */
   bool isActive() { return s_activeTerminal == this; }
+
+
+  //// Delegates ////
+
+  /**
+   * @brief Delegate called whenever a new virtual key is received from keyboard
+   *
+   * First parameter is a pointer to the decoded virtual key
+   * Second parameter specifies if the key is Down (true) or Up (false)
+   */
+  Delegate<VirtualKey *, bool> onVirtualKey;
 
 
 
@@ -993,8 +1014,9 @@ private:
   static Terminal *  s_activeTerminal;
 
 
-  DisplayController * m_displayController;
+  BaseDisplayController * m_displayController;
   Canvas *           m_canvas;
+  bool               m_bitmappedDisplayController;  // true = bitmapped, false = textual
 
   Keyboard *         m_keyboard;
 
@@ -1049,6 +1071,10 @@ private:
   volatile int       m_columns;
   volatile int       m_rows;
 
+  // checked in loadFont() to limit m_columns and m_rows (-1 = not checked)
+  int                m_maxColumns;
+  int                m_maxRows;
+
   // optional serial port
   // data from serial port is processed and displayed
   // keys from keyboard are processed and sent to serial port
@@ -1101,7 +1127,8 @@ private:
 /**
  * @brief TerminalController allows direct controlling of the Terminal object without using escape sequences
  *
- * TerminalController needs FabGL specific sequences to be enabled (this is the default).
+ * TerminalController needs FabGL specific sequences to be enabled (this is the default), and always works
+ * despite the selected terminal emulation.
  *
  * Example:
  *
@@ -1124,11 +1151,23 @@ public:
   ~TerminalController();
 
   /**
-   * @brief Set destination terminal
+   * @brief Clears screen
+   */
+  void clear();
+
+  /**
+   * @brief Sets destination terminal
    *
    * @param terminal The Terminal instance to control. If not specified you have to set delegates.
    */
   void setTerminal(Terminal * terminal = nullptr);
+
+  /**
+   * @brief Enables/disables cursor
+   *
+   * @param value True enables cursor, False disables cursor
+   */
+  void enableCursor(bool value);
 
   /**
    * @brief Sets current cursor position

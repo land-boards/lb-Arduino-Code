@@ -114,6 +114,8 @@ const char * CTRLCHAR_TO_STR[] = {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK
 #define FABGL_ENTERM_SETFGCOLOR     0x0D
 #define FABGL_ENTERM_SETBGCOLOR     0X0E
 #define FABGL_ENTERM_SETCHARSTYLE   0x0F
+#define FABGL_ENTERM_CLEAR          0x10
+#define FABGL_ENTERM_ENABLECURSOR   0x11
 
 
 // each fabgl specific sequence has a fixed length, specified here:
@@ -133,6 +135,8 @@ const uint8_t FABGLSEQLENGTH[] = { 0,  // invalid
                                    4,  // FABGL_ENTERM_SETFGCOLOR
                                    4,  // FABGL_ENTERM_SETBGCOLOR
                                    5,  // FABGL_ENTERM_SETCHARSTYLE
+                                   3,  // FABGL_ENTERM_CLEAR
+                                   4,  // FABGL_ENTERM_ENABLECURSOR
                                   };
 
 
@@ -179,39 +183,85 @@ void Terminal::activate(TerminalTransition transition)
   if (s_activeTerminal != this) {
 
     if (s_activeTerminal && transition != TerminalTransition::None) {
-      s_activeTerminal = nullptr;
-      AutoSuspendInterrupts autoInt;
-      switch (transition) {
-        case TerminalTransition::LeftToRight:
-          for (int x = 0; x < m_columns; ++x) {
-            m_canvas->scroll(m_font.width, 0);
-            m_canvas->setOrigin(-m_font.width * (m_columns - x - 1), 0);
-            for (int y = 0; y < m_rows; ++y)
-              m_canvas->renderGlyphsBuffer(m_columns - x - 1, y, &m_glyphsBuffer);
-            m_canvas->waitCompletion(false);
-            delayMicroseconds(2000);
-          }
-          break;
-        case TerminalTransition::RightToLeft:
-          for (int x = 0; x < m_columns; ++x) {
-            m_canvas->scroll(-m_font.width, 0);
-            m_canvas->setOrigin(m_font.width * (m_columns - x - 1), 0);
-            for (int y = 0; y < m_rows; ++y)
-              m_canvas->renderGlyphsBuffer(x, y, &m_glyphsBuffer);
-            m_canvas->waitCompletion(false);
-            delayMicroseconds(2000);
-          }
-          break;
-        default:
-          break;
+      if (m_bitmappedDisplayController) {
+        // bitmapped controller, use Canvas to perform the animation
+        s_activeTerminal = nullptr;
+        AutoSuspendInterrupts autoInt;
+        switch (transition) {
+          case TerminalTransition::LeftToRight:
+            for (int x = 0; x < m_columns; ++x) {
+              m_canvas->scroll(m_font.width, 0);
+              m_canvas->setOrigin(-m_font.width * (m_columns - x - 1), 0);
+              for (int y = 0; y < m_rows; ++y)
+                m_canvas->renderGlyphsBuffer(m_columns - x - 1, y, &m_glyphsBuffer);
+              m_canvas->waitCompletion(false);
+              delayMicroseconds(2000);
+            }
+            break;
+          case TerminalTransition::RightToLeft:
+            for (int x = 0; x < m_columns; ++x) {
+              m_canvas->scroll(-m_font.width, 0);
+              m_canvas->setOrigin(m_font.width * (m_columns - x - 1), 0);
+              for (int y = 0; y < m_rows; ++y)
+                m_canvas->renderGlyphsBuffer(x, y, &m_glyphsBuffer);
+              m_canvas->waitCompletion(false);
+              delayMicroseconds(2000);
+            }
+            break;
+          default:
+            break;
+        }
+      } else {
+        // textual controller, use temporary buffer to perform animation
+        auto txtCtrl = static_cast<TextualDisplayController*>(m_displayController);
+        auto map = (uint32_t*) heap_caps_malloc(sizeof(uint32_t) * m_columns * m_rows, MALLOC_CAP_8BIT);
+        memcpy(map, s_activeTerminal->m_glyphsBuffer.map, sizeof(uint32_t) * m_columns * m_rows);
+        txtCtrl->enableCursor(false);
+        txtCtrl->setTextMap(map, m_rows);
+        switch (transition) {
+          case TerminalTransition::LeftToRight:
+            for (int x = 0; x < m_columns; ++x) {
+              for (int y = 0; y < m_rows; ++y) {
+                memmove(map + y * m_columns + 1, map + y * m_columns, sizeof(uint32_t) * (m_columns - 1));
+                map[y * m_columns] = m_glyphsBuffer.map[y * m_columns + m_columns - x - 1];
+              }
+              vTaskDelay(5);
+            }
+            break;
+          case TerminalTransition::RightToLeft:
+            for (int x = 0; x < m_columns; ++x) {
+              for (int y = 0; y < m_rows; ++y) {
+                memmove(map + y * m_columns, map + y * m_columns + 1, sizeof(uint32_t) * (m_columns - 1));
+                map[y * m_columns + m_columns - 1] = m_glyphsBuffer.map[y * m_columns + x];
+              }
+              vTaskDelay(5);
+            }
+            break;
+          default:
+            break;
+        }
+        txtCtrl->setTextMap(m_glyphsBuffer.map, m_rows);
+        free(map);
       }
     }
 
     s_activeTerminal = this;
     vTaskResume(m_keyboardReaderTaskHandle);
-    m_canvas->setGlyphOptions(m_glyphOptions);
-    m_canvas->setBrushColor(m_emuState.backgroundColor);
-    m_canvas->setPenColor(m_emuState.foregroundColor);
+    if (m_bitmappedDisplayController) {
+      // restore canvas state for bitmapped display controller
+      m_canvas->reset();
+      m_canvas->setGlyphOptions(m_glyphOptions);
+      m_canvas->setBrushColor(m_emuState.backgroundColor);
+      m_canvas->setPenColor(m_emuState.foregroundColor);
+    } else {
+      // restore textual display controller state
+      auto txtCtrl = static_cast<TextualDisplayController*>(m_displayController);
+      txtCtrl->setTextMap(m_glyphsBuffer.map, m_rows);
+      txtCtrl->setCursorBackground(m_emuState.backgroundColor);
+      txtCtrl->setCursorForeground(m_emuState.foregroundColor);
+      txtCtrl->setCursorPos(m_emuState.cursorY - 1, m_emuState.cursorX - 1);
+      txtCtrl->enableCursor(m_emuState.cursorEnabled);
+    }
     updateCanvasScrollingRegion();
     refresh();
   }
@@ -219,11 +269,30 @@ void Terminal::activate(TerminalTransition transition)
 }
 
 
-void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
+void Terminal::deactivate()
+{
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
+  if (s_activeTerminal == this) {
+    s_activeTerminal = nullptr;
+  }
+  xSemaphoreGive(m_mutex);
+}
+
+
+bool Terminal::begin(BaseDisplayController * displayController, int maxColumns, int maxRows, Keyboard * keyboard)
 {
   m_displayController = displayController;
+  m_bitmappedDisplayController = (m_displayController->controllerType() == DisplayControllerType::Bitmapped);
 
-  m_canvas = new Canvas(m_displayController);
+  m_maxColumns = maxColumns;
+  m_maxRows    = maxRows;
+
+  if (m_bitmappedDisplayController) {
+    m_canvas = new Canvas(static_cast<BitmappedDisplayController*>(m_displayController));
+  } else {
+    m_canvas = nullptr;
+    static_cast<TextualDisplayController*>(m_displayController)->adjustMapSize(&m_maxColumns, &m_maxRows);
+  }
 
   m_keyboard = keyboard;
   if (m_keyboard == nullptr && PS2Controller::instance()) {
@@ -282,7 +351,12 @@ void Terminal::begin(DisplayController * displayController, Keyboard * keyboard)
 
   m_termInfo = nullptr;
 
-  reset();
+  bool success = (m_glyphsBuffer.map != nullptr);
+
+  if (success)
+    reset();
+
+  return success;
 }
 
 
@@ -378,19 +452,49 @@ void Terminal::uartCheckInputQueueForFlowControl()
 // connect to UART2
 void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int txPin, FlowControl flowControl, bool inverted)
 {
-  Serial2.end();
+  uart_dev_t * uart = (volatile uart_dev_t *) DR_REG_UART2_BASE;
 
-  m_uart = true;
+  bool initialSetup = !m_uart;
+
+  if (initialSetup) {
+    // uart not configured, configure now
+
+    Serial2.end();
+
+    m_uart = true;
+
+    DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
+    DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
+
+    // flush
+    uartFlushTXFIFO();
+    uartFlushRXFIFO();
+
+    // TX/RX Pin direction
+    pinMode(rxPin, INPUT);
+    pinMode(txPin, OUTPUT);
+
+    // RX interrupt
+    uart->conf1.rxfifo_full_thrhd = 1;  // an interrupt for each character received
+    uart->conf1.rx_tout_thrhd = 2;      // actually not used
+    uart->conf1.rx_tout_en    = 0;      // timeout not enabled
+    uart->int_ena.rxfifo_full = 1;      // interrupt on FIFO full (1 character - see rxfifo_full_thrhd)
+    uart->int_ena.frm_err     = 1;      // interrupt on frame error
+    uart->int_ena.rxfifo_tout = 0;      // no interrupt on rx timeout (see rx_tout_en and rx_tout_thrhd)
+    uart->int_ena.parity_err  = 1;      // interrupt on rx parity error
+    uart->int_ena.rxfifo_ovf  = 1;      // interrupt on rx overflow
+    uart->int_clr.val = 0xffffffff;
+    esp_intr_alloc(ETS_UART2_INTR_SOURCE, 0, uart_isr, this, nullptr);
+
+    // setup FIFOs size
+    uart->mem_conf.rx_size = 3;  // RX: 384 bytes (this is the max for UART2)
+    uart->mem_conf.tx_size = 1;  // TX: 128 bytes
+
+    if (!m_keyboardReaderTaskHandle && m_keyboard->isKeyboardAvailable())
+      xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
+  }
+
   m_autoXONOFF = (flowControl == FlowControl::Software);
-
-  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
-
-  DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_UART2_CLK_EN);
-  DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_UART2_RST);
-
-  // flush
-  uartFlushTXFIFO();
-  uartFlushRXFIFO();
 
   // set baud rate
   uint32_t clk_div = (getApbFrequency() << 4) / baud;
@@ -404,28 +508,8 @@ void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int 
     uart->rs485_conf.dl1_en  = 1;
   }
 
-  // RX Pin
-  pinMode(rxPin, INPUT);
+  // TX/RX Pin logic
   pinMatrixInAttach(rxPin, U2RXD_IN_IDX, inverted);
-
-  // RX interrupt
-  uart->conf1.rxfifo_full_thrhd = 1;  // an interrupt for each character received
-  uart->conf1.rx_tout_thrhd = 2;      // actually not used
-  uart->conf1.rx_tout_en    = 0;      // timeout not enabled
-  uart->int_ena.rxfifo_full = 1;      // interrupt on FIFO full (1 character - see rxfifo_full_thrhd)
-  uart->int_ena.frm_err     = 1;      // interrupt on frame error
-  uart->int_ena.rxfifo_tout = 0;      // no interrupt on rx timeout (see rx_tout_en and rx_tout_thrhd)
-  uart->int_ena.parity_err  = 1;      // interrupt on rx parity error
-  uart->int_ena.rxfifo_ovf  = 1;      // interrupt on rx overflow
-  uart->int_clr.val = 0xffffffff;
-  esp_intr_alloc(ETS_UART2_INTR_SOURCE, 0, uart_isr, this, nullptr);
-
-  // setup FIFOs size
-  uart->mem_conf.rx_size = 3;  // RX: 384 bytes (this is the max for UART2)
-  uart->mem_conf.tx_size = 1;  // TX: 128 bytes
-
-  // TX Pin
-  pinMode(txPin, OUTPUT);
   pinMatrixOutAttach(txPin, U2TXD_OUT_IDX, inverted, false);
 
   // Flow Control
@@ -438,16 +522,15 @@ void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int 
     uart->swfc_conf.xoff_threshold = 0;
     uart->swfc_conf.xon_char  = ASCII_XON;
     uart->swfc_conf.xoff_char = ASCII_XOFF;
-    // send an XON right now
-    m_XOFF = true;
-    uart->flow_conf.send_xon = 1;
+    if (initialSetup) {
+      // send an XON right now
+      m_XOFF = true;
+      uart->flow_conf.send_xon = 1;
+    }
   }
 
   // APB Change callback (TODO?)
   //addApbChangeCallback(this, uart_on_apb_change);
-
-  if (m_keyboard->isKeyboardAvailable())
-    xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
 }
 
 
@@ -588,7 +671,8 @@ void Terminal::reset()
     .userOpt1         = 0,    // blinking
     .userOpt2         = 0,    // 0 = erasable by DECSED or DECSEL,  1 = not erasable by DECSED or DECSEL
   }};
-  m_canvas->setGlyphOptions(m_glyphOptions);
+  if (m_canvas)
+    m_canvas->setGlyphOptions(m_glyphOptions);
 
   m_paintOptions = PaintOptions();
 
@@ -611,33 +695,59 @@ void Terminal::loadFont(FontInfo const * font)
   log("loadFont()\n");
   #endif
 
-  freeFont();
+  if (m_bitmappedDisplayController) {
 
-  m_font = *font;
-#if FABGLIB_CACHE_FONT_IN_RAM
-  int size = m_font.height * 256 * ((m_font.width + 7) / 8);
-  m_font.data = (uint8_t const*) malloc(size);
-  memcpy((void*)m_font.data, font->data, size);
-#else
-  m_font.data = font->data;
-#endif
+    // bitmapped display controller
 
-  m_columns = tmin(m_canvas->getWidth() / m_font.width, 132);
-  m_rows    = tmin(m_canvas->getHeight() / m_font.height, 25);
+    freeFont();
+
+    m_font = *font;
+  #if FABGLIB_CACHE_FONT_IN_RAM
+    int size = m_font.height * 256 * ((m_font.width + 7) / 8);
+    m_font.data = (uint8_t const*) malloc(size);
+    memcpy((void*)m_font.data, font->data, size);
+  #else
+    m_font.data = font->data;
+  #endif
+
+    m_columns = m_canvas->getWidth() / m_font.width;
+    m_rows    = m_canvas->getHeight() / m_font.height;
+
+    m_glyphsBuffer.glyphsWidth  = m_font.width;
+    m_glyphsBuffer.glyphsHeight = m_font.height;
+    m_glyphsBuffer.glyphsData   = m_font.data;
+
+  } else {
+
+    // textual display controller
+
+    m_columns = static_cast<TextualDisplayController*>(m_displayController)->getColumns();
+    m_rows    = static_cast<TextualDisplayController*>(m_displayController)->getRows();
+
+  }
+
+  // check maximum columns and rows
+  if (m_maxColumns > 0 && m_maxColumns < m_columns)
+    m_columns = m_maxColumns;
+  if (m_maxRows > 0 && m_maxRows < m_rows)
+    m_rows = m_maxRows;
 
   freeTabStops();
   m_emuState.tabStop = (uint8_t*) malloc(m_columns);
   resetTabStops();
 
   freeGlyphsMap();
-  m_glyphsBuffer.glyphsWidth  = m_font.width;
-  m_glyphsBuffer.glyphsHeight = m_font.height;
-  m_glyphsBuffer.glyphsData   = m_font.data;
   m_glyphsBuffer.columns      = m_columns;
   m_glyphsBuffer.rows         = m_rows;
-  m_glyphsBuffer.map          = (uint32_t*) heap_caps_malloc(sizeof(uint32_t) * m_columns * m_rows, MALLOC_CAP_32BIT);
+  m_glyphsBuffer.map          = (uint32_t*) heap_caps_malloc(sizeof(uint32_t) * m_columns * m_rows, MALLOC_CAP_8BIT);
+
   m_alternateMap = nullptr;
   m_alternateScreenBuffer = false;
+
+  if (!m_bitmappedDisplayController && isActive()) {
+    // associate map with textual display controller
+    static_cast<TextualDisplayController*>(m_displayController)->setTextMap(m_glyphsBuffer.map, m_rows);
+  }
 
   setScrollingRegion(1, m_rows);
 }
@@ -648,7 +758,7 @@ void Terminal::flush(bool waitVSync)
   #if FABGLIB_TERMINAL_DEBUG_REPORT_DESCS
   log("flush()\n");
   #endif
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     while (uxQueueMessagesWaiting(m_inputQueue) > 0)
       ;
     m_canvas->waitCompletion(waitVSync);
@@ -664,7 +774,10 @@ void Terminal::set132ColumnMode(bool value)
   log("set132ColumnMode()\n");
   #endif
 
-  loadFont(getPresetFontInfo(m_canvas->getWidth(), m_canvas->getHeight(), (value ? 132 : 80), 25));
+  if (m_bitmappedDisplayController)
+    loadFont(getPresetFontInfo(m_canvas->getWidth(), m_canvas->getHeight(), (value ? 132 : 80), 25));
+  else
+    loadFont(nullptr);
 }
 
 
@@ -672,19 +785,19 @@ void Terminal::setBackgroundColor(Color color, bool setAsDefault)
 {
   if (setAsDefault)
     m_defaultBackgroundColor = color;
-  //Print::printf("\e[%dm", (int)color + (color < Color::BrightBlack ? 40 : 92));  <--- removed to reduce stack size
-  write("\e[");
-  char buf[4];
-  write(itoa((int)color + (color < Color::BrightBlack ? 40 : 92), buf, 10));
-  write('m');
+  TerminalController(this).setBackgroundColor(color);
 }
 
 
 void Terminal::int_setBackgroundColor(Color color)
 {
   m_emuState.backgroundColor = color;
-  if (isActive())
-    m_canvas->setBrushColor(color);
+  if (isActive()) {
+    if (m_bitmappedDisplayController)
+      m_canvas->setBrushColor(color);
+    else
+      static_cast<TextualDisplayController*>(m_displayController)->setCursorBackground(color);
+  }
 }
 
 
@@ -692,19 +805,19 @@ void Terminal::setForegroundColor(Color color, bool setAsDefault)
 {
   if (setAsDefault)
     m_defaultForegroundColor = color;
-  //Print::printf("\e[%dm", (int)color + (color < Color::BrightBlack ? 30 : 82));    <--- removed to reduce stack size
-  write("\e[");
-  char buf[4];
-  write(itoa((int)color + (color < Color::BrightBlack ? 30 : 82), buf, 10));
-  write('m');
+  TerminalController(this).setForegroundColor(color);
 }
 
 
 void Terminal::int_setForegroundColor(Color color)
 {
   m_emuState.foregroundColor = color;
-  if (isActive())
-    m_canvas->setPenColor(color);
+  if (isActive()) {
+    if (m_bitmappedDisplayController)
+      m_canvas->setPenColor(color);
+    else
+      static_cast<TextualDisplayController*>(m_displayController)->setCursorForeground(color);
+  }
 }
 
 
@@ -713,8 +826,10 @@ void Terminal::reverseVideo(bool value)
   if (m_paintOptions.swapFGBG != value) {
     m_paintOptions.swapFGBG = value;
     if (isActive()) {
-      m_canvas->setPaintOptions(m_paintOptions);
-      m_canvas->swapRectangle(0, 0, m_canvas->getWidth() - 1, m_canvas->getHeight() - 1);
+      if (m_bitmappedDisplayController) {
+        m_canvas->setPaintOptions(m_paintOptions);
+        m_canvas->swapRectangle(0, 0, m_canvas->getWidth() - 1, m_canvas->getHeight() - 1);
+      }
     }
   }
 }
@@ -722,9 +837,9 @@ void Terminal::reverseVideo(bool value)
 
 void Terminal::clear(bool moveCursor)
 {
-  Print::write("\e[2J");
+  TerminalController(this).clear();
   if (moveCursor)
-    Print::write("\e[1;1H");
+    TerminalController(this).setCursorPos(1, 1);
 }
 
 
@@ -734,7 +849,7 @@ void Terminal::int_clear()
   log("int_clear()\n");
   #endif
 
-  if (isActive())
+  if (m_bitmappedDisplayController && isActive())
     m_canvas->clear();
   clearMap(m_glyphsBuffer.map);
 }
@@ -802,6 +917,9 @@ void Terminal::setCursorPos(int X, int Y)
   m_emuState.cursorY = tclamp(Y, 1, (int)m_rows);
   m_emuState.cursorPastLastCol = false;
 
+  if (!m_bitmappedDisplayController && isActive())
+    static_cast<TextualDisplayController*>(m_displayController)->setCursorPos(m_emuState.cursorY - 1, m_emuState.cursorX - 1);
+
   #if FABGLIB_TERMINAL_DEBUG_REPORT_DESCSALL
   logFmt("setCursorPos(%d, %d) => set to (%d, %d)\n", X, Y, m_emuState.cursorX, m_emuState.cursorY);
   #endif
@@ -824,8 +942,7 @@ int Terminal::getAbsoluteRow(int Y)
 
 void Terminal::enableCursor(bool value)
 {
-  Print::write("\e[?25");
-  Print::write(value ? "h" : "l");
+  TerminalController(this).enableCursor(value);
 }
 
 
@@ -834,16 +951,22 @@ bool Terminal::int_enableCursor(bool value)
   bool prev = m_emuState.cursorEnabled;
   if (m_emuState.cursorEnabled != value) {
     m_emuState.cursorEnabled = value;
-    if (m_emuState.cursorEnabled) {
-      if (uxQueueMessagesWaiting(m_inputQueue) == 0) {
-        // just to show the cursor before next blink
-        blinkCursor();
+    if (m_bitmappedDisplayController) {
+      // bitmapped display, simulated cursor
+      if (m_emuState.cursorEnabled) {
+        if (uxQueueMessagesWaiting(m_inputQueue) == 0) {
+          // just to show the cursor before next blink
+          blinkCursor();
+        }
+      } else {
+        if (m_cursorState) {
+          // make sure cursor is hidden
+          blinkCursor();
+        }
       }
-    } else {
-      if (m_cursorState) {
-        // make sure cursor is hidden
-        blinkCursor();
-      }
+    } else if (isActive()) {
+      // textual display, native cursor
+      static_cast<TextualDisplayController*>(m_displayController)->enableCursor(value);
     }
   }
   return prev;
@@ -880,7 +1003,7 @@ void Terminal::blinkTimerFunc(TimerHandle_t xTimer)
 
 void Terminal::blinkCursor()
 {
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     m_cursorState = !m_cursorState;
     int X = (m_emuState.cursorX - 1) * m_font.width;
     int Y = (m_emuState.cursorY - 1) * m_font.height;
@@ -909,7 +1032,8 @@ void Terminal::blinkText()
     bool keepEnabled = false;
     int rows = m_rows;
     int cols = m_columns;
-    m_canvas->beginUpdate();
+    if (m_bitmappedDisplayController)
+      m_canvas->beginUpdate();
     for (int y = 0; y < rows; ++y) {
       uint32_t * itemPtr = m_glyphsBuffer.map + y * cols;
       for (int x = 0; x < cols; ++x, ++itemPtr) {
@@ -922,9 +1046,11 @@ void Terminal::blinkText()
           keepEnabled = true;
         }
       }
-      m_canvas->waitCompletion(false);
+      if (m_bitmappedDisplayController)
+        m_canvas->waitCompletion(false);
     }
-    m_canvas->endUpdate();
+    if (m_bitmappedDisplayController)
+      m_canvas->endUpdate();
     if (!keepEnabled)
       m_blinkingTextEnabled = false;
   }
@@ -977,7 +1103,7 @@ void Terminal::scrollDown()
   log("scrollDown\n");
   #endif
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     // scroll down using canvas
     if (m_emuState.smoothScroll) {
       for (int i = 0; i < m_font.height; ++i)
@@ -1017,7 +1143,7 @@ void Terminal::scrollUp()
   log("scrollUp\n");
   #endif
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     // scroll up using canvas
     if (m_emuState.smoothScroll) {
       for (int i = 0; i < m_font.height; ++i)
@@ -1066,7 +1192,7 @@ void Terminal::setScrollingRegion(int top, int down, bool resetCursorPos)
 
 void Terminal::updateCanvasScrollingRegion()
 {
-  if (isActive())
+  if (m_bitmappedDisplayController && isActive())
     m_canvas->setScrollingRegion(0, (m_emuState.scrollingRegionTop - 1) * m_font.height, m_canvas->getWidth() - 1, m_emuState.scrollingRegionDown * m_font.height - 1);
 }
 
@@ -1102,7 +1228,7 @@ bool Terminal::multilineInsertChar(int charsToMove)
     } else {
       ++row;
     }
-    if (isActive())
+    if (m_bitmappedDisplayController && isActive())
       m_canvas->waitCompletion(false);
   }
   return scrolled;
@@ -1118,7 +1244,7 @@ void Terminal::insertAt(int column, int row, int count)
 
   count = tmin((int)m_columns, count);
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     // move characters on the right using canvas
     int charWidth = getCharWidthAt(row);
     m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
@@ -1157,7 +1283,7 @@ void Terminal::multilineDeleteChar(int charsToMove)
     deleteAt(col, row, 1);
     charsToMove -= m_columns - col;
     if (charsToMove > 0) {
-      if (isActive())
+      if (m_bitmappedDisplayController && isActive())
         m_canvas->waitCompletion(false);
       uint32_t * lastItem  = m_glyphsBuffer.map + (row - 1) * m_columns + (m_columns - 1);
       lastItem[0] = lastItem[1];
@@ -1165,7 +1291,7 @@ void Terminal::multilineDeleteChar(int charsToMove)
     }
     col = 1;
     ++row;
-    if (isActive())
+    if (m_bitmappedDisplayController && isActive())
       m_canvas->waitCompletion(false);
   }
 }
@@ -1180,7 +1306,7 @@ void Terminal::deleteAt(int column, int row, int count)
 
   count = imin(m_columns - column + 1, count);
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     // move characters on the right using canvas
     int charWidth = getCharWidthAt(row);
     m_canvas->setScrollingRegion((column - 1) * charWidth, (row - 1) * m_font.height, charWidth * getColumnsAt(row) - 1, row * m_font.height - 1);
@@ -1217,7 +1343,7 @@ void Terminal::erase(int X1, int Y1, int X2, int Y2, uint8_t c, bool maintainDou
   X2 = tclamp(X2 - 1, 0, (int)m_columns - 1);
   Y2 = tclamp(Y2 - 1, 0, (int)m_rows - 1);
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     if (c == ASCII_SPC && !selective) {
       int charWidth = getCharWidthAt(m_emuState.cursorY);
       m_canvas->fillRectangle(X1 * charWidth, Y1 * m_font.height, (X2 + 1) * charWidth - 1, (Y2 + 1) * m_font.height - 1);
@@ -1309,7 +1435,7 @@ void Terminal::restoreCursorState()
     if (m_savedCursorStateList->tabStop)
       memcpy(m_emuState.tabStop, m_savedCursorStateList->tabStop, m_columns);
     m_glyphOptions = m_savedCursorStateList->glyphOptions;
-    if (isActive())
+    if (m_bitmappedDisplayController && isActive())
       m_canvas->setGlyphOptions(m_glyphOptions);
     m_emuState.characterSetIndex = m_savedCursorStateList->characterSetIndex;
     for (int i = 0; i < 4; ++i)
@@ -1330,7 +1456,7 @@ void Terminal::useAlternateScreenBuffer(bool value)
     m_alternateScreenBuffer = value;
     if (!m_alternateMap) {
       // first usage, need to setup the alternate screen
-      m_alternateMap = (uint32_t*) heap_caps_malloc(sizeof(uint32_t) * m_columns * m_rows, MALLOC_CAP_32BIT);
+      m_alternateMap = (uint32_t*) heap_caps_malloc(sizeof(uint32_t) * m_columns * m_rows, MALLOC_CAP_8BIT);
       clearMap(m_alternateMap);
       m_alternateCursorX = 1;
       m_alternateCursorY = 1;
@@ -1876,7 +2002,7 @@ bool Terminal::setChar(uint8_t c)
   glyphOptions.doubleWidth = glyphMapItem_getOptions(mapItemPtr).doubleWidth;
   *mapItemPtr = GLYPHMAP_ITEM_MAKE(c, m_emuState.backgroundColor, m_emuState.foregroundColor, glyphOptions);
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     if (glyphOptions.value != m_glyphOptions.value)
       m_canvas->setGlyphOptions(glyphOptions);
 
@@ -1886,11 +2012,11 @@ bool Terminal::setChar(uint8_t c)
 
     if (glyphOptions.value != m_glyphOptions.value)
       m_canvas->setGlyphOptions(m_glyphOptions);
-
-    // blinking text?
-    if (m_glyphOptions.userOpt1)
-      m_prevBlinkingTextEnabled = true; // consumeInputQueue() will set the value
   }
+
+  // blinking text?
+  if (m_glyphOptions.userOpt1)
+    m_prevBlinkingTextEnabled = true; // consumeInputQueue() will set the value
 
   if (m_emuState.cursorX == m_columns) {
     m_emuState.cursorPastLastCol = true;
@@ -1919,7 +2045,7 @@ void Terminal::refresh(int X, int Y)
   logFmt("refresh(%d, %d)\n", X, Y);
   #endif
 
-  if (isActive())
+  if (m_bitmappedDisplayController && isActive())
     m_canvas->renderGlyphsBuffer(X - 1, Y - 1, &m_glyphsBuffer);
 }
 
@@ -1930,7 +2056,7 @@ void Terminal::refresh(int X1, int Y1, int X2, int Y2)
   logFmt("refresh(%d, %d, %d, %d)\n", X1, Y1, X2, Y2);
   #endif
 
-  if (isActive()) {
+  if (m_bitmappedDisplayController && isActive()) {
     for (int y = Y1 - 1; y < Y2; ++y) {
       for (int x = X1 - 1; x < X2; ++x)
         m_canvas->renderGlyphsBuffer(x, y, &m_glyphsBuffer);
@@ -2945,7 +3071,7 @@ void Terminal::execSGRParameters(int const * params, int paramsCount)
 
     }
   }
-  if (isActive())
+  if (m_bitmappedDisplayController && isActive())
     m_canvas->setGlyphOptions(m_glyphOptions);
 }
 
@@ -3142,6 +3268,24 @@ void Terminal::consumeFabGLSeq()
 
   // process command in "c"
   switch (c) {
+
+    // Clear screen
+    // Seq:
+    //   ESC FABGL_ENTERM_CODE FABGL_ENTERM_CLEAR
+    // params:
+    //   none
+    case FABGL_ENTERM_CLEAR:
+      erase(1, 1, m_columns, m_rows, ASCII_SPC, false, false);
+      break;
+
+    // Enable/disable cursor
+    // Seq:
+    //  ESC FABGL_ENTERM_CODE FABGL_ENTERM_ENABLECURSOR STATE
+    // params:
+    //  STATE (byte): 0 = disable, 1 = enable
+    case FABGL_ENTERM_ENABLECURSOR:
+      m_prevCursorEnabled = getNextCode(false);
+      break;
 
     // Get cursor horizontal position (1 = leftmost pos)
     // Seq:
@@ -3358,7 +3502,7 @@ void Terminal::consumeFabGLSeq()
           m_glyphOptions.invert = val;
           break;
       }
-      if (isActive())
+      if (m_bitmappedDisplayController && isActive())
         m_canvas->setGlyphOptions(m_glyphOptions);
       break;
     }
@@ -3386,6 +3530,8 @@ void Terminal::keyboardReaderTask(void * pvParameters)
     VirtualKey vk = term->m_keyboard->getNextVirtualKey(&keyDown);
 
     if (term->isActive()) {
+
+      term->onVirtualKey(&vk, keyDown);
 
       if (keyDown) {
 
@@ -3804,6 +3950,21 @@ void TerminalController::waitFor(int value)
   while (true)
     if (read() == value)
       return;
+}
+
+
+void TerminalController::clear()
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_CLEAR);
+}
+
+
+void TerminalController::enableCursor(bool value)
+{
+  write(FABGL_ENTERM_CMD);
+  write(FABGL_ENTERM_ENABLECURSOR);
+  write(value ? 1 : 0);
 }
 
 

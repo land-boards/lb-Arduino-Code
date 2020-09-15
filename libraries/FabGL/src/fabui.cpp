@@ -51,7 +51,7 @@ void dumpEvent(uiEvent * event)
                                   "UIEVT_MOUSEENTER", "UIEVT_MOUSELEAVE", "UIEVT_MAXIMIZE", "UIEVT_MINIMIZE", "UIEVT_RESTORE",
                                   "UIEVT_SHOW", "UIEVT_HIDE", "UIEVT_SETFOCUS", "UIEVT_KILLFOCUS", "UIEVT_KEYDOWN", "UIEVT_KEYUP",
                                   "UIEVT_TIMER", "UIEVT_DBLCLICK", "UIEVT_DBLCLICK", "UIEVT_EXITMODAL", "UIEVT_DESTROY", "UIEVT_CLOSE",
-                                  "UIEVT_QUIT",
+                                  "UIEVT_QUIT", "UIEVT_CREATE", "UIEVT_CHILDSETFOCUS", "UIEVT_CHILDKILLFOCUS"
                                 };
   Serial.printf("#%d ", idx++);
   Serial.write(TOSTR[event->id]);
@@ -87,12 +87,14 @@ void dumpEvent(uiEvent * event)
       break;
     case UIEVT_KEYDOWN:
     case UIEVT_KEYUP:
-      Serial.printf("VK=%s ", Keyboard.virtualKeyToString(event->params.key.VK));
+      #ifdef FABGLIB_HAS_VirtualKeyO_STRING
+      Serial.printf("VK=%s ", Keyboard::virtualKeyToString(event->params.key.VK));
       if (event->params.key.LALT) Serial.write(" +LALT");
       if (event->params.key.RALT) Serial.write(" +RALT");
       if (event->params.key.CTRL) Serial.write(" +CTRL");
       if (event->params.key.SHIFT) Serial.write(" +SHIFT");
       if (event->params.key.GUI) Serial.write(" +GUI");
+      #endif
       break;
     case UIEVT_TIMER:
       Serial.printf("handle=%p", event->params.timerHandle);
@@ -102,7 +104,7 @@ void dumpEvent(uiEvent * event)
   }
   Serial.write("\n");
 }
-*/
+//*/
 
 
 
@@ -173,7 +175,8 @@ uiApp::uiApp()
     m_caretWindow(nullptr),
     m_caretTimer(nullptr),
     m_caretInvertState(-1),
-    m_lastMouseUpTimeMS(0)
+    m_lastMouseUpTimeMS(0),
+    m_style(nullptr)
 {
   objectType().uiApp = true;
   setApp(this);
@@ -185,7 +188,7 @@ uiApp::~uiApp()
 }
 
 
-int uiApp::run(DisplayController * displayController, Keyboard * keyboard, Mouse * mouse)
+int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboard, Mouse * mouse)
 {
   m_displayController = displayController;
 
@@ -263,8 +266,10 @@ int uiApp::run(DisplayController * displayController, Keyboard * keyboard, Mouse
 
   m_displayController->setMouseCursor(nullptr);
 
-  m_canvas->setBrushColor(m_rootWindow->frameStyle().backgroundColor);
-  m_canvas->clear();
+  if (m_rootWindow->frameProps().fillBackground) {
+    m_canvas->setBrushColor(m_rootWindow->frameStyle().backgroundColor);
+    m_canvas->clear();
+  }
 
   delete m_rootWindow;
   m_rootWindow = nullptr;
@@ -549,9 +554,8 @@ uiWindow * uiApp::setActiveWindow(uiWindow * value)
   uiWindow * prev = m_activeWindow;
 
   if (value != m_activeWindow) {
-
-    // is "value" window activable? If not turn "value" to the first activabe parent
-    while (!value->m_windowProps.activable) {
+    // is "value" window activable? If not turn "value" to the first activable parent
+    while (value && !value->m_windowProps.activable) {
       value = value->m_parent;
       if (!value)
         return prev; // no parent is activable
@@ -598,8 +602,16 @@ uiWindow * uiApp::setFocusedWindow(uiWindow * value)
 
     if (prev) {
       uiEvent evt = uiEvent(prev, UIEVT_KILLFOCUS);
-      evt.params.newFocused = value;
+      evt.params.focusInfo.oldFocused = prev;
+      evt.params.focusInfo.newFocused = value;
       postEvent(&evt);
+      if (prev->parent()) {
+        // send UIEVT_CHILDKILLFOCUS to its parent
+        evt = uiEvent(prev->parent(), UIEVT_CHILDKILLFOCUS);
+        evt.params.focusInfo.oldFocused = prev;
+        evt.params.focusInfo.newFocused = value;
+        postEvent(&evt);
+      }
     }
 
     m_focusedWindow = value;
@@ -609,8 +621,16 @@ uiWindow * uiApp::setFocusedWindow(uiWindow * value)
 
     if (m_focusedWindow) {
       uiEvent evt = uiEvent(m_focusedWindow, UIEVT_SETFOCUS);
-      evt.params.oldFocused = prev;
+      evt.params.focusInfo.oldFocused = prev;
+      evt.params.focusInfo.newFocused = m_focusedWindow;
       postEvent(&evt);
+      if (m_focusedWindow->parent()) {
+        // send UIEVT_CHILDSETFOCUS to its parent
+        evt = uiEvent(m_focusedWindow->parent(), UIEVT_CHILDSETFOCUS);
+        evt.params.focusInfo.oldFocused = prev;
+        evt.params.focusInfo.newFocused = m_focusedWindow;
+        postEvent(&evt);
+      }
     }
 
   }
@@ -623,27 +643,24 @@ uiWindow * uiApp::setFocusedWindow(uiWindow * value)
 // delta = -1, go previous focused index
 uiWindow * uiApp::moveFocus(int delta)
 {
-  uiWindow * old = m_focusedWindow;
-  uiWindow * parent = old ? old->parent() : m_activeWindow;
-  if (parent && parent->hasChildren()) {
-    uiWindow * proposed = old;
-    int startingIndex = old ? old->focusIndex() + delta : 0;
-    int newIndex = startingIndex;
-    do {
-      int maxIndex;
-      uiWindow * child = parent->getChildWithFocusIndex(newIndex, &maxIndex);
-      if (child) {
-        proposed = child;
-        break;
-      }
-      if (delta > 0)
-        newIndex = (newIndex >= maxIndex ? 0 : newIndex + delta);
-      else
-        newIndex = (newIndex <= 0 ? maxIndex : newIndex + delta);
-    } while (newIndex != startingIndex);
-    setFocusedWindow(proposed);
-  }
-  return old;
+  uiWindow * parent = m_focusedWindow ? m_focusedWindow->parentFrame() : m_activeWindow;
+  int startingIndex = m_focusedWindow ? m_focusedWindow->focusIndex() + delta : 0;
+  int newIndex = startingIndex;
+  do {
+    int maxIndex = -1;
+    uiWindow * newFocusedCtrl = parent->findChildWithFocusIndex(newIndex, &maxIndex);
+    if (maxIndex == -1)
+      return m_focusedWindow; // no change
+    if (newFocusedCtrl) {
+      setFocusedWindow(newFocusedCtrl);
+      return newFocusedCtrl;
+    }
+    if (delta > 0)
+      newIndex = (newIndex >= maxIndex ? 0 : newIndex + delta);
+    else
+      newIndex = (newIndex <= 0 ? maxIndex : newIndex + delta);
+  } while (newIndex != startingIndex);
+  return m_focusedWindow; // no change
 }
 
 
@@ -1137,7 +1154,7 @@ void uiApp::enableKeyboardAndMouseEvents(bool value)
 // uiWindow
 
 
-uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool visible)
+uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
   : uiEvtHandler(parent ? parent->app() : nullptr),
     m_parent(parent),
     m_pos(pos),
@@ -1147,7 +1164,9 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
     m_next(nullptr),
     m_prev(nullptr),
     m_firstChild(nullptr),
-    m_lastChild(nullptr)
+    m_lastChild(nullptr),
+    m_styleClassID(styleClassID),
+    m_parentProcessKbdEvents(false)
 {
   objectType().uiWindow = true;
 
@@ -1156,8 +1175,11 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
   m_state.minimized = false;
   m_state.active    = false;
 
-  if (app())
+  if (app()) {
     m_canvas = app()->canvas();
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 
   if (parent)
     parent->addChild(this);
@@ -1165,7 +1187,13 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
   if (visible && app())
     app()->showWindow(this, true);
 
-  m_focusIndex = prev() ? prev()->m_focusIndex + 1 : 0;
+  auto pframe = parentFrame();
+  m_focusIndex = pframe ? ((uiFrame*)pframe)->getNextFreeFocusIndex() : 0;
+
+  if (app()) {
+    uiEvent evt = uiEvent(this, UIEVT_CREATE);
+    app()->postEvent(&evt);
+  }
 }
 
 
@@ -1475,16 +1503,13 @@ void uiWindow::processEvent(uiEvent * event)
       break;
 
     case UIEVT_KEYDOWN:
-      // only non-focusable windows can make focusable its children
-      if (!m_windowProps.focusable) {
-        // move focused child
-        if (event->params.key.VK == VK_TAB) {
-          if (event->params.key.SHIFT)
-            app()->moveFocus(-1);
-          else
-            app()->moveFocus(1);
-        }
-      }
+      if (m_parentProcessKbdEvents)
+        m_parent->processEvent(event);
+      break;
+
+    case UIEVT_KEYUP:
+      if (m_parentProcessKbdEvents)
+        m_parent->processEvent(event);
       break;
 
     case UIEVT_PAINT:
@@ -1654,17 +1679,33 @@ bool uiWindow::isFocusable()
 }
 
 
-uiWindow * uiWindow::getChildWithFocusIndex(int focusIndex, int * maxIndex)
+// set maxIndex = -1 at first call
+uiWindow * uiWindow::findChildWithFocusIndex(int focusIndex, int * maxIndex)
 {
-  *maxIndex = -1;
   for (auto child = m_firstChild; child; child = child->m_next) {
     if (child->isFocusable()) {
       *maxIndex = imax(*maxIndex, child->m_focusIndex);
-      if (child->m_focusIndex == focusIndex)
+      if (child->m_focusIndex == focusIndex) {
         return child;
+      }
+    }
+    if (child->hasChildren()) {
+      auto r = child->findChildWithFocusIndex(focusIndex, maxIndex);
+      if (r) {
+        return r;
+      }
     }
   }
   return nullptr;
+}
+
+
+uiWindow * uiWindow::parentFrame()
+{
+  uiWindow * ret = m_parent;
+  while (ret && ret->objectType().uiFrame == 0)
+    ret = ret->parent();
+  return ret;
 }
 
 
@@ -1677,15 +1718,18 @@ uiWindow * uiWindow::getChildWithFocusIndex(int focusIndex, int * maxIndex)
 // uiFrame
 
 
-uiFrame::uiFrame(uiWindow * parent, char const * title, const Point & pos, const Size & size, bool visible)
-  : uiWindow(parent, pos, size, visible),
+uiFrame::uiFrame(uiWindow * parent, char const * title, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiWindow(parent, pos, size, visible, 0),
     m_title(nullptr),
     m_titleLength(0),
     m_mouseDownFrameItem(uiFrameItem::None),
     m_mouseMoveFrameItem(uiFrameItem::None),
-    m_lastReshapingBox(Rect(0, 0, 0, 0))
+    m_lastReshapingBox(Rect(0, 0, 0, 0)),
+    m_nextFreeFocusIndex(0)
 {
   objectType().uiFrame = true;
+  if (app() && app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
   setTitle(title);
 }
 
@@ -1802,7 +1846,7 @@ void uiFrame::paintFrame()
     bkgRect.Y1 += barHeight;
   }
   // background
-  if (!state().minimized && bkgRect.width() > 0 && bkgRect.height() > 0) {
+  if (m_frameProps.fillBackground && !state().minimized && bkgRect.width() > 0 && bkgRect.height() > 0) {
     canvas()->setBrushColor(m_frameStyle.backgroundColor);
     canvas()->fillRectangle(bkgRect);
   }
@@ -1944,6 +1988,13 @@ void uiFrame::processEvent(uiEvent * event)
       break;
 
     case UIEVT_KEYDOWN:
+      // move focused child
+      if (event->params.key.VK == VK_TAB) {
+        if (event->params.key.SHIFT)
+          app()->moveFocus(-1);
+        else
+          app()->moveFocus(1);
+      }
       onKeyDown(event->params.key);
       break;
 
@@ -2219,11 +2270,14 @@ void uiFrame::handleButtonsClick(int x, int y, bool doubleClick)
 // uiControl
 
 
-uiControl::uiControl(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiWindow(parent, pos, size, visible)
+uiControl::uiControl(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiWindow(parent, pos, size, visible, 0)
 {
   objectType().uiControl = true;
   windowProps().activable = false;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -2248,8 +2302,8 @@ void uiControl::processEvent(uiEvent * event)
 // uiButton
 
 
-uiButton::uiButton(uiWindow * parent, char const * text, const Point & pos, const Size & size, uiButtonKind kind, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiButton::uiButton(uiWindow * parent, char const * text, const Point & pos, const Size & size, uiButtonKind kind, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_text(nullptr),
     m_textExtent(0),
     m_down(false),
@@ -2263,6 +2317,9 @@ uiButton::uiButton(uiWindow * parent, char const * text, const Point & pos, cons
   windowStyle().focusedBorderSize  = 2;
   windowStyle().borderColor        = RGB888(64, 64, 64);
   windowStyle().focusedBorderColor = RGB888(0, 0, 255);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 
   setText(text);
 }
@@ -2394,8 +2451,8 @@ void uiButton::setDown(bool value)
 // uiTextEdit
 
 
-uiTextEdit::uiTextEdit(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiTextEdit::uiTextEdit(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_text(nullptr),
     m_textLength(0),
     m_textSpace(0),
@@ -2410,6 +2467,9 @@ uiTextEdit::uiTextEdit(uiWindow * parent, char const * text, const Point & pos, 
   windowStyle().defaultCursor = CursorName::CursorTextInput;
   windowStyle().borderColor   = RGB888(64, 64, 64);
   windowStyle().borderSize    = 1;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 
   setText(text);
 }
@@ -2831,8 +2891,8 @@ void uiTextEdit::selectWordAt(int mouseX)
 // uiLabel
 
 
-uiLabel::uiLabel(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiLabel::uiLabel(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_text(nullptr),
     m_textExtent(0)
 {
@@ -2840,7 +2900,12 @@ uiLabel::uiLabel(uiWindow * parent, char const * text, const Point & pos, const 
 
   windowProps().focusable = false;
   windowStyle().borderSize = 0;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+
   m_autoSize = (size.width == 0 && size.height == 0);
+
   setText(text);
 }
 
@@ -2926,15 +2991,20 @@ void uiLabel::processEvent(uiEvent * event)
 // TODO? bitmap is not copied, but just referenced
 
 
-uiImage::uiImage(uiWindow * parent, Bitmap const * bitmap, const Point & pos, const Size & size, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiImage::uiImage(uiWindow * parent, Bitmap const * bitmap, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_bitmap(nullptr)
 {
   objectType().uiImage = true;
 
   windowProps().focusable = false;
   windowStyle().borderSize = 0;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+
   m_autoSize = (size.width == 0 && size.height == 0);
+
   setBitmap(bitmap);
 }
 
@@ -2992,14 +3062,17 @@ void uiImage::processEvent(uiEvent * event)
 // uiPanel
 
 
-uiPanel::uiPanel(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiControl(parent, pos, size, visible)
+uiPanel::uiPanel(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0)
 {
   objectType().uiPanel = true;
 
   windowProps().focusable = false;
   windowStyle().borderSize = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -3043,14 +3116,17 @@ void uiPanel::processEvent(uiEvent * event)
 // uiPaintBox
 
 
-uiPaintBox::uiPaintBox(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiScrollableControl(parent, pos, size, visible)
+uiPaintBox::uiPaintBox(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiScrollableControl(parent, pos, size, visible, 0)
 {
   objectType().uiPaintBox = true;
 
   windowProps().focusable = false;
   windowStyle().borderSize  = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -3094,11 +3170,73 @@ void uiPaintBox::processEvent(uiEvent * event)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiColorBox
+
+
+uiColorBox::uiColorBox(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
+    m_color(Color::BrightWhite)
+{
+  objectType().uiColorBox = true;
+
+  windowProps().focusable = true;
+  windowStyle().borderSize = 1;
+  windowStyle().borderColor = RGB888(64, 64, 64);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+}
+
+
+uiColorBox::~uiColorBox()
+{
+}
+
+
+void uiColorBox::setColor(Color value)
+{
+  m_color = value;
+  repaint();
+}
+
+
+void uiColorBox::paintColorBox()
+{
+  Rect bkgRect = uiControl::clientRect(uiOrigin::Window);
+  // main color
+  canvas()->setBrushColor(m_color);
+  canvas()->fillRectangle(bkgRect);
+}
+
+
+void uiColorBox::processEvent(uiEvent * event)
+{
+  uiControl::processEvent(event);
+
+  switch (event->id) {
+
+    case UIEVT_PAINT:
+      beginPaint(event, uiControl::clientRect(uiOrigin::Window));
+      paintColorBox();
+      break;
+
+    default:
+      break;
+  }
+}
+
+
+// uiPanel
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // uiScrollableControl
 
 
-uiScrollableControl::uiScrollableControl(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiScrollableControl::uiScrollableControl(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_HScrollBarPosition(0),
     m_HScrollBarVisible(0),
     m_HScrollBarRange(0),
@@ -3109,6 +3247,9 @@ uiScrollableControl::uiScrollableControl(uiWindow * parent, const Point & pos, c
     m_scrollTimer(nullptr)
 {
   objectType().uiScrollableControl = true;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -3440,8 +3581,8 @@ Rect uiScrollableControl::clientRect(uiOrigin origin)
 // uiCustomListBox
 
 
-uiCustomListBox::uiCustomListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiScrollableControl(parent, pos, size, visible),
+uiCustomListBox::uiCustomListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiScrollableControl(parent, pos, size, visible, 0),
     m_firstVisibleItem(0)
 {
   objectType().uiCustomListBox = true;
@@ -3450,6 +3591,9 @@ uiCustomListBox::uiCustomListBox(uiWindow * parent, const Point & pos, const Siz
 
   windowStyle().borderSize  = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -3698,14 +3842,18 @@ void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // uiListBox
 
 
-uiListBox::uiListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiCustomListBox(parent, pos, size, visible)
+uiListBox::uiListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiCustomListBox(parent, pos, size, visible, 0)
 {
   objectType().uiListBox = true;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -3721,15 +3869,49 @@ void uiListBox::items_draw(int index, const Rect & itemRect)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiColorListBox
+
+
+uiColorListBox::uiColorListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiCustomListBox(parent, pos, size, visible, 0),
+    m_selectedColor((Color)0)
+{
+  objectType().uiColorListBox = true;
+
+  listBoxStyle().itemHeight = 10;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+}
+
+
+void uiColorListBox::items_draw(int index, const Rect & itemRect)
+{
+  constexpr int BORDER = 1;
+  canvas()->setBrushColor((Color)index);
+  canvas()->fillRectangle(itemRect.X1 + BORDER, itemRect.Y1 + BORDER, itemRect.X2 - BORDER, itemRect.Y2 - BORDER);
+}
+
+
+// uiColorListBox
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // uiFileBrowser
 
 
-uiFileBrowser::uiFileBrowser(uiWindow * parent, const Point & pos, const Size & size, bool visible)
-  : uiCustomListBox(parent, pos, size, visible),
+uiFileBrowser::uiFileBrowser(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiCustomListBox(parent, pos, size, visible, 0),
     m_selected(-1)
 {
   objectType().uiFileBrowser = true;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -3831,71 +4013,67 @@ void uiFileBrowser::processEvent(uiEvent * event)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// uiComboBox
+// uiCustomComboBox
 
 
-uiComboBox::uiComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible)
-  : uiTextEdit(parent, "", pos, size, visible),
-    m_listBox(new uiListBox(parent, Point(0, 0), Size(0, 0), false)),
+uiCustomComboBox::uiCustomComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_listHeight(listHeight)
 {
-  objectType().uiComboBox = true;
+  objectType().uiCustomComboBox = true;
 
-  textEditProps().hasCaret  = false;
-  textEditProps().allowEdit = false;
+  windowProps().focusable = true;
 
-  m_listBox->onKillFocus = [&]() {
-    closeListBox();
-  };
+  windowStyle().borderSize = 0;
 
-  m_listBox->onChange = [&]() {
-    updateTextEdit();
-    onChange();
-  };
-
-  m_listBox->onKeyUp = [&](uiKeyEventInfo key) {
-    if (key.VK == VK_RETURN) {
-      closeListBox();
-      app()->setFocusedWindow(this);
-    }
-  };
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
-uiComboBox::~uiComboBox()
+uiCustomComboBox::~uiCustomComboBox()
 {
 }
 
 
 // index = -1 -> deselect all
-void uiComboBox::selectItem(int index)
+void uiCustomComboBox::selectItem(int index)
 {
   if (index < 0)
-    m_listBox->deselectAll();
+    listbox()->deselectAll();
   else
-    m_listBox->selectItem(index);
-  updateTextEdit();
+    listbox()->selectItem(index);
+  updateEditControl();
 }
 
 
-// refresh text edit with the selected listbox item
-void uiComboBox::updateTextEdit()
+void uiCustomComboBox::processEvent(uiEvent * event)
 {
-  int idx = selectedItem();
-  setText(idx > -1 ? items().get(idx) : "");
-  repaint();
-}
-
-
-void uiComboBox::processEvent(uiEvent * event)
-{
-  uiTextEdit::processEvent(event);
+  uiControl::processEvent(event);
 
   switch (event->id) {
 
+    case UIEVT_CREATE:
+      listbox()->onKillFocus = [&]() {
+        closeListBox();
+      };
+      listbox()->onChange = [&]() {
+        updateEditControl();
+        onChange();
+      };
+      listbox()->onKeyUp = [&](uiKeyEventInfo key) {
+        if (key.VK == VK_RETURN) {
+          closeListBox();
+          app()->setFocusedWindow(this);
+        }
+      };
+      editcontrol()->setParentProcessKbdEvents(true); // we want keyboard events also here
+      break;
+
     case UIEVT_PAINT:
-      beginPaint(event, uiTextEdit::clientRect(uiOrigin::Window));
+      beginPaint(event, uiControl::clientRect(uiOrigin::Window));
       paintComboBox();
       break;
 
@@ -3904,24 +4082,40 @@ void uiComboBox::processEvent(uiEvent * event)
         switchListBox();
       break;
 
-    case UIEVT_SETFOCUS:
-      if (m_comboBoxProps.openOnFocus && event->params.oldFocused != m_listBox)
+    case UIEVT_CHILDSETFOCUS:
+      if (m_comboBoxProps.openOnFocus && event->params.focusInfo.newFocused == editcontrol()
+                                      && event->params.focusInfo.oldFocused != listbox()
+                                      && event->params.focusInfo.oldFocused != this) {
         openListBox();
+      }
+      break;
+
+    case UIEVT_SETFOCUS:
+      if (event->params.focusInfo.oldFocused != listbox() && event->params.focusInfo.oldFocused != editcontrol()) {
+        if (m_comboBoxProps.openOnFocus) {
+          openListBox();
+        } else {
+          app()->setFocusedWindow(editcontrol());
+        }
+      } else if (event->params.focusInfo.oldFocused == listbox()) {
+        app()->setFocusedWindow(editcontrol());
+      }
       break;
 
     case UIEVT_KILLFOCUS:
-      if (event->params.newFocused != m_listBox)
+      if (event->params.focusInfo.newFocused != listbox()) {
         closeListBox();
+      }
       break;
 
     case UIEVT_KEYDOWN:
-      m_listBox->processEvent(event);
+      listbox()->processEvent(event);
       break;
 
     case UIEVT_KEYUP:
       // ALT-DOWN or ALT-UP or ENTER opens listbox
       if (((event->params.key.RALT || event->params.key.LALT) && (event->params.key.VK == VK_DOWN || event->params.key.VK == VK_UP)) || (event->params.key.VK == VK_RETURN))
-        openListBox();
+        switchListBox();
       break;
 
     default:
@@ -3930,56 +4124,58 @@ void uiComboBox::processEvent(uiEvent * event)
 }
 
 
-void uiComboBox::openListBox()
+void uiCustomComboBox::openListBox()
 {
   Rect r = rect(uiOrigin::Parent);
   r.Y1 = r.Y2 + 1;
   r.Y2 = r.Y1 + m_listHeight;
-  m_listBox->bringOnTop();
-  app()->reshapeWindow(m_listBox, r);
-  app()->showWindow(m_listBox, true);
-  app()->setFocusedWindow(m_listBox);
+  listbox()->bringOnTop();
+  app()->reshapeWindow(listbox(), r);
+  app()->showWindow(listbox(), true);
+  app()->setFocusedWindow(listbox());
 }
 
 
-void uiComboBox::closeListBox()
+void uiCustomComboBox::closeListBox()
 {
-  app()->showWindow(m_listBox, false);
+  app()->showWindow(listbox(), false);
 }
 
 
-void uiComboBox::switchListBox()
+void uiCustomComboBox::switchListBox()
 {
-  if (m_listBox->state().visible)
+  if (listbox()->state().visible) {
     closeListBox();
-  else
+    app()->setFocusedWindow(editcontrol());
+  } else {
     openListBox();
+  }
 }
 
 
-int uiComboBox::buttonWidth()
+Size uiCustomComboBox::getEditControlSize()
 {
-  return size().height / 2;
+  Rect clientArea = uiControl::clientRect(uiOrigin::Window);
+  return Size(clientArea.width() - buttonWidth(), clientArea.height());
 }
 
 
-Rect uiComboBox::getEditRect()
+int uiCustomComboBox::buttonWidth()
 {
-  Rect r = uiTextEdit::getEditRect();
-  r.X2 -= buttonWidth();
-  return r;
+  Rect clientArea = uiControl::clientRect(uiOrigin::Window);
+  return clientArea.height() / 2;
 }
 
 
-Rect uiComboBox::getButtonRect()
+Rect uiCustomComboBox::getButtonRect()
 {
-  Rect btnRect = uiTextEdit::getEditRect();
+  Rect btnRect = uiControl::clientRect(uiOrigin::Window);
   btnRect.X1 = btnRect.X2 - buttonWidth() + 1;
   return btnRect;
 }
 
 
-void uiComboBox::paintComboBox()
+void uiCustomComboBox::paintComboBox()
 {
   Rect btnRect = getButtonRect();
 
@@ -4000,9 +4196,85 @@ void uiComboBox::paintComboBox()
 }
 
 
+// uiCustomComboBox
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiComboBox
+
+
+uiComboBox::uiComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible, uint32_t styleClassID)
+  : uiCustomComboBox(parent, pos, size, listHeight, visible, 0),
+    m_textEdit(nullptr),
+    m_listBox(nullptr)
+{
+  objectType().uiComboBox = true;
+
+  m_textEdit = new uiTextEdit(this, "", Point(windowStyle().borderSize, windowStyle().borderSize), getEditControlSize(), true, 0);
+  m_textEdit->textEditProps().hasCaret  = false;
+  m_textEdit->textEditProps().allowEdit = false;
+
+  m_listBox = new uiListBox(parent, Point(0, 0), Size(0, 0), false, 0);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+}
+
+
+uiComboBox::~uiComboBox()
+{
+}
+
+
+// refresh text edit with the selected listbox item
+void uiComboBox::updateEditControl()
+{
+  int idx = selectedItem();
+  m_textEdit->setText(idx > -1 ? items().get(idx) : "");
+  m_textEdit->repaint();
+}
+
+
 // uiComboBox
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiColorComboBox
+
+
+uiColorComboBox::uiColorComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible, uint32_t styleClassID)
+  : uiCustomComboBox(parent, pos, size, listHeight, visible, 0),
+    m_colorBox(nullptr),
+    m_colorListBox(nullptr)
+{
+  objectType().uiColorComboBox = true;
+
+  m_colorBox     = new uiColorBox(this, Point(windowStyle().borderSize, windowStyle().borderSize), getEditControlSize(), true, 0);
+  m_colorListBox = new uiColorListBox(parent, Point(0, 0), Size(0, 0), false, 0);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+}
+
+
+uiColorComboBox::~uiColorComboBox()
+{
+}
+
+
+// refresh text edit with the selected listbox item
+void uiColorComboBox::updateEditControl()
+{
+  m_colorBox->setColor( (Color) selectedItem() );
+}
+
+
+// uiComboBox
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -4010,8 +4282,8 @@ void uiComboBox::paintComboBox()
 // uiCheckBox
 
 
-uiCheckBox::uiCheckBox(uiWindow * parent, const Point & pos, const Size & size, uiCheckBoxKind kind, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiCheckBox::uiCheckBox(uiWindow * parent, const Point & pos, const Size & size, uiCheckBoxKind kind, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_checked(false),
     m_kind(kind),
     m_groupIndex(-1)
@@ -4024,6 +4296,9 @@ uiCheckBox::uiCheckBox(uiWindow * parent, const Point & pos, const Size & size, 
   windowStyle().focusedBorderSize  = 2;
   windowStyle().borderColor        = RGB888(64, 64, 64);
   windowStyle().focusedBorderColor = RGB888(0, 0, 255);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 
@@ -4153,8 +4428,8 @@ void uiCheckBox::unCheckGroup()
 // uiSlider
 
 
-uiSlider::uiSlider(uiWindow * parent, const Point & pos, const Size & size, uiOrientation orientation, bool visible)
-  : uiControl(parent, pos, size, visible),
+uiSlider::uiSlider(uiWindow * parent, const Point & pos, const Size & size, uiOrientation orientation, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0),
     m_orientation(orientation),
     m_position(0),
     m_min(0),
@@ -4168,6 +4443,9 @@ uiSlider::uiSlider(uiWindow * parent, const Point & pos, const Size & size, uiOr
   windowStyle().focusedBorderColor = RGB888(0, 0, 255);
 
   windowProps().focusable = true;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
 }
 
 

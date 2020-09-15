@@ -291,7 +291,7 @@ const GFXglyph FreeSmallFontGlyphs[] PROGMEM = {
 const GFXfont FreeSmallFont PROGMEM = {
     (uint8_t  *)FreeSmallFontBitmaps,
     (GFXglyph *)FreeSmallFontGlyphs,
-    32, 127, 12
+    32, 126, 12
 };
 // FreeSmallFont bitmap size = 414 [1079] [1239]
 const uint8_t FreeBigFontBitmaps[] PROGMEM = {
@@ -601,7 +601,7 @@ const GFXglyph FreeBigFontGlyphs[] PROGMEM = {
 const GFXfont FreeBigFont PROGMEM = {
     (uint8_t  *)FreeBigFontBitmaps,
     (GFXglyph *)FreeBigFontGlyphs,
-    32, 127, 16
+    32, 126, 16
 };
 // FreeBigFont bitmap size = 1198 [1863] [3139]
 const uint8_t FreeSevenSegNumFontBitmaps[] PROGMEM = {
@@ -719,7 +719,7 @@ const GFXglyph FreeSevenSegNumFontGlyphs[] PROGMEM = {
 const GFXfont FreeSevenSegNumFont PROGMEM = {
     (uint8_t  *)FreeSevenSegNumFontBitmaps,
     (GFXglyph *)FreeSevenSegNumFontGlyphs,
-    48, 58, 50
+    48, 57, 50
 };
 // FreeSevenSegNumFont bitmap size = 1363 [1433] [2014]
 

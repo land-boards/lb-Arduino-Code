@@ -26,8 +26,8 @@
 
 
 
-fabgl::VGAController DisplayController;
-fabgl::Terminal      Terminal;
+fabgl::VGA16Controller DisplayController;
+fabgl::Terminal        Terminal;
 
 
 void setup()
@@ -35,8 +35,7 @@ void setup()
   //Serial.begin(115200); delay(500); Serial.write("\n\n\n"); // DEBUG ONLY
 
   DisplayController.begin();
-  DisplayController.setResolution(VGA_640x350_70HzAlt1, 640, 350);
-  //DisplayController.setResolution(VGA_640x240_60Hz);    // select to have more free memory
+  DisplayController.setResolution(VGA_640x480_60Hz);
 
   Terminal.begin(&DisplayController);
   Terminal.setLogStream(Serial);  // DEBUG ONLY
@@ -76,7 +75,7 @@ void demo1()
   slowPrintf("Current settings\r\n");
   slowPrintf("Screen Size   : %d x %d\r\n", DisplayController.getScreenWidth(), DisplayController.getScreenHeight());
   slowPrintf("Terminal Size : %d x %d\r\n", Terminal.getColumns(), Terminal.getRows());
-  slowPrintf("Free Memory   : %d bytes\r\n\n", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+  slowPrintf("Free Memory   : %d bytes\r\n\n", heap_caps_get_free_size(MALLOC_CAP_32BIT));
 }
 
 void demo2()
@@ -173,6 +172,7 @@ void demo4()
     Terminal.write("\e[40;32mScrolling...\r\n");
     delay(250);
   }
+  cv.clear();
 }
 
 void demo5()
@@ -207,5 +207,4 @@ void loop()
   demo4();
   delay(4000);
   demo5();
-  delay(4000);
 }

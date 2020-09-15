@@ -174,6 +174,60 @@ ChipPackage getChipPackage()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////
+adc1_channel_t ADC1_GPIO2Channel(gpio_num_t gpio)
+{
+  switch (gpio) {
+    case ADC1_CHANNEL_0_GPIO_NUM:
+      return ADC1_CHANNEL_0;
+    case ADC1_CHANNEL_1_GPIO_NUM:
+      return ADC1_CHANNEL_1;
+    case ADC1_CHANNEL_2_GPIO_NUM:
+      return ADC1_CHANNEL_2;
+    case ADC1_CHANNEL_3_GPIO_NUM:
+      return ADC1_CHANNEL_3;
+    case ADC1_CHANNEL_4_GPIO_NUM:
+      return ADC1_CHANNEL_4;
+    case ADC1_CHANNEL_5_GPIO_NUM:
+      return ADC1_CHANNEL_5;
+    case ADC1_CHANNEL_6_GPIO_NUM:
+      return ADC1_CHANNEL_6;
+    case ADC1_CHANNEL_7_GPIO_NUM:
+      return ADC1_CHANNEL_7;
+    default:
+      return ADC1_CHANNEL_0;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// esp_intr_alloc_pinnedToCore
+
+struct esp_intr_alloc_args {
+  int             source;
+  int             flags;
+  intr_handler_t  handler;
+  void *          arg;
+  intr_handle_t * ret_handle;
+  TaskHandle_t    waitingTask;
+};
+
+void esp_intr_alloc_pinnedToCore_task(void * arg)
+{
+  auto args = (esp_intr_alloc_args*) arg;
+  esp_intr_alloc(args->source, args->flags, args->handler, args->arg, args->ret_handle);
+  xTaskNotifyGive(args->waitingTask);
+  vTaskDelete(NULL);
+}
+
+void esp_intr_alloc_pinnedToCore(int source, int flags, intr_handler_t handler, void * arg, intr_handle_t * ret_handle, int core)
+{
+  esp_intr_alloc_args args = { source, flags, handler, arg, ret_handle, xTaskGetCurrentTaskHandle() };
+  xTaskCreatePinnedToCore(esp_intr_alloc_pinnedToCore_task, "" , 1024, &args, 3, NULL, core);
+  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // converts '\' or '/' to newSep
@@ -378,6 +432,13 @@ int StringList::append(char const * str)
 {
   insert(m_count, str);
   return m_count - 1;
+}
+
+
+void StringList::append(char const * strlist[], int count)
+{
+  for (int i = 0; i < count; ++i)
+    insert(m_count, strlist[i]);
 }
 
 
@@ -1258,6 +1319,18 @@ int LightMemoryPool::largestFree()
 
 
 // LightMemoryPool
+///////////////////////////////////////////////////////////////////////////////////
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// CoreUsage
+
+
+int CoreUsage::s_busiestCore = -1;
+
+
+// CoreUsage
 ///////////////////////////////////////////////////////////////////////////////////
 
 

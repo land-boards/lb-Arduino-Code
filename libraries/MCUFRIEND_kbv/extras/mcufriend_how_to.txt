@@ -26,6 +26,7 @@ vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), 
 readReg(), pushCommand(), WriteCmdData() access the controller registers
 
 10. It currently supports UNO shields with "mcufriend.com" pcbs with controllers:
+GC9302   240x320  ID=0x9302 
 HX8347-A 240x320  ID=0x8347 #define SUPPORT_8347A *** Untested ***
 HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
 HX8347-G 240x320  ID=0x7575 #define SUPPORT_8347D
@@ -36,9 +37,9 @@ HX8357-B 320x480  ID=0x8357 (shares init with 8357-D)
 HX8357-C 320x480  ID=0x9090 (ID has changed from 0x8357)
 HX8357-D 320x480  ID=0x0099 #define SUPPORT_8357D_GAMMA
 HX8367-A 240x320  ID=0x6767 #define SUPPORT_8347D
+ILI9163  128x160  ID=0x9163 #define SUPPORT_9163 
 ILI9225  176x220  ID=0x9225 #define SUPPORT_9225 
 ILI9226  176x220  ID=0x9226 #define SUPPORT_9225 
-ILI9302  240x320  ID=0x9302 
 ILI9320  240x320  ID=0x9320
 ILI9325  240x320  ID=0x9325
 ILI9326  240x400  ID=0x9326 #define SUPPORT_9326_5420
@@ -67,6 +68,7 @@ R61526A  240x320  ID=0x1526 (no Vertical Scroll) configure NVM with sketch
 R61580   240x320  ID=0x1580 #define SUPPORT_1580 *** Untested ***
 R61581   320x480  ID=0x1581
 RM68090  240x320  ID=0x6809
+RM68130  176x220  ID=0x6813 #define SUPPORT_9225
 RM68140  320x480  ID=0x6814 #define SUPPORT_68140
 S6D0139  240x320  ID=0x0139 #define SUPPORT_0139 (no Band Scroll)
 S6D0154  240x320  ID=0x0154 #define SUPPORT_0154
@@ -74,16 +76,20 @@ SPFD5408 240x320  ID=0x5408
 SPFD5420 240x400  ID=0x5420 #define SUPPORT_9326_5420
 SSD1963  800x480  ID=0x1963
 SSD1289  240x320  ID=0x1289 #define SUPPORT_1289
+SSD1297  240x320  ID=0x9797 #define SUPPORT_1289 (unstable readGRAM())
+ST7735   128x160  ID=0x7735 #define SUPPORT_7735 (untested) 
 ST7781   240x320  ID=0x7783 #define SUPPORT_7781 (no Vertical Scroll)
 ST7789V  240x320  ID=0x7789
 ST7793   240x400  ID=0x7793 #define SUPPORT_B509_7793
 ST7796   320x480  ID=0x7796
 UC8230   240x320  ID=0x8230 #define SUPPORT_8230
 UNKNOWN  320x480  ID=0x1511 (scroll directions not correct)
-UNKNOWN  240x320  ID=0x1602
+UNKNOWN  240x320  ID=0x1602 readGRAM() does not work
 UNKNOWN  240x320  ID=0xAC11
 UNKNOWN  240x320  ID=0x2053 weird controller from BangGood (was ID=0x0000)
 UNKNOWN  240x320  ID=0x8031 (no Vertical Scroll)
+UNKNOWN  240x320  ID=0x0001 (0x9320 style)
+UNKNOWN  240x320  ID=0x3229 readGRAM() does not work properly.   NEED DATASHEET.
 
 Most of these controllers are #define SUPPORT_xxxx by default.
 You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp
@@ -118,8 +124,32 @@ It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
 18. Please run LCD_ID_readreg.ino to verify your non-standard wiring.  Paste the defines to a Forum message.
 
 19. OPEN-SMART Shields have different wiring to regular Uno Shields:
-    Edit mcufriend_shield.h:  #define USE_SPECIAL
-    Edit mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT
-    Edit MCUFRIEND_kbv.cpp:   #define SUPPORT_8352B
+    Edit utility/mcufriend_shield.h:  #define USE_SPECIAL
+    Edit utility/mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT
+    Edit MCUFRIEND_kbv.cpp:           #define SUPPORT_8352B
 
+20. OPEN-SMART Shields can not read LM75A on a Mega because there are no SDA/SCL pins next on AREF header.
+    Uno:  LM75A on pcb works.  Difficult to add external I2C devices when Shield is plugged in.
+	Uno:  All use of SPI bus should use SPI.beginTransaction(), SPI.endTransaction()
+	Leo:  I do not support USE_OPENSMART_SHIELD_PINOUT_LEO
+	Mega: Old boards do not have SDA/SCL on AREF header.   Only external I2C devices on COMMS header
+	Due:  MAX809 Reset chip interferes with 3.3V RST on SPI header.  Manual reset for Upload / Run.
+	
+21. BLUEPILL Adapter standard wiring is:
+    //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|
+    //STM32 pin |PA7|PA6|PA5|PA4|PA3|PA2|PA1|PA0| |PB0|PB6|PB7|PB8|PB9| |PA15 |PB5  |PB4  |PB3   | **ALT-SPI1**
+    
+    Maple core:  to use SPI2 for SPI. edit SPI.cpp for SPIClass SPI(2);
+    STM Core:    to use SPI2 for SPI. edit variant.h to use PA15, PB3, PB4, PB5 for SPI_SS etc
+    
+    Touchscreen needs XM, YP to be on Analog capable pins.  Measure resistance with DMM to determine X, Y
+    300R pair is XP, XM.  500R pair is YP, YM.  choose XM, YP from PA7, PA6.  XP, YM from PB6, PB7
+    Run the Calibration sketch to get accurate TS_LEFT, TS_RT, TS_TOP, TS_BOT values.
+    Ignore the XP, XM, ... values.   They mean nothing on a BluePill
+    
+    Adafruit_Touchscreen might need: typedef volatile uint32_t RwReg;
+    
+    Maple core:  use Touchscreen_kbv library
+    STM Core:    regular Touchscreen libraries should be ok.
+    
 CHANGE HISTORY: is now in "mcufriend_history.txt"

@@ -34,6 +34,8 @@
 
 #include "freertos/FreeRTOS.h"
 
+#include <driver/adc.h>
+
 
 namespace fabgl {
 
@@ -344,6 +346,7 @@ public:
   StringList();
   ~StringList();
   int append(char const * str);
+  void append(char const * strlist[], int count);
   void insert(int index, char const * str);
   void set(int index, char const * str);
   void remove(int index);
@@ -817,6 +820,15 @@ enum class ChipPackage {
 
 ChipPackage getChipPackage();
 
+inline __attribute__((always_inline)) uint32_t getCycleCount() {
+  uint32_t ccount;
+  __asm__ __volatile__(
+    "esync \n\t"
+    "rsr %0, ccount \n\t"
+    : "=a" (ccount)
+  );
+  return ccount;
+}
 
 /**
  * @brief Replaces path separators
@@ -826,6 +838,27 @@ ChipPackage getChipPackage();
  */
 void replacePathSep(char * path, char newSep);
 
+
+/**
+ * @brief Composes UART configuration word
+ *
+ * @param parity Parity. 0 = none, 1 = even, 2 = odd
+ * @param dataLength Data word length. 0 = 5 bits, 1 = 6 bits, 2 = 7 bits, 3 = 8 bits
+ * @param stopBits Number of stop bits. 1 = 1 bit, 2 = 1.5 bits, 3 = 2 bits
+ */
+inline uint32_t UARTConf(int parity, int dataLength, int stopBits)
+{
+  uint32_t w = 0x8000000 | (dataLength << 2) | (stopBits << 4);
+  if (parity)
+    w |= (parity == 1 ? 0b10 : 0b11);
+  return w;
+}
+
+
+adc1_channel_t ADC1_GPIO2Channel(gpio_num_t gpio);
+
+
+void esp_intr_alloc_pinnedToCore(int source, int flags, intr_handler_t handler, void * arg, intr_handle_t * ret_handle, int core);
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -850,6 +883,22 @@ struct AutoSuspendInterrupts {
   bool suspended;
 };
 
+
+///////////////////////////////////////////////////////////////////////////////////
+// CoreUsage
+
+/**
+ * @brief This class helps to choice a core for intensive processing tasks
+ */
+struct CoreUsage {
+
+  static int busiestCore()                 { return s_busiestCore; }
+  static int quietCore()                   { return s_busiestCore != -1 ? s_busiestCore ^ 1 : -1; }
+  static void setBusiestCore(int core)     { s_busiestCore = core; }
+
+  private:
+    static int s_busiestCore;  // -1 = none, 0 = core 0, 1 = core 1
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////////

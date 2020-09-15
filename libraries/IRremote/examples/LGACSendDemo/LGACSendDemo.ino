@@ -138,7 +138,7 @@ void ac_air_clean(int air_clean)
 
 void setup()
 {
-  Serial.begin(38400);
+  Serial.begin(115200);
   delay(1000);
   Wire.begin(7);
   Wire.onReceive(receiveEvent);
@@ -192,12 +192,12 @@ void loop()
         ac_activate(AC_TEMPERATURE, AC_FLOW);
         break;
       case 2:
-        if ( b == 0 | b == 1 ) {
+        if ( b == 0 || b == 1 ) {
           ac_change_air_swing(b);
         }
         break;
       case 3: // 1  : clean on, power on
-        if ( b == 0 | b == 1 ) {
+        if ( b == 0 || b == 1 ) {
           ac_air_clean(b);
         }
         break;

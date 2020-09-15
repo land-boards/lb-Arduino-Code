@@ -63,14 +63,18 @@
             *uiPaintBox
               *uiCustomListBox
                 *uiListBox
+                *uiColorListBox
                 *uiFileBrowser
             uiMemoEdit
           *uiCheckBox
-          *uiComboBox
+          *uiCustomComboBox
+            *uiComboBox
+            *uiColorComboBox
           uiMenu
           uiGauge
           *uiSlider
           uiSpinButton
+          *uiColorBox
 
 */
 
@@ -120,6 +124,9 @@ enum uiEventID {
   UIEVT_DESTROY,
   UIEVT_CLOSE,      // Request to close (frame Close button)
   UIEVT_QUIT,       // Quit the application
+  UIEVT_CREATE,
+  UIEVT_CHILDSETFOCUS,  // a UIEVT_SETFOCUS has been sent to a child
+  UIEVT_CHILDKILLFOCUS, // a UIEVT_KILLFOCUS has been sent to a child
 };
 
 
@@ -149,6 +156,12 @@ struct uiMouseEventInfo {
 };
 
 
+struct uiFocusInfo {
+  uiWindow * oldFocused;
+  uiWindow * newFocused;
+};
+
+
 struct uiEvent {
   uiEvtHandler * dest;
   uiEventID      id;
@@ -170,12 +183,10 @@ struct uiEvent {
     uiTimerHandle timerHandle;
     // event: UIEVT_EXITMODAL
     int modalResult;
-    // event: UIEVT_SETFOCUS
-    uiWindow * oldFocused;
-    // event: UIEVT_KILLFOCUS
-    uiWindow * newFocused;
     // event: UIEVT_QUIT
     int exitCode;
+    // event: UIEVT_SETFOCUS, UIEVT_KILLFOCUS, UIEVT_CHILDKILLFOCUS, UIEVT_CHILDSETFOCUS
+    uiFocusInfo focusInfo;
 
     uiEventParams() { }
   } params;
@@ -221,9 +232,14 @@ struct uiObjectType {
   uint32_t uiComboBox          : 1;
   uint32_t uiCheckBox          : 1;
   uint32_t uiSlider            : 1;
+  uint32_t uiColorListBox      : 1;
+  uint32_t uiCustomComboBox    : 1;
+  uint32_t uiColorBox          : 1;
+  uint32_t uiColorComboBox     : 1;
 
   uiObjectType() : uiApp(0), uiEvtHandler(0), uiWindow(0), uiFrame(0), uiControl(0), uiScrollableControl(0), uiButton(0), uiTextEdit(0),
-                   uiLabel(0), uiImage(0), uiPanel(0), uiPaintBox(0), uiCustomListBox(0), uiListBox(0), uiFileBrowser(0), uiComboBox(0), uiCheckBox(0), uiSlider(0)
+                   uiLabel(0), uiImage(0), uiPanel(0), uiPaintBox(0), uiCustomListBox(0), uiListBox(0), uiFileBrowser(0), uiComboBox(0),
+                   uiCheckBox(0), uiSlider(0), uiColorListBox(0), uiCustomComboBox(0), uiColorBox(0), uiColorComboBox(0)
     { }
 };
 
@@ -322,9 +338,9 @@ struct uiWindowProps {
 /** @brief Contains the window style */
 struct uiWindowStyle {
   CursorName    defaultCursor      = CursorName::CursorPointerSimpleReduced;  /**< Default window mouse cursor */
-  RGB888        borderColor        = RGB888(128, 128, 128);                         /**< Border color */
-  RGB888        activeBorderColor  = RGB888(128, 128, 255);                         /**< Border color when active */
-  RGB888        focusedBorderColor = RGB888(0, 0, 255);                         /**< Border color when focused */
+  RGB888        borderColor        = RGB888(128, 128, 128);                   /**< Border color */
+  RGB888        activeBorderColor  = RGB888(128, 128, 255);                   /**< Border color when active */
+  RGB888        focusedBorderColor = RGB888(0, 0, 255);                       /**< Border color when focused */
   uint8_t       borderSize         = 3;                                       /**< Border size in pixels. This determines also the resize grips area. */
   uint8_t       focusedBorderSize  = 1;                                       /**< Border size when focused */
 };
@@ -355,8 +371,9 @@ public:
    * @param pos Top-left coordinates of the window relative to the parent
    * @param size The window size
    * @param visible If true the window is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool visible);
+  uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID = 0);
 
   virtual ~uiWindow();
 
@@ -498,6 +515,13 @@ public:
   uiWindow * parent() { return m_parent; }
 
   /**
+   * @brief Determines the parent frame
+   *
+   * @return Parent frame
+   */
+  uiWindow * parentFrame();
+
+  /**
    * @brief Determines mouse position when left button was down
    *
    * @return Mouse position
@@ -574,10 +598,33 @@ public:
    *
    * @return The focus index
    */
-  int focusIndex() { return m_focusIndex; }
+  int focusIndex()                       { return m_focusIndex; }
 
-  Canvas * canvas() { return m_canvas; }
-  
+  Canvas * canvas()                      { return m_canvas; }
+
+  /**
+   * @brief Sets style class for this UI element
+   *
+   * @param value Style class identifier
+   */
+  void setStyleClassID(uint32_t value) { m_styleClassID = value; }
+
+  /**
+   * @brief Determines current style class for this UI element
+   *
+   * @return Style class ID
+   */
+  uint32_t styleClassID()                { return m_styleClassID; }
+
+  /**
+   * @brief Enables a child window to send keyboard events to its parent
+   *
+   * Events aren't posted, but processed instantly.
+   *
+   * @param value When true parent processes keyboard events
+   */
+  void setParentProcessKbdEvents(bool value) { m_parentProcessKbdEvents = value; }
+
 
   // Delegates
 
@@ -622,7 +669,8 @@ protected:
 private:
 
   void paintWindow();
-  uiWindow * getChildWithFocusIndex(int focusIndex, int * maxIndex);
+
+  uiWindow * findChildWithFocusIndex(int focusIndex, int * maxIndex);
 
 
   uiWindow *    m_parent;
@@ -657,6 +705,11 @@ private:
   uiWindow *    m_prev;
   uiWindow *    m_firstChild;
   uiWindow *    m_lastChild;
+
+  uint32_t      m_styleClassID;
+
+  // if true parent processes keyboard events
+  bool          m_parentProcessKbdEvents;
 };
 
 
@@ -672,12 +725,12 @@ struct uiFrameStyle {
   RGB888              backgroundColor                = RGB888(255, 255, 255);  /**< Frame background color */
   RGB888              titleBackgroundColor           = RGB888(128, 128, 128);  /**< Title background color */
   RGB888              activeTitleBackgroundColor     = RGB888(128, 128, 255);  /**< Title background color when active */
-  RGB888              titleColor                     = RGB888(0, 0, 0);  /**< Title color */
-  RGB888              activeTitleColor               = RGB888(0, 0, 0);  /**< Title color when active */
-  FontInfo const *    titleFont                      = &FONT_std_12;  /**< Title font */
-  RGB888              buttonColor                    = RGB888(64, 64, 64);  /**< Color used to draw Close, Maximize and Minimize buttons */
-  RGB888              activeButtonColor              = RGB888(0, 0, 0);  /**< Color used to draw Close, Maximize and Minimize buttons */
-  RGB888              mouseOverBackgroundButtonColor = RGB888(0, 0, 255);  /**< Color used for background of Close, Maximize and Minimize buttons when mouse is over them */
+  RGB888              titleColor                     = RGB888(0, 0, 0);        /**< Title color */
+  RGB888              activeTitleColor               = RGB888(0, 0, 0);        /**< Title color when active */
+  FontInfo const *    titleFont                      = &FONT_std_12;           /**< Title font */
+  RGB888              buttonColor                    = RGB888(64, 64, 64);     /**< Color used to draw Close, Maximize and Minimize buttons */
+  RGB888              activeButtonColor              = RGB888(0, 0, 0);        /**< Color used to draw Close, Maximize and Minimize buttons */
+  RGB888              mouseOverBackgroundButtonColor = RGB888(0, 0, 255);      /**< Color used for background of Close, Maximize and Minimize buttons when mouse is over them */
   RGB888              mouseOverButtonColor           = RGB888(255, 255, 255);  /**< Color used for pen of Close, Maximize and Minimize buttons when mouse is over them */
 };
 
@@ -691,13 +744,15 @@ struct uiFrameProps {
   uint8_t hasCloseButton    : 1; /**< Frame has close button. Make sure the window has a title bar setting window title */
   uint8_t hasMaximizeButton : 1; /**< Frame has maximize button. Make sure the window has a title bar setting window title */
   uint8_t hasMinimizeButton : 1; /**< Frame has minimize button. Make sure the window has a title bar setting window title */
+  uint8_t fillBackground    : 1; /**< Frame has filled background */
 
   uiFrameProps() :
     resizeable(true),
     moveable(true),
     hasCloseButton(true),
     hasMaximizeButton(true),
-    hasMinimizeButton(true)
+    hasMinimizeButton(true),
+    fillBackground(true)
   { }
 };
 
@@ -721,6 +776,8 @@ enum class uiFrameItem : uint8_t {
 
 /**
  * @brief A frame is a window with a title bar, maximize/minimize/close buttons and that is resizeable or moveable
+ *
+ * A frame is the unique container that can handle focus travel (TAB and SHIFT-TAB) among child controls.
  */
 class uiFrame : public uiWindow {
 
@@ -734,8 +791,9 @@ public:
    * @param pos Top-left coordinates of the frame relative to the parent
    * @param size The frame size
    * @param visible If true the frame is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiFrame(uiWindow * parent, char const * title, const Point & pos, const Size & size, bool visible = true);
+  uiFrame(uiWindow * parent, char const * title, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiFrame();
 
@@ -781,6 +839,8 @@ public:
   uiFrameProps & frameProps() { return m_frameProps; }
 
   Rect clientRect(uiOrigin origin);
+
+  int getNextFreeFocusIndex() { return m_nextFreeFocusIndex++; }
 
 
   // Delegates
@@ -859,10 +919,12 @@ private:
   char *             m_title;
   int                m_titleLength;
 
-  uiFrameItem m_mouseDownFrameItem;  // frame item on mouse down
-  uiFrameItem m_mouseMoveFrameItem;  // frame item on mouse move
+  uiFrameItem        m_mouseDownFrameItem;  // frame item on mouse down
+  uiFrameItem        m_mouseMoveFrameItem;  // frame item on mouse move
 
-  Rect        m_lastReshapingBox;    // last reshaping box painted by drawReshapingBox(), (0,0,0,0) if there isn't any
+  Rect               m_lastReshapingBox;    // last reshaping box painted by drawReshapingBox(), (0,0,0,0) if there isn't any
+
+  int                m_nextFreeFocusIndex;
 
 };
 
@@ -886,8 +948,9 @@ public:
    * @param pos Top-left coordinates of the control relative to the parent
    * @param size The control size
    * @param visible If true the control is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiControl(uiWindow * parent, const Point & pos, const Size & size, bool visible);
+  uiControl(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID = 0);
 
   virtual ~uiControl();
 
@@ -902,10 +965,10 @@ public:
 
 /** @brief Contains the scrollable control style */
 struct uiScrollableControlStyle {
-  RGB888  scrollBarBackgroundColor          = RGB888(64, 64, 64);  /**< Background color of the scrollbar */
+  RGB888  scrollBarBackgroundColor          = RGB888(64, 64, 64);     /**< Background color of the scrollbar */
   RGB888  scrollBarForegroundColor          = RGB888(128, 128, 128);  /**< Foreground color of the scrollbar */
   RGB888  mouseOverScrollBarForegroundColor = RGB888(255, 255, 255);  /**< Foreground color of the scrollbar when mouse is over it */
-  uint8_t scrollBarSize                     = 11;            /**< Width of vertical scrollbar, height of vertical scroll bar */
+  uint8_t scrollBarSize                     = 11;                     /**< Width of vertical scrollbar, height of vertical scroll bar */
 };
 
 
@@ -938,8 +1001,9 @@ public:
    * @param pos Top-left coordinates of the control relative to the parent
    * @param size The control size
    * @param visible If true the control is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiScrollableControl(uiWindow * parent, const Point & pos, const Size & size, bool visible = true);
+  uiScrollableControl(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiScrollableControl();
 
@@ -962,7 +1026,7 @@ public:
    *
    * @return Scrollbar position in scroll units
    */
-  int HScrollBarPos() { return m_HScrollBarPosition; }
+  int HScrollBarPos()     { return m_HScrollBarPosition; }
 
   /**
    * @brief Determines horizontal scrollbar visible portion (aka thumb size) of the scrollable content
@@ -981,7 +1045,7 @@ public:
    *
    * @return Scrollbar range in scroll units.
    */
-  int HScrollBarRange() { return m_HScrollBarRange; }
+  int HScrollBarRange()   { return m_HScrollBarRange; }
 
   /**
    * @brief Determines position of the vertical scrollbar thumb
@@ -991,7 +1055,7 @@ public:
    *
    * @return Scrollbar position in scroll units
    */
-  int VScrollBarPos() { return m_VScrollBarPosition; }
+  int VScrollBarPos()     { return m_VScrollBarPosition; }
 
   /**
    * @brief Determines vertical scrollbar visible portion (aka thumb size) of the scrollable content
@@ -1010,7 +1074,7 @@ public:
    *
    * @return Scrollbar range in scroll units.
    */
-  int VScrollBarRange() { return m_VScrollBarRange; }
+  int VScrollBarRange()  { return m_VScrollBarRange; }
 
 
   // Delegates
@@ -1118,8 +1182,9 @@ public:
    * @param size The button size
    * @param kind The button kind (button or switch)
    * @param visible If true the button is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiButton(uiWindow * parent, char const * text, const Point & pos, const Size & size, uiButtonKind kind = uiButtonKind::Button, bool visible = true);
+  uiButton(uiWindow * parent, char const * text, const Point & pos, const Size & size, uiButtonKind kind = uiButtonKind::Button, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiButton();
 
@@ -1249,8 +1314,9 @@ public:
    * @param pos Top-left coordinates of the text edit relative to the parent
    * @param size The text edit size
    * @param visible If true the button is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiTextEdit(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible = true);
+  uiTextEdit(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiTextEdit();
 
@@ -1366,8 +1432,9 @@ public:
    * @param pos Top-left coordinates of the label relative to the parent
    * @param size The label size. If Size(0, 0) then size is automatically calculated
    * @param visible If true the label is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiLabel(uiWindow * parent, char const * text, const Point & pos, const Size & size = Size(0, 0), bool visible = true);
+  uiLabel(uiWindow * parent, char const * text, const Point & pos, const Size & size = Size(0, 0), bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiLabel();
 
@@ -1453,8 +1520,9 @@ public:
    * @param pos Top-left coordinates of the image relative to the parent
    * @param size The image size. If Size(0, 0) then size is automatically calculated
    * @param visible If true the image is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiImage(uiWindow * parent, Bitmap const * bitmap, const Point & pos, const Size & size = Size(0, 0), bool visible = true);
+  uiImage(uiWindow * parent, Bitmap const * bitmap, const Point & pos, const Size & size = Size(0, 0), bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiImage();
 
@@ -1521,8 +1589,9 @@ public:
    * @param pos Top-left coordinates of the panel relative to the parent
    * @param size The panel size
    * @param visible If true the panel is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiPanel(uiWindow * parent, const Point & pos, const Size & size, bool visible = true);
+  uiPanel(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiPanel();
 
@@ -1568,8 +1637,9 @@ public:
    * @param pos Top-left coordinates of the paintbox relative to the parent
    * @param size The paintbox size
    * @param visible If true the paintbox is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiPaintBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true);
+  uiPaintBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiPaintBox();
 
@@ -1605,6 +1675,53 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiColorBox
+
+/** @brief A color box is a control that shows a single color */
+class uiColorBox : public uiControl {
+
+public:
+
+  /**
+   * @brief Creates an instance of the object
+   *
+   * @param parent The parent window. A panel must always have a parent window
+   * @param pos Top-left coordinates of the panel relative to the parent
+   * @param size The panel size
+   * @param visible If true the panel is immediately visible
+   * @param styleClassID Optional style class identifier
+   */
+  uiColorBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
+
+  virtual ~uiColorBox();
+
+  virtual void processEvent(uiEvent * event);
+
+  /**
+   * @brief Gets current colorbox color
+   *
+   * @return Current color
+   */
+  Color color() { return m_color; }
+
+  /**
+   * @brief Sets current colorbox color
+   *
+   * @param value Color to set
+   */
+  void setColor(Color value);
+
+private:
+
+  void paintColorBox();
+
+
+  Color m_color;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // uiCustomListBox
 
 
@@ -1633,8 +1750,9 @@ public:
    * @param pos Top-left coordinates of the listbox relative to the parent
    * @param size The listbox size
    * @param visible If true the listbox is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiCustomListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true);
+  uiCustomListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiCustomListBox();
 
@@ -1737,8 +1855,9 @@ public:
    * @param pos Top-left coordinates of the listbox relative to the parent
    * @param size The listbox size
    * @param visible If true the listbox is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true);
+  uiListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   /**
    * @brief A list of strings representing the listbox content
@@ -1780,8 +1899,9 @@ public:
    * @param pos Top-left coordinates of the listbox relative to the parent
    * @param size The listbox size
    * @param visible If true the listbox is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiFileBrowser(uiWindow * parent, const Point & pos, const Size & size, bool visible = true);
+  uiFileBrowser(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   /**
    * @brief Sets current directory
@@ -1853,14 +1973,56 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiColorListBox
+
+/** @brief Shows a list of 16 colors, one selectable */
+class uiColorListBox : public uiCustomListBox {
+
+public:
+
+  /**
+   * @brief Creates an instance of the object
+   *
+   * @param parent The parent window. A listbox must always have a parent window
+   * @param pos Top-left coordinates of the listbox relative to the parent
+   * @param size The listbox size
+   * @param visible If true the listbox is immediately visible
+   * @param styleClassID Optional style class identifier
+   */
+  uiColorListBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
+
+  /**
+   * @brief Currently selected color
+   *
+   * @return Currently selected color.
+   */
+  Color color();
+
+
+protected:
+
+  virtual int items_getCount()                      { return 16; }
+  virtual void items_deselectAll()                  { }
+  virtual void items_select(int index, bool select) { if (select) m_selectedColor = (Color)index; }
+  virtual bool items_selected(int index)            { return index == (int)m_selectedColor; }
+  virtual void items_draw(int index, const Rect & itemRect);
+
+
+private:
+
+  Color m_selectedColor;
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// uiComboBox
+// uiCustomComboBox
 
 
 /** @brief Contains the listbox style */
 struct uiComboBoxStyle {
-  RGB888 buttonBackgroundColor = RGB888(64, 64, 64);  /**< Background color of open/close button */
+  RGB888 buttonBackgroundColor = RGB888(64, 64, 64);     /**< Background color of open/close button */
   RGB888 buttonColor           = RGB888(128, 128, 128);  /**< Foreground color of open/close button */
 };
 
@@ -1876,8 +2038,8 @@ struct uiComboBoxProps {
 };
 
 
-/** @brief This is a combination of a listbox and a single-line editable textbox */
-class uiComboBox : public uiTextEdit
+/** @brief This is a combination of a listbox and another component, base of all combobox components */
+class uiCustomComboBox : public uiControl
 {
 
 public:
@@ -1890,21 +2052,13 @@ public:
    * @param size The combobox size
    * @param listHeight Height in pixels of the open listbox
    * @param visible If true the combobox is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible = true);
+  uiCustomComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible, uint32_t styleClassID);
 
-  ~uiComboBox();
+  ~uiCustomComboBox();
 
   virtual void processEvent(uiEvent * event);
-
-  /**
-   * @brief A list of strings representing items of the combobox
-   *
-   * Repainting is required when the string list changes.
-   *
-   * @return L-value representing combobox items
-   */
-  StringList & items() { return m_listBox->items(); }
 
   /**
    * @brief Sets or gets combobox style
@@ -1918,7 +2072,7 @@ public:
    *
    * @return L-value representing listbox style
    */
-  uiListBoxStyle & listBoxStyle() { return m_listBox->listBoxStyle(); }
+  uiListBoxStyle & listBoxStyle() { return listbox()->listBoxStyle(); }
 
   /**
    * @brief Sets or gets combobox properties
@@ -1932,7 +2086,7 @@ public:
    *
    * @return Index of the selected item or -1 if no item is selected
    */
-  int selectedItem() { return m_listBox->firstSelectedItem(); }
+  int selectedItem() { return listbox()->firstSelectedItem(); }
 
   /**
    * @brief Selects an item
@@ -1954,25 +2108,156 @@ public:
 
 protected:
 
-  virtual Rect getEditRect();
+  virtual uiCustomListBox * listbox() = 0;
+  virtual uiControl * editcontrol()   = 0;
+  virtual void updateEditControl()    = 0;
 
+  Size getEditControlSize();
 
 private:
 
   void paintComboBox();
   Rect getButtonRect();
-  int buttonWidth();
   void openListBox();
   void closeListBox();
   void switchListBox();
-  void updateTextEdit();
+  int buttonWidth();
 
 
-  uiListBox *     m_listBox;
-  int             m_listHeight;
-  uiComboBoxStyle m_comboBoxStyle;
-  uiComboBoxProps m_comboBoxProps;
+  int               m_listHeight;
+  uiComboBoxStyle   m_comboBoxStyle;
+  uiComboBoxProps   m_comboBoxProps;
+};
 
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiComboBox
+
+
+/** @brief This is a combination of a listbox and a single-line editable textbox */
+class uiComboBox : public uiCustomComboBox
+{
+
+public:
+
+  /**
+   * @brief Creates an instance of the object
+   *
+   * @param parent The parent window. A combobox must always have a parent window
+   * @param pos Top-left coordinates of the combobox relative to the parent
+   * @param size The combobox size
+   * @param listHeight Height in pixels of the open listbox
+   * @param visible If true the combobox is immediately visible
+   * @param styleClassID Optional style class identifier
+   */
+  uiComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible = true, uint32_t styleClassID = 0);
+
+  ~uiComboBox();
+
+  /**
+   * @brief A list of strings representing items of the combobox
+   *
+   * Repainting is required when the string list changes.
+   *
+   * @return L-value representing combobox items
+   */
+  StringList & items() { return m_listBox->items(); }
+
+  /**
+   * @brief Sets or gets text edit style
+   *
+   * @return L-value representing text edit style (colors, font, etc...)
+   */
+  uiTextEditStyle & textEditStyle() { return m_textEdit->textEditStyle(); }
+
+  /**
+   * @brief Sets or gets text edit properties
+   *
+   * @return L-value representing some text edit properties
+   */
+  uiTextEditProps & textEditProps() { return m_textEdit->textEditProps(); }
+
+  /**
+   * @brief Replaces current text
+   *
+   * Text edit needs to be repainted in order to display changed text.
+   *
+   * @param value Text to set
+   */
+  void setText(char const * value) { m_textEdit->setText(value); }
+
+  /**
+   * @brief Gets current content of the text edit
+   *
+   * @return Text edit content
+   */
+  char const * text() { return m_textEdit->text(); }
+
+
+protected:
+
+  uiCustomListBox * listbox()  { return m_listBox; }
+  uiControl * editcontrol()    { return m_textEdit; }
+  void updateEditControl();
+
+private:
+  uiTextEdit * m_textEdit;
+  uiListBox *  m_listBox;
+
+};
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiColorComboBox
+
+
+/** @brief This is a combination of a color listbox and a colorbox */
+class uiColorComboBox : public uiCustomComboBox
+{
+
+public:
+
+  /**
+   * @brief Creates an instance of the object
+   *
+   * @param parent The parent window. A combobox must always have a parent window
+   * @param pos Top-left coordinates of the combobox relative to the parent
+   * @param size The combobox size
+   * @param listHeight Height in pixels of the open listbox
+   * @param visible If true the combobox is immediately visible
+   * @param styleClassID Optional style class identifier
+   */
+  uiColorComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible = true, uint32_t styleClassID = 0);
+
+  ~uiColorComboBox();
+
+  /**
+   * @brief Sets current selected color
+   *
+   * @param value Color to set
+   */
+  void selectColor(Color value) { selectItem((int)value); }
+
+  /**
+   * @brief Determines current selected color
+   *
+   * @return Currently selected color
+   */
+  Color selectedColor()         { return (Color) selectedItem(); }
+
+
+protected:
+
+  uiCustomListBox * listbox()  { return m_colorListBox; }
+  uiControl * editcontrol()    { return m_colorBox; }
+  void updateEditControl();
+
+private:
+  uiColorBox *     m_colorBox;
+  uiColorListBox * m_colorListBox;
 
 };
 
@@ -1987,7 +2272,7 @@ struct uiCheckBoxStyle {
   RGB888              backgroundColor          = RGB888(128, 128, 128);  /**< Background color */
   RGB888              checkedBackgroundColor   = RGB888(128, 128, 255);  /**< Background color when checked */
   RGB888              mouseOverBackgroundColor = RGB888(128, 128, 255);  /**< Background color when mouse is over */
-  RGB888              foregroundColor          = RGB888(0, 0, 0);  /**< Foreground color */
+  RGB888              foregroundColor          = RGB888(0, 0, 0);        /**< Foreground color */
 };
 
 
@@ -2018,8 +2303,9 @@ public:
    * @param size The checkbox size
    * @param kind Defines the checkbox behaviour: checkbox or radiobutton
    * @param visible If true the checkbox is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiCheckBox(uiWindow * parent, const Point & pos, const Size & size, uiCheckBoxKind kind = uiCheckBoxKind::CheckBox, bool visible = true);
+  uiCheckBox(uiWindow * parent, const Point & pos, const Size & size, uiCheckBoxKind kind = uiCheckBoxKind::CheckBox, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiCheckBox();
 
@@ -2096,9 +2382,9 @@ private:
 /** @brief Contains the slider style */
 struct uiSliderStyle {
   RGB888 backgroundColor = RGB888(255, 255, 255);    /**< Slider background color */
-  RGB888 slideColor      = RGB888(0, 128, 128);    /**< Color of internal slide */
-  RGB888 rangeColor      = RGB888(0, 128, 255);    /**< Color of slide before the grip */
-  RGB888 gripColor       = RGB888(0, 0, 255);    /**< Color of slider grip */
+  RGB888 slideColor      = RGB888(0, 128, 128);      /**< Color of internal slide */
+  RGB888 rangeColor      = RGB888(0, 128, 255);      /**< Color of slide before the grip */
+  RGB888 gripColor       = RGB888(0, 0, 255);        /**< Color of slider grip */
   RGB888 ticksColor      = RGB888(255, 255, 255);    /**> Ticks color */
 };
 
@@ -2116,8 +2402,9 @@ public:
    * @param size The slider size
    * @param orientation The slider orientation
    * @param visible If true the slider is immediately visible
+   * @param styleClassID Optional style class identifier
    */
-  uiSlider(uiWindow * parent, const Point & pos, const Size & size, uiOrientation orientation, bool visible = true);
+  uiSlider(uiWindow * parent, const Point & pos, const Size & size, uiOrientation orientation, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiSlider();
 
@@ -2195,6 +2482,13 @@ private:
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiStyle
+
+struct uiStyle {
+  virtual void setStyle(uiObject * object, uint32_t styleClassID) = 0;
+};
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2268,7 +2562,7 @@ public:
    *
    * @return exitCode specified calling uiApp.quit().
    */
-  int run(DisplayController * displayController, Keyboard * keyboard = nullptr, Mouse * mouse = nullptr);
+  int run(BitmappedDisplayController * displayController, Keyboard * keyboard = nullptr, Mouse * mouse = nullptr);
 
   /**
    * @brief Terminates application and free resources
@@ -2608,6 +2902,21 @@ public:
    */
   virtual void init();
 
+  /**
+   * @brief Sets application controls style
+   *
+   * @param value Style class descriptor
+   */
+  void setStyle(uiStyle * value)           { m_style = value; }
+
+  /**
+   * @brief Gets current application controls style
+   *
+   * @return Current style (nullptr = default).
+   */
+  uiStyle * style()                        { return m_style; }
+
+
   // delegates
 
   /**
@@ -2622,7 +2931,7 @@ public:
 
   Mouse * mouse() { return m_mouse; }
 
-  DisplayController * displayController() { return m_displayController; }
+  BitmappedDisplayController * displayController() { return m_displayController; }
 
   Canvas * canvas() { return m_canvas; }
 
@@ -2646,7 +2955,7 @@ private:
   void suspendCaret(bool value);
 
 
-  DisplayController * m_displayController;
+  BitmappedDisplayController * m_displayController;
 
   Canvas *        m_canvas;
 
@@ -2679,6 +2988,8 @@ private:
 
   int             m_lastMouseUpTimeMS;   // time (MS) at mouse up. Used to measure double clicks
   Point           m_lastMouseUpPos;      // screen position of last mouse up
+
+  uiStyle *       m_style;
 };
 
 

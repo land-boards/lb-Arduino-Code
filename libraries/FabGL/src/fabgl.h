@@ -70,7 +70,9 @@
  * - - -
  *
  * The main classes of FabGL library are:
- *    * fabgl::VGAController, device driver for VGA output.
+ *    * fabgl::VGAController, device driver for VGA bitmapped output.
+ *    * fabgl::VGA16Controller, device driver for VGA 16 colors bitmapped output (low RAM requirements, CPU intensive).
+ *    * fabgl::VGATextController, device driver for VGA textual output (low RAM requirements, CPU intensive).
  *    * fabgl::SSD1306Controller, device driver for SSD1306 based OLED displays.
  *    * fabgl::ST7789Controller, device driver for ST7789 based TFT displays.
  *    * fabgl::ILI9341Controller, device driver for ILI9341 based TFT displays.
@@ -106,6 +108,9 @@
  * - - -
  * <CENTER> @link VGA/Audio/Audio.ino Audio output demo @endlink </CENTER>
  * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/RQtKFgU7OYI?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
+ * - - -
+ * <CENTER> @link VGA/AnsiTerminal/AnsiTerminal.ino Serial terminal connected to MBC2 Z80 board @endlink </CENTER>
+ * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/Ww_pH_ZOLqU?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
  * - - -
  * <CENTER> @link VGA/SimpleTerminalOut/SimpleTerminalOut.ino Simple Terminal Out Example @endlink </CENTER>
  * @htmlonly <div align="center"> <iframe width="560" height="349" src="http://www.youtube.com/embed/AmXN0SIRqqU?rel=0&loop=1&autoplay=1&modestbranding=1" frameborder="0" allowfullscreen align="middle"> </iframe> </div> @endhtmlonly
@@ -279,6 +284,8 @@
 #include "dispdrivers/vgacontroller.h"
 #include "dispdrivers/SSD1306Controller.h"
 #include "dispdrivers/TFTControllerSpecif.h"
+#include "dispdrivers/vgatextcontroller.h"
+#include "dispdrivers/vga16controller.h"
 #include "comdrivers/ps2controller.h"
 #include "comdrivers/tsi2c.h"
 #include "devdrivers/keyboard.h"
@@ -303,6 +310,7 @@ using fabgl::Rect;
 using fabgl::MouseDelta;
 using fabgl::MouseStatus;
 using fabgl::CursorName;
+using fabgl::uiObject;
 using fabgl::uiButtonKind;
 using fabgl::uiTimerHandle;
 using fabgl::uiTextEdit;
@@ -320,6 +328,23 @@ using fabgl::uiComboBox;
 using fabgl::uiCheckBox;
 using fabgl::uiCheckBoxKind;
 using fabgl::uiSlider;
+using fabgl::uiStyle;
+using fabgl::uiWindowStyle;
+using fabgl::uiFrameStyle;
+using fabgl::uiScrollableControlStyle;
+using fabgl::uiButtonStyle;
+using fabgl::uiTextEditStyle;
+using fabgl::uiLabelStyle;
+using fabgl::uiImageStyle;
+using fabgl::uiPanelStyle;
+using fabgl::uiPaintBoxStyle;
+using fabgl::uiListBoxStyle;
+using fabgl::uiComboBoxStyle;
+using fabgl::uiCheckBoxStyle;
+using fabgl::uiSliderStyle;
+using fabgl::uiColorListBox;
+using fabgl::uiColorBox;
+using fabgl::uiColorComboBox;
 using fabgl::SoundGenerator;
 using fabgl::uiMessageBoxResult;
 using fabgl::SineWaveformGenerator;
@@ -331,6 +356,7 @@ using fabgl::SawtoothWaveformGenerator;
 using fabgl::SamplesGenerator;
 using fabgl::WaveformGenerator;
 using fabgl::TermType;
+using fabgl::SupportedTerminals;
 using fabgl::PS2Preset;
 using fabgl::PS2DeviceType;
 using fabgl::KbdMode;
@@ -354,5 +380,7 @@ using fabgl::AutoSuspendInterrupts;
 using fabgl::LineEnds;
 using fabgl::CharStyle;
 using fabgl::TerminalTransition;
+using fabgl::SupportedLayouts;
+using fabgl::CoreUsage;
 
 

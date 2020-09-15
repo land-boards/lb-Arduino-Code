@@ -5,7 +5,7 @@
  */
 
 #ifndef MCUFRIEND_KBV_H_
-#define MCUFRIEND_KBV_H_   298
+#define MCUFRIEND_KBV_H_   299
 
 //#define USE_SERIAL
 
@@ -20,7 +20,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 
 	public:
 //	MCUFRIEND_kbv(int CS=A3, int RS=A2, int WR=A1, int RD=A0, int RST=A4); //shield wiring
-	MCUFRIEND_kbv(int CS=0, int RS=0, int WR=0, int RD=0, int RST=0);  //dummy arguments 
+	MCUFRIEND_kbv(int CS=0, int RS=0, int WR=0, int RD=0, int _RST=0);  //dummy arguments 
 	void     reset(void);                                       // you only need the constructor
 	void     begin(uint16_t ID = 0x9341);                       // you only need the constructor
 	virtual void     drawPixel(int16_t x, int16_t y, uint16_t color);  // and these three
@@ -33,7 +33,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
 	virtual void     drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) { fillRect(x, y, w, 1, color); }
 	virtual void     fillScreen(uint16_t color)                                     { fillRect(0, 0, _width, _height, color); }
 	virtual void     setRotation(uint8_t r);
-    virtual void     invertDisplay(boolean i);
+    virtual void     invertDisplay(bool i);
 
 	uint16_t readReg(uint16_t reg, int8_t index=0);
 	int16_t  readGRAM(int16_t x, int16_t y, uint16_t *block, int16_t w, int16_t h);

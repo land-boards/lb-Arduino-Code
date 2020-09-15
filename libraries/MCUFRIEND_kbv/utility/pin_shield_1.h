@@ -10,6 +10,21 @@
 #define LPC1768 1768
 #define LPC2103 2103
 #define LPC2148 2148
+
+#define ISTARGET_NUCLEO64 (0 \
+        || defined(TARGET_NUCLEO_F072RB) \
+        || defined(TARGET_NUCLEO_F103RB) \
+        || defined(TARGET_NUCLEO_F401RE) \
+        || defined(TARGET_NUCLEO_F411RE) \
+        || defined(TARGET_NUCLEO_F446RE) \
+        || defined(TARGET_NUCLEO_L433RC_P) \
+        || defined(TARGET_NUCLEO_L476RG) \
+        )
+
+#define ISTARGET_NUCLEO144 (0 \
+        || defined(TARGET_NUCLEO_F767ZI) \
+        )
+
 //#warning Using pin_SHIELD_1.h
 
 #if 0
@@ -96,17 +111,17 @@
   #define D8_PIN  0
   #define D9_PORT GPIOA
   #define D9_PIN  1
-  #define D10_PORT GPIOB //GPIOA
-  #define D10_PIN  12    //15
+  #define D10_PORT GPIOA
+  #define D10_PIN  15
   #define D11_PORT GPIOB
-  #define D11_PIN  15    //5
+  #define D11_PIN  5
   #define D12_PORT GPIOB
-  #define D12_PIN  14    //4
+  #define D12_PIN  4
   #define D13_PORT GPIOB
-  #define D13_PIN  13    //3
+  #define D13_PIN  3
   #define A0_PORT GPIOB
-  #define A0_PIN  5      //original pcb uses SPI pin 
-//  #define A0_PIN  0      //hardware mod to Adapter to PB0.  Allows use of PB5 for SD Card
+//  #define A0_PIN  5      //original pcb uses SPI pin 
+  #define A0_PIN  0      //hardware mod to Adapter to PB0.  Allows use of PB5 for SD Card
   #define A1_PORT GPIOB
   #define A1_PIN  6
   #define A2_PORT GPIOB
@@ -182,7 +197,63 @@
 #define PIN_INPUT(port, pin) {if (pin > 7) PIN_MODE4((port)->CRH, (pin&7), 0x4); else  PIN_MODE4((port)->CRL, pin, 0x4); }  //input
 
 
-#elif defined(NUCLEO) || defined(TARGET_NUCLEO_F072RB) || defined(TARGET_NUCLEO_F401RE) || defined(TARGET_NUCLEO_F411RE) || defined(TARGET_NUCLEO_F103RB) || defined(TARGET_NUCLEO_L476RG) || defined(TARGET_NUCLEO_F446RE)
+#elif defined(NUCLEO144) || ISTARGET_NUCLEO144
+#define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
+#if __MBED__
+#warning MBED knows everything
+#elif defined(STM32F767xx)
+  #include <STM32F7XX.h>
+#endif
+  #define D0_PORT GPIOG
+  #define D0_PIN  9
+  #define D1_PORT GPIOG
+  #define D1_PIN  14
+  #define D2_PORT GPIOF
+  #define D2_PIN  15
+  #define D3_PORT GPIOE
+  #define D3_PIN  13
+  #define D4_PORT GPIOF
+  #define D4_PIN  14
+  #define D5_PORT GPIOE
+  #define D5_PIN  11
+  #define D6_PORT GPIOE
+  #define D6_PIN  9
+  #define D7_PORT GPIOF
+  #define D7_PIN  13
+  #define D8_PORT GPIOF
+  #define D8_PIN  12
+  #define D9_PORT GPIOD
+  #define D9_PIN  15
+  #define D10_PORT GPIOD
+  #define D10_PIN  14
+  #define D11_PORT GPIOA
+  #define D11_PIN  7
+  #define D12_PORT GPIOA
+  #define D12_PIN  6
+  #define D13_PORT GPIOA
+  #define D13_PIN  5
+  #define A0_PORT GPIOA
+  #define A0_PIN  3
+  #define A1_PORT GPIOC
+  #define A1_PIN  0
+  #define A2_PORT GPIOC
+  #define A2_PIN  3
+  #define A3_PORT GPIOF
+  #define A3_PIN  3
+  #define A4_PORT GPIOF
+  #define A4_PIN  5
+  #define A5_PORT GPIOF
+  #define A5_PIN  10
+// Shield Control macros
+#define PIN_LOW(port, pin)    (port)->BSRR = (1<<((pin)+16))
+#define PIN_HIGH(port, pin)   (port)->BSRR = (1<<(pin))
+//#define PIN_LOW(port, pin)    (port)->ODR &= ~(1<<(pin))
+//#define PIN_HIGH(port, pin)   (port)->ODR |=  (1<<(pin))
+#define PIN_READ(port, pin)   (port)->IDR & (1<<(pin))
+#define PIN_OUTPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x1)
+#define PIN_INPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x0)   //.kbv check this
+
+#elif defined(NUCLEO) || ISTARGET_NUCLEO64
 #define PIN_MODE2(reg, pin, mode) reg=(reg&~(0x3<<((pin)<<1)))|(mode<<((pin)<<1))
 #if __MBED__
 #warning MBED knows everything
@@ -194,7 +265,7 @@
   #else
   #include <STM32F1XX.h>
   #endif
-#elif defined(STM32L476xx)
+#elif defined(STM32L476xx) || defined(STM32L433xx)
   #include <STM32L4XX.h>
 #elif defined(STM32F401xE) || defined(STM32F411xE) || defined(STM32F446xx)
   #include <STM32F4XX.h>
@@ -463,7 +534,7 @@
 #define PIN_INPUT(port, pin)  (port)->PDDR &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port)->PDIR & (1u<<(pin))
 
-#elif defined(MKL05Z4)
+#elif defined(MKL05Z4) || defined(TARGET_KL05Z)
   #include <MKL05Z4.h>
   #define D0_PORT PTB
   #define D0_PIN  2
@@ -615,11 +686,12 @@
   #define D0_PIN  11
   #define D1_PORT PORT->Group[0]
   #define D1_PIN  10
-  #define D2_PORT PORT->Group[0]
+	//M0 and Zero physical PA08 and PA14 are swapped
+  #define D2_PORT PORT->Group[0] //PA08  (Zero-D4)
   #define D2_PIN  8
   #define D3_PORT PORT->Group[0]
   #define D3_PIN  9
-  #define D4_PORT PORT->Group[0]
+  #define D4_PORT PORT->Group[0] //PA14  (Zero-D2)
   #define D4_PIN  14
   #define D5_PORT PORT->Group[0]
   #define D5_PIN  15
@@ -639,17 +711,28 @@
   #define D12_PIN  19
   #define D13_PORT PORT->Group[0]
   #define D13_PIN  17
-  #define A0_PORT PORT->Group[0]
+	//M0 and Zero Arduino digital pin numbering is DIFFERENT
+  #define D16_PORT PORT->Group[0] //PA22 (SDA)  (Zero-D20)
+  #define D16_PIN  22
+  #define D17_PORT PORT->Group[0] //PA23 (SCL)  (Zero-D21)
+  #define D17_PIN  23
+  #define D18_PORT PORT->Group[0] //PA12 (MISO) (Zero-D22)
+  #define D18_PIN  12
+  #define D20_PORT PORT->Group[1] //PB11 (SCK)  (Zero-D24)
+  #define D20_PIN  11
+  #define D21_PORT PORT->Group[1] //PB10 (MOSI) (Zero-D23)
+  #define D21_PIN  10
+  #define A0_PORT PORT->Group[0] //PA02(M0-D24) (Zero-D14)   
   #define A0_PIN  2
-  #define A1_PORT PORT->Group[1]
+  #define A1_PORT PORT->Group[1] //PB08
   #define A1_PIN  8
-  #define A2_PORT PORT->Group[1]
+  #define A2_PORT PORT->Group[1] //PB09
   #define A2_PIN  9
-  #define A3_PORT PORT->Group[0]
+  #define A3_PORT PORT->Group[0] //PA04
   #define A3_PIN  4
-  #define A4_PORT PORT->Group[0]
+  #define A4_PORT PORT->Group[0] //PA05
   #define A4_PIN  5
-  #define A5_PORT PORT->Group[1]
+  #define A5_PORT PORT->Group[1] //PB02
   #define A5_PIN  2
 
 #endif
@@ -659,6 +742,57 @@
 #define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
 #define PIN_INPUT(port, pin)  (port).DIR.reg &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
+
+
+//####################################### DUE ############################
+#elif defined(__SAM3X8E__)
+  #include <sam3xa.h>
+  #define D0_PORT PIOA
+  #define D0_PIN  8
+  #define D1_PORT PIOA
+  #define D1_PIN  9
+  #define D2_PORT PIOB
+  #define D2_PIN  25
+  #define D3_PORT PIOC
+  #define D3_PIN  28
+  #define D4_PORT PIOC   //also PA29
+  #define D4_PIN  26
+  #define D5_PORT PIOC
+  #define D5_PIN  25
+  #define D6_PORT PIOC
+  #define D6_PIN  24
+  #define D7_PORT PIOC
+  #define D7_PIN  23
+  #define D8_PORT PIOC
+  #define D8_PIN  22
+  #define D9_PORT PIOC
+  #define D9_PIN  21
+  #define D10_PORT PIOC  //also PA28
+  #define D10_PIN  29
+  #define D11_PORT PIOD
+  #define D11_PIN  7
+  #define D12_PORT PIOD
+  #define D12_PIN  8
+  #define D13_PORT PIOB
+  #define D13_PIN  27
+  #define A0_PORT PIOA
+  #define A0_PIN  16
+  #define A1_PORT PIOA
+  #define A1_PIN  24
+  #define A2_PORT PIOA
+  #define A2_PIN  23
+  #define A3_PORT PIOA
+  #define A3_PIN  22
+  #define A4_PORT PIOA
+  #define A4_PIN  6
+  #define A5_PORT PIOA
+  #define A5_PIN  4
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+#define PIN_INPUT(port, pin)  (port)->PIO_ODR &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port)->PIO_PDSR & (1u<<(pin))
 
 
 #elif defined(__AVR_ATxmegaA4U__)
@@ -704,6 +838,112 @@
   #define A4_PIN  0
   #define A5_PORT PORTE
   #define A5_PIN  1
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
+#define PIN_INPUT(port, pin)  (port).DIR.reg &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
+
+
+#elif defined(__AVR_ATmega4809__) && defined(ARDUINO_AVR_NANO_EVERY)   //NANO-EVERY
+#warning using NANO-EVERY
+  #include <avr/io.h>
+  #define D0_PORT PORTC
+  #define D0_PIN  5
+  #define D1_PORT PORTC
+  #define D1_PIN  4
+  #define D2_PORT PORTA
+  #define D2_PIN  0
+  #define D3_PORT PORTF
+  #define D3_PIN  5
+  #define D4_PORT PORTC
+  #define D4_PIN  6
+  #define D5_PORT PORTB
+  #define D5_PIN  2
+  #define D6_PORT PORTF
+  #define D6_PIN  4
+  #define D7_PORT PORTA
+  #define D7_PIN  1
+  #define D8_PORT PORTE
+  #define D8_PIN  3
+  #define D9_PORT PORTB
+  #define D9_PIN  0
+  #define D10_PORT PORTB //PB1
+  #define D10_PIN  1
+  #define D11_PORT PORTE
+  #define D11_PIN  0
+  #define D12_PORT PORTE
+  #define D12_PIN  1
+  #define D13_PORT PORTE
+  #define D13_PIN  2
+  #define A0_PORT PORTD
+  #define A0_PIN  3
+  #define A1_PORT PORTD
+  #define A1_PIN  2
+  #define A2_PORT PORTD
+  #define A2_PIN  1
+  #define A3_PORT PORTD
+  #define A3_PIN  0
+  #define A4_PORT PORTF
+  #define A4_PIN  2
+  #define A5_PORT PORTF
+  #define A5_PIN  3
+  #define A6_PORT PORTD
+  #define A6_PIN  5
+  #define A7_PORT PORTD
+  #define A7_PIN  4
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
+#define PIN_INPUT(port, pin)  (port).DIR.reg &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
+
+
+#elif defined(__AVR_ATmega4809__)    //XPRO_4809 with XPRO_SHIELD_ADAPTER
+#warning using XPRO_4809 with XPRO_SHIELD_ADAPTER
+  #include <avr/io.h>
+  #define D0_PORT PORTA
+  #define D0_PIN  1
+  #define D1_PORT PORTA
+  #define D1_PIN  0
+  #define D2_PORT PORTB
+  #define D2_PIN  2
+  #define D3_PORT PORTC
+  #define D3_PIN  6
+  #define D4_PORT PORTC
+  #define D4_PIN  7
+  #define D5_PORT PORTF
+  #define D5_PIN  6
+  #define D6_PORT PORTB
+  #define D6_PIN  3
+  #define D7_PORT PORTE
+  #define D7_PIN  1
+  #define D8_PORT PORTA
+  #define D8_PIN  2
+  #define D9_PORT PORTA
+  #define D9_PIN  3
+  #define D10_PORT PORTA
+  #define D10_PIN  7
+  #define D11_PORT PORTA //PC5
+  #define D11_PIN  4
+  #define D12_PORT PORTA
+  #define D12_PIN  5
+  #define D13_PORT PORTA
+  #define D13_PIN  6
+  #define A0_PORT PORTD
+  #define A0_PIN  2
+  #define A1_PORT PORTD
+  #define A1_PIN  3
+  #define A2_PORT PORTD
+  #define A2_PIN  4
+  #define A3_PORT PORTD
+  #define A3_PIN  5
+  #define A4_PORT PORTC
+  #define A4_PIN  2
+  #define A5_PORT PORTC
+  #define A5_PIN  3
 // Shield Control macros.
 #define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
 #define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))

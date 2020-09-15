@@ -898,7 +898,9 @@ void PS2Controller::begin(gpio_num_t port0_clkGPIO, gpio_num_t port0_datGPIO, gp
   SET_PERI_REG_MASK(SENS_SAR_START_FORCE_REG, SENS_ULP_CP_START_TOP);         // start
 
   // install RTC interrupt handler (on ULP Wake() instruction)
-  esp_intr_alloc(ETS_RTC_CORE_INTR_SOURCE, 0, rtc_isr, this, &m_isrHandle);
+  // note about ESP_INTR_FLAG_LEVEL2: this is necessary in order to work reliably with interrupt intensive VGATextController, when running on the same core
+  // must be core "1" due the RTC
+  esp_intr_alloc_pinnedToCore(ETS_RTC_CORE_INTR_SOURCE, ESP_INTR_FLAG_LEVEL2 | ESP_INTR_FLAG_IRAM, rtc_isr, this, &m_isrHandle, 1);
   SET_PERI_REG_MASK(RTC_CNTL_INT_ENA_REG, RTC_CNTL_ULP_CP_INT_ENA);
 }
 
@@ -1057,35 +1059,44 @@ void PS2Controller::sendData(uint8_t data, int PS2Port)
 
 void IRAM_ATTR PS2Controller::rtc_isr(void * arg)
 {
-  PS2Controller * ctrl = (PS2Controller*) arg;
-  for (int PS2Port = 0; PS2Port < 2; ++PS2Port) {
+  uint32_t rtc_intr = READ_PERI_REG(RTC_CNTL_INT_ST_REG);
 
-    uint32_t RTCMEM_PORTX_WORD_SENT_FLAG = (PS2Port == 0 ? RTCMEM_PORT0_WORD_SENT_FLAG : RTCMEM_PORT1_WORD_SENT_FLAG);
-    uint32_t RTCMEM_PORTX_WRITE_POS      = (PS2Port == 0 ? RTCMEM_PORT0_WRITE_POS      : RTCMEM_PORT1_WRITE_POS);
-    uint32_t RTCMEM_PORTX_WORD_RX_READY  = (PS2Port == 0 ? RTCMEM_PORT0_WORD_RX_READY  : RTCMEM_PORT1_WORD_RX_READY);
+  if (rtc_intr & RTC_CNTL_SAR_INT_ST) {
 
-    // Received end of send interrupt?
-    if (RTC_SLOW_MEM[RTCMEM_PORTX_WORD_SENT_FLAG]) {
-      // reset flag and awake waiting task
-      RTC_SLOW_MEM[RTCMEM_PORTX_WORD_SENT_FLAG] = 0;
-      ctrl->m_readPos[PS2Port] = RTC_SLOW_MEM[RTCMEM_PORTX_WRITE_POS] & 0xFFFF;
-      if (ctrl->m_TXWaitTask[PS2Port]) {
-        vTaskNotifyGiveFromISR(ctrl->m_TXWaitTask[PS2Port], nullptr);
-        ctrl->m_TXWaitTask[PS2Port] = nullptr;
+    PS2Controller * ctrl = (PS2Controller*) arg;
+    for (int PS2Port = 0; PS2Port < 2; ++PS2Port) {
+
+      uint32_t RTCMEM_PORTX_WORD_SENT_FLAG = (PS2Port == 0 ? RTCMEM_PORT0_WORD_SENT_FLAG : RTCMEM_PORT1_WORD_SENT_FLAG);
+      uint32_t RTCMEM_PORTX_WRITE_POS      = (PS2Port == 0 ? RTCMEM_PORT0_WRITE_POS      : RTCMEM_PORT1_WRITE_POS);
+      uint32_t RTCMEM_PORTX_WORD_RX_READY  = (PS2Port == 0 ? RTCMEM_PORT0_WORD_RX_READY  : RTCMEM_PORT1_WORD_RX_READY);
+
+      // Received end of send interrupt?
+      if (RTC_SLOW_MEM[RTCMEM_PORTX_WORD_SENT_FLAG]) {
+        // reset flag and awake waiting task
+        RTC_SLOW_MEM[RTCMEM_PORTX_WORD_SENT_FLAG] = 0;
+        ctrl->m_readPos[PS2Port] = RTC_SLOW_MEM[RTCMEM_PORTX_WRITE_POS] & 0xFFFF;
+        if (ctrl->m_TXWaitTask[PS2Port]) {
+          vTaskNotifyGiveFromISR(ctrl->m_TXWaitTask[PS2Port], nullptr);
+          ctrl->m_TXWaitTask[PS2Port] = nullptr;
+        }
       }
-    }
 
-    // Received new RX word interrupt?
-    if (RTC_SLOW_MEM[RTCMEM_PORTX_WORD_RX_READY]) {
-      // reset flag and awake waiting task
-      RTC_SLOW_MEM[RTCMEM_PORTX_WORD_RX_READY] = 0;
-      if (ctrl->m_RXWaitTask[PS2Port]) {
-        vTaskNotifyGiveFromISR(ctrl->m_RXWaitTask[PS2Port], nullptr);
-        ctrl->m_RXWaitTask[PS2Port] = nullptr;
+      // Received new RX word interrupt?
+      if (RTC_SLOW_MEM[RTCMEM_PORTX_WORD_RX_READY]) {
+        // reset flag and awake waiting task
+        RTC_SLOW_MEM[RTCMEM_PORTX_WORD_RX_READY] = 0;
+        if (ctrl->m_RXWaitTask[PS2Port]) {
+          vTaskNotifyGiveFromISR(ctrl->m_RXWaitTask[PS2Port], nullptr);
+          ctrl->m_RXWaitTask[PS2Port] = nullptr;
+        }
       }
+
     }
 
   }
+
+  // clear interrupt
+  WRITE_PERI_REG(RTC_CNTL_INT_CLR_REG, rtc_intr);
 }
 
 

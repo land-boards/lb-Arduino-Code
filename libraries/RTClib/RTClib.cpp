@@ -658,25 +658,44 @@ TimeSpan DateTime::operator-(const DateTime &right) {
 
 /**************************************************************************/
 /*!
+    @author Anton Rieutskyi
     @brief  Test if one DateTime is less (earlier) than another.
+    @warning if one or both DateTime objects are invalid, returned value is
+        meaningless
+    @see use `isValid()` method to check if DateTime object is valid
     @param right Comparison DateTime object
     @return True if the left DateTime is earlier than the right one,
         false otherwise.
 */
 /**************************************************************************/
 bool DateTime::operator<(const DateTime &right) const {
-  return unixtime() < right.unixtime();
+  return (yOff + 2000 < right.year() ||
+          (yOff + 2000 == right.year() &&
+           (m < right.month() ||
+            (m == right.month() &&
+             (d < right.day() ||
+              (d == right.day() &&
+               (hh < right.hour() ||
+                (hh == right.hour() &&
+                 (mm < right.minute() ||
+                  (mm == right.minute() && ss < right.second()))))))))));
 }
 
 /**************************************************************************/
 /*!
+    @author Anton Rieutskyi
     @brief  Test if two DateTime objects are equal.
+    @warning if one or both DateTime objects are invalid, returned value is
+        meaningless
+    @see use `isValid()` method to check if DateTime object is valid
     @param right Comparison DateTime object
     @return True if both DateTime objects are the same, false otherwise.
 */
 /**************************************************************************/
 bool DateTime::operator==(const DateTime &right) const {
-  return unixtime() == right.unixtime();
+  return (right.year() == yOff + 2000 && right.month() == m &&
+          right.day() == d && right.hour() == hh && right.minute() == mm &&
+          right.second() == ss);
 }
 
 /**************************************************************************/
@@ -695,7 +714,7 @@ bool DateTime::operator==(const DateTime &right) const {
 */
 /**************************************************************************/
 String DateTime::timestamp(timestampOpt opt) {
-  char buffer[20];
+  char buffer[25]; // large enough for any DateTime, including invalid ones
 
   // Generate timestamp according to opt
   switch (opt) {
@@ -1122,6 +1141,41 @@ DateTime RTC_PCF8523::now() {
   uint16_t y = bcd2bin(Wire._I2C_READ()) + 2000;
 
   return DateTime(y, m, d, hh, mm, ss);
+}
+
+/**************************************************************************/
+/*!
+    @brief  Resets the STOP bit in register Control_1
+*/
+/**************************************************************************/
+void RTC_PCF8523::start(void) {
+  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+  if (ctlreg & (1 << 5)) {
+    write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg & ~(1 << 5));
+  }
+}
+
+/**************************************************************************/
+/*!
+    @brief  Sets the STOP bit in register Control_1
+*/
+/**************************************************************************/
+void RTC_PCF8523::stop(void) {
+  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+  if (!(ctlreg & (1 << 5))) {
+    write_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1, ctlreg | (1 << 5));
+  }
+}
+
+/**************************************************************************/
+/*!
+    @brief  Is the PCF8523 running? Check the STOP bit in register Control_1
+    @return 1 if the RTC is running, 0 if not
+*/
+/**************************************************************************/
+uint8_t RTC_PCF8523::isrunning() {
+  uint8_t ctlreg = read_i2c_register(PCF8523_ADDRESS, PCF8523_CONTROL_1);
+  return !((ctlreg >> 5) & 1);
 }
 
 /**************************************************************************/
