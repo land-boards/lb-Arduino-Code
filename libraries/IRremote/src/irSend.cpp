@@ -1,6 +1,6 @@
 #include "IRremote.h"
 
-#ifdef SENDING_SUPPORTED
+#ifdef SENDING_SUPPORTED // from IRremoteBoardDefs.h
 //+=============================================================================
 void IRsend::sendRaw(const unsigned int buf[], unsigned int len, unsigned int hz) {
     // Set IR carrier frequency
@@ -37,7 +37,7 @@ void IRsend::sendRaw_P(const unsigned int buf[], unsigned int len, unsigned int 
 
 }
 
-#ifdef USE_SOFT_CARRIER
+#ifdef USE_SOFT_SEND_PWM
 void inline IRsend::sleepMicros(unsigned long us) {
 #ifdef USE_SPIN_WAIT
     sleepUntilMicros(micros() + us);
@@ -59,7 +59,45 @@ void inline IRsend::sleepUntilMicros(unsigned long targetTime) {
     }
 #endif
 }
-#endif // USE_SOFT_CARRIER
+#endif // USE_SOFT_SEND_PWM
+
+//+=============================================================================
+// Sends PulseDistance data from MSB to LSB
+//
+void IRsend::sendPulseDistanceWidthData(unsigned int aOneMarkMicros, unsigned int aOneSpaceMicros, unsigned int aZeroMarkMicros,
+        unsigned int aZeroSpaceMicros, unsigned long aData, uint8_t aNumberOfBits, bool aMSBfirst) {
+
+    if (aMSBfirst) {  // Send the MSB first.
+        // send data from MSB to LSB until mask bit is shifted out
+        for (unsigned long mask = 1UL << (aNumberOfBits - 1); mask; mask >>= 1) {
+            if (aData & mask) {
+                DBG_PRINT("1");
+                mark(aOneMarkMicros);
+                space(aOneSpaceMicros);
+            } else {
+                DBG_PRINT("0");
+                mark(aZeroMarkMicros);
+                space(aZeroSpaceMicros);
+            }
+        }
+        DBG_PRINTLN("");
+    }
+#if defined(LSB_FIRST_REQUIRED)
+     else {  // Send the Least Significant Bit (LSB) first / MSB last.
+        for (uint16_t bit = 0; bit < aNumberOfBits; bit++, aData >>= 1)
+            if (aData & 1) {  // Send a 1
+                DBG_PRINT("1");
+                mark(aOneMarkMicros);
+                space(aOneSpaceMicros);
+            } else {  // Send a 0
+                DBG_PRINT("0");
+                mark(aZeroMarkMicros);
+                space(aZeroSpaceMicros);
+            }
+        DBG_PRINTLN("");
+    }
+#endif
+}
 
 //+=============================================================================
 // Sends an IR mark for the specified number of microseconds.
@@ -67,10 +105,10 @@ void inline IRsend::sleepUntilMicros(unsigned long targetTime) {
 //
 
 void IRsend::mark(unsigned int time) {
-#ifdef USE_SOFT_CARRIER
+#ifdef USE_SOFT_SEND_PWM
     unsigned long start = micros();
     unsigned long stop = start + time;
-    if (stop + periodTime < start) {
+    if (stop + periodTimeMicros < start) {
         // Counter wrap-around, happens very seldomly, but CAN happen.
         // Just give up instead of possibly damaging the hardware.
         return;
@@ -79,16 +117,16 @@ void IRsend::mark(unsigned int time) {
     unsigned long now = micros();
     while (now < stop) {
         SENDPIN_ON(sendPin);
-        sleepMicros (periodOnTime);
+        sleepMicros (periodOnTimeMicros);
         SENDPIN_OFF(sendPin);
-        nextPeriodEnding += periodTime;
+        nextPeriodEnding += periodTimeMicros;
         sleepUntilMicros(nextPeriodEnding);
         now = micros();
     }
-#elif defined(USE_NO_CARRIER)
+#elif defined(USE_NO_SEND_PWM)
     digitalWrite(sendPin, LOW); // Set output to active low.
 #else
-    TIMER_ENABLE_PWM; // Enable pin 3 PWM output
+    TIMER_ENABLE_SEND_PWM; // Enable pin 3 PWM output
 #endif
     if (time > 0) {
         custom_delay_usec(time);
@@ -101,10 +139,10 @@ void IRsend::mark(unsigned int time) {
 // A space is no output, so the PWM output is disabled.
 //
 void IRsend::space(unsigned int time) {
-#if defined(USE_NO_CARRIER)
+#if defined(USE_NO_SEND_PWM)
     digitalWrite(sendPin, HIGH); // Set output to inactive high.
 #else
-    TIMER_DISABLE_PWM; // Disable pin 3 PWM output
+    TIMER_DISABLE_SEND_PWM; // Disable pin 3 PWM output
 #endif
     if (time > 0) {
         IRsend::custom_delay_usec(time);
@@ -125,23 +163,23 @@ void IRsend::space(unsigned int time) {
 // See my Secrets of Arduino PWM at http://arcfn.com/2009/07/secrets-of-arduino-pwm.html for details.
 //
 void IRsend::enableIROut(int khz) {
-#ifdef USE_SOFT_CARRIER
-    periodTime = (1000U + khz / 2) / khz; // = 1000/khz + 1/2 = round(1000.0/khz)
-    periodOnTime = periodTime * DUTY_CYCLE / 100U - PULSE_CORRECTION;
+#ifdef USE_SOFT_SEND_PWM
+    periodTimeMicros = (1000U + khz / 2) / khz; // = 1000/khz + 1/2 = round(1000.0/khz)
+    periodOnTimeMicros = periodTimeMicros * IR_SEND_DUTY_CYCLE / 100U - PULSE_CORRECTION_MICROS;
 #endif
 
-#if defined(USE_NO_CARRIER)
+#if defined(USE_NO_SEND_PWM)
     pinMode(sendPin, OUTPUT);
     digitalWrite(sendPin, HIGH); // Set output to inactive high.
 #else
     // Disable the Timer2 Interrupt (which is used for receiving IR)
-    TIMER_DISABLE_INTR; //Timer2 Overflow Interrupt
+    TIMER_DISABLE_RECEIVE_INTR; //Timer2 Overflow Interrupt
 
     pinMode(sendPin, OUTPUT);
 
     SENDPIN_OFF(sendPin); // When not sending, we want it low
 
-    timerConfigkHz(khz);
+    timerConfigForSend(khz);
 #endif
 }
 #endif

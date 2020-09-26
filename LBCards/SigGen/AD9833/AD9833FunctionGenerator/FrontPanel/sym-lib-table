@@ -1,0 +1,7 @@
+(sym_lib_table
+  (lib (name AD9833FunctionGenerator-rescue)(type Legacy)(uri ${KIPRJMOD}/AD9833FunctionGenerator-rescue.lib)(options "")(descr ""))
+  (lib (name mc34063)(type Legacy)(uri ${KIPRJMOD}/lib/mc34063.lib)(options "")(descr ""))
+  (lib (name HE721_ReedRelays)(type Legacy)(uri H:/Workspace/ElectronicsProjects/TestAndMeasurement/AD9833FunctionGenerator/Hardware/lib/HE721_ReedRelays.lib)(options "")(descr ""))
+  (lib (name Amplifier_Custom)(type Legacy)(uri ${KIPRJMOD}/lib/Amplifier_Custom.lib)(options "")(descr ""))
+  (lib (name FrontPanel_AD9833FunctionGenerator-rescue)(type Legacy)(uri ${KIPRJMOD}/FrontPanel_AD9833FunctionGenerator-rescue.lib)(options "")(descr ""))
+)

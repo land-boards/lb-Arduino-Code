@@ -45,7 +45,7 @@
  C. Further down in "Main class for receiving IR", add:
  //......................................................................
  #if DECODE_SHUZU
- bool  decodeShuzu (decode_results *results) ;
+ bool  decodeShuzu (decode_results *aResults) ;
  #endif
 
  D. Further down in "Main class for sending IR", add:
@@ -101,16 +101,16 @@
 //
 //==============================================================================
 
-#define SHUZU_BITS          32  // The number of bits in the command
+#define SHUZU_BITS            32  // The number of bits in the command
 
-#define SHUZU_HDR_MARK    1000  // The length of the Header:Mark
-#define SHUZU_HDR_SPACE   2000  // The lenght of the Header:Space
+#define SHUZU_HEADER_MARK   1000  // The length of the Header:Mark
+#define SHUZU_HEADER_SPACE  2000  // The lenght of the Header:Space
 
-#define SHUZU_BIT_MARK    3000  // The length of a Bit:Mark
-#define SHUZU_ONE_SPACE   4000  // The length of a Bit:Space for 1's
-#define SHUZU_ZERO_SPACE  5000  // The length of a Bit:Space for 0's
+#define SHUZU_BIT_MARK      3000  // The length of a Bit:Mark
+#define SHUZU_ONE_SPACE     4000  // The length of a Bit:Space for 1's
+#define SHUZU_ZERO_SPACE    5000  // The length of a Bit:Space for 0's
 
-#define SHUZU_OTHER       1234  // Other things you may need to define
+#define SHUZU_OTHER         1234  // Other things you may need to define
 
 //+=============================================================================
 //
@@ -120,19 +120,20 @@ void IRsend::sendShuzu(unsigned long data, int nbits) {
     enableIROut(38);
 
     // Header
-    mark(SHUZU_HDR_MARK);
-    space(SHUZU_HDR_SPACE);
+    mark(SHUZU_HEADER_MARK);
+    space(SHUZU_HEADER_SPACE);
 
     // Data
-    for (unsigned long mask = 1UL << (nbits - 1); mask; mask >>= 1) {
-        if (data & mask) {
-            mark(SHUZU_BIT_MARK);
-            space(SHUZU_ONE_SPACE);
-        } else {
-            mark(SHUZU_BIT_MARK);
-            space(SHUZU_ZERO_SPACE);
-        }
-    }
+    sendPulseDistanceData(data, nbits,  SHUZU_BIT_MARK, SHUZU_ONE_SPACE,SHUZU_BIT_MARK, SHUZU_ZERO_SPACE);
+//    for (unsigned long mask = 1UL << (nbits - 1); mask; mask >>= 1) {
+//        if (data & mask) {
+//            mark(SHUZU_BIT_MARK);
+//            space(SHUZU_ONE_SPACE);
+//        } else {
+//            mark(SHUZU_BIT_MARK);
+//            space(SHUZU_ZERO_SPACE);
+//        }
+//    }
 
     // Footer
     mark(SHUZU_BIT_MARK);
@@ -143,50 +144,54 @@ void IRsend::sendShuzu(unsigned long data, int nbits) {
 //+=============================================================================
 //
 #if DECODE_SHUZU
-bool IRrecv::decodeShuzu(decode_results *results) {
+bool IRrecv::decodeShuzu() {
     unsigned long data = 0;  // Somewhere to build our code
-    int offset = 1;  // Skip the Gap reading
+    int offset = 1;  // Skip the gap reading
 
     // Check we have the right amount of data
-    if (irparams.rawlen != 1 + 2 + (2 * SHUZU_BITS) + 1) {
+    if (results.rawlen != 1 + 2 + (2 * SHUZU_BITS) + 1) {
         return false;
     }
 
     // Check initial Mark+Space match
-    if (!MATCH_MARK(results->rawbuf[offset], SHUZU_HDR_MARK)) {
+    if (!MATCH_MARK(results.rawbuf[offset], SHUZU_HEADER_MARK)) {
         return false;
     }
     offset++;
 
-    if (!MATCH_SPACE(results->rawbuf[offset], SHUZU_HDR_SPACE)) {
+    if (!MATCH_SPACE(results.rawbuf[offset], SHUZU_HEADER_SPACE)) {
         return false;
     }
     offset++;
 
-    // Read the bits in
-    for (int i = 0; i < SHUZU_BITS; i++) {
-        // Each bit looks like: MARK + SPACE_1 -> 1
-        //                 or : MARK + SPACE_0 -> 0
-        if (!MATCH_MARK(results->rawbuf[offset], SHUZU_BIT_MARK)) {
-            return false;
-        }
-        offset++;
-
-        // IR data is big-endian, so we shuffle it in from the right:
-        if (MATCH_SPACE(results->rawbuf[offset], SHUZU_ONE_SPACE)) {
-            data = (data << 1) | 1;
-        } else if (MATCH_SPACE(results->rawbuf[offset], SHUZU_ZERO_SPACE)) {
-            data = (data << 1) | 0;
-        } else {
-            return false;
-        }
-        offset++;
-    }
+    data = decodePulseDistanceData(results, SHUZU_BITS, offset, SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_ZERO_SPACE);
+//    // Read the bits in
+//    for (int i = 0; i < SHUZU_BITS; i++) {
+//        // Each bit looks like: MARK + SPACE_1 -> 1
+//        //                 or : MARK + SPACE_0 -> 0
+//        if (!MATCH_MARK(results.rawbuf[offset], SHUZU_BIT_MARK)) {
+//            return false;
+//        }
+//        offset++;
+//
+//        // IR data is big-endian, so we shuffle it in from the right:
+//        if (MATCH_SPACE(results.rawbuf[offset], SHUZU_ONE_SPACE)) {
+//            data = (data << 1) | 1;
+//        } else if (MATCH_SPACE(results.rawbuf[offset], SHUZU_ZERO_SPACE)) {
+//            data = (data << 1) | 0;
+//        } else {
+//            return false;
+//        }
+//        offset++;
+//    }
 
     // Success
-    results->bits = SHUZU_BITS;
-    results->value = data;
-    results->decode_type = SHUZU;
+    results.bits = SHUZU_BITS;
+    results.value = data;
+    results.decode_type = SHUZU;
     return true;
+}
+bool IRrecv::decodeShuzu(decode_results *aResults) {
+    bool aReturnValue = decodeShuzu();
 }
 #endif

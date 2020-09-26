@@ -1,0 +1,7 @@
+(fp_lib_table
+  (lib (name PTH901)(type KiCad)(uri ${KIPRJMOD}/lib/PTH901.pretty)(options "")(descr ""))
+  (lib (name Bourns_538-73101-0570_BNC)(type KiCad)(uri ${KIPRJMOD}/lib/Bourns_538-73101-0570_BNC.pretty)(options "")(descr ""))
+  (lib (name PTD901)(type KiCad)(uri ${KIPRJMOD}/lib/PTD901.pretty)(options "")(descr ""))
+  (lib (name PN22LENA03QE)(type KiCad)(uri ${KIPRJMOD}/lib/PN22LENA03QE.pretty)(options "")(descr ""))
+  (lib (name ALPS_SPUN191600)(type KiCad)(uri ${KIPRJMOD}/lib/ALPS_SPUN191600.pretty)(options "")(descr ""))
+)

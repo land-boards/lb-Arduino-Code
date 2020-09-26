@@ -23,79 +23,84 @@
 #define IRremote_h
 
 //------------------------------------------------------------------------------
-// The ISR header contains several useful macros the user may wish to use
-//
 #include "private/IRremoteInt.h"
 
-#ifdef ARDUINO_ARCH_AVR
-#include <avr/pgmspace.h>
-#define HAS_FLASH_READ 1
-#define STRCPY_PF_CAST(x) (x)
-#else
-#define HAS_FLASH_READ 0
-#endif
-
+/****************************************************
+ *                     PROTOCOLS
+ ****************************************************/
 //------------------------------------------------------------------------------
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to 0) all the protocols you do not need/want!
 //
+#define DECODE_AIWA_RC_T501  1
+#define SEND_AIWA_RC_T501    1
+
+#define DECODE_BOSEWAVE      1
+#define SEND_BOSEWAVE        1
+
+#define DECODE_DENON         1
+#define SEND_DENON           1
+
+#define DECODE_DISH          0 // NOT WRITTEN
+#define SEND_DISH            1
+
+#define DECODE_JVC           1
+#define SEND_JVC             1
+
+#define DECODE_LEGO_PF       0 // NOT WRITTEN
+#define SEND_LEGO_PF         1
+
+#define DECODE_LG            1
+#define SEND_LG              1
+
+#define DECODE_MAGIQUEST     1
+#define SEND_MAGIQUEST       1
+
+#define DECODE_MITSUBISHI    1
+#define SEND_MITSUBISHI      0 // NOT WRITTEN
+
+//#define USE_NEC_STANDARD // remove comment to have the standard NEC decoding (LSB first) available.
+#if defined(USE_NEC_STANDARD)
+#define DECODE_NEC_STANDARD  1
+#define DECODE_NEC           0
+#define LSB_FIRST_REQUIRED
+#else
+#define DECODE_NEC_STANDARD  0
+#define DECODE_NEC           1
+#endif
+#define SEND_NEC             1
+#define SEND_NEC_STANDARD    1
+
+#define DECODE_PANASONIC     1
+#define SEND_PANASONIC       1
+
 #define DECODE_RC5           1
 #define SEND_RC5             1
 
 #define DECODE_RC6           1
 #define SEND_RC6             1
 
-#define DECODE_NEC           1
-#define SEND_NEC             1
-
-#define DECODE_SONY          1
-#define SEND_SONY            1
-
-#define DECODE_PANASONIC     1
-#define SEND_PANASONIC       1
-
-#define DECODE_JVC           1
-#define SEND_JVC             1
-
 #define DECODE_SAMSUNG       1
 #define SEND_SAMSUNG         1
 
-#define DECODE_WHYNTER       1
-#define SEND_WHYNTER         1
-
-#define DECODE_AIWA_RC_T501  1
-#define SEND_AIWA_RC_T501    1
-
-#define DECODE_LG            1
-#define SEND_LG              1
-
 #define DECODE_SANYO         1
 #define SEND_SANYO           0 // NOT WRITTEN
-
-#define DECODE_MITSUBISHI    1
-#define SEND_MITSUBISHI      0 // NOT WRITTEN
-
-#define DECODE_DISH          0 // NOT WRITTEN
-#define SEND_DISH            1
 
 #define DECODE_SHARP         1
 #define SEND_SHARP           1
 
 #define DECODE_SHARP_ALT     1
 #define SEND_SHARP_ALT       1
+#if SEND_SHARP_ALT
+#define LSB_FIRST_REQUIRED
+#endif
 
-#define DECODE_DENON         1
-#define SEND_DENON           1
+#define DECODE_SONY          1
+#define SEND_SONY            1
 
-#define DECODE_LEGO_PF       0 // NOT WRITTEN
-#define SEND_LEGO_PF         1
-
-#define DECODE_BOSEWAVE      1
-#define SEND_BOSEWAVE        1
-
-#define DECODE_MAGIQUEST     1
-#define SEND_MAGIQUEST       1
+#define DECODE_WHYNTER       1
+#define SEND_WHYNTER         1
 
 #define DECODE_HASH          1 // special decoder for all protocols
 
@@ -106,36 +111,36 @@
 typedef enum {
     UNKNOWN = -1,
     UNUSED = 0,
+    AIWA_RC_T501,
+    BOSEWAVE,
+    DENON,
+    DISH,
+    JVC,
+    LEGO_PF,
+    LG,
+    MAGIQUEST,
+    MITSUBISHI,
+    NEC_STANDARD,
+    NEC,
+    PANASONIC,
     RC5,
     RC6,
-    NEC,
-    SONY,
-    PANASONIC,
-    JVC,
     SAMSUNG,
-    WHYNTER,
-    AIWA_RC_T501,
-    LG,
     SANYO,
-    MITSUBISHI,
-    DISH,
     SHARP,
     SHARP_ALT,
-    DENON,
-    LEGO_PF,
-    BOSEWAVE,
-    MAGIQUEST,
+    SONY,
+    WHYNTER,
 } decode_type_t;
 
 /**
- * Set DEBUG to 1 for lots of lovely debug output.
+ * Comment this out for lots of lovely debug output.
  */
-#define DEBUG  0
-
+//#define DEBUG
 //------------------------------------------------------------------------------
 // Debug directives
 //
-#if DEBUG
+#ifdef DEBUG
 #  define DBG_PRINT(...)    Serial.print(__VA_ARGS__)
 #  define DBG_PRINTLN(...)  Serial.println(__VA_ARGS__)
 #else
@@ -162,23 +167,30 @@ int MATCH(int measured, int desired);
 int MATCH_MARK(int measured_ticks, int desired_us);
 int MATCH_SPACE(int measured_ticks, int desired_us);
 
+/****************************************************
+ *                     RECEIVING
+ ****************************************************/
 /**
  * Results returned from the decoder
  */
-class decode_results {
-public:
+struct decode_results {
     decode_type_t decode_type;  ///< UNKNOWN, NEC, SONY, RC5, ...
-    unsigned int address;       ///< Used by Panasonic & Sharp [16-bits]
-    unsigned long value;        ///< Decoded value [max 32-bits]
-    unsigned int magnitude;     ///< Used by MagiQuest [16-bits]
+    unsigned int address;       ///< Used by Panasonic & Sharp6 NEC_standard [16-bits]
+    unsigned long value;        ///< Decoded value / command [max 32-bits]
     int bits;                   ///< Number of bits in decoded value
-    volatile unsigned int *rawbuf;      ///< Raw intervals in 50uS ticks
+    unsigned int magnitude;     ///< Used by MagiQuest [16-bits]
+    bool isRepeat;              ///< True if repeat of value is detected
+
+    // next 3 values are copies of irparams values
+    unsigned int *rawbuf;       ///< Raw intervals in 50uS ticks
     unsigned int rawlen;        ///< Number of records in rawbuf
-    int overflow;               ///< true if IR raw code too long
+    bool overflow;               ///< true if IR raw code too long
 };
 
 /**
- * Decoded value for NEC when a repeat code is received
+ * DEPRECATED
+ * Decoded value for NEC and others when a repeat code is received
+ * Use Flag decode_results.isRepeat (see above) instead
  */
 #define REPEAT 0xFFFFFFFF
 
@@ -208,9 +220,11 @@ public:
     /**
      * Attempt to decode the recently receive IR signal
      * @param results decode_results instance returning the decode, if any.
-     * @return success of operation. TODO: convert to bool
+     * @return success of operation.
      */
-    int decode(decode_results *results);
+    bool decode(decode_results *aResults);__attribute__ ((deprecated ("You should use decode() without a parameter.")))
+    ;               // deprecated
+    bool decode();
 
     /**
      * Enable IR reception.
@@ -229,9 +243,18 @@ public:
     bool isIdle();
 
     /**
+     * Returns status of reception and copies IR-data to decode_results buffer if true.
+     * @return true if data is available.
+     */
+    bool available();
+
+    /**
      * Called to re-enable IR reception.
      */
     void resume();
+
+    const char* getProtocolString();
+    void printResultShort(Print * aSerial);
 
     /**
      * Print the result (second argument) as Pronto Hex on the Stream supplied as argument.
@@ -239,107 +262,149 @@ public:
      * @param results the decode_results as delivered from irrecv.decode.
      * @param frequency Modulation frequency in Hz. Often 38000Hz.
      */
-    void dumpPronto(Stream& stream, decode_results *results, unsigned int frequency = 38000U);
+    void dumpPronto(Stream& stream, unsigned int frequency = 38000U);
+
+    unsigned long decodePulseDistanceData(uint8_t aNumberOfBits, uint8_t aStartOffset, unsigned int aBitMarkMicros,
+            unsigned int aOneSpaceMicros, unsigned int aZeroSpaceMicros, bool aMSBfirst = true);
+
+    decode_results results; // the instance for decoding
 
 private:
 #if DECODE_HASH
-    long decodeHash(decode_results *results);
+    bool decodeHash();
+    bool decodeHash(decode_results *aResults);
     int compare(unsigned int oldval, unsigned int newval);
 #endif
 
     //......................................................................
-#if (DECODE_RC5 || DECODE_RC6)
-    /**
-     *  This helper function is shared by RC5 and RC6
-     */
-    int getRClevel(decode_results *results, unsigned int *offset, int *used, int t1);
-#endif
 #if DECODE_RC5
     /**
      * Try to decode the recently received IR signal as an RC5 signal-
      * @param results decode_results instance returning the decode, if any.
      * @return Success of the operation.
      */
-    bool decodeRC5(decode_results *results);
+    bool decodeRC5();
+    bool decodeRC5(decode_results *aResults);
 #endif
 #if DECODE_RC6
-    bool decodeRC6(decode_results *results);
+    bool decodeRC6();
+    bool decodeRC6(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_NEC
-    bool decodeNEC(decode_results *results);
+    bool decodeNEC();
+    bool decodeNEC(decode_results *aResults);
 #endif
+#if DECODE_NEC_STANDARD
+    bool decodeNECStandard();
+#endif
+
     //......................................................................
 #if DECODE_SONY
-    bool decodeSony(decode_results *results);
+    bool decodeSony();
+    bool decodeSony(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_PANASONIC
-    bool decodePanasonic(decode_results *results);
+    bool decodePanasonic();
+    bool decodePanasonic(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_JVC
-    bool decodeJVC(decode_results *results);
+    bool decodeJVC();
+    bool decodeJVC(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_SAMSUNG
-    bool decodeSAMSUNG(decode_results *results);
+    bool decodeSAMSUNG();
+    bool decodeSAMSUNG(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_WHYNTER
-    bool decodeWhynter(decode_results *results);
+    bool decodeWhynter();
+    bool decodeWhynter(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_AIWA_RC_T501
-    bool decodeAiwaRCT501(decode_results *results);
+    bool decodeAiwaRCT501();
+    bool decodeAiwaRCT501(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_LG
-    bool decodeLG(decode_results *results);
+    bool decodeLG();
+    bool decodeLG(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_SANYO
-    bool decodeSanyo(decode_results *results);
+    bool decodeSanyo();
+    bool decodeSanyo(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_MITSUBISHI
-    bool decodeMitsubishi(decode_results *results);
+    bool decodeMitsubishi();
+    bool decodeMitsubishi(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_DISH
-      bool  decodeDish (decode_results *results) ; // NOT WRITTEN
+      bool  decodeDish () ; // NOT WRITTEN
 #endif
     //......................................................................
 #if DECODE_SHARP
-    bool decodeSharp(decode_results *results); // NOT WRITTEN
+    bool decodeSharp();
+    bool decodeSharp(decode_results *aResults);
 #endif
 #if DECODE_SHARP_ALT
-    bool decodeSharpAlt(decode_results *results);
+    bool decodeSharpAlt();
+    bool decodeSharpAlt(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_DENON
-    bool decodeDenon(decode_results *results);
+    bool decodeDenon();
+    bool decodeDenon(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_LEGO_PF
-      bool  decodeLegoPowerFunctions (decode_results *results) ;
+      bool  decodeLegoPowerFunctions (decode_results *aResults) ;
 #endif
     //......................................................................
 #if DECODE_BOSEWAVE
-    bool decodeBoseWave(decode_results *results);
+    bool decodeBoseWave();
+    bool decodeBoseWave(decode_results *aResults);
 #endif
     //......................................................................
 #if DECODE_MAGIQUEST
-    bool decodeMagiQuest(decode_results *results);
+    bool decodeMagiQuest();
+    bool decodeMagiQuest(decode_results *aResults);
 #endif
 };
 
+/****************************************************
+ *                     SENDING
+ ****************************************************/
+/**
+ * Define to use no carrier PWM, just simulate an active low receiver signal.
+ */
+//#define USE_NO_SEND_PWM
+/**
+ * Define to use carrier PWM generation in software, instead of hardware PWM.
+ */
+//#define USE_SOFT_SEND_PWM
+/**
+ * If USE_SOFT_SEND_PWM, this amount is subtracted from the on-time of the pulses.
+ */
+#ifndef PULSE_CORRECTION_MICROS
+#define PULSE_CORRECTION_MICROS 3
+#endif
+/**
+ * If USE_SOFT_SEND_PWM, use spin wait instead of delayMicros().
+ */
+//#define USE_SPIN_WAIT
 /**
  * Main class for sending IR
  */
 class IRsend {
 public:
-#if defined(USE_SOFT_CARRIER) || defined(USE_NO_CARRIER)
+#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
     IRsend(int pin = IR_SEND_PIN) {
       sendPin = pin;
     }
@@ -350,6 +415,8 @@ public:
 
     void custom_delay_usec(unsigned long uSecs);
     void enableIROut(int khz);
+    void sendPulseDistanceWidthData(unsigned int aOneMarkMicros, unsigned int aOneSpaceMicros, unsigned int aZeroMarkMicros,
+            unsigned int aZeroSpaceMicros, unsigned long aData, uint8_t aNumberOfBits, bool aMSBfirst = true);
     void mark(unsigned int usec);
     void space(unsigned int usec);
     void sendRaw(const unsigned int buf[], unsigned int len, unsigned int hz);
@@ -358,14 +425,20 @@ public:
     //......................................................................
 #if SEND_RC5
     void sendRC5(unsigned long data, int nbits);
-    void sendRC5ext(unsigned long addr, unsigned long cmd, boolean toggle);
+    void sendRC5ext(uint8_t addr, uint8_t cmd, boolean toggle);
 #endif
 #if SEND_RC6
     void sendRC6(unsigned long data, int nbits);
 #endif
     //......................................................................
+#if SEND_NEC || SEND_NEC_STANDARD
+    void sendNECRepeat();
+#endif
 #if SEND_NEC
     void sendNEC(unsigned long data, int nbits, bool repeat = false);
+#endif
+#if SEND_NEC_STANDARD
+    void sendNECStandard(uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRepeats = 0);
 #endif
     //......................................................................
 #if SEND_SONY
@@ -417,8 +490,8 @@ public:
     void sendSharp(unsigned int address, unsigned int command);
 #endif
 #if SEND_SHARP_ALT
-    void sendSharpAltRaw(unsigned long data, int nbits);
-    void sendSharpAlt(unsigned int address, unsigned long command);
+    void sendSharpAltRaw(unsigned int data, int nbits);
+    void sendSharpAlt(uint8_t address, uint8_t command);
 #endif
     //......................................................................
 #if SEND_DENON
@@ -470,13 +543,20 @@ public:
     void sendPronto(const __FlashStringHelper *str, unsigned int times = 1U);
 #endif
 
-#if defined(USE_SOFT_CARRIER) || defined(USE_NO_CARRIER)
-  private:
+private:
+#if (DECODE_RC5 || DECODE_RC6)
+    /**
+     *  This helper function is shared by RC5 and RC6
+     */
+    int getRClevel(decode_results *results, unsigned int *offset, int *used, int t1);
+#endif
+
+#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
     int sendPin;
 
-#  if defined(USE_SOFT_CARRIER)
-    unsigned int periodTime;
-    unsigned int periodOnTime;
+#  if defined(USE_SOFT_SEND_PWM)
+    unsigned int periodTimeMicros;
+    unsigned int periodOnTimeMicros;
 
     void sleepMicros(unsigned long us);
     void sleepUntilMicros(unsigned long targetTime);
@@ -487,4 +567,4 @@ public:
 #endif
 };
 
-#endif
+#endif // IRremote_h

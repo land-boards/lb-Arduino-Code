@@ -16,7 +16,7 @@ int IR_RECEIVE_PIN = 11;
 #endif
 int RELAY_PIN = 4; // is labeled D2 on the Chinese SAMD21 M0-Mini clone
 
-IRrecv irrecv(IR_RECEIVE_PIN);
+IRrecv IrReceiver(IR_RECEIVE_PIN);
 decode_results results;
 
 // On the Zero and others we switch explicitly to SerialUSB
@@ -28,23 +28,21 @@ decode_results results;
 //#define LED_BUILTIN 25 // Or choose pin 25, it is the RX pin, but active low.
 #endif
 
-void dump(decode_results *results);
+void dump();
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(RELAY_PIN, OUTPUT);
 
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__)
-    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
-#endif
-#if defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__));
 
-    irrecv.enableIRIn(); // Start the receiver
+    IrReceiver.enableIRIn();  // Start the receiver
+    IrReceiver.blink13(true); // Enable feedback LED
 
     Serial.print(F("Ready to receive IR signals at pin "));
     Serial.println(IR_RECEIVE_PIN);
@@ -54,7 +52,7 @@ int on = 0;
 unsigned long last = millis();
 
 void loop() {
-    if (irrecv.decode(&results)) {
+    if (IrReceiver.decode()) {
         // If it's been at least 1/4 second since the last
         // IR received, toggle the relay
         if (millis() - last > 250) {
@@ -69,36 +67,25 @@ void loop() {
                 digitalWrite(LED_BUILTIN, LOW);
                 Serial.println(F("off"));
             }
-            dump(&results);
+            dump();
         }
         last = millis();
-        irrecv.resume(); // Receive the next value
+        IrReceiver.resume(); // Receive the next value
     }
 }
 
 
 // Dumps out the decode_results structure.
 // Call this after IRrecv::decode()
-// void * to work around compiler issue
-//void dump(void *v) {
-//  decode_results *results = (decode_results *)v
-void dump(decode_results *results) {
-    int count = results->rawlen;
-    if (results->decode_type == UNKNOWN) {
+void dump() {
+    int count = IrReceiver.results.rawlen;
+    if (IrReceiver.results.decode_type == UNKNOWN) {
         Serial.println("Could not decode message");
     } else {
-        if (results->decode_type == NEC) {
-            Serial.print("Decoded NEC: ");
-        } else if (results->decode_type == SONY) {
-            Serial.print("Decoded SONY: ");
-        } else if (results->decode_type == RC5) {
-            Serial.print("Decoded RC5: ");
-        } else if (results->decode_type == RC6) {
-            Serial.print("Decoded RC6: ");
-        }
-        Serial.print(results->value, HEX);
+        IrReceiver.printResultShort(&Serial);
+
         Serial.print(" (");
-        Serial.print(results->bits, DEC);
+        Serial.print(IrReceiver.results.bits, DEC);
         Serial.println(" bits)");
     }
     Serial.print("Raw (");
@@ -107,9 +94,9 @@ void dump(decode_results *results) {
 
     for (int i = 0; i < count; i++) {
         if ((i % 2) == 1) {
-            Serial.print(results->rawbuf[i] * MICROS_PER_TICK, DEC);
+            Serial.print(IrReceiver.results.rawbuf[i] * MICROS_PER_TICK, DEC);
         } else {
-            Serial.print(-(int) results->rawbuf[i] * MICROS_PER_TICK, DEC);
+            Serial.print(-(int) IrReceiver.results.rawbuf[i] * MICROS_PER_TICK, DEC);
         }
         Serial.print(" ");
     }

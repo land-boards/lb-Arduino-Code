@@ -18,10 +18,9 @@
 // Whynter A/C ARC-110WD added by Francesco Meschia
 //******************************************************************************
 
-// Defining IR_GLOBAL here allows us to declare the instantiation of global variables
-#define IR_GLOBAL
 #include "IRremote.h"
-#undef IR_GLOBAL
+
+struct irparams_struct irparams; // the irparams instance
 
 //+=============================================================================
 // The match functions were (apparently) originally MACROs to improve code speed
@@ -127,7 +126,7 @@ int MATCH_SPACE(int measured_ticks, int desired_us) {
 //   Gap width is recorded; Ready is cleared; New logging starts
 //
 ISR (TIMER_INTR_NAME) {
-    TIMER_RESET; // reset timer interrupt flag if required (currently only for Teensy and ATmega4809)
+    TIMER_RESET_INTR_PENDING; // reset timer interrupt flag if required (currently only for Teensy and ATmega4809)
 
     // Read if IR Receiver -> SPACE [xmt LED off] or a MARK [xmt LED on]
     // digitalRead() is very slow. Optimisation is possible, but makes the code unportable
@@ -135,7 +134,9 @@ ISR (TIMER_INTR_NAME) {
 
     irparams.timer++;  // One more 50uS tick
     if (irparams.rawlen >= RAW_BUFFER_LENGTH) {
-        irparams.rcvstate = IR_REC_STATE_OVERFLOW;  // Buffer overflow
+        // Flag up a read overflow; Stop the State Machine
+        irparams.overflow = true;
+        irparams.rcvstate = IR_REC_STATE_STOP;
     }
 
     /*
@@ -149,7 +150,8 @@ ISR (TIMER_INTR_NAME) {
             if (irparams.timer < GAP_TICKS) {  // Not big enough to be a gap.
                 irparams.timer = 0;
             } else {
-                // Gap just ended; Record duration; Start recording transmission
+                // Gap just ended; Record gap duration; Start recording transmission
+                // Initialize all state machine variables
                 irparams.overflow = false;
                 irparams.rawlen = 0;
                 irparams.rawbuf[irparams.rawlen++] = irparams.timer;
@@ -180,9 +182,6 @@ ISR (TIMER_INTR_NAME) {
         if (irdata == MARK) {
             irparams.timer = 0;  // Reset gap timer
         }
-    } else if (irparams.rcvstate == IR_REC_STATE_OVERFLOW) {  // Flag up a read overflow; Stop the State Machine
-        irparams.overflow = true;
-        irparams.rcvstate = IR_REC_STATE_STOP;
     }
 
 #ifdef BLINKLED

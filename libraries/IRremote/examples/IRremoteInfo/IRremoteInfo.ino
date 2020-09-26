@@ -30,8 +30,8 @@ void printDecodeEnabled(int flag);
 
 void setup() {
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__)
-    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+    delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__));
@@ -101,8 +101,10 @@ void dumpTIMER() {
 }
 
 void dumpTimerPin() {
+#if defined(SENDING_SUPPORTED)
     Serial.print(F("IR Tx Pin: "));
     Serial.println(IR_SEND_PIN);
+#endif
 }
 
 void dumpClock() {
@@ -228,6 +230,10 @@ void dumpProtocols() {
     Serial.print(F("RC6:          "));
     printSendEnabled(SEND_RC6);
     printDecodeEnabled(DECODE_RC5);
+
+    Serial.print(F("NEC_STANDARD: "));
+    printSendEnabled(SEND_NEC_STANDARD);
+    printDecodeEnabled(DECODE_NEC_STANDARD);
 
     Serial.print(F("NEC:          "));
     printSendEnabled(SEND_NEC);

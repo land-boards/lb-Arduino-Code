@@ -19,7 +19,7 @@
 
 #include <IRremote.h>
 
-IRsend irsend;
+IRsend IrSender;
 
 // On the Zero and others we switch explicitly to SerialUSB
 #if defined(ARDUINO_ARCH_SAMD)
@@ -30,10 +30,7 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__)
-    while (!Serial); //delay for Leonardo, but this loops forever for Maple Serial
-#endif
-#if defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
     delay(2000); // To be able to connect Serial monitor after reset and before first printout
 #endif
     // Just to know which program is running on my Arduino
@@ -51,7 +48,7 @@ void loop() {
             1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 560, 560, 560, 560,
             1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560,
             1690, 560, 1690, 560, 39416, 9000, 2210, 560 }; // AnalysIR Batch Export (IRremote) - RAW
-    irsend.sendRaw(irSignal, sizeof(irSignal) / sizeof(irSignal[0]), khz); // Note the approach used to automatically calculate the size of the array.
+    IrSender.sendRaw(irSignal, sizeof(irSignal) / sizeof(irSignal[0]), khz); // Note the approach used to automatically calculate the size of the array.
 
     delay(2000);
     /*
@@ -61,7 +58,7 @@ void loop() {
             560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 560, 560, 560,
             560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560,
             1690, 560, 1690, 560, 39416, 9000, 2210, 560 }; // AnalysIR Batch Export (IRremote) - RAW
-    irsend.sendRaw_P(irSignalP, sizeof(irSignalP) / sizeof(irSignalP[0]), khz); // Note the approach used to automatically calculate the size of the array.
+    IrSender.sendRaw_P(irSignalP, sizeof(irSignalP) / sizeof(irSignalP[0]), khz); // Note the approach used to automatically calculate the size of the array.
 
     delay(5000); //In this example, the signal will be repeated every 7 seconds, approximately.
 }

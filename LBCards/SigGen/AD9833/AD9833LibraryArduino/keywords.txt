@@ -1,0 +1,43 @@
+﻿#######################################
+# Syntax Coloring Map For AD9833 Library
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+AD9833	KEYWORD1
+
+#######################################
+# AD9833
+#######################################
+Begin	KEYWORD2
+Reset	KEYWORD2
+ApplySignal	KEYWORD2
+SetFrequency	KEYWORD2
+SetPhase	KEYWORD2
+IncrementFrequency	KEYWORD2
+IncrementPhase	KEYWORD2
+SetOutputSource	KEYWORD2
+SetWaveform	KEYWORD2
+EnableOutput	KEYWORD2
+SleepMode	KEYWORD2
+EnableDAC	KEYWORD2
+EnableInternalClock	KEYWORD2
+GetActualProgrammedFrequency	KEYWORD2
+GetActualProgrammedPhase	KEYWORD2
+GetResolution	KEYWORD2
+WaveformType	KEYWORD2
+Registers	KEYWORD2
+
+#######################################
+REG0	LITERAL1
+REG1	LITERAL1
+SINE_WAVE	LITERAL1
+TRIANGLE_WAVE	LITERAL1
+SQUARE_WAVE	LITERAL1
+HALF_SQUARE_WAVE	LITERAL1
+
+
+
+
