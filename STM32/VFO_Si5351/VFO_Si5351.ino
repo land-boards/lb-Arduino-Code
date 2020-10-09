@@ -1,40 +1,13 @@
 /*
 
-  GraphicsTest.ino
+  VFO_Si5351.ino
 
-  Universal 8bit Graphics Library (https://github.com/olikraus/u8g2/)
-
-  Copyright (c) 2016, olikraus@gmail.com
-  All rights reserved.
-
-  Redistribution and use in source and binary forms, with or without modification, 
-  are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright notice, this list 
-    of conditions and the following disclaimer.
-    
-  * Redistributions in binary form must reproduce the above copyright notice, this 
-    list of conditions and the following disclaimer in the documentation and/or other 
-    materials provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
-  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR 
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT 
-  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
-  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
-
+BITS AND PECES FROM ALL OVER THE PLACE
 */
 
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include "si5351.h"
 
 //#define U8X8_HAVE_HW_I2C
 //#undef U8X8_HAVE_HW_SPI
@@ -46,6 +19,7 @@
 #include <Wire.h>
 #endif
 
+Si5351 si5351;
 
 /*
   U8g2lib Example Overview:
@@ -100,33 +74,76 @@ void u8g2_prepare(void) {
 }
 
 void displayFreq(float freq) {
-  char buffer[12];
-  dtostrf(freq,9,5,buffer);
-  buffer[9] = buffer[8];
-  buffer[8] = buffer[7];
-  buffer[7] = ',';
-  buffer[10] = 0;
+  char buffer[14];
+  dtostrf(freq/1000.0,9,3,buffer);
+  buffer[7] = buffer[6];
+  buffer[6] = buffer[5];
+  buffer[5] = buffer[4];
+  buffer[4] = buffer[3];
+  buffer[3] = buffer[2];
+  buffer[2] = ',';
+  buffer[8] = ' ';
+  buffer[9] = 'K';
+  buffer[10] = 'H';
+  buffer[11] = 'z';
+  buffer[12] = 0;
+//  buffer[9] = buffer[8];
+//  buffer[8] = buffer[7];
+//  buffer[7] = ',';
+//  buffer[10] = 0;
   u8g2.drawStr( 0, 0, buffer);
 }
 
 void setup(void) {
+  bool i2c_found;
   u8g2.begin();
-  setupEncoder();
+  Serial.begin(9600);
+  //setupEncoder();
+  i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 0);
+  if(!i2c_found)
+  {
+    Serial.println("Device not found on I2C bus!");
+  }
+
+  // Set CLK0 to output 14 MHz
+  si5351.set_freq(1400000000ULL, SI5351_CLK0);
+
+  // Set CLK1 to output 175 MHz
+  si5351.set_ms_source(SI5351_CLK1, SI5351_PLLB);
+  si5351.set_freq_manual(17500000000ULL, 70000000000ULL, SI5351_CLK1);
+
+  // Query a status update and wait a bit to let the Si5351 populate the
+  // status flags correctly.
+  si5351.update_status();
+  delay(500);
 }
 
 void loop(void) {
-  float freq = 14.00000;
+  unsigned long freqInt = 1400000000ULL;
+  float freq = float(freqInt/100000ULL);
+  // Read the Status Register and print it every 10 seconds
+  si5351.update_status();
+  Serial.print("SYS_INIT: ");
+  Serial.print(si5351.dev_status.SYS_INIT);
+  Serial.print("  LOL_A: ");
+  Serial.print(si5351.dev_status.LOL_A);
+  Serial.print("  LOL_B: ");
+  Serial.print(si5351.dev_status.LOL_B);
+  Serial.print("  LOS: ");
+  Serial.print(si5351.dev_status.LOS);
+  Serial.print("  REVID: ");
+  Serial.println(si5351.dev_status.REVID);
+
   while(1)
   {
     u8g2.clearBuffer();
     u8g2_prepare();
+    si5351.set_freq(freqInt, SI5351_CLK0);
     displayFreq(freq);
     u8g2.sendBuffer();
-    freq += 0.00001;
-    if (freq > 14.350)
-      freq = 14.00000;
-  }  
-  // deley between each page
-  delay(1000);
-
+    freqInt += 10000ULL; // count up by 100 Hz
+    freq = float(freqInt/100ULL);
+    if (freqInt > 1435000000ULL)
+      freqInt = 1400000000ULL;
+  }
 }
