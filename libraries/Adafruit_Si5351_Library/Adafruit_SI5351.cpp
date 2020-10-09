@@ -66,7 +66,7 @@
 /**************************************************************************/
 Adafruit_SI5351::Adafruit_SI5351(void) {
   m_si5351Config.initialised = false;
-  m_si5351Config.crystalFreq = SI5351_CRYSTAL_FREQ_25MHZ;
+  m_si5351Config.crystalFreq = SI5351_CRYSTAL_FREQ_27MHZ;
   m_si5351Config.crystalLoad = SI5351_CRYSTAL_LOAD_10PF;
   m_si5351Config.crystalPPM = 30;
   m_si5351Config.plla_configured = false;

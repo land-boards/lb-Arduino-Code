@@ -33,7 +33,7 @@
 /* Define definitions */
 
 #define SI5351_BUS_BASE_ADDR				0xC0
-#define SI5351_XTAL_FREQ					25000000
+#define SI5351_XTAL_FREQ					27000000
 #define SI5351_PLL_FIXED					900000000
 
 #define SI5351_PLL_VCO_MIN					600000000
