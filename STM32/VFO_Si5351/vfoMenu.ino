@@ -35,20 +35,6 @@ void vfoMenu(void)
   delay(1000);
 }
 
-// If pressed, waits until switch is released before return
-// If switch is pressed return 1
-int checkSwitch(void)
-{
-  if (digitalRead(encoderSwitch) == 0)
-  {
-    while (digitalRead(encoderSwitch) == 0)
-      delay(50);    // Debounce
-    //Serial.print("Button Pressed\n");
-    return (1);
-  }
-  return (0);
-}
-
 //int getEncoderDelta(void)
 //{
 //  if (encoder0Pos == 0)
