@@ -1,72 +1,67 @@
-//
+// Robust Rotary encoder reading
+// Clean no-bounce rotary switch code
+// polled rotary switch implementation based on
+// Copyright John Main - https://www.best-microcontroller-projects.com/rotary-encoder.html
+// Does not need caps on encoder pins
 
-#define encoder0PinB  PB0
-#define encoder0PinA  PB1
+#define CLK PB1
+#define DATA PB0
 
-volatile int encoder0Pos = 0;
+static int encoder0Pos = 0;
+static uint8_t prevNextCode = 0;
+static uint16_t store = 0;
 
-void setupEncoder(void) 
-{
-  pinMode(encoder0PinA, INPUT);
-  pinMode(encoder0PinB, INPUT);
-
-  // encoder pin on interrupt 0 (pin 2)
-  attachInterrupt(digitalPinToInterrupt(encoder0PinA), doEncoderA, CHANGE);
-
-  // encoder pin on interrupt 1 (pin 3)
-  attachInterrupt(digitalPinToInterrupt(encoder0PinB), doEncoderB, CHANGE);
+void setupEncoder() {
+  pinMode(CLK, INPUT);
+  pinMode(CLK, INPUT_PULLUP);
+  pinMode(DATA, INPUT);
+  pinMode(DATA, INPUT_PULLUP);
 }
 
-void doEncoderA(void)
+void pollEncoder()
 {
-  // look for a low-to-high on channel A
-  if (digitalRead(encoder0PinA) == HIGH) {
+  static int8_t val;
+  if ( val = read_rotary() )
+    encoder0Pos += val;
+}
 
-    // check channel B to see which way encoder is turning
-    if (digitalRead(encoder0PinB) == LOW) {
-      encoder0Pos = encoder0Pos + 1;         // CW
-    }
-    else {
-      encoder0Pos = encoder0Pos - 1;         // CCW
-    }
+// A vald CW or  CCW move returns 1, invalid returns 0.
+int8_t read_rotary()
+{
+  static int8_t rot_enc_table[] = {0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0};
+
+  prevNextCode <<= 2;
+  if (digitalRead(DATA)) prevNextCode |= 0x02;
+  if (digitalRead(CLK)) prevNextCode |= 0x01;
+  prevNextCode &= 0x0f;
+
+  // If valid then store as 16 bit data.
+  if  (rot_enc_table[prevNextCode] ) {
+    store <<= 4;
+    store |= prevNextCode;
+
+    if ((store & 0xff) == 0x2b)
+      return -1;
+    if ((store & 0xff) == 0x17)
+      return 1;
   }
+  return 0;
+}
 
-  else   // must be a high-to-low edge on channel A
+int getEncoderDelta(void)
+{
+  if (encoder0Pos > 0)
   {
-    // check channel B to see which way encoder is turning
-    if (digitalRead(encoder0PinB) == HIGH) {
-      encoder0Pos = encoder0Pos + 1;          // CW
-    }
-    else {
-      encoder0Pos = encoder0Pos - 1;          // CCW
-    }
+    encoder0Pos = 0;
+    return(1);
   }
-  //Serial.println (encoder0Pos, DEC);
-   //use for debugging - remember to comment out
-}
-
-void doEncoderB() {
-  // look for a low-to-high on channel B
-  if (digitalRead(encoder0PinB) == HIGH) {
-
-    // check channel A to see which way encoder is turning
-    if (digitalRead(encoder0PinA) == HIGH) {
-      encoder0Pos = encoder0Pos + 1;         // CW
-    }
-    else {
-      encoder0Pos = encoder0Pos - 1;         // CCW
-    }
+  else if (encoder0Pos < 0)
+  {
+    encoder0Pos = 0;
+    return(-1);
   }
-
-  // Look for a high-to-low on channel B
-
-  else {
-    // check channel B to see which way encoder is turning
-    if (digitalRead(encoder0PinA) == LOW) {
-      encoder0Pos = encoder0Pos + 1;          // CW
-    }
-    else {
-      encoder0Pos = encoder0Pos - 1;          // CCW
-    }
+  else
+  {
+    return(0);
   }
 }

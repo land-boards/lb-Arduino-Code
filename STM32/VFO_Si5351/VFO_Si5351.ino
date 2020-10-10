@@ -28,11 +28,11 @@ unsigned long stepSize;
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // STM32, Ebay OLED
 
+// Leave other SSD1306 constructors just in case
 //U8G2_SSD1306_128X32_WINSTAR_F_HW_I2C u8g2(U8G2_R0,  U8X8_PIN_NONE);   // STM32
 //U8G2_SSD1306_128X32_WINSTAR_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
 //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // Adafruit ESP8266/32u4/ARM Boards + FeatherWing OLED
 //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
-
 //U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* SCL=PB6*/ PB6, /* SDA=PB7=*/ PB7, /* reset=*/ U8X8_PIN_NONE);
 //U8G2_SSD1306_64X32_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 //U8G2_SSD1306_64X32_1F_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -59,12 +59,10 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 void setup(void) {
   bool i2c_found;
+  
   u8g2.begin();
+  
   Serial.begin(9600);
-  pinMode(encoderSwitch, INPUT);
-
-  // Encoder initialization
-  setupEncoder();
 
   // Si8351 initialiation
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 0);
@@ -83,58 +81,44 @@ void setup(void) {
   // Query a status update and wait a bit to let the Si5351 populate the
   // status flags correctly.
   si5351.update_status();
-  delay(500);
+  
+  // Encoder initialization
+  pinMode(encoderSwitch, INPUT_PULLUP);
+  setupEncoder();
+  delay(100);
 }
-
-extern volatile int encoder0Pos;
 
 void loop(void)
 {
   unsigned long freqInt = 1400000000ULL;
-  stepSize = 10000ULL;
-  int delta = 0;
   float freq = float(freqInt / 100ULL);
-  // Read the Status Register and print it every 10 seconds
-  si5351.update_status();
-  //  Serial.print("SYS_INIT: ");
-  //  Serial.print(si5351.dev_status.SYS_INIT);
-  //  Serial.print("  LOL_A: ");
-  //  Serial.print(si5351.dev_status.LOL_A);
-  //  Serial.print("  LOL_B: ");
-  //  Serial.print(si5351.dev_status.LOL_B);
-  //  Serial.print("  LOS: ");
-  //  Serial.print(si5351.dev_status.LOS);
-  //  Serial.print("  REVID: ");
-  //  Serial.println(si5351.dev_status.REVID);
-  u8g2.clearBuffer();
-  u8g2_prepare();
+  int encoderDelta = 0;
+  
+  stepSize = 10000ULL;
+//  si5351.update_status();
   si5351.set_freq(freqInt, SI5351_CLK0);
-  displayFreqInKHz(freq);
+  displayFreqInKHzOnOLED(freq);
   u8g2.sendBuffer();
 
   while (1)
   {
-    u8g2.clearBuffer();
-    if (encoder0Pos == 0)
-      delta = 0;
-    else if (encoder0Pos < 0)
-      delta = -1;
-    else if (encoder0Pos > 0)
-      delta = 1;
-    encoder0Pos = 0;
-    if (delta != 0)
+    pollEncoder();
+    encoderDelta = getEncoderDelta();
+    if (encoderDelta != 0)
     {
-      freqInt += (delta * stepSize); // count up/dowb by 100 Hz
+      freqInt += (encoderDelta * stepSize); // count up/dowb by 100 Hz
       if (freqInt > 1435000000ULL)
         freqInt = 1435000000ULL;
       else if (freqInt < 1400000000ULL)
         freqInt = 1400000000ULL;
       freq = float(freqInt / 100ULL);
-      u8g2_prepare();
       si5351.set_freq(freqInt, SI5351_CLK0);
-      displayFreqInKHz(freq);
-      u8g2.sendBuffer();
+      displayFreqInKHzOnOLED(freq);
+     }
+    if (checkSwitch() == 1)
+    {
+      vfoMenu();
+      displayFreqInKHzOnOLED(freq);
     }
-    checkSwitch();
   }
 }

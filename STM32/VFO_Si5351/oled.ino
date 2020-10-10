@@ -7,9 +7,11 @@ void u8g2_prepare(void)
   u8g2.setFontDirection(0);
 }
 
-void displayFreqInKHz(float freq)
+void displayFreqInKHzOnOLED(float freq)
 {
   char buffer[14];
+  u8g2.clearBuffer();
+  u8g2_prepare();
   dtostrf(freq / 1000.0, 9, 3, buffer);
   // Adda a comma below the MHz digits
   buffer[7] = buffer[6];
@@ -24,4 +26,13 @@ void displayFreqInKHz(float freq)
   buffer[11] = 'z';
   buffer[12] = 0;
   u8g2.drawStr( 0, 0, buffer);
+  u8g2.sendBuffer();
+}
+
+void printStringToOLED(char * charStr)
+{
+  u8g2.clearBuffer();
+  u8g2_prepare();
+  u8g2.drawStr( 0, 0, charStr);
+  u8g2.sendBuffer();
 }
