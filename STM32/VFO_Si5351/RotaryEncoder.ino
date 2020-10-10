@@ -1,9 +1,9 @@
 //
 
-#define encoder0PinA  PB11
-#define encoder0PinB  PB10
+#define encoder0PinB  PB0
+#define encoder0PinA  PB1
 
-volatile unsigned int encoder0Pos = 0;
+volatile int encoder0Pos = 0;
 
 void setupEncoder(void) 
 {
@@ -11,12 +11,10 @@ void setupEncoder(void)
   pinMode(encoder0PinB, INPUT);
 
   // encoder pin on interrupt 0 (pin 2)
-  attachInterrupt(0, doEncoderA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(encoder0PinA), doEncoderA, CHANGE);
 
   // encoder pin on interrupt 1 (pin 3)
-  attachInterrupt(1, doEncoderB, CHANGE);
-
-//  Serial.begin (9600);
+  attachInterrupt(digitalPinToInterrupt(encoder0PinB), doEncoderB, CHANGE);
 }
 
 void doEncoderA() {
@@ -43,7 +41,7 @@ void doEncoderA() {
     }
   }
   //Serial.println (encoder0Pos, DEC);
-  // use for debugging - remember to comment out
+   //use for debugging - remember to comment out
 }
 
 void doEncoderB() {

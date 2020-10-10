@@ -76,6 +76,7 @@ void u8g2_prepare(void) {
 void displayFreq(float freq) {
   char buffer[14];
   dtostrf(freq/1000.0,9,3,buffer);
+  // Adda a comma below the MHz digits
   buffer[7] = buffer[6];
   buffer[6] = buffer[5];
   buffer[5] = buffer[4];
@@ -98,7 +99,7 @@ void setup(void) {
   bool i2c_found;
   u8g2.begin();
   Serial.begin(9600);
-  //setupEncoder();
+  setupEncoder();
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 0);
   if(!i2c_found)
   {
@@ -118,9 +119,16 @@ void setup(void) {
   delay(500);
 }
 
+extern volatile int encoder0Pos;
+
 void loop(void) {
   unsigned long freqInt = 1400000000ULL;
-  float freq = float(freqInt/100000ULL);
+  int EncVal = encoder0Pos;   // get initial encoder position
+  int delta = 0;
+  Serial.print("Init encVal ");
+  Serial.print(EncVal);
+  Serial.print("\n");
+  float freq = float(freqInt/100ULL);
   // Read the Status Register and print it every 10 seconds
   si5351.update_status();
   Serial.print("SYS_INIT: ");
@@ -141,9 +149,34 @@ void loop(void) {
     si5351.set_freq(freqInt, SI5351_CLK0);
     displayFreq(freq);
     u8g2.sendBuffer();
-    freqInt += 10000ULL; // count up by 100 Hz
-    freq = float(freqInt/100ULL);
-    if (freqInt > 1435000000ULL)
-      freqInt = 1400000000ULL;
+    EncVal = encoder0Pos;
+   if (EncVal == 0)
+    {
+      delta = 0;
+    }
+    else if (EncVal < 0)
+    {
+      delta = -1;
+      Serial.print("delta ");
+      Serial.print(delta);
+      Serial.print("\n");
+    }
+    else if (EncVal > 0)
+    {
+      delta = 1;
+      Serial.print("delta ");
+      Serial.print(delta);
+      Serial.print("\n");
+    }
+    encoder0Pos = 0;
+    if (delta != 0)
+    {
+      if (freqInt > 1435000000ULL)
+        freqInt = 1435000000ULL;
+      else if (freqInt < 1400000000ULL)
+        freqInt = 1400000000ULL;
+      freq = float(freqInt/100ULL);
+      freqInt += (delta*10000ULL); // count up by 100 Hz
+    }
   }
 }
