@@ -17,7 +17,8 @@ void setupEncoder(void)
   attachInterrupt(digitalPinToInterrupt(encoder0PinB), doEncoderB, CHANGE);
 }
 
-void doEncoderA() {
+void doEncoderA(void)
+{
   // look for a low-to-high on channel A
   if (digitalRead(encoder0PinA) == HIGH) {
 
