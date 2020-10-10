@@ -2,7 +2,17 @@
 
   VFO_Si5351.ino
 
+  http://land-boards.com/blwiki/index.php?title=HW-9_VFO
+
+  OLED is 128x32 I2C device
+  Si5351 is on a custom board
+  Runs on Blue Pill Hub so no 5V to 3.3V level shifting is needed
+
   Borrowed bits pieces from all over the place
+  Si6361 driver is from si5351_example
+  https://etherkit.github.io/si5351abb_landing_page.html
+  Copyright (C) 2015 - 2016 Jason Milldrum <milldrum@gmail.com>
+  
 */
 
 #include <Arduino.h>
@@ -74,9 +84,11 @@ void setup(void) {
   // Set CLK0 to output 14 MHz
   si5351.set_freq(1400000000ULL, SI5351_CLK0);
 
-  // Set CLK1 to output 175 MHz
-  //  si5351.set_ms_source(SI5351_CLK1, SI5351_PLLB);
-  //  si5351.set_freq_manual(17500000000ULL, 70000000000ULL, SI5351_CLK1);
+  // Set CLK1 to output 12 MHz
+  si5351.set_freq(1200000000ULL, SI5351_CLK1);
+
+  // Set CLK2 to output 10 MHz
+  si5351.set_freq(1000000000ULL, SI5351_CLK2);
 
   // Query a status update and wait a bit to let the Si5351 populate the
   // status flags correctly.
