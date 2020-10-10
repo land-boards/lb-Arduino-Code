@@ -65,3 +65,18 @@ int getEncoderDelta(void)
     return(0);
   }
 }
+
+// Check the rotary encoder switch
+// If rotary encoder is pressed, waits until switch is released before return
+// If switch is pressed return 1
+int checkSwitch(void)
+{
+  if (digitalRead(encoderSwitch) == 0)
+  {
+    while (digitalRead(encoderSwitch) == 0)
+      delay(50);    // Debounce
+    //Serial.print("Button Pressed\n");
+    return (1);
+  }
+  return (0);
+}
