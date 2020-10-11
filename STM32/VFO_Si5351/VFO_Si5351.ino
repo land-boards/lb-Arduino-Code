@@ -33,8 +33,37 @@
 
 Si5351 si5351;
 
+// enum si5351_drive {SI5351_DRIVE_2MA, SI5351_DRIVE_4MA, SI5351_DRIVE_6MA, SI5351_DRIVE_8MA};
+
+si5351_drive VFO_0_Drive = SI5351_DRIVE_4MA;
+si5351_drive VFO_1_Drive = SI5351_DRIVE_4MA;
+si5351_drive VFO_2_Drive = SI5351_DRIVE_4MA;
+
+enum VFO_ON_OFF
+{
+  VFO_OFF,
+  VFO_ON
+};
+
+unsigned long VFO_0_Freq = 1400000000ULL;
+unsigned long VFO_1_Freq = 1200000000ULL;
+unsigned long VFO_2_Freq = 1000000000ULL;
+
+uint8_t VFO_O_OnOff = VFO_ON;
+uint8_t VFO_1_OnOff = VFO_ON;
+uint8_t VFO_2_OnOff = VFO_ON;
+
+uint8_t currentVFONumber = 0;
+
+#define STEP_100_HZ   10000ULL
+#define STEP_1_KHZ    100000ULL
+#define STEP_10_KHZ   1000000ULL
+#define STEP_100_KHZ  10000000ULL
+#define STEP_1_MHZ    100000000ULL
+#define STEP_10_MHZ   1000000000ULL
+
 // Gloibal variables
-unsigned long stepSize;
+unsigned long stepSize = STEP_1_MHZ;
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // STM32, Ebay OLED
 
@@ -67,7 +96,8 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 // End of constructor list
 
-void setup(void) {
+void setup(void)
+{
   bool i2c_found;
   
   u8g2.begin();
@@ -82,13 +112,13 @@ void setup(void) {
   }
 
   // Set CLK0 to output 14 MHz
-  si5351.set_freq(1400000000ULL, SI5351_CLK0);
+  si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
 
   // Set CLK1 to output 12 MHz
-  si5351.set_freq(1200000000ULL, SI5351_CLK1);
+  si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
 
   // Set CLK2 to output 10 MHz
-  si5351.set_freq(1000000000ULL, SI5351_CLK2);
+  si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
 
   // Query a status update and wait a bit to let the Si5351 populate the
   // status flags correctly.
@@ -102,35 +132,8 @@ void setup(void) {
 
 void loop(void)
 {
-  unsigned long freqInt = 1400000000ULL;
-  float freq = float(freqInt / 100ULL);
-  int encoderDelta = 0;
-  
-  stepSize = 10000ULL;
-//  si5351.update_status();
-  si5351.set_freq(freqInt, SI5351_CLK0);
-  displayFreqInKHzOnOLED(freq);
-  u8g2.sendBuffer();
-
   while (1)
   {
-    pollEncoder();
-    encoderDelta = getEncoderDelta();
-    if (encoderDelta != 0)
-    {
-      freqInt += (encoderDelta * stepSize); // count up/dowb by 100 Hz
-      if (freqInt > 1435000000ULL)
-        freqInt = 1435000000ULL;
-      else if (freqInt < 1400000000ULL)
-        freqInt = 1400000000ULL;
-      freq = float(freqInt / 100ULL);
-      si5351.set_freq(freqInt, SI5351_CLK0);
-      displayFreqInKHzOnOLED(freq);
-     }
-    if (checkSwitch() == 1)
-    {
       vfoMenu();
-      displayFreqInKHzOnOLED(freq);
-    }
   }
 }
