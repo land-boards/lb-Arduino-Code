@@ -1,18 +1,12 @@
-// 
-
-#define STEP_100_HZ   10000ULL
-#define STEP_1_KHZ    100000ULL
-#define STEP_10_KHZ   1000000ULL
-#define STEP_100_KHZ  10000000ULL
-#define STEP_1_MHZ    100000000ULL
-#define STEP_10_MHZ   1000000000ULL
+// Menu System for the VFO
 
 enum MenuStateValues
 {
   SET_STEP_SIZE,
   SET_FREQ,
   SELECT_VFO,
-  VFO_ON_OFF
+  VFO_ON_OFF,
+  OUTPUT_DRIVE_LEVEL
 };
 
 enum ControlsState
@@ -23,25 +17,9 @@ enum ControlsState
   ENC_DOWN
 };
 
-enum VFO_ON_OFF
-{
-  VFO_OFF,
-  VFO_ON
-};
-
 MenuStateValues menuState = SET_STEP_SIZE;
 
-unsigned long VFO_0_Freq = 1400000000ULL;
-unsigned long VFO_1_Freq = 1200000000ULL;
-unsigned long VFO_2_Freq = 1000000000ULL;
-
-uint8_t VFO_O_OnOff = VFO_ON;
-uint8_t VFO_1_OnOff = VFO_ON;
-uint8_t VFO_2_OnOff = VFO_ON;
-
-uint8_t currentVFONumber = 0;
-
-// 
+//
 void printVFOFreq()
 {
   if (currentVFONumber == 0)
@@ -52,7 +30,7 @@ void printVFOFreq()
     displayFreqInKHzOnOLED(float(VFO_2_Freq / 100ULL));
 }
 
-// 
+//
 void setVFOFreq(void)
 {
   uint8_t controlVal;
@@ -102,7 +80,7 @@ void setVFOFreq(void)
   }
 }
 
-// 
+//
 void printVFONumber(void)
 {
   if (currentVFONumber == 0)
@@ -120,6 +98,99 @@ void printVFONumber(void)
 //  ENC_UP,
 //  ENC_DOWN
 //};
+
+// enum si5351_drive {SI5351_DRIVE_2MA, SI5351_DRIVE_4MA, SI5351_DRIVE_6MA, SI5351_DRIVE_8MA};
+//uint8_t VFO_0_Drive = SI5351_DRIVE_4MA;
+//uint8_t VFO_1_Drive = SI5351_DRIVE_4MA;
+//uint8_t VFO_2_Drive = SI5351_DRIVE_4MA;
+
+si5351_drive printDriveStrength(void)
+{
+  int driveLevel;
+  if (currentVFONumber == 0)
+    driveLevel = VFO_0_Drive;
+  else if (currentVFONumber == 1)
+    driveLevel = VFO_1_Drive;
+  else if (currentVFONumber == 2)
+    driveLevel = VFO_2_Drive;
+  if (driveLevel == SI5351_DRIVE_2MA)
+  {
+    printStringToOLED("2mA drive");
+    return (SI5351_DRIVE_2MA);
+  }
+  else if (driveLevel == SI5351_DRIVE_4MA)
+  {
+    printStringToOLED("4mA drive");
+    return (SI5351_DRIVE_4MA);
+  }
+  else if (driveLevel == SI5351_DRIVE_6MA)
+  {
+    printStringToOLED("6mA drive");
+    return (SI5351_DRIVE_6MA);
+  }
+  else if (driveLevel == SI5351_DRIVE_8MA)
+  {
+    printStringToOLED("8mA drive");
+    return (SI5351_DRIVE_8MA);
+  }
+}
+
+void setDriveLevel(void)
+{
+  uint8_t controlVal;
+  si5351_drive driveVal;
+  while (1)
+  {
+    driveVal = printDriveStrength();
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+    {
+      if (currentVFONumber == 0)
+        si5351.drive_strength(SI5351_CLK0, driveVal);
+      else if (currentVFONumber == 1)
+        si5351.drive_strength(SI5351_CLK1, driveVal);
+      else if (currentVFONumber == 2)
+        si5351.drive_strength(SI5351_CLK2, driveVal);
+      return;
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (driveVal == SI5351_DRIVE_2MA)
+      {
+        driveVal = SI5351_DRIVE_4MA;
+      }
+      else if (driveVal == SI5351_DRIVE_4MA)
+      {
+        driveVal = SI5351_DRIVE_6MA;
+      }
+      else if (driveVal == SI5351_DRIVE_6MA)
+      {
+        driveVal = SI5351_DRIVE_8MA;
+      }
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (driveVal == SI5351_DRIVE_8MA)
+      {
+        driveVal = SI5351_DRIVE_6MA;
+      }
+      else if (driveVal == SI5351_DRIVE_6MA)
+      {
+        driveVal = SI5351_DRIVE_4MA;
+      }
+      else if (driveVal == SI5351_DRIVE_4MA)
+      {
+        driveVal = SI5351_DRIVE_2MA;
+      }
+    }
+    if (currentVFONumber == 0)
+      VFO_0_Drive = driveVal;
+    else if (currentVFONumber == 1)
+      VFO_1_Drive = driveVal;
+    else if (currentVFONumber == 2)
+      VFO_2_Drive = driveVal;
+  }
+}
 
 void selectVFO(void)
 {
@@ -144,7 +215,7 @@ void selectVFO(void)
       else if (currentVFONumber == 1)
         currentVFONumber = 0;
     }
-  printVFONumber();
+    printVFONumber();
   }
 }
 
@@ -196,7 +267,7 @@ void toggleVFOOnOff(void)
       }
       else if (currentVFONumber == 2)
         VFO_2_OnOff = VFO_ON;
-        si5351.output_enable(SI5351_CLK2, 0);
+      si5351.output_enable(SI5351_CLK2, 1);
     }
     else if (controlVal == ENC_DOWN)
     {
@@ -241,7 +312,7 @@ void setVFOStepSize(void)
 {
   uint8_t controlVal;
   printStepSize();
-  while(1)
+  while (1)
   {
     controlVal = waitForControlChange();
     if (controlVal == ENC_SW_PRESSED)
@@ -258,7 +329,6 @@ void setVFOStepSize(void)
         stepSize = STEP_1_MHZ;
       else if (stepSize == STEP_1_MHZ)
         stepSize = STEP_10_MHZ;
-      printStepSize();
     }
     else if (controlVal == ENC_DOWN)
     {
@@ -272,8 +342,8 @@ void setVFOStepSize(void)
         stepSize = STEP_100_KHZ;
       else if (stepSize == STEP_10_MHZ)
         stepSize = STEP_1_MHZ;
-      printStepSize();
     }
+    printStepSize();
   }
 
 }
@@ -288,6 +358,8 @@ void displayTopMenuOption()
     printStringToOLED("Select VFO");
   else if (menuState == VFO_ON_OFF)
     printStringToOLED("VFO On/Off");
+  else if (menuState == OUTPUT_DRIVE_LEVEL)
+    printStringToOLED("Drive Level");
 }
 
 //enum MenuStateValues
@@ -303,7 +375,7 @@ void displayTopMenuOption()
 void vfoMenu(void)
 {
   uint8_t controlVal;
-  while(1)
+  while (1)
   {
     displayTopMenuOption();
     controlVal = waitForControlChange();
@@ -317,6 +389,8 @@ void vfoMenu(void)
         selectVFO();
       else if (menuState == VFO_ON_OFF)
         toggleVFOOnOff();
+      else if (menuState == OUTPUT_DRIVE_LEVEL)
+        setDriveLevel();
     }
     else if (controlVal == ENC_UP)
     {
@@ -326,10 +400,14 @@ void vfoMenu(void)
         menuState = SELECT_VFO;
       else if (menuState == SELECT_VFO)
         menuState = VFO_ON_OFF;
+      else if (menuState == VFO_ON_OFF)
+        menuState = OUTPUT_DRIVE_LEVEL;
     }
     else if (controlVal == ENC_DOWN)
     {
-      if (menuState == VFO_ON_OFF)
+      if (menuState == OUTPUT_DRIVE_LEVEL)
+        menuState = VFO_ON_OFF;
+      else if (menuState == VFO_ON_OFF)
         menuState = SELECT_VFO;
       else if (menuState == SELECT_VFO)
         menuState = SET_FREQ;
@@ -339,7 +417,7 @@ void vfoMenu(void)
   }
 }
 
- uint8_t checkControls()
+uint8_t checkControls()
 {
   int encoderDelta = 0;
   if (checkSwitch() == 1)
@@ -347,25 +425,25 @@ void vfoMenu(void)
   pollEncoder();
   encoderDelta = getEncoderDelta();
   if (encoderDelta == 0)
-    return(NOTHING);
+    return (NOTHING);
   else if (encoderDelta == 1)
-    return(ENC_UP);
+    return (ENC_UP);
   else if (encoderDelta == -1)
-    return(ENC_DOWN);
-  return(NOTHING);
+    return (ENC_DOWN);
+  return (NOTHING);
 }
 
 // Wait around for an encoder change
 uint8_t waitForControlChange(void)
 {
   uint8_t controlVal;
-  while(1)
+  while (1)
   {
     do
     {
       controlVal = checkControls();
     }
     while (controlVal == NOTHING);
-    return(controlVal);
+    return (controlVal);
   }
 }
