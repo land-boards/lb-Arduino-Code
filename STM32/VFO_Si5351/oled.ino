@@ -14,12 +14,15 @@ void displayFreqInKHzOnOLED(float freq)
   u8g2_prepare();
   dtostrf(freq / 1000.0, 9, 3, buffer);
   // Adda a comma below the MHz digits
-  buffer[7] = buffer[6];
-  buffer[6] = buffer[5];
-  buffer[5] = buffer[4];
-  buffer[4] = buffer[3];
-  buffer[3] = buffer[2];
-  buffer[2] = ',';
+  if (freq >= 1000000)
+  {
+    buffer[7] = buffer[6];
+    buffer[6] = buffer[5];
+    buffer[5] = buffer[4];
+    buffer[4] = buffer[3];
+    buffer[3] = buffer[2];
+    buffer[2] = ',';
+  }
   buffer[8] = ' ';
   buffer[9] = 'K';
   buffer[10] = 'H';
