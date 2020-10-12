@@ -45,16 +45,22 @@ void setVFOFreq(void)
       if (currentVFONumber == 0)
       {
         VFO_0_Freq += stepSize; // count up by step size
+        if (VFO_0_Freq > 4000000000ULL)
+          VFO_0_Freq = 4000000000ULL; // Limit top of range
         si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
       }
       else if (currentVFONumber == 1)
       {
         VFO_1_Freq += stepSize; // count up by step size
+        if (VFO_1_Freq > 4000000000ULL)
+          VFO_1_Freq = 4000000000ULL; // Limit top of range
         si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
       }
       else if (currentVFONumber == 2)
       {
         VFO_2_Freq += stepSize; // count up by step size
+        if (VFO_2_Freq > 4000000000ULL)
+          VFO_2_Freq = 4000000000ULL; // Limit top of range
         si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
       }
     }
@@ -63,16 +69,22 @@ void setVFOFreq(void)
       if (currentVFONumber == 0)
       {
         VFO_0_Freq -= stepSize; // count down by step size
+        if ((VFO_0_Freq < 1000000ULL) || (VFO_0_Freq > 4000000000ULL))
+          VFO_0_Freq = 1000000ULL;
         si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
       }
       else if (currentVFONumber == 1)
       {
         VFO_1_Freq -= stepSize; // count down by step size
+        if ((VFO_1_Freq < 1000000ULL) || (VFO_1_Freq > 4000000000ULL))
+          VFO_1_Freq = 1000000ULL;
         si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
       }
       else if (currentVFONumber == 2)
       {
         VFO_2_Freq -= stepSize; // count down by step size
+        if ((VFO_2_Freq < 1000000ULL) || (VFO_2_Freq > 4000000000ULL))
+          VFO_2_Freq = 1000000ULL;
         si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
       }
     }
