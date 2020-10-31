@@ -19,7 +19,7 @@ enum ControlsState
   ENC_DOWN
 };
 
-MenuStateValues menuState = SET_STEP_SIZE;
+MenuStateValues menuState = SET_FREQ;
 
 void printCalFactor(void)
 {
