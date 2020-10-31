@@ -6,7 +6,9 @@ enum MenuStateValues
   SET_FREQ,
   SELECT_VFO,
   VFO_ON_OFF,
-  OUTPUT_DRIVE_LEVEL
+  OUTPUT_DRIVE_LEVEL,
+  SET_CAL_FACTOR,
+  SAVE_INIT_VALS
 };
 
 enum ControlsState
@@ -19,8 +21,48 @@ enum ControlsState
 
 MenuStateValues menuState = SET_STEP_SIZE;
 
+void printCalFactor(void)
+{
+  char buffer[14];
+  itoa(calFactor/100, buffer, 10);
+  printStringToOLED(buffer);
+}
+
+void setCalFactor(void)
+{
+  uint8_t controlVal;
+  printCalFactor();
+  while (1)
+  {
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+      return;
+   else if (controlVal == ENC_UP)
+    {
+      calFactor += stepSize;
+      si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
+      printCalFactor();
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      calFactor -= stepSize;
+      si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
+      printCalFactor();
+    }
+  }
+}
+
+void saveInitValuesToEEPROM(void)
+{
+  #ifdef HAS_INTERNAL_EEPROM
+    storeEEPROM();
+    printStringToOLED("Stored");
+    delay(1000);
+  #endif
+}
+
 //
-void printVFOFreq()
+void printVFOFreq(void)
 {
   if (currentVFONumber == 0)
     displayFreqInKHzOnOLED(float(VFO_0_Freq / 100ULL));
@@ -305,7 +347,11 @@ void toggleVFOOnOff(void)
 
 void printStepSize(void)
 {
-  if (stepSize == STEP_100_HZ)
+  if (stepSize == STEP_1_HZ)
+    printStringToOLED("Step 1 Hz");
+  else if (stepSize == STEP_10_HZ)
+    printStringToOLED("Step 10 Hz");
+  else if (stepSize == STEP_100_HZ)
     printStringToOLED("Step 100 Hz");
   else if (stepSize == STEP_1_KHZ)
     printStringToOLED("Step 1 KHz");
@@ -331,7 +377,11 @@ void setVFOStepSize(void)
       return;
     else if (controlVal == ENC_UP)
     {
-      if (stepSize == STEP_100_HZ)
+      if (stepSize == STEP_1_HZ)
+        stepSize = STEP_10_HZ;
+      else if (stepSize == STEP_10_HZ)
+        stepSize = STEP_100_HZ;
+      else if (stepSize == STEP_100_HZ)
         stepSize = STEP_1_KHZ;
       else if (stepSize == STEP_1_KHZ)
         stepSize = STEP_10_KHZ;
@@ -344,7 +394,11 @@ void setVFOStepSize(void)
     }
     else if (controlVal == ENC_DOWN)
     {
-      if (stepSize == STEP_1_KHZ)
+      if (stepSize == STEP_10_HZ)
+        stepSize = STEP_1_HZ;
+      else if (stepSize == STEP_100_HZ)
+        stepSize = STEP_10_HZ;
+      else if (stepSize == STEP_1_KHZ)
         stepSize = STEP_100_HZ;
       else if (stepSize == STEP_10_KHZ)
         stepSize = STEP_1_KHZ;
@@ -372,6 +426,10 @@ void displayTopMenuOption()
     printStringToOLED("VFO On/Off");
   else if (menuState == OUTPUT_DRIVE_LEVEL)
     printStringToOLED("Drive Level");
+  else if (menuState == SET_CAL_FACTOR)
+    printStringToOLED("Set Cal Value");
+  else if (menuState == SAVE_INIT_VALS)
+    printStringToOLED("Save defaults");
 }
 
 //enum MenuStateValues
@@ -379,7 +437,9 @@ void displayTopMenuOption()
 //  SET_STEP_SIZE,
 //  SET_FREQ,
 //  SELECT_VFO,
-//  VFO_ON_OFF
+//  VFO_ON_OFF,
+//  SET_CAL_FACTOR,
+//  SAVE_INIT_VALS
 //};
 
 // Menu options
@@ -403,6 +463,10 @@ void vfoMenu(void)
         toggleVFOOnOff();
       else if (menuState == OUTPUT_DRIVE_LEVEL)
         setDriveLevel();
+      else if (menuState == SET_CAL_FACTOR)
+        setCalFactor();
+      else if (menuState == SAVE_INIT_VALS)
+        saveInitValuesToEEPROM();
     }
     else if (controlVal == ENC_UP)
     {
@@ -414,10 +478,18 @@ void vfoMenu(void)
         menuState = VFO_ON_OFF;
       else if (menuState == VFO_ON_OFF)
         menuState = OUTPUT_DRIVE_LEVEL;
+      else if (menuState == OUTPUT_DRIVE_LEVEL)
+        menuState = SET_CAL_FACTOR;
+      else if (menuState == SET_CAL_FACTOR)
+        menuState = SAVE_INIT_VALS;
     }
     else if (controlVal == ENC_DOWN)
     {
-      if (menuState == OUTPUT_DRIVE_LEVEL)
+      if (menuState == SAVE_INIT_VALS)
+        menuState = SET_CAL_FACTOR;
+      else if (menuState == SET_CAL_FACTOR)
+        menuState = OUTPUT_DRIVE_LEVEL;
+      else if (menuState == OUTPUT_DRIVE_LEVEL)
         menuState = VFO_ON_OFF;
       else if (menuState == VFO_ON_OFF)
         menuState = SELECT_VFO;

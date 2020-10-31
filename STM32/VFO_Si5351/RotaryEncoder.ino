@@ -4,8 +4,8 @@
 // Copyright John Main - https://www.best-microcontroller-projects.com/rotary-encoder.html
 // Does not need caps on encoder pins
 
-#define CLK PB1
-#define DATA PB0
+#define CLK 3
+#define DATA 2
 
 static int encoder0Pos = 0;
 static uint8_t prevNextCode = 0;

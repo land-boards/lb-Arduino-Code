@@ -16,17 +16,21 @@
 */
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include <U8g2lib.h>
 #include "si5351.h"
 
-#define encoderSwitch  PA7
+// EEPROM is used to store initial values
+// STM3232 parts have no internal EEPROM
+// ATMEGA parts have internal EEPROM
+// Set defines/undefs appropriately
+#define HAS_INTERNAL_EEPROM
+//#undef HAS_INTERNAL_EEPROM
+
+#define encoderSwitch  4
 
 #define U8X8_HAVE_HW_I2C
-//#undef U8X8_HAVE_HW_SPI
 
-#ifdef U8X8_HAVE_HW_SPI
-#include <SPI.h>
-#endif
 #ifdef U8X8_HAVE_HW_I2C
 #include <Wire.h>
 #endif
@@ -54,7 +58,10 @@ uint8_t VFO_1_OnOff = VFO_ON;
 uint8_t VFO_2_OnOff = VFO_ON;
 
 uint8_t currentVFONumber = 0;
+int32_t calFactor = 0;
 
+#define STEP_1_HZ     100ULL
+#define STEP_10_HZ    1000ULL
 #define STEP_100_HZ   10000ULL
 #define STEP_1_KHZ    100000ULL
 #define STEP_10_KHZ   1000000ULL
@@ -63,7 +70,7 @@ uint8_t currentVFONumber = 0;
 #define STEP_10_MHZ   1000000000ULL
 
 // Gloibal variables
-unsigned long stepSize = STEP_1_MHZ;
+uint32_t stepSize = STEP_1_MHZ;
 
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // STM32, Ebay OLED
 
@@ -96,16 +103,81 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 // End of constructor list
 
+//unsigned long VFO_0_Freq = 1400000000ULL;
+//unsigned long VFO_1_Freq = 1200000000ULL;
+//unsigned long VFO_2_Freq = 1000000000ULL;
+//
+//uint32_t stepSize = STEP_1_MHZ;
+//int32_t calFactor = 0;
+//
+//uint8_t VFO_O_OnOff = VFO_ON;
+//uint8_t VFO_1_OnOff = VFO_ON;
+//uint8_t VFO_2_OnOff = VFO_ON;
+//
+//uint8_t currentVFONumber = 0;
+
+#define FREQ0_OFFSET 0
+#define FREQ1_OFFSET 4
+#define FREQ2_OFFSET 8
+#define STEPSIZE_OFFSET 12
+#define CALVAL_OFFSET 16
+#define VFO0ONOFF_OFFSET 20
+#define VFO1ONOFF_OFFSET 21
+#define VFO2ONOFF_OFFSET 22
+#define VFONUMBER_OFFSET 23
+#define MAGICNUMBER_OFFSET 24
+
+void loadEEPROM(void)
+{
+  VFO_0_Freq = EEPROM.get(FREQ0_OFFSET,VFO_0_Freq);
+  VFO_1_Freq = EEPROM.get(FREQ1_OFFSET,VFO_1_Freq);
+  VFO_2_Freq = EEPROM.get(FREQ2_OFFSET,VFO_2_Freq);
+  stepSize = EEPROM.get(STEPSIZE_OFFSET,stepSize);
+  calFactor = EEPROM.get(CALVAL_OFFSET,calFactor);
+  VFO_O_OnOff = EEPROM.get(VFO0ONOFF_OFFSET,VFO_O_OnOff);
+  VFO_1_OnOff = EEPROM.get(VFO1ONOFF_OFFSET,VFO_1_OnOff);
+  VFO_2_OnOff = EEPROM.get(VFO2ONOFF_OFFSET,VFO_2_OnOff);
+  currentVFONumber = EEPROM.get(VFONUMBER_OFFSET,currentVFONumber);
+}
+
+void storeEEPROM(void)
+{
+  uint8_t magicNumber = 0x5a;
+  EEPROM.put(FREQ0_OFFSET,VFO_0_Freq);
+  EEPROM.put(FREQ1_OFFSET,VFO_1_Freq);
+  EEPROM.put(FREQ2_OFFSET,VFO_2_Freq);
+  EEPROM.put(STEPSIZE_OFFSET,stepSize);
+  EEPROM.put(CALVAL_OFFSET,calFactor);
+  EEPROM.put(VFO0ONOFF_OFFSET,VFO_O_OnOff);
+  EEPROM.put(VFO1ONOFF_OFFSET,VFO_1_OnOff);
+  EEPROM.put(VFO2ONOFF_OFFSET,VFO_2_OnOff);
+  EEPROM.put(VFONUMBER_OFFSET,currentVFONumber);
+  EEPROM.put(MAGICNUMBER_OFFSET,magicNumber);
+}
+
+void checkEEPROM(void)
+{
+  uint8_t magicNumber = 0x5a;
+  #ifdef HAS_INTERNAL_EEPROM
+    if (EEPROM.get(MAGICNUMBER_OFFSET,magicNumber) == 0x5a)
+      loadEEPROM();
+    else
+      storeEEPROM();
+  #endif
+}
+
 void setup(void)
 {
   bool i2c_found;
+
+  checkEEPROM();
   
   u8g2.begin();
   
   Serial.begin(9600);
 
   // Si8351 initialiation
-  i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_8PF, 0, 0);
+  i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_10PF, 0, 0);
   if (!i2c_found)
   {
     Serial.println("Device not found on I2C bus!");
