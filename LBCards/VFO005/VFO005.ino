@@ -107,8 +107,6 @@ void setup(void)
 {
   checkEEPROM();
 
-  Serial.begin(9600);
-
   u8g2.begin();
   delay(100);
   u8g2_prepare();
