@@ -12,7 +12,7 @@
   Si6361 driver is from si5351_example
   https://etherkit.github.io/si5351abb_landing_page.html
   Copyright (C) 2015 - 2016 Jason Milldrum <milldrum@gmail.com>
-  
+
 */
 
 #include <Arduino.h>
@@ -48,7 +48,7 @@ enum VFO_ON_OFF
 
 uint8_t VFO_O_OnOff;
 
-unsigned long VFO_0_Freq;
+long VFO_0_Freq;
 
 #define STEP_1_HZ     1ULL
 #define STEP_10_HZ    10ULL
@@ -105,52 +105,39 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 void setup(void)
 {
-  bool i2c_found;
-
   checkEEPROM();
-  
-  u8g2.begin();
-  
-//  Serial.begin(9600);
 
-  gen.Begin();              
-  
-    // Apply a 1000 Hz sine wave using REG0 (register set 0). There are two register sets,
-    // REG0 and REG1. 
-    // Each one can be programmed for:
-    //   Signal type - SINE_WAVE, TRIANGLE_WAVE, SQUARE_WAVE, and HALF_SQUARE_WAVE
-    //   Frequency - 0 to 12.5 MHz
-    //   Phase - 0 to 360 degress (this is only useful if it is 'relative' to some other signal
-    //           such as the phase difference between REG0 and REG1).
-    // In ApplySignal, if Phase is not given, it defaults to 0.
-      if (waveformType == HALF_SQUARE_WAVE_TYPE)
-        gen.ApplySignal(HALF_SQUARE_WAVE,REG0,float(VFO_0_Freq));
-      else if (waveformType == SQUARE_WAVE_TYPE)
-        gen.ApplySignal(SQUARE_WAVE,REG0,float(VFO_0_Freq));
-      else if (waveformType == TRIANGLE_WAVE_TYPE)
-        gen.ApplySignal(TRIANGLE_WAVE,REG0,float(VFO_0_Freq));
-      else if (waveformType == SINE_WAVE_TYPE)
-        gen.ApplySignal(SINE_WAVE,REG0,float(VFO_0_Freq));
-      
-   
-    gen.EnableOutput(VFO_O_OnOff);   // Turn ON the output - it defaults to OFF
-    // There should be a 1000 Hz sine wave on the output of the AD9833
+  Serial.begin(9600);
+
+  u8g2.begin();
+  delay(100);
+  u8g2_prepare();
+  u8g2.clearBuffer();
+  u8g2.drawStr(0, 10, "VFO-005");
+  u8g2.sendBuffer();
+  delay(500);
+
+  gen.Begin();
+  if (waveformType == HALF_SQUARE_WAVE_TYPE)
+    gen.ApplySignal(HALF_SQUARE_WAVE, REG0, float(VFO_0_Freq));
+  else if (waveformType == SQUARE_WAVE_TYPE)
+    gen.ApplySignal(SQUARE_WAVE, REG0, float(VFO_0_Freq));
+  else if (waveformType == TRIANGLE_WAVE_TYPE)
+    gen.ApplySignal(TRIANGLE_WAVE, REG0, float(VFO_0_Freq));
+  else if (waveformType == SINE_WAVE_TYPE)
+    gen.ApplySignal(SINE_WAVE, REG0, float(VFO_0_Freq));
+  gen.EnableOutput(VFO_O_OnOff);
 
   // Encoder initialization
   pinMode(encoderSwitch, INPUT_PULLUP);
   setupEncoder();
   delay(100);
-  u8g2_prepare();
-  delay(100);
-  u8g2.clearBuffer();          // clear the internal memory
-  u8g2.drawStr(0,10,"Hello World!");  // write something to the internal memory
-  u8g2.sendBuffer();          // transfer internal memory to the display
 }
 
 void loop(void)
 {
   while (1)
   {
-      vfoMenu();
+    vfoMenu();
   }
 }

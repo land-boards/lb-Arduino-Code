@@ -31,7 +31,7 @@ void saveInitValuesToEEPROM(void)
 //
 void printVFOFreq(void)
 {
-  displayFreqInKHzOnOLED(float(VFO_0_Freq));
+  displayFreqOnOLED(float(VFO_0_Freq));
 }
 
 //
