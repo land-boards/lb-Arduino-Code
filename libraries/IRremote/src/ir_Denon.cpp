@@ -40,15 +40,6 @@ void IRsend::sendDenon(unsigned long data, int nbits) {
 
     // Data
     sendPulseDistanceWidthData(DENON_BIT_MARK, DENON_ONE_SPACE, DENON_BIT_MARK, DENON_ZERO_SPACE, data, nbits);
-//    for (unsigned long mask = 1UL << (nbits - 1); mask; mask >>= 1) {
-//        if (data & mask) {
-//            mark(DENON_BIT_MARK);
-//            space(DENON_ONE_SPACE);
-//        } else {
-//            mark(DENON_BIT_MARK);
-//            space(DENON_ZERO_SPACE);
-//        }
-//    }
 
 // Footer
     mark(DENON_BIT_MARK);
@@ -60,7 +51,6 @@ void IRsend::sendDenon(unsigned long data, int nbits) {
 //
 #if DECODE_DENON
 bool IRrecv::decodeDenon() {
-    unsigned long data = 0;  // Somewhere to build our code
     int offset = 1;  // Skip the gap reading
 
     // Check we have the right amount of data
@@ -80,32 +70,16 @@ bool IRrecv::decodeDenon() {
     offset++;
 
     // Read the bits in
-    data = decodePulseDistanceData(DENON_BITS, offset, DENON_BIT_MARK, DENON_ONE_SPACE, DENON_ZERO_SPACE);
-//    for (int i = 0; i < DENON_BITS; i++) {
-//        // Each bit looks like: MARK + SPACE_1 -> 1
-//        //                 or : MARK + SPACE_0 -> 0
-//        if (!MATCH_MARK(results.rawbuf[offset], DENON_BIT_MARK)) {
-//            return false;
-//        }
-//        offset++;
-//
-//        // IR data is big-endian, so we shuffle it in from the right:
-//        if (MATCH_SPACE(results.rawbuf[offset], DENON_ONE_SPACE)) {
-//            data = (data << 1) | 1;
-//        } else if (MATCH_SPACE(results.rawbuf[offset], DENON_ZERO_SPACE)) {
-//            data = (data << 1) | 0;
-//        } else {
-//            return false;
-//        }
-//        offset++;
-//    }
+    if (!decodePulseDistanceData(DENON_BITS, offset, DENON_BIT_MARK, DENON_ONE_SPACE, DENON_ZERO_SPACE)) {
+        return false;
+    }
 
     // Success
     results.bits = DENON_BITS;
-    results.value = data;
     results.decode_type = DENON;
     return true;
 }
+
 bool IRrecv::decodeDenon(decode_results *aResults) {
     bool aReturnValue = decodeDenon();
     *aResults = results;

@@ -6,8 +6,7 @@
 //******************************************************************************
 // IRremote
 // Version 2.0.1 June, 2015
-// Copyright 2009 Ken Shirriff
-// For details, see http://arcfn.com/2009/08/multi-protocol-infrared-remote-library.html
+// Initially coded 2009 Ken Shirriff http://www.righto.com
 // Edited by Mitra to add new controller SANYO
 //
 // Interrupt code based on NECIRrcv by Joe Knapp
@@ -33,8 +32,8 @@
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to 0) all the protocols you do not need/want!
 //
-#define DECODE_AIWA_RC_T501  1
-#define SEND_AIWA_RC_T501    1
+//#define DECODE_AIWA_RC_T501  1
+//#define SEND_AIWA_RC_T501    1
 
 #define DECODE_BOSEWAVE      1
 #define SEND_BOSEWAVE        1
@@ -48,7 +47,7 @@
 #define DECODE_JVC           1
 #define SEND_JVC             1
 
-#define DECODE_LEGO_PF       0 // NOT WRITTEN
+#define DECODE_LEGO_PF       1
 #define SEND_LEGO_PF         1
 
 #define DECODE_LG            1
@@ -57,8 +56,8 @@
 #define DECODE_MAGIQUEST     1
 #define SEND_MAGIQUEST       1
 
-#define DECODE_MITSUBISHI    1
-#define SEND_MITSUBISHI      0 // NOT WRITTEN
+//#define DECODE_MITSUBISHI    1 // Faulty implementation
+//#define SEND_MITSUBISHI      0 // NOT WRITTEN
 
 //#define USE_NEC_STANDARD // remove comment to have the standard NEC decoding (LSB first) available.
 #if defined(USE_NEC_STANDARD)
@@ -111,7 +110,7 @@
 typedef enum {
     UNKNOWN = -1,
     UNUSED = 0,
-    AIWA_RC_T501,
+//    AIWA_RC_T501,
     BOSEWAVE,
     DENON,
     DISH,
@@ -119,7 +118,7 @@ typedef enum {
     LEGO_PF,
     LG,
     MAGIQUEST,
-    MITSUBISHI,
+//    MITSUBISHI,
     NEC_STANDARD,
     NEC,
     PANASONIC,
@@ -163,9 +162,9 @@ typedef enum {
 //------------------------------------------------------------------------------
 // Mark & Space matching functions
 //
-int MATCH(int measured, int desired);
-int MATCH_MARK(int measured_ticks, int desired_us);
-int MATCH_SPACE(int measured_ticks, int desired_us);
+int MATCH(unsigned int measured, unsigned int desired);
+int MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us);
+int MATCH_SPACE(uint16_t measured_ticks, unsigned int desired_us);
 
 /****************************************************
  *                     RECEIVING
@@ -175,16 +174,16 @@ int MATCH_SPACE(int measured_ticks, int desired_us);
  */
 struct decode_results {
     decode_type_t decode_type;  ///< UNKNOWN, NEC, SONY, RC5, ...
-    unsigned int address;       ///< Used by Panasonic & Sharp6 NEC_standard [16-bits]
-    unsigned long value;        ///< Decoded value / command [max 32-bits]
-    int bits;                   ///< Number of bits in decoded value
-    unsigned int magnitude;     ///< Used by MagiQuest [16-bits]
+    uint16_t address;           ///< Used by Panasonic & Sharp6 NEC_standard [16-bits]
+    uint32_t value;             ///< Decoded value / command [max 32-bits]
+    uint16_t bits;              ///< Number of bits in decoded value
+    uint16_t magnitude;         ///< Used by MagiQuest [16-bits]
     bool isRepeat;              ///< True if repeat of value is detected
 
-    // next 3 values are copies of irparams values
-    unsigned int *rawbuf;       ///< Raw intervals in 50uS ticks
-    unsigned int rawlen;        ///< Number of records in rawbuf
-    bool overflow;               ///< true if IR raw code too long
+    // next 3 values are copies of irparams values - see IRremoteint.h
+    uint16_t *rawbuf;           ///< Raw intervals in 50uS ticks
+    uint16_t rawlen;            ///< Number of records in rawbuf
+    bool overflow;              ///< true if IR raw code too long
 };
 
 /**
@@ -254,17 +253,21 @@ public:
     void resume();
 
     const char* getProtocolString();
-    void printResultShort(Print * aSerial);
-
+    void printResultShort(Print *aSerial);
+    void printIRResultRaw(Print *aSerial);
+    void printIRResultRawFormatted(Print *aSerial);
+    void printIRResultAsCArray(Print *aSerial);
+    void printIRResultAsCVariables(Print *aSerial);
     /**
      * Print the result (second argument) as Pronto Hex on the Stream supplied as argument.
      * @param stream The Stream on which to write, often Serial
      * @param results the decode_results as delivered from irrecv.decode.
      * @param frequency Modulation frequency in Hz. Often 38000Hz.
      */
-    void dumpPronto(Stream& stream, unsigned int frequency = 38000U);
+    void dumpPronto(Print *aSerial, unsigned int frequency = 38000U);
+    void printIRResultAsPronto(Print *aSerial, unsigned int frequency = 38000U);
 
-    unsigned long decodePulseDistanceData(uint8_t aNumberOfBits, uint8_t aStartOffset, unsigned int aBitMarkMicros,
+    bool decodePulseDistanceData(uint8_t aNumberOfBits, uint8_t aStartOffset, unsigned int aBitMarkMicros,
             unsigned int aOneSpaceMicros, unsigned int aZeroSpaceMicros, bool aMSBfirst = true);
 
     decode_results results; // the instance for decoding
@@ -325,10 +328,10 @@ private:
     bool decodeWhynter(decode_results *aResults);
 #endif
     //......................................................................
-#if DECODE_AIWA_RC_T501
-    bool decodeAiwaRCT501();
-    bool decodeAiwaRCT501(decode_results *aResults);
-#endif
+//#if DECODE_AIWA_RC_T501
+//    bool decodeAiwaRCT501();
+//    bool decodeAiwaRCT501(decode_results *aResults);
+//#endif
     //......................................................................
 #if DECODE_LG
     bool decodeLG();
@@ -340,10 +343,10 @@ private:
     bool decodeSanyo(decode_results *aResults);
 #endif
     //......................................................................
-#if DECODE_MITSUBISHI
-    bool decodeMitsubishi();
-    bool decodeMitsubishi(decode_results *aResults);
-#endif
+//#if DECODE_MITSUBISHI
+//    bool decodeMitsubishi();
+//    bool decodeMitsubishi(decode_results *aResults);
+//#endif
     //......................................................................
 #if DECODE_DISH
       bool  decodeDish () ; // NOT WRITTEN
@@ -364,7 +367,7 @@ private:
 #endif
     //......................................................................
 #if DECODE_LEGO_PF
-      bool  decodeLegoPowerFunctions (decode_results *aResults) ;
+      bool  decodeLegoPowerFunctions () ;
 #endif
     //......................................................................
 #if DECODE_BOSEWAVE
@@ -417,25 +420,28 @@ public:
     void enableIROut(int khz);
     void sendPulseDistanceWidthData(unsigned int aOneMarkMicros, unsigned int aOneSpaceMicros, unsigned int aZeroMarkMicros,
             unsigned int aZeroSpaceMicros, unsigned long aData, uint8_t aNumberOfBits, bool aMSBfirst = true);
-    void mark(unsigned int usec);
-    void space(unsigned int usec);
+    void mark(uint16_t timeMicros);
+    void mark_long(uint32_t timeMicros);
+    void space(uint16_t timeMicros);
+    void space_long(uint32_t timeMicros);
     void sendRaw(const unsigned int buf[], unsigned int len, unsigned int hz);
     void sendRaw_P(const unsigned int buf[], unsigned int len, unsigned int hz);
 
     //......................................................................
 #if SEND_RC5
-    void sendRC5(unsigned long data, int nbits);
+    void sendRC5(uint32_t data, uint8_t nbits);
     void sendRC5ext(uint8_t addr, uint8_t cmd, boolean toggle);
 #endif
 #if SEND_RC6
-    void sendRC6(unsigned long data, int nbits);
+    void sendRC6(uint32_t data, uint8_t nbits);
+    void sendRC6(uint64_t data, uint8_t nbits);
 #endif
     //......................................................................
 #if SEND_NEC || SEND_NEC_STANDARD
     void sendNECRepeat();
 #endif
 #if SEND_NEC
-    void sendNEC(unsigned long data, int nbits, bool repeat = false);
+    void sendNEC(uint32_t data, uint8_t nbits, bool repeat = false);
 #endif
 #if SEND_NEC_STANDARD
     void sendNECStandard(uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRepeats = 0);
@@ -465,9 +471,9 @@ public:
     void sendWhynter(unsigned long data, int nbits);
 #endif
     //......................................................................
-#if SEND_AIWA_RC_T501
-    void sendAiwaRCT501(int code);
-#endif
+//#if SEND_AIWA_RC_T501
+//    void sendAiwaRCT501(int code);
+//#endif
     //......................................................................
 #if SEND_LG
     void sendLG(unsigned long data, int nbits);
@@ -477,9 +483,9 @@ public:
       void  sendSanyo      ( ) ; // NOT WRITTEN
 #endif
     //......................................................................
-#if SEND_MISUBISHI
-      void  sendMitsubishi ( ) ; // NOT WRITTEN
-#endif
+//#if SEND_MISUBISHI
+//      void  sendMitsubishi ( ) ; // NOT WRITTEN
+//#endif
     //......................................................................
 #if SEND_DISH
     void sendDISH(unsigned long data, int nbits);

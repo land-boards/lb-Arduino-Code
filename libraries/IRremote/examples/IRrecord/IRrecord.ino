@@ -9,9 +9,7 @@
  * If the button is pressed, send the IR code.
  * If an IR code is received, record it.
  *
- * Version 0.11 September, 2009
- * Copyright 2009 Ken Shirriff
- * http://arcfn.com
+ * Initially coded 2009 Ken Shirriff http://www.righto.com
  */
 
 #include <IRremote.h>
@@ -65,10 +63,10 @@ void setup() {
 
 // Storage for the recorded code
 int codeType = -1; // The type of code
-unsigned long codeValue; // The code value if not raw
-unsigned int address; // The address value if not raw
+uint32_t codeValue; // The code value if not raw
+uint16_t address; // The address value if not raw
 unsigned int rawCodes[RAW_BUFFER_LENGTH]; // The durations if raw
-int codeLen; // The length of the code
+uint8_t codeLen; // The length of the code
 int toggle = 0; // The RC5/6 toggle state
 
 // Stores the code for later playback

@@ -21,8 +21,7 @@
  * the receiver by looking for an input on the send pin, which will indicate
  * the sender.  You should hook the serial port to the receiver for debugging.
  *
- * Copyright 2010 Ken Shirriff
- * http://arcfn.com
+ * Initially coded 2010 Ken Shirriff http://www.righto.com
  */
 
 #include <IRremote.h>
@@ -119,7 +118,7 @@ void dump() {
 // The motivation behind this method is that the sender and the receiver
 // can do the same test calls, and the mode variable indicates whether
 // to send or receive.
-void test(const char *label, int type, unsigned long value, int bits) {
+void test(const char *label, int type, uint32_t value, int bits) {
     if (mode == SENDER) {
         Serial.println(label);
         if (type == NEC) {
@@ -163,7 +162,7 @@ void test(const char *label, int type, unsigned long value, int bits) {
 
 // Test raw send or receive.  This is similar to the test method,
 // except it send/receives raw data.
-void testRaw(const char *label, unsigned int *rawbuf, unsigned int rawlen) {
+void testRaw(const char *label, unsigned int *rawbuf, uint8_t rawlen) {
     if (mode == SENDER) {
         Serial.println(label);
         IrSender.sendRaw(rawbuf, rawlen, 38 /* kHz */);

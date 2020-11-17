@@ -19,11 +19,10 @@
 //+=============================================================================
 #if DECODE_LG
 bool IRrecv::decodeLG() {
-    long data = 0;
     int offset = 1; // Skip first space
 
-    // Check we have the right amount of data
-    if (irparams.rawlen < (2 * LG_BITS) + 1)
+    // Check we have the right amount of data  +3 for start bit mark and space + stop bit mark
+    if (irparams.rawlen <= (2 * LG_BITS) + 3)
         return false;
 
     // Initial mark/space
@@ -37,34 +36,21 @@ bool IRrecv::decodeLG() {
     }
     offset++;
 
-    data = decodePulseDistanceData(LG_BITS, offset, LG_BIT_MARK, LG_ONE_SPACE, LG_ZERO_SPACE);
-//    for (int i = 0; i < LG_BITS; i++) {
-//        if (!MATCH_MARK(results.rawbuf[offset], LG_BIT_MARK)) {
-//            return false;
-//        }
-//        offset++;
-//
-//        if (MATCH_SPACE(results.rawbuf[offset], LG_ONE_SPACE)) {
-//            data = (data << 1) | 1;
-//        } else if (MATCH_SPACE(results.rawbuf[offset], LG_ZERO_SPACE)) {
-//            data = (data << 1) | 0;
-//        } else {
-//            return false;
-//        }
-//        offset++;
-//    }
-
+    if (!decodePulseDistanceData(LG_BITS, offset, LG_BIT_MARK, LG_ONE_SPACE, LG_ZERO_SPACE)) {
+        return false;
+    }
     // Stop bit
-    if (!MATCH_MARK(results.rawbuf[offset], LG_BIT_MARK)) {
+    if (!MATCH_MARK(results.rawbuf[offset + (2 * LG_BITS)], LG_BIT_MARK)) {
+        DBG_PRINT("Stop bit verify failed");
         return false;
     }
 
     // Success
     results.bits = LG_BITS;
-    results.value = data;
     results.decode_type = LG;
     return true;
 }
+
 bool IRrecv::decodeLG(decode_results *aResults) {
     bool aReturnValue = decodeLG();
     *aResults = results;
@@ -85,15 +71,6 @@ void IRsend::sendLG(unsigned long data, int nbits) {
 
     // Data
     sendPulseDistanceWidthData(LG_BIT_MARK, LG_ONE_SPACE, LG_BIT_MARK, LG_ZERO_SPACE, data, nbits);
-//    for (unsigned long mask = 1UL << (nbits - 1); mask; mask >>= 1) {
-//        if (data & mask) {
-//            space(LG_ONE_SPACE);
-//            mark(LG_BIT_MARK);
-//        } else {
-//            space(LG_ZERO_SPACE);
-//            mark(LG_BIT_MARK);
-//        }
-//    }
 
     mark(LG_BIT_MARK);
     space(0);  // Always end with the LED off

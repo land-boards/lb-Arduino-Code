@@ -3,15 +3,8 @@
  *
  *  Contains functions for receiving and sending NEC IR Protocol in "raw" and standard format with 16 bit Address  8bit Data
  *
- *  This file is part of Arduino-RobotCar https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
 #include "IRremote.h"
@@ -53,7 +46,7 @@ void IRsend::sendNECRepeat() {
  * Repeat commands should be sent in a 110 ms raster.
  * https://www.sbprojects.net/knowledge/ir/nec.php
  */
-void IRsend::sendNEC(unsigned long data, int nbits, bool repeat) {
+void IRsend::sendNEC(uint32_t data, uint8_t nbits, bool repeat) {
     // Set IR carrier frequency
     enableIROut(38);
 
@@ -68,7 +61,7 @@ void IRsend::sendNEC(unsigned long data, int nbits, bool repeat) {
     // Data
     sendPulseDistanceWidthData(NEC_BIT_MARK, NEC_ONE_SPACE, NEC_BIT_MARK, NEC_ZERO_SPACE, data, nbits);
 
-    // Footer
+    // Stop bit
     mark(NEC_BIT_MARK);
     space(0);  // Always end with the LED off
 }
@@ -95,7 +88,7 @@ void IRsend::sendNECStandard(uint16_t aAddress, uint8_t aCommand, uint8_t aNumbe
     uint16_t tCommand = ((~aCommand) << 8) | aCommand;
     // Command 16 bit LSB first
     sendPulseDistanceWidthData(NEC_BIT_MARK, NEC_ONE_SPACE, NEC_BIT_MARK, NEC_ZERO_SPACE, tCommand, 16, false);
-    mark(NEC_BIT_MARK);
+    mark(NEC_BIT_MARK); // Stop bit
     space(0); // Always end with the LED off
 
     for (uint8_t i = 0; i < aNumberOfRepeats; ++i) {
@@ -112,8 +105,7 @@ void IRsend::sendNECStandard(uint16_t aAddress, uint8_t aCommand, uint8_t aNumbe
 //
 #if DECODE_NEC
 bool IRrecv::decodeNEC() {
-    long data = 0;  // We decode in to here; Start with nothing
-    int offset = 1;  // Index in to results; Skip first entry!?
+    int offset = 1;  // Index in to results; Skip first space.
 
 // Check header "mark"
     if (!MATCH_MARK(results.rawbuf[offset], NEC_HEADER_MARK)) {
@@ -131,25 +123,34 @@ bool IRrecv::decodeNEC() {
         return true;
     }
 
-// Check we have enough data
-    if (results.rawlen < (2 * NEC_BITS) + 4) {
+// Check we have enough data - +3 for start bit mark and space + stop bit mark
+    if (results.rawlen <= (2 * NEC_BITS) + 3) {
         return false;
     }
+
 // Check header "space"
     if (!MATCH_SPACE(results.rawbuf[offset], NEC_HEADER_SPACE)) {
         return false;
     }
     offset++;
 
-    data = decodePulseDistanceData(NEC_BITS, offset, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_ZERO_SPACE);
+    if (!decodePulseDistanceData(NEC_BITS, offset, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_ZERO_SPACE)) {
+        return false;
+    }
+
+    // Stop bit
+    if (!MATCH_MARK(results.rawbuf[offset + (2 * NEC_BITS)], NEC_BIT_MARK)) {
+        DBG_PRINT("Stop bit verify failed");
+        return false;
+    }
 
 // Success
     results.bits = NEC_BITS;
-    results.value = data;
     results.decode_type = NEC;
 
     return true;
 }
+
 bool IRrecv::decodeNEC(decode_results *aResults) {
     bool aReturnValue = decodeNEC();
     *aResults = results;
@@ -163,7 +164,7 @@ bool IRrecv::decodeNEC(decode_results *aResults) {
 #if DECODE_NEC_STANDARD
 bool IRrecv::decodeNECStandard() {
     long data = 0;  // We decode in to here; Start with nothing
-    int offset = 1;  // Index in to results; Skip first entry!?
+    int offset = 1;  // Index in to results; Skip first space.
 
     // Check header "mark"
     if (!MATCH_MARK(results.rawbuf[offset], NEC_HEADER_MARK)) {
@@ -179,8 +180,8 @@ bool IRrecv::decodeNECStandard() {
         return true;
     }
 
-    // Check we have enough data
-    if (results.rawlen < (2 * NEC_BITS) + 4) {
+    // Check we have enough data - +3 for start bit mark and space + stop bit mark
+    if (results.rawlen <= (2 * NEC_BITS) + 3) {
         return false;
     }
     // Check header "space"
@@ -190,6 +191,12 @@ bool IRrecv::decodeNECStandard() {
     offset++;
 
     data = decodePulseDistanceData(NEC_BITS, offset, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_ZERO_SPACE, false);
+
+    // Stop bit
+    if (!MATCH_MARK(results.rawbuf[offset + (2 * NEC_BITS)], NEC_BIT_MARK)) {
+        DBG_PRINT("Stop bit verify failed");
+       return false;
+    }
 
     // Success
     uint16_t tCommand = data >> 16;

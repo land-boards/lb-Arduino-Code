@@ -1,7 +1,19 @@
+## 2.8.0 2020/10
+- Changed License to MIT see https://github.com/z3t0/Arduino-IRremote/issues/397.
+- Added ATtiny timer 1 support.
+- Changed wrong return code signature of decodePulseDistanceData() and its handling.
+- Removed Mitsubishi protocol, since the implementation is in contradiction with all documentation I could found and therefore supposed to be wrong.
+- Removed AIWA implementation, since it is only for 1 device and at least sending implemented wrong.
+- Added Lego_PF decode.
+- Added new example IR2Keyboard.
+- Changed internal usage of custom_delay_usec.
+- Moved dump/print functions from example to irReceiver.
+- irPronto.cpp: Using Print instead of Stream saves 1020 bytes program memory. Changed from & to * parameter type to be more transparent and consistent with other code of IRremote.
+
 ## 2.7.0 2020/09
 - Added ATmega328PB support.
 - Renamed hardware specific macro and function names.
-- Renamed `USE_SOFT_CARRIER` and `USE_NO_CARRIER` macros to `USE_SOFT_SEND_PWM` and `USE_NO_SEND_PWM`.
+- Renamed `USE_SOFT_CARRIER`, `USE_NO_CARRIER`, `DUTY_CYCLE` macros to `USE_SOFT_SEND_PWM`, `USE_NO_SEND_PWM`, `IR_SEND_DUTY_CYCLE`.
 - Removed blocking wait for ATmega32U4 Serial in examples.
 - Deactivated default debug output.
 - Optimized types in sendRC5ext and sendSharpAlt.

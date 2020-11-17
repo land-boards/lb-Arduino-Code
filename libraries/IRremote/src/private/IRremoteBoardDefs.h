@@ -98,11 +98,16 @@
 #define BLINKLED_ON()   RXLED1
 #define BLINKLED_OFF()  RXLED0
 
-// Arduino Leonardo
+// Arduino Leonardo + others
 #elif defined(__AVR_ATmega32U4__)
 #define BLINKLED        LED_BUILTIN
 #define BLINKLED_ON()   (PORTC |= B10000000)
 #define BLINKLED_OFF()  (PORTC &= B01111111)
+
+#elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega8U2__) || defined(__AVR_ATmega16U2__)  || defined(__AVR_ATmega32U2__)
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   (digitalWrite(LED_BUILTIN, HIGH))
+#define BLINKLED_OFF()  (digitalWrite(LED_BUILTIN, LOW))
 
 // Arduino Uno, Nano etc (previously default clause)
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega168__)
@@ -121,7 +126,7 @@
 #define BLINKLED_OFF()  (PORTD &= B11111110)
 
 // Nano Every, Uno WiFi Rev2, nRF5 BBC MicroBit, Nano33_BLE
-#elif defined(__AVR_ATmega4809__) || defined(NRF5) || defined (ARDUINO_ARCH_NRF52840)
+#elif defined(__AVR_ATmega4809__) || defined(NRF5) || defined(ARDUINO_ARCH_NRF52840) || defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny85__)
 #define BLINKLED        LED_BUILTIN
 #define BLINKLED_ON()   (digitalWrite(BLINKLED, HIGH))
 #define BLINKLED_OFF()  (digitalWrite(BLINKLED, LOW))
@@ -203,6 +208,12 @@
 //#define IR_USE_TIMER4_HS  // tx = pin 13
 #  endif
 
+// ATmega8U2, ATmega16U2, ATmega32U2
+#elif defined(__AVR_ATmega8U2__) || defined(__AVR_ATmega16U2__)  || defined(__AVR_ATmega32U2__)
+#  if !defined(IR_USE_TIMER1)
+    #define IR_USE_TIMER1     // tx = pin C6
+#endif
+
 // Nano Every, Uno WiFi Rev2
 #elif defined(__AVR_ATmega4809__)
 #  if !defined(IR_USE_TIMER_4809_1) && !defined(IR_USE_TIMER_4809_2)
@@ -234,8 +245,14 @@
 
 //ATtiny85
 #elif defined(__AVR_ATtiny85__)
-#  if !defined(IR_USE_TIMER_TINY0)
+#  if !defined(IR_USE_TIMER_TINY0) && !defined(IR_USE_TIMER_TINY1)
+#    if defined(TIMER_TO_USE_FOR_MILLIS) && (TIMER_TO_USE_FOR_MILLIS== 0)
+// standard ATTinyCore settings use timer 0 for millis() and micros()
+#define IR_USE_TIMER_TINY1   // tx = pin 4
+#    else
 #define IR_USE_TIMER_TINY0   // tx = pin 1
+//#define IR_USE_TIMER_TINY1   // tx = pin 4
+#    endif
 #  endif
 
 /*********************
@@ -380,9 +397,9 @@
 // CPU Frequency
 //
 #if !defined(SYSCLOCK) && defined(ARDUINO) // allow for processor specific code to define SYSCLOCK
-#ifndef F_CPU
+#  ifndef F_CPU
 #error SYSCLOCK or F_CPU cannot be determined. Define it for your board in IRremoteBoardDefs.h.
-#endif // ! F_CPU
+#  endif // ! F_CPU
 /**
  * Clock frequency to be used for timing.
  */
@@ -412,9 +429,9 @@
 // Assume that we compile a test version, to be executed on the host,
 // not on a board.
 // Do nothing.
-#ifdef ISR
+#  ifdef ISR
 #undef ISR
-#endif
+#  endif
 #define ISR(f) void do_not_use__(void)
 #define TIMER_RESET_INTR_PENDING
 
@@ -424,24 +441,21 @@
 #elif defined(IR_USE_TIMER2)
 
 #define TIMER_RESET_INTR_PENDING
-#define TIMER_ENABLE_SEND_PWM    (TCCR2A |= _BV(COM2B1))
-#define TIMER_DISABLE_SEND_PWM   (TCCR2A &= ~(_BV(COM2B1)))
-#define TIMER_ENABLE_RECEIVE_INTR   (TIMSK2 = _BV(OCIE2A))
+#define TIMER_ENABLE_SEND_PWM    (TCCR2A |= _BV(COM2B1))    // Clear OC2B on Compare Match
+#define TIMER_DISABLE_SEND_PWM   (TCCR2A &= ~(_BV(COM2B1))) // Normal port operation, OC2B disconnected.
+#define TIMER_ENABLE_RECEIVE_INTR   (TIMSK2 = _BV(OCIE2A))  // Output Compare Match A Interrupt Enable
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK2 = 0)
 #define TIMER_INTR_NAME     TIMER2_COMPA_vect
-// COM2A = 00: disconnect OC2A
-// COM2B = 00: disconnect OC2B; to send signal set to 10: OC2B non-inverted
-// WGM2 = 101: phase-correct PWM with OCRA as top
-// CS2  = 000: no prescaling
+
 // The top value for the timer.  The modulation frequency will be SYSCLOCK / 2 / OCR2A.
 #pragma GCC diagnostic ignored "-Wunused-function"
 /*
  * timerConfigForSend() is used exclusively by IRsend::enableIROut()
  */
-static void timerConfigForSend(uint16_t frequency) {
-    const uint16_t pwmval = (SYSCLOCK / 2000) / (frequency);
-    TCCR2A = _BV(WGM20);
-    TCCR2B = _BV(WGM22) | _BV(CS20);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint16_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 2000 instead of 1000 because of Phase Correct PWM
+    TCCR2A = _BV(WGM20); // PWM, Phase Correct, Top is OCR2A
+    TCCR2B = _BV(WGM22) | _BV(CS20); // CS20 -> no prescaling
     OCR2A = pwmval;
     OCR2B = pwmval * IR_SEND_DUTY_CYCLE / 100;
 }
@@ -452,36 +466,36 @@ static void timerConfigForSend(uint16_t frequency) {
  * It generates an interrupt each 50 (MICROS_PER_TICK) us.
  */
 static void timerConfigForReceive() {
-#if (TIMER_COUNT_TOP < 256)
+#  if (TIMER_COUNT_TOP < 256)
     TCCR2A = _BV(WGM21);
     TCCR2B = _BV(CS20);
     OCR2A  = TIMER_COUNT_TOP;
     TCNT2  = 0;
-#else
+#  else
     TCCR2A = _BV(WGM21);
     TCCR2B = _BV(CS21);
     OCR2A = TIMER_COUNT_TOP / 8;
     TCNT2 = 0;
-#endif
+#  endif
 }
 
 //-----------------
-#if defined(CORE_OC2B_PIN)
+#  if defined(CORE_OC2B_PIN)
 #define IR_SEND_PIN  CORE_OC2B_PIN  // Teensy
 
 #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define IR_SEND_PIN  9              // Arduino Mega
 
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) \
+#  elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) \
 || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__) \
 || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega324A__) \
 || defined(__AVR_ATmega324PA__) || defined(__AVR_ATmega164A__) \
 || defined(__AVR_ATmega164P__)
 #define IR_SEND_PIN  14             // MightyCore, MegaCore
 
-#else
+#  else
 #define IR_SEND_PIN  3              // Arduino Duemilanove, Diecimila, LilyPad, etc
-#endif // defined(CORE_OC2B_PIN)
+#  endif // defined(CORE_OC2B_PIN)
 
 //---------------------------------------------------------
 // Timer1 (16 bits)
@@ -493,24 +507,28 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_SEND_PWM  (TCCR1A &= ~(_BV(COM1A1)))
 
 //-----------------
-#if defined(__AVR_ATmega8__) || defined(__AVR_ATmega8515__) \
+#  if defined(__AVR_ATmega8__) || defined(__AVR_ATmega8515__) \
 || defined(__AVR_ATmega8535__) || defined(__AVR_ATmega16__) \
 || defined(__AVR_ATmega32__) || defined(__AVR_ATmega64__) \
 || defined(__AVR_ATmega128__) || defined(__AVR_ATmega162__)
 #define TIMER_ENABLE_RECEIVE_INTR   (TIMSK |= _BV(OCIE1A))
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK &= ~_BV(OCIE1A))
-#else
+#  else
 #define TIMER_ENABLE_RECEIVE_INTR   (TIMSK1 = _BV(OCIE1A))
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK1 = 0)
-#endif
+#  endif
 
 //-----------------
+#if defined(TIMER1_COMPA_vect)
 #define TIMER_INTR_NAME       TIMER1_COMPA_vect
+#elif defined(TIM1_COMPA_vect)
+#define TIMER_INTR_NAME       TIM1_COMPA_vect
+#endif
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint32_t pwmval = SYSCLOCK / 2000 / (frequency);
-    TCCR1A = _BV(WGM11);
-    TCCR1B = _BV(WGM13) | _BV(CS10);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint32_t pwmval = SYSCLOCK / 2000 / (aFrequencyKHz);  // 2000 instead of 1000 because of Phase Correct PWM
+    TCCR1A = _BV(WGM11); // PWM, Phase Correct, Top is ICR1
+    TCCR1B = _BV(WGM13) | _BV(CS10); // CS10 -> no prescaling
     ICR1 = pwmval;
     OCR1A = pwmval * IR_SEND_DUTY_CYCLE / 100;
 }
@@ -523,13 +541,13 @@ static void timerConfigForReceive() {
 }
 
 //-----------------
-#if defined(CORE_OC1A_PIN)
+#  if defined(CORE_OC1A_PIN)
 #define IR_SEND_PIN  CORE_OC1A_PIN  // Teensy
 
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#  elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define IR_SEND_PIN  11             // Arduino Mega
 
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) \
+#  elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) \
 || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__) \
 || defined(__AVR_ATmega324P__) || defined(__AVR_ATmega324A__) \
 || defined(__AVR_ATmega324PA__) || defined(__AVR_ATmega164A__) \
@@ -540,12 +558,12 @@ static void timerConfigForReceive() {
 || defined(__AVR_ATmega8515__) || defined(__AVR_ATmega162__)
 #define IR_SEND_PIN  13             // MightyCore, MegaCore, MajorCore
 
-#elif defined(__AVR_ATtiny84__)
+#  elif defined(__AVR_ATtiny84__)
 # define IR_SEND_PIN  6
 
-#else
+#  else
 #define IR_SEND_PIN  9              // Arduino Duemilanove, Diecimila, LilyPad, Sparkfun Pro Micro, Leonardo etc.
-#endif // defined(CORE_OC1A_PIN)
+#  endif // defined(CORE_OC1A_PIN)
 
 //---------------------------------------------------------
 // Timer3 (16 bits)
@@ -559,8 +577,8 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR   (TIMSK3 = 0)
 #define TIMER_INTR_NAME      TIMER3_COMPA_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint32_t pwmval = SYSCLOCK / 2000 / (frequency);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint32_t pwmval = SYSCLOCK / 2000 / (aFrequencyKHz);
     TCCR3A = _BV(WGM31);
     TCCR3B = _BV(WGM33) | _BV(CS30);
     ICR3 = pwmval;
@@ -575,19 +593,19 @@ static void timerConfigForReceive() {
 }
 
 //-----------------
-#if defined(CORE_OC3A_PIN)
+#  if defined(CORE_OC3A_PIN)
 #define IR_SEND_PIN  CORE_OC3A_PIN  // Teensy
 
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) \
+#  elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) \
 || defined(__AVR_ATmega32U4__) || defined(ARDUINO_AVR_PROMICRO)
 #define IR_SEND_PIN  5              // Arduino Mega, Arduino Leonardo, Sparkfun Pro Micro
 
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
+#  elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #define IR_SEND_PIN  6              // MightyCore, MegaCore
 
-#else
-#error "Please add OC3A pin number here\n"
-#endif
+#  else
+#error Please add OC3A pin number here
+#  endif
 
 //---------------------------------------------------------
 // Timer4 (10 bits, high speed option)
@@ -595,20 +613,20 @@ static void timerConfigForReceive() {
 #elif defined(IR_USE_TIMER4_HS)
 
 #define TIMER_RESET_INTR_PENDING
-#if defined(ARDUINO_AVR_PROMICRO) // Sparkfun Pro Micro
+#  if defined(ARDUINO_AVR_PROMICRO) // Sparkfun Pro Micro
 #define TIMER_ENABLE_SEND_PWM    (TCCR4A |= _BV(COM4A0))     // Use complimentary O̅C̅4̅A̅ output on pin 5
 #define TIMER_DISABLE_SEND_PWM   (TCCR4A &= ~(_BV(COM4A0)))  // (Pro Micro does not map PC7 (32/ICP3/CLK0/OC4A)
                                                             // of ATmega32U4 )
-#else
+#  else
 #define TIMER_ENABLE_SEND_PWM    (TCCR4A |= _BV(COM4A1))
 #define TIMER_DISABLE_SEND_PWM   (TCCR4A &= ~(_BV(COM4A1)))
-#endif
+#  endif
 #define TIMER_ENABLE_RECEIVE_INTR   (TIMSK4 = _BV(TOIE4))
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK4 = 0)
 #define TIMER_INTR_NAME     TIMER4_OVF_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint32_t pwmval = SYSCLOCK / 2000 / (frequency);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint32_t pwmval = SYSCLOCK / 2000 / (aFrequencyKHz);
     TCCR4A = (1 << PWM4A);
     TCCR4B = _BV(CS40);
     TCCR4C = 0;
@@ -633,15 +651,15 @@ static void timerConfigForReceive() {
 }
 
 //-----------------
-#if defined(CORE_OC4A_PIN)
+#  if defined(CORE_OC4A_PIN)
 #define IR_SEND_PIN  CORE_OC4A_PIN  // Teensy
-#elif defined(ARDUINO_AVR_PROMICRO)
+#  elif defined(ARDUINO_AVR_PROMICRO)
 #define IR_SEND_PIN  5              // Sparkfun Pro Micro
-#elif defined(__AVR_ATmega32U4__)
+#  elif defined(__AVR_ATmega32U4__)
 #define IR_SEND_PIN  13             // Leonardo
-#else
-#error "Please add OC4A pin number here\n"
-#endif
+#  else
+#error Please add OC4A pin number here
+#  endif
 
 //---------------------------------------------------------
 // Timer4 (16 bits)
@@ -655,8 +673,8 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK4 = 0)
 #define TIMER_INTR_NAME     TIMER4_COMPA_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint32_t pwmval = SYSCLOCK / 2000 / (frequency);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint32_t pwmval = SYSCLOCK / 2000 / (aFrequencyKHz);
     TCCR4A = _BV(WGM41);
     TCCR4B = _BV(WGM43) | _BV(CS40);
     ICR4 = pwmval;
@@ -671,13 +689,13 @@ static void timerConfigForReceive() {
 }
 
 //-----------------
-#if defined(CORE_OC4A_PIN)
+#  if defined(CORE_OC4A_PIN)
 #define IR_SEND_PIN  CORE_OC4A_PIN
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#  elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define IR_SEND_PIN  6  // Arduino Mega
-#else
-#error "Please add OC4A pin number here\n"
-#endif
+#  else
+#error Please add OC4A pin number here
+#  endif
 
 //---------------------------------------------------------
 // Timer5 (16 bits)
@@ -691,8 +709,8 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK5 = 0)
 #define TIMER_INTR_NAME     TIMER5_COMPA_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint32_t pwmval = SYSCLOCK / 2000 / (frequency);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint32_t pwmval = SYSCLOCK / 2000 / (aFrequencyKHz);
     TCCR5A = _BV(WGM51);
     TCCR5B = _BV(WGM53) | _BV(CS50);
     ICR5 = pwmval;
@@ -707,13 +725,13 @@ static void timerConfigForReceive() {
 }
 
 //-----------------
-#if defined(CORE_OC5A_PIN)
+#  if defined(CORE_OC5A_PIN)
 #define IR_SEND_PIN  CORE_OC5A_PIN
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#  elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #define IR_SEND_PIN  46  // Arduino Mega
-#else
-#error "Please add OC5A pin number here\n"
-#endif
+#  else
+#error Please add OC5A pin number here
+#  endif
 
 //---------------------------------------------------------
 // Special carrier modulator timer for Teensy 3.0 / Teensy 3.1
@@ -738,23 +756,23 @@ CORE_PIN5_CONFIG = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;  \
 #define TIMER_INTR_NAME     cmt_isr
 
 //-----------------
-#ifdef ISR
+#  ifdef ISR
 #undef ISR
-#endif
+#  endif
 #define ISR(f) void do_not_use__(void)
 
 //-----------------
 #define CMT_PPS_DIV  ((F_BUS + 7999999) / 8000000)
-#if F_BUS < 8000000
+#  if F_BUS < 8000000
 #error IRremote requires at least 8 MHz on Teensy 3.x
-#endif
+#  endif
 
-static void timerConfigForSend(uint16_t frequency) {
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
     SIM_SCGC4 |= SIM_SCGC4_CMT;
     SIM_SOPT2 |= SIM_SOPT2_PTD7PAD;
     CMT_PPS = CMT_PPS_DIV - 1;
-    CMT_CGH1 = ((F_BUS / CMT_PPS_DIV / 3000) + ((frequency) / 2)) / (frequency);
-    CMT_CGL1 = ((F_BUS / CMT_PPS_DIV / 1500) + ((frequency) / 2)) / (frequency);
+    CMT_CGH1 = ((F_BUS / CMT_PPS_DIV / 3000) + ((aFrequencyKHz) / 2)) / (aFrequencyKHz);
+    CMT_CGL1 = ((F_BUS / CMT_PPS_DIV / 1500) + ((aFrequencyKHz) / 2)) / (aFrequencyKHz);
     CMT_CMD1 = 0;
     CMT_CMD2 = 30;
     CMT_CMD3 = 0;
@@ -786,17 +804,17 @@ static void timerConfigForReceive() {
 #define TIMER_ENABLE_RECEIVE_INTR    NVIC_ENABLE_IRQ(IRQ_FTM1)
 #define TIMER_DISABLE_RECEIVE_INTR   NVIC_DISABLE_IRQ(IRQ_FTM1)
 #define TIMER_INTR_NAME      ftm1_isr
-#ifdef ISR
+#  ifdef ISR
 #undef ISR
-#endif
+#  endif
 #define ISR(f) void do_not_use__(void)
 
-static void timerConfigForSend(uint16_t frequency) {
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
     SIM_SCGC6 |= SIM_SCGC6_TPM1;
     FTM1_SC = 0;
     FTM1_CNT = 0;
-    FTM1_MOD = (F_PLL / 2000) / frequency - 1;
-    FTM1_C0V = (F_PLL / 6000) / frequency - 1;
+    FTM1_MOD = (F_PLL / 2000) / aFrequencyKHz - 1;
+    FTM1_C0V = (F_PLL / 6000) / aFrequencyKHz - 1;
     FTM1_SC = FTM_SC_CLKS(1) | FTM_SC_PS(0);
 }
 
@@ -819,49 +837,74 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR   (TIMSK &= ~(_BV(OCIE0A)))
 #define TIMER_INTR_NAME      TIMER0_COMPA_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint16_t pwmval = SYSCLOCK / 2000 / (frequency);
-    TCCR0A = _BV(WGM00);
-    TCCR0B = _BV(WGM02) | _BV(CS00);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint16_t pwmval = SYSCLOCK / 2000 / (aFrequencyKHz); // 2000 instead of 1000 because of Phase Correct PWM
+    TCCR0A = _BV(WGM00); // PWM, Phase Correct, Top is OCR0A
+    TCCR0B = _BV(WGM02) | _BV(CS00); // CS00 -> no prescaling
     OCR0A = pwmval;
     OCR0B = pwmval * IR_SEND_DUTY_CYCLE / 100;
 }
 
 #define TIMER_COUNT_TOP  (SYSCLOCK * MICROS_PER_TICK / 1000000)
 static void timerConfigForReceive() {
-#if (TIMER_COUNT_TOP < 256)
-    TCCR0A = _BV(WGM01);
-    TCCR0B = _BV(CS00);
+#  if (TIMER_COUNT_TOP < 256)
+    TCCR0A = _BV(WGM01); // CTC, Top is OCR0A
+    TCCR0B = _BV(CS00); // No prescaling
     OCR0A = TIMER_COUNT_TOP;
     TCNT0 = 0;
-#else
+#  else
     TCCR0A = _BV(WGM01);
-    TCCR0B = _BV(CS01);
+    TCCR0B = _BV(CS01); // prescaling by 8
     OCR0A = TIMER_COUNT_TOP / 8;
     TCNT0 = 0;
-#endif
+#  endif
 }
 
 #define IR_SEND_PIN        1
 
-// work in progress- defines for timer_tiny1 (8 bits)
+// defines for timer_tiny1 (8 bits)
 #elif defined(IR_USE_TIMER_TINY1)
 #define TIMER_RESET_INTR_PENDING
-#define TIMER_ENABLE_SEND_PWM     (TCCR1 |= _BV(CTC1))
-#define TIMER_DISABLE_SEND_PWM    (TCCR0A &= ~(_BV(COM0B1)))
+#define TIMER_ENABLE_SEND_PWM     TCNT1 = 0; GTCCR |= _BV(PWM1B) | _BV(COM1B0) // Enable pin 4 PWM output (PB4 - Arduino D4)
+#define TIMER_DISABLE_SEND_PWM    (GTCCR &= ~(_BV(PWM1B) | _BV(COM1B0)))
 #define TIMER_ENABLE_RECEIVE_INTR    (TIMSK |= _BV(OCIE1B))
 #define TIMER_DISABLE_RECEIVE_INTR   (TIMSK &= ~(_BV(OCIE1B)))
 #define TIMER_INTR_NAME      TIMER1_COMPB_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint16_t pwmval = SYSCLOCK / 2000 / (frequency);
-    TCCR0A = _BV(WGM00);
-    TCCR0B = _BV(WGM02) | _BV(CS00);
-    OCR0A = pwmval;
-    OCR0B = pwmval * IR_SEND_DUTY_CYCLE / 100;
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+#  if (((SYSCLOCK / 1000) / 38) < 256)
+    const uint16_t pwmval = (SYSCLOCK / 1000) / (aFrequencyKHz); // 421 @16 MHz, 26 @1 MHz and 38 kHz
+    TCCR1 = _BV(CTC1) | _BV(CS10);  // CTC1 = 1: TOP value set to OCR1C, CS10 No Prescaling
+    OCR1C = pwmval;
+    OCR1B = pwmval * IR_SEND_DUTY_CYCLE / 100;
+    TCNT1 = 0;
+    GTCCR = _BV(PWM1B) | _BV(COM1B0); // PWM1B = 1: Enable PWM for OCR1B, COM1B0 Clear on compare match
+#  else
+    const uint16_t pwmval = ((SYSCLOCK / 2) / 1000) / (aFrequencyKHz); // 210 for 16 MHz and 38 kHz
+    TCCR1 = _BV(CTC1) | _BV(CS11);  // CTC1 = 1: TOP value set to OCR1C, CS11 Prescaling by 2
+    OCR1C = pwmval;
+    OCR1B = pwmval * IR_SEND_DUTY_CYCLE / 100;
+    TCNT1 = 0;
+    GTCCR = _BV(PWM1B) | _BV(COM1B0); // PWM1B = 1: Enable PWM for OCR1B, COM1B0 Clear on compare match
+#  endif
 }
 
-#define IR_SEND_PIN        1
+#define TIMER_COUNT_TOP  (SYSCLOCK * MICROS_PER_TICK / 1000000)
+static void timerConfigForReceive() {
+#  if (TIMER_COUNT_TOP < 256)
+    TCCR1 = _BV(CTC1) | _BV(CS10); // Clear Timer/Counter on Compare Match, Top is OCR1C, No prescaling
+    GTCCR = 0;  // normal, non-PWM mode
+    OCR1C = TIMER_COUNT_TOP;
+    TCNT1 = 0;
+#  else
+    TCCR1 = _BV(CTC1) | _BV(CS12); // Clear Timer/Counter on Compare Match, Top is OCR1C, prescaling by 8
+    GTCCR = 0;  // normal, non-PWM mode
+    OCR1C = TIMER_COUNT_TOP / 8;
+    TCNT1 = 0;
+#  endif
+}
+
+#define IR_SEND_PIN        4
 
 #elif defined(IR_USE_TIMER_4809_1)
 // ATmega4809 TCB0
@@ -872,8 +915,8 @@ static void timerConfigForSend(uint16_t frequency) {
 #define TIMER_DISABLE_RECEIVE_INTR   (TCB0.INTCTRL &= ~(TCB_CAPT_bm))
 #define TIMER_INTR_NAME      TCB0_INT_vect
 
-static void timerConfigForSend(uint16_t frequency) {
-    const uint32_t pwmval = (SYSCLOCK / 2000) / (frequency);
+static void timerConfigForSend(uint16_t aFrequencyKHz) {
+    const uint32_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz);
     TCB0.CTRLB = TCB_CNTMODE_PWM8_gc;
     TCB0.CCMPL = pwmval;
     TCB0.CCMPH = (pwmval * IR_SEND_DUTY_CYCLE) / 100;
@@ -930,14 +973,14 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR   NVIC_DisableIRQ(TC3_IRQn)
 #define TIMER_INTR_NAME      TC3_Handler // Not presently used
 #pragma GCC diagnostic ignored "-Wunused-function"
-static void timerConfigForSend(uint16_t frequency __attribute__((unused))) {}
+static void timerConfigForSend(uint16_t aFrequencyKHz __attribute__((unused))) {}
 
 #ifdef ISR
 #undef ISR
 #endif
 #define ISR(f) void IRTimer(void)
 
-#elif defined(NRF5) || defined (ARDUINO_ARCH_NRF52840)
+#elif defined(NRF5) || defined(ARDUINO_ARCH_NRF52840)
 // The default pin used used for sending. 3, A0 - left pad
 #define IR_SEND_PIN   3 // dummy since sending not yet supported
 
@@ -952,7 +995,7 @@ static void timerConfigForSend(uint16_t frequency __attribute__((unused))) {}
 // Unknown Timer
 //
 #else
-#error "Internal code configuration error, no known IR_USE_TIMER* defined\n"
+#error Internal code configuration error, no known IR_USE_TIMER* defined
 #endif
 
 #endif // ! IRremoteBoardDefs_h
