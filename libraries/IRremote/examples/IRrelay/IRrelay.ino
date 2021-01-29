@@ -14,9 +14,6 @@ int IR_RECEIVE_PIN = 11;
 #endif
 int RELAY_PIN = 4; // is labeled D2 on the Chinese SAMD21 M0-Mini clone
 
-IRrecv IrReceiver(IR_RECEIVE_PIN);
-decode_results results;
-
 // On the Zero and others we switch explicitly to SerialUSB
 #if defined(ARDUINO_ARCH_SAMD)
 #define Serial SerialUSB
@@ -33,14 +30,13 @@ void setup() {
     pinMode(RELAY_PIN, OUTPUT);
 
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)
-    delay(2000); // To be able to connect Serial monitor after reset and before first printout
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
+    delay(2000); // To be able to connect Serial monitor after reset or power up and before first printout
 #endif
     // Just to know which program is running on my Arduino
-    Serial.println(F("START " __FILE__ " from " __DATE__));
+    Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
 
-    IrReceiver.enableIRIn();  // Start the receiver
-    IrReceiver.blink13(true); // Enable feedback LED
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); // Start the receiver, enable feedback LED, take LED feedback pin from the internal boards definition
 
     Serial.print(F("Ready to receive IR signals at pin "));
     Serial.println(IR_RECEIVE_PIN);
@@ -58,45 +54,20 @@ void loop() {
             Serial.print(F("Switch relay "));
             if (on) {
                 digitalWrite(RELAY_PIN, HIGH);
-                digitalWrite(LED_BUILTIN, HIGH);
                 Serial.println(F("on"));
             } else {
                 digitalWrite(RELAY_PIN, LOW);
-                digitalWrite(LED_BUILTIN, LOW);
                 Serial.println(F("off"));
             }
-            dump();
+
+            IrReceiver.printIRResultShort(&Serial);
+            Serial.println();
+            if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+                // We have an unknown protocol, print more info
+                IrReceiver.printIRResultRawFormatted(&Serial, true);
+            }
         }
         last = millis();
-        IrReceiver.resume(); // Receive the next value
+        IrReceiver.resume(); // Enable receiving of the next value
     }
-}
-
-
-// Dumps out the decode_results structure.
-// Call this after IRrecv::decode()
-void dump() {
-    int count = IrReceiver.results.rawlen;
-    if (IrReceiver.results.decode_type == UNKNOWN) {
-        Serial.println("Could not decode message");
-    } else {
-        IrReceiver.printResultShort(&Serial);
-
-        Serial.print(" (");
-        Serial.print(IrReceiver.results.bits, DEC);
-        Serial.println(" bits)");
-    }
-    Serial.print("Raw (");
-    Serial.print(count, DEC);
-    Serial.print("): ");
-
-    for (int i = 0; i < count; i++) {
-        if ((i % 2) == 1) {
-            Serial.print(IrReceiver.results.rawbuf[i] * MICROS_PER_TICK, DEC);
-        } else {
-            Serial.print(-(int) IrReceiver.results.rawbuf[i] * MICROS_PER_TICK, DEC);
-        }
-        Serial.print(" ");
-    }
-    Serial.println("");
 }

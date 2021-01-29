@@ -24,6 +24,9 @@
 
 
 
+#ifdef ARDUINO
+
+
 /**
  * @file
  *
@@ -35,8 +38,6 @@
 #include <stddef.h>
 
 #include "freertos/FreeRTOS.h"
-
-#include "esp32-hal.h"
 
 #include "fabglconf.h"
 #include "fabutils.h"
@@ -106,6 +107,17 @@ public:
    */
   void begin(I2C * i2c, int address = 0x3C, gpio_num_t resetGPIO = GPIO_UNUSED);
 
+  /**
+   * @brief Initializes SSD1306.
+   *
+   * This initializer uses following configuration:
+   *   SDA = 4
+   *   SCL = 15
+   *   Address = 0x3C
+   *   no reset
+   */
+  void begin();
+
   void end();
 
   /**
@@ -141,12 +153,6 @@ public:
 
   // abstract method of BitmappedDisplayController
   int getViewPortHeight() { return m_viewPortHeight; }
-
-  // abstract method of BitmappedDisplayController
-  int getScreenWidth()    { return m_screenWidth; }
-
-  // abstract method of BitmappedDisplayController
-  int getScreenHeight()   { return m_screenHeight; }
 
   /**
    * @brief Set initial left column of the viewport
@@ -307,6 +313,7 @@ private:
 
 
 
+#endif // #ifdef ARDUINO
 
 
 

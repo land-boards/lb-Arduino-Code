@@ -25,6 +25,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <math.h>
 
 #include "diskio.h"
 #include "ff.h"
@@ -34,10 +35,17 @@
 #include "sdmmc_cmd.h"
 #include "esp_spiffs.h"
 #include "soc/efuse_reg.h"
+#include "soc/rtc.h"
+#include "esp_ipc.h"
 
 #include "fabutils.h"
 #include "dispdrivers/vgacontroller.h"
+#include "dispdrivers/vga2controller.h"
+#include "dispdrivers/vga16controller.h"
 #include "comdrivers/ps2controller.h"
+
+
+#pragma GCC optimize ("O2")
 
 
 
@@ -122,28 +130,6 @@ void free32(void * ptr)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-// suspendInterrupts
-// resumeInterrupts
-
-void suspendInterrupts()
-{
-  if (VGAController::instance())
-    VGAController::instance()->suspendBackgroundPrimitiveExecution();
-  if (PS2Controller::instance())
-    PS2Controller::instance()->suspend();
-}
-
-
-void resumeInterrupts()
-{
-  if (PS2Controller::instance())
-    PS2Controller::instance()->resume();
-  if (VGAController::instance())
-    VGAController::instance()->resumeBackgroundPrimitiveExecution();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
 // msToTicks
 
 uint32_t msToTicks(int ms)
@@ -201,6 +187,35 @@ adc1_channel_t ADC1_GPIO2Channel(gpio_num_t gpio)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// configureGPIO
+void configureGPIO(gpio_num_t gpio, gpio_mode_t mode)
+{
+  PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[gpio], PIN_FUNC_GPIO);
+  gpio_set_direction(gpio, mode);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// getApbFrequency
+uint32_t getApbFrequency()
+{
+  rtc_cpu_freq_config_t conf;
+  rtc_clk_cpu_freq_get_config(&conf);
+  return conf.freq_mhz >= 80 ? 80000000 : (conf.source_freq_mhz * 80000000 / conf.div);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// getCPUFrequencyMHz
+uint32_t getCPUFrequencyMHz()
+{
+  rtc_cpu_freq_config_t conf;
+  rtc_clk_cpu_freq_get_config(&conf);
+  return conf.freq_mhz;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // esp_intr_alloc_pinnedToCore
 
 struct esp_intr_alloc_args {
@@ -212,19 +227,18 @@ struct esp_intr_alloc_args {
   TaskHandle_t    waitingTask;
 };
 
-void esp_intr_alloc_pinnedToCore_task(void * arg)
+
+void esp_intr_alloc_pinnedToCore_call(void * arg)
 {
   auto args = (esp_intr_alloc_args*) arg;
   esp_intr_alloc(args->source, args->flags, args->handler, args->arg, args->ret_handle);
-  xTaskNotifyGive(args->waitingTask);
-  vTaskDelete(NULL);
 }
+
 
 void esp_intr_alloc_pinnedToCore(int source, int flags, intr_handler_t handler, void * arg, intr_handle_t * ret_handle, int core)
 {
   esp_intr_alloc_args args = { source, flags, handler, arg, ret_handle, xTaskGetCurrentTaskHandle() };
-  xTaskCreatePinnedToCore(esp_intr_alloc_pinnedToCore_task, "" , 1024, &args, 3, NULL, core);
-  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+  esp_ipc_call_blocking(core, esp_intr_alloc_pinnedToCore_call, &args);
 }
 
 
@@ -352,6 +366,30 @@ Rect IRAM_ATTR Rect::intersection(Rect const & rect) const
 }
 
 
+///////////////////////////////////////////////////////////////////////////////////
+// rgb222_to_hsv
+// R, G, B in the 0..3 range
+void rgb222_to_hsv(int R, int G, int B, double * h, double * s, double * v)
+{
+  double r = R / 3.0;
+  double g = G / 3.0;
+  double b = B / 3.0;
+  double cmax = tmax<double>(tmax<double>(r, g), b);
+  double cmin = tmin<double>(tmin<double>(r, g), b);
+  double diff = cmax - cmin;
+  if (cmax == cmin)
+    *h = 0;
+  else if (cmax == r)
+    *h = fmod((60.0 * ((g - b) / diff) + 360.0), 360.0);
+  else if (cmax == g)
+    *h = fmod((60.0 * ((b - r) / diff) + 120.0), 360.0);
+  else if (cmax == b)
+    *h = fmod((60.0 * ((r - g) / diff) + 240.0), 360.0);
+  *s = cmax == 0 ? 0 : (diff / cmax) * 100.0;
+  *v = cmax * 100.0;
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 // StringList
@@ -431,6 +469,24 @@ void StringList::insert(int index, char const * str)
 int StringList::append(char const * str)
 {
   insert(m_count, str);
+  return m_count - 1;
+}
+
+
+int StringList::appendFmt(const char *format, ...)
+{
+  takeStrings();
+  va_list ap;
+  va_start(ap, format);
+  int size = vsnprintf(nullptr, 0, format, ap) + 1;
+  if (size > 0) {
+    va_end(ap);
+    va_start(ap, format);
+    char buf[size + 1];
+    vsnprintf(buf, size, format, ap);
+    insert(m_count, buf);
+  }
+  va_end(ap);
   return m_count - 1;
 }
 
@@ -614,7 +670,6 @@ int FileBrowser::countDirEntries(int * namesLength)
 
     *namesLength = 0;
     if (m_dir) {
-      AutoSuspendInterrupts autoInt;
       auto dirp = opendir(m_dir);
       while (dirp) {
         auto dp = readdir(dirp);
@@ -655,7 +710,6 @@ size_t FileBrowser::fileSize(char const * name)
   size_t size = 0;
   char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
   sprintf(fullpath, "%s/%s", m_dir, name);
-  AutoSuspendInterrupts autoInt;
   auto fr = fopen(fullpath, "rb");
   if (fr) {
     fseek(fr, 0, SEEK_END);
@@ -670,7 +724,6 @@ bool FileBrowser::fileCreationDate(char const * name, int * year, int * month, i
 {
   char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
   sprintf(fullpath, "%s/%s", m_dir, name);
-  AutoSuspendInterrupts autoInt;
   struct stat s;
   if (stat(fullpath, &s))
     return false;
@@ -689,7 +742,6 @@ bool FileBrowser::fileUpdateDate(char const * name, int * year, int * month, int
 {
   char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
   sprintf(fullpath, "%s/%s", m_dir, name);
-  AutoSuspendInterrupts autoInt;
   struct stat s;
   if (stat(fullpath, &s))
     return false;
@@ -708,7 +760,6 @@ bool FileBrowser::fileAccessDate(char const * name, int * year, int * month, int
 {
   char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
   sprintf(fullpath, "%s/%s", m_dir, name);
-  AutoSuspendInterrupts autoInt;
   struct stat s;
   if (stat(fullpath, &s))
     return false;
@@ -767,7 +818,6 @@ bool FileBrowser::reload()
     m_items[0].isDir = true;
     ++m_count;
 
-    AutoSuspendInterrupts autoInt;
     int hiddenFilesCount = 0;
     auto dirp = opendir(m_dir);
     while (dirp) {
@@ -827,7 +877,6 @@ void FileBrowser::makeDirectory(char const * dirname)
 {
   int dirnameLen = strlen(dirname);
   if (dirnameLen > 0) {
-    AutoSuspendInterrupts autoInt;
     if (getCurrentDriveType() == DriveType::SPIFFS) {
       // simulated directory, puts an hidden placeholder
       char fullpath[strlen(m_dir) + 3 + 2 * dirnameLen + 1];
@@ -868,8 +917,6 @@ void FileBrowser::makeDirectory(char const * dirname)
 // "name" is not a path, just a file or directory name inside "m_dir"
 void FileBrowser::remove(char const * name)
 {
-  AutoSuspendInterrupts autoInt;
-
   char fullpath[strlen(m_dir) + 1 + strlen(name) + 1];
   sprintf(fullpath, "%s/%s", m_dir, name);
   int r = unlink(fullpath);
@@ -908,8 +955,6 @@ void FileBrowser::remove(char const * name)
 // works only for files
 void FileBrowser::rename(char const * oldName, char const * newName)
 {
-  AutoSuspendInterrupts autoInt;
-
   char oldfullpath[strlen(m_dir) + 1 + strlen(oldName) + 1];
   sprintf(oldfullpath, "%s/%s", m_dir, oldName);
 
@@ -947,8 +992,6 @@ bool FileBrowser::truncate(char const * name, size_t size)
   //::truncate(name, size);
 
   bool retval = false;
-
-  AutoSuspendInterrupts autoInt;
 
   // for now...
   char * tempFilename = createTempFilename();
@@ -996,8 +1039,6 @@ int FileBrowser::getFullPath(char const * name, char * outPath, int maxlen)
 
 FILE * FileBrowser::openFile(char const * filename, char const * mode)
 {
-  AutoSuspendInterrupts autoInt;
-  
   char fullpath[strlen(m_dir) + 1 + strlen(filename) + 1];
   strcpy(fullpath, m_dir);
   strcat(fullpath, "/");
@@ -1029,8 +1070,6 @@ DriveType FileBrowser::getDriveType(char const * path)
 
 bool FileBrowser::format(DriveType driveType, int drive)
 {
-  AutoSuspendInterrupts autoSuspendInt;
-
   esp_task_wdt_init(45, false);
 
   if (driveType == DriveType::SDCard && s_SDCardMounted) {
@@ -1078,8 +1117,10 @@ bool FileBrowser::format(DriveType driveType, int drive)
 
 bool FileBrowser::mountSDCard(bool formatOnFail, char const * mountPath, size_t maxFiles, int allocationUnitSize, int MISO, int MOSI, int CLK, int CS)
 {
-  if (getChipPackage() == ChipPackage::ESP32PICOD4 && (MISO == 16 || MOSI == 17))
-    return false; // PICO-D4 uses pins 16 and 17 for Flash
+  if (getChipPackage() == ChipPackage::ESP32PICOD4) {
+    MISO = 2;
+    MOSI = 12;
+  }
 
   s_SDCardMountPath          = mountPath;
   s_SDCardMaxFiles           = maxFiles;
@@ -1131,7 +1172,6 @@ bool FileBrowser::mountSPIFFS(bool formatOnFail, char const * mountPath, size_t 
       .max_files              = maxFiles,
       .format_if_mount_failed = true
   };
-  AutoSuspendInterrupts autoSuspendInt;
   s_SPIFFSMounted = (esp_vfs_spiffs_register(&conf) == ESP_OK);
   return s_SPIFFSMounted;
 }
@@ -1140,7 +1180,6 @@ bool FileBrowser::mountSPIFFS(bool formatOnFail, char const * mountPath, size_t 
 void FileBrowser::unmountSPIFFS()
 {
   if (s_SPIFFSMounted) {
-    AutoSuspendInterrupts autoSuspendInt;
     esp_vfs_spiffs_unregister(nullptr);
     s_SPIFFSMounted = false;
   }
@@ -1218,14 +1257,14 @@ bool LightMemoryPool::isFree(int pos)
 LightMemoryPool::LightMemoryPool(int poolSize)
 {
   m_poolSize = poolSize + 2;
-  m_mem = (uint8_t*) malloc(m_poolSize);
+  m_mem = (uint8_t*) heap_caps_malloc(m_poolSize, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
   mark(0, m_poolSize - 2, false);
 }
 
 
 LightMemoryPool::~LightMemoryPool()
 {
-  ::free(m_mem);
+  heap_caps_free(m_mem);
 }
 
 
@@ -1327,7 +1366,7 @@ int LightMemoryPool::largestFree()
 // CoreUsage
 
 
-int CoreUsage::s_busiestCore = -1;
+int CoreUsage::s_busiestCore = FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE;
 
 
 // CoreUsage

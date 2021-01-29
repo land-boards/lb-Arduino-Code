@@ -20,11 +20,16 @@
  */
 
 
+#ifdef ARDUINO
+
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "tsi2c.h"
 
+
+#pragma GCC optimize ("O2")
 
 
 namespace fabgl {
@@ -189,3 +194,6 @@ void I2C::commTaskFunc(void * pvParameters)
 
 
 } // end of namespace
+
+
+#endif  // #ifdef ARDUINO

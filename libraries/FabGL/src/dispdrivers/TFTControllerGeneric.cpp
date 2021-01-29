@@ -30,6 +30,7 @@
 #include "TFTControllerGeneric.h"
 
 
+#pragma GCC optimize ("O2")
 
 
 #define TFT_UPDATETASK_STACK             1024
@@ -38,7 +39,7 @@
 #define TFT_BACKGROUND_PRIMITIVE_TIMEOUT 10000  // uS
 
 #define TFT_SPI_WRITE_FREQUENCY          40000000
-#define TFT_SPI_MODE                     SPI_MODE3
+#define TFT_SPI_MODE                     3
 #define TFT_DMACHANNEL                   2
 
 
@@ -95,7 +96,10 @@ inline uint16_t RGBA8888toNative(RGBA8888 const & rgba8888)
 
 
 TFTController::TFTController()
-  : m_spi(nullptr),
+  :
+    #ifdef ARDUINO
+    m_spi(nullptr),
+    #endif
     m_SPIDevHandle(nullptr),
     m_viewPort(nullptr),
     m_controllerWidth(240),
@@ -120,21 +124,18 @@ TFTController::~TFTController()
 void TFTController::setupGPIO()
 {
   // DC GPIO
-  PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[m_DC], PIN_FUNC_GPIO);
-  gpio_set_direction(m_DC, GPIO_MODE_OUTPUT);
+  configureGPIO(m_DC, GPIO_MODE_OUTPUT);
   gpio_set_level(m_DC, 1);
 
   // reset GPIO
   if (m_RESX != GPIO_UNUSED) {
-    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[m_RESX], PIN_FUNC_GPIO);
-    gpio_set_direction(m_RESX, GPIO_MODE_OUTPUT);
+    configureGPIO(m_RESX, GPIO_MODE_OUTPUT);
     gpio_set_level(m_RESX, 1);
   }
 
   // CS GPIO
   if (m_CS != GPIO_UNUSED) {
-    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[m_CS], PIN_FUNC_GPIO);
-    gpio_set_direction(m_CS, GPIO_MODE_OUTPUT);
+    configureGPIO(m_CS, GPIO_MODE_OUTPUT);
     gpio_set_level(m_CS, 1);
   }
 }
@@ -142,23 +143,30 @@ void TFTController::setupGPIO()
 
 // use SPIClass
 // without CS it is not possible to share SPI with other devices
+#ifdef ARDUINO
 void TFTController::begin(SPIClass * spi, gpio_num_t DC, gpio_num_t RESX, gpio_num_t CS)
 {
+  #ifdef ARDUINO
   m_spi   = spi;
+  #endif
+
   m_DC    = DC;
   m_RESX  = RESX;
   m_CS    = CS;
 
   setupGPIO();
 }
+#endif
 
 
 // use SPIClass
 // without CS it is not possible to share SPI with other devices
+#ifdef ARDUINO
 void TFTController::begin(SPIClass * spi, int DC, int RESX, int CS)
 {
   begin(spi, int2gpio(DC), int2gpio(RESX), int2gpio(CS));
 }
+#endif
 
 
 // use SDK driver
@@ -174,6 +182,12 @@ void TFTController::begin(int SCK, int MOSI, int DC, int RESX, int CS, int host)
 
   setupGPIO();
   SPIBegin();
+}
+
+
+void TFTController::begin()
+{
+  begin(18, 23, 22, 21, 5, VSPI_HOST);
 }
 
 
@@ -201,6 +215,9 @@ void TFTController::setResolution(char const * modeline, int viewPortWidth, int 
   m_screenHeight = sheight;
   m_screenCol    = 0;
   m_screenRow    = 0;
+
+  // inform base class about screen size
+  setScreenSize(m_screenWidth, m_screenHeight);
 
   setDoubleBuffered(doubleBuffered);
 
@@ -248,8 +265,7 @@ void TFTController::hardReset()
   if (m_RESX != GPIO_UNUSED) {
     SPIBeginWrite();
 
-    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[m_RESX], PIN_FUNC_GPIO);
-    gpio_set_direction(m_RESX, GPIO_MODE_OUTPUT);
+    configureGPIO(m_RESX, GPIO_MODE_OUTPUT);
     gpio_set_level(m_RESX, 1);
     vTaskDelay(5 / portTICK_PERIOD_MS);
     gpio_set_level(m_RESX, 0);
@@ -329,8 +345,10 @@ void TFTController::setReverseHorizontal(bool value)
 
 void TFTController::SPIBegin()
 {
+  #ifdef ARDUINO
   if (m_spi)
     return;
+  #endif
 
   spi_bus_config_t busconf;
   memset(&busconf, 0, sizeof(busconf));
@@ -359,8 +377,10 @@ void TFTController::SPIBegin()
 
 void TFTController::SPIEnd()
 {
+  #ifdef ARDUINO
   if (m_spi)
     return;
+  #endif
 
   suspendBackgroundPrimitiveExecution();
 
@@ -374,9 +394,11 @@ void TFTController::SPIEnd()
 
 void TFTController::SPIBeginWrite()
 {
+  #ifdef ARDUINO
   if (m_spi) {
     m_spi->beginTransaction(SPISettings(TFT_SPI_WRITE_FREQUENCY, SPI_MSBFIRST, TFT_SPI_MODE));
   }
+  #endif
 
   if (m_SPIDevHandle) {
     spi_device_acquire_bus(m_SPIDevHandle, portMAX_DELAY);
@@ -397,9 +419,11 @@ void TFTController::SPIEndWrite()
   // leave in data mode
   gpio_set_level(m_DC, 1);  // 1 = DATA
 
+  #ifdef ARDUINO
   if (m_spi) {
     m_spi->endTransaction();
   }
+  #endif
 
   if (m_SPIDevHandle) {
     spi_device_release_bus(m_SPIDevHandle);
@@ -409,9 +433,11 @@ void TFTController::SPIEndWrite()
 
 void TFTController::SPIWriteByte(uint8_t data)
 {
+  #ifdef ARDUINO
   if (m_spi) {
     m_spi->write(data);
   }
+  #endif
 
   if (m_SPIDevHandle) {
     spi_transaction_t ta;
@@ -427,10 +453,12 @@ void TFTController::SPIWriteByte(uint8_t data)
 
 void TFTController::SPIWriteWord(uint16_t data)
 {
+  #ifdef ARDUINO
   if (m_spi) {
     m_spi->write(data >> 8);
     m_spi->write(data & 0xff);
   }
+  #endif
 
   if (m_SPIDevHandle) {
     spi_transaction_t ta;
@@ -447,9 +475,11 @@ void TFTController::SPIWriteWord(uint16_t data)
 
 void TFTController::SPIWriteBuffer(void * data, size_t size)
 {
+  #ifdef ARDUINO
   if (m_spi) {
     m_spi->writeBytes((uint8_t*)data, size);
   }
+  #endif
 
   if (m_SPIDevHandle) {
     spi_transaction_t ta;
@@ -527,7 +557,7 @@ void TFTController::sendScreenBuffer(Rect updateRect)
 
 void TFTController::allocViewPort()
 {
-  m_viewPort = (uint16_t**) heap_caps_malloc(m_viewPortHeight * sizeof(uint16_t*), MALLOC_CAP_32BIT);
+  m_viewPort = (uint16_t**) heap_caps_malloc(m_viewPortHeight * sizeof(uint16_t*), MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
   for (int i = 0; i < m_viewPortHeight; ++i) {
     m_viewPort[i] = (uint16_t*) heap_caps_malloc(m_viewPortWidth * sizeof(uint16_t), MALLOC_CAP_DMA);
     memset(m_viewPort[i], 0, m_viewPortWidth * sizeof(uint16_t));

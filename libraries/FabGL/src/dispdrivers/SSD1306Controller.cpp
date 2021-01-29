@@ -20,6 +20,9 @@
  */
 
 
+#ifdef ARDUINO
+
+
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
@@ -29,6 +32,7 @@
 #include "SSD1306Controller.h"
 
 
+#pragma GCC optimize ("O2")
 
 
 #define SSD1306_I2C_TIMEOUT         100  // ms
@@ -133,6 +137,14 @@ void SSD1306Controller::begin(I2C * i2c, int address, gpio_num_t resetGPIO)
 }
 
 
+void SSD1306Controller::begin()
+{
+  auto i2c = new I2C;
+  i2c->begin(GPIO_NUM_4, GPIO_NUM_15);
+  begin(i2c);
+}
+
+
 void SSD1306Controller::end()
 {
   if (m_updateTaskHandle)
@@ -156,6 +168,9 @@ void SSD1306Controller::setResolution(char const * modeline, int viewPortWidth, 
   m_screenHeight = sheight;
   m_screenCol    = 0;
   m_screenRow    = 0;
+
+  // inform base class about screen size
+  setScreenSize(m_screenWidth, m_screenHeight);
 
   setDoubleBuffered(doubleBuffered);
 
@@ -246,8 +261,7 @@ bool SSD1306Controller::SSD1306_sendCmd(uint8_t c1, uint8_t c2, uint8_t c3)
 void SSD1306Controller::SSD1306_hardReset()
 {
   if (m_resetGPIO != GPIO_UNUSED) {
-    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[m_resetGPIO], PIN_FUNC_GPIO);
-    gpio_set_direction(m_resetGPIO, GPIO_MODE_OUTPUT);
+    configureGPIO(m_resetGPIO, GPIO_MODE_OUTPUT);
     gpio_set_level(m_resetGPIO, 1);
     vTaskDelay(1 / portTICK_PERIOD_MS);
     gpio_set_level(m_resetGPIO, 0);
@@ -613,3 +627,7 @@ void SSD1306Controller::swapBuffers()
 
 
 } // end of namespace
+
+
+
+#endif // #ifdef ARDUINO

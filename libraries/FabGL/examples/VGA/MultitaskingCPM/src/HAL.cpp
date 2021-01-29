@@ -23,16 +23,18 @@
 
 #include <sys/time.h>
 
+#include "driver/gpio.h"
+#include "driver/dac.h"
 
 
 #include "HAL.h"
 
 
+#pragma GCC optimize ("O2")
 
 
 HAL::HAL()
-  : m_Z80(this),
-    m_CPUSpeed(DEFAULTCPUSPEEDHZ),
+  : m_CPUSpeed(DEFAULTCPUSPEEDHZ),
     m_terminal(nullptr),
     m_LPTStream(nullptr),
     m_abortReason(AbortReason::NoAbort)
@@ -46,6 +48,9 @@ HAL::HAL()
   m_serialStream[0] = nullptr;
   m_serialStream[1] = nullptr;
 
+  dac_output_enable(DAC_CHANNEL_1);
+
+  m_Z80.setCallbacks(this, readByte, writeByte, readWord, writeWord, readIO, writeIO);
   CPU_reset();
 }
 
@@ -286,7 +291,7 @@ void HAL::CPU_exec(uint16_t addr, uint16_t exitAddr)
     if (!m_execMainLoop)
       break;
 
-    /*int cycles = */m_Z80.emulate(0);
+    /*int cycles = */m_Z80.step();
 
     /*
     if (m_CPUSpeed != 0) {
@@ -390,6 +395,9 @@ void HAL::writeIO(uint16_t addr, uint8_t value)
   #if MSGDEBUG & DEBUG_HAL
   logf("writeIO(%04x, %02x)\r\n", addr, value);
   #endif
+  if (addr == 0x50) {
+    dac_output_voltage(DAC_CHANNEL_1, value);
+  }
 }
 
 

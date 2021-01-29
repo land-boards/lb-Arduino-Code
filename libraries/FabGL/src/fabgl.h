@@ -42,6 +42,8 @@
  *
  * [www.FabGL.com](http://www.fabgl.com) - 2019-2020 by Fabrizio Di Vittorio (fdivitto2013@gmail.com)
  *
+ * [Demos and Tutorials](https://www.youtube.com/user/fdivitto/videos)
+ *
  * - - -
  *
  * FabGL is mainly a Graphics Library for ESP32. It implements several display drivers (for direct VGA output and for I2C and SPI LCD drivers).<br>
@@ -69,32 +71,40 @@
  *
  * - - -
  *
- * The main classes of FabGL library are:
+ * Main classes of FabGL library:
  *    * fabgl::VGAController, device driver for VGA bitmapped output.
+ *    * fabgl::VGA2Controller, device driver for VGA 2 colors bitmapped output (low RAM requirements, CPU intensive).
+ *    * fabgl::VGA4Controller, device driver for VGA 4 colors bitmapped output (low RAM requirements, CPU intensive).
+ *    * fabgl::VGA8Controller, device driver for VGA 8 colors bitmapped output (low RAM requirements, CPU intensive).
  *    * fabgl::VGA16Controller, device driver for VGA 16 colors bitmapped output (low RAM requirements, CPU intensive).
  *    * fabgl::VGATextController, device driver for VGA textual output (low RAM requirements, CPU intensive).
  *    * fabgl::SSD1306Controller, device driver for SSD1306 based OLED displays.
  *    * fabgl::ST7789Controller, device driver for ST7789 based TFT displays.
  *    * fabgl::ILI9341Controller, device driver for ILI9341 based TFT displays.
  *    * fabgl::Canvas, that provides a set of drawing primitives (lines, rectangles, text...).
- *    * fabgl::Terminal, that emulates an ANSI/VT100/VT102 and up terminal (look at @ref vttest "vttest score").
+ *    * fabgl::Terminal, that emulates an ANSI/VT100/VT102/etc and up terminal (look at @ref vttest "vttest score").
  *    * fabgl::Keyboard, that controls a PS2 keyboard and translates scancodes to virtual keys or ASCII/ANSI codes.
- *    * fabgl::Mouse (instanced as \b Mouse), that controls a PS2 mouse.
+ *    * fabgl::Mouse, that controls a PS2 mouse.
  *    * fabgl::Scene abstract class that handles sprites, timings and collision detection.
  *    * fabgl::uiApp base class to build Graphical User Interface applications
  *    * fabgl::SoundGenerator to generate sound and music.
  *
- * Other classes are:
+ * Devices emulation classes:
+ *    * fabgl::Z80, Zilog Z80 CPU emulator
+ *    * fabgl::i8080, Intel 8080 CPU emulator
+ *    * fabgl::MOS6502, MOS 6502 CPU emulator
+ *    * fabgl::VIA6522, VIA 6522 emulator
+ *
+ * Other classes:
  *    * fabgl::I2C, thread safe I2C (Wire) class
  *    * fabgl::DS3231, Real Time Clock driver which uses the thread safe fabgl::I2C library
  *
- * See @ref confVGA "Configuring VGA outputs" for VGA connection sample schema.
+ * See @ref confVGA "VGA output" for VGA connection sample schema.
  *
- * See @ref confPS2 "Configuring PS/2 port" for PS/2 connection sample schema.
+ * See @ref confPS2 "PS/2 ports" for PS/2 connections sample schema.
  *
  * See @ref confAudio "Configuring Audio port" for audio connection sample schema.
  *
- * See @ref genSchema "Generic Circuit Diagram" for a generic complete circuit diagram.
  *
  * - - -
  * <CENTER> Installation Tutorial </CENTER>
@@ -160,7 +170,7 @@
 
 
 /**
- * @page confVGA Configuring VGA outputs
+ * @page confVGA VGA output schema
  *
  * VGA output can be configured such as 8 colors or 64 colors are displayed.
  * Eight colors require 5 outputs (R, G, B, H and V), while sixty-four colors require 8 outputs (R0, R1, G0, G1, B0, B1, H and V).
@@ -175,14 +185,14 @@
  *
  *     VGAController.begin(GPIO_NUM_22, GPIO_NUM_21, GPIO_NUM_19, GPIO_NUM_18, GPIO_NUM_5, GPIO_NUM_4, GPIO_NUM_23, GPIO_NUM_15);
  *
- * Note: Do not connect GPIO_NUM_2 (led) to the VGA signals.
+ * Note: Do not use GPIO_NUM_2 (LED) for VGA signals.
  *
  */
 
 
 
 /**
- * @page confPS2 Configuring PS/2 port
+ * @page confPS2 PS/2 ports schema
  *
  * PS2 Keyboard or Mouse connection uses two GPIOs (data and clock) and requires one 120 Ohm series resistor and one 2K Ohm pullup resistor for each signal:
  *
@@ -224,34 +234,32 @@
  */
 
 
-/**
- * @page genSchema Generic Circuit Diagram
- *
- * This is a sample schema using ESP32 Devkit V1, with VGA Output, Audio Output, two PS/2 ports and a UART port
- *
- * \image html schema.png width=800cm
- *
- */
-
 
 
 /**
- * @example VGA/AnsiTerminal/AnsiTerminal.ino Serial VT/ANSI Terminal
- * @example VGA/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
- * @example VGA/DoubleBuffer/DoubleBuffer.ino Show double buffering usage
  * @example VGA/Altair8800/Altair8800.ino Altair 8800 Emulator - with ADM-31, ADM-3A, Kaypro, Hazeltine 1500 and Osborne I terminal emulation
- * @example VGA/MultitaskingCPM/MultitaskingCPM.ino Multitasking - Multisession CP/M 3 compatible system. Supports directories and FAT32 file system with SD Cards.
- * @example VGA/VIC20/VIC20.ino Commodore VIC20 Emulator
+ * @example VGA/AnsiTerminal/AnsiTerminal.ino Serial VT/ANSI Terminal
+ * @example VGA/Audio/Audio.ino Audio demo with GUI
+ * @example VGA/ClassicRacer/ClassicRacer.ino Racer game, from Carles Oriol
+ * @example VGA/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
+ * @example VGA/DirectVGA/DirectVGA.ino Sample usage of VGADirectController base class for direct VGA control
+ * @example VGA/DirectVGA_ElMuro/DirectVGA_ElMuro.ino Sample breakout-style game using VGADirectController base class, from Carles Oriol
+ * @example VGA/DoubleBuffer/DoubleBuffer.ino Show double buffering usage
+ * @example VGA/FileBrowser/FileBrowser.ino File browser (SPIFFS and SDCard) with GUI
+ * @example VGA/GraphicalUserInterface/GraphicalUserInterface.ino Graphical User Interface - GUI demo
+ * @example VGA/HardwareTest/HardwareTest.ino Hardware test with GUI
  * @example VGA/LoopbackTerminal/LoopbackTerminal.ino Loopback VT/ANSI Terminal
  * @example VGA/ModelineStudio/ModelineStudio.ino Test VGA output at predefined resolutions or custom resolution by specifying linux-like modelines
  * @example VGA/MouseOnScreen/MouseOnScreen.ino PS/2 mouse and mouse pointer on screen
+ * @example VGA/MultitaskingCPM/MultitaskingCPM.ino Multitasking - Multisession CP/M 3 compatible system. Supports directories and FAT32 file system with SD Cards.
  * @example VGA/NetworkTerminal/NetworkTerminal.ino Network VT/ANSI Terminal
  * @example VGA/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
+ * @example VGA/SimpleTextTerminalOut/SimpleTextTerminalOut.ino Simple terminal text-only mode - output only
+ * @example VGA/Songs/Songs.ino Music and sound demo, from Carles Oriol
  * @example VGA/SpaceInvaders/SpaceInvaders.ino Space invaders full game
- * @example VGA/GraphicalUserInterface/GraphicalUserInterface.ino Graphical User Interface - GUI demo
- * @example VGA/Audio/Audio.ino Audio demo with GUI
- * @example VGA/FileBrowser/FileBrowser.ino File browser (SPIFFS and SDCard) with GUI
  * @example VGA/Sprites/Sprites.ino Simple sprites animation
+ * @example VGA/VIC20/VIC20.ino Commodore VIC20 Emulator
+ *
  * @example SSD1306_OLED/128x32/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
  * @example SSD1306_OLED/128x32/SimpleTerminalOut/SimpleTerminalOut.ino Simple terminal - output only
  * @example SSD1306_OLED/128x64/CollisionDetection/CollisionDetection.ino fabgl::Scene, sprites and collision detection example
@@ -285,7 +293,11 @@
 #include "dispdrivers/SSD1306Controller.h"
 #include "dispdrivers/TFTControllerSpecif.h"
 #include "dispdrivers/vgatextcontroller.h"
+#include "dispdrivers/vga2controller.h"
+#include "dispdrivers/vga4controller.h"
+#include "dispdrivers/vga8controller.h"
 #include "dispdrivers/vga16controller.h"
+#include "dispdrivers/vgadirectcontroller.h"
 #include "comdrivers/ps2controller.h"
 #include "comdrivers/tsi2c.h"
 #include "devdrivers/keyboard.h"
@@ -376,7 +388,6 @@ using fabgl::FlowControl;
 using fabgl::LineEditorSpecialChar;
 using fabgl::LineEditor;
 using fabgl::TerminalController;
-using fabgl::AutoSuspendInterrupts;
 using fabgl::LineEnds;
 using fabgl::CharStyle;
 using fabgl::TerminalTransition;

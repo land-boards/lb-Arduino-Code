@@ -25,11 +25,11 @@ var NAVTREE =
 [
   [ "FabGL", "index.html", [
     [ "FabGL Library", "index.html", null ],
-    [ "Configuring VGA outputs", "conf_v_g_a.html", null ],
-    [ "Configuring PS/2 port", "conf_p_s2.html", null ],
+    [ "VGA output schema", "conf_v_g_a.html", null ],
+    [ "PS/2 ports schema", "conf_p_s2.html", null ],
     [ "Configuring Audio port", "conf_audio.html", null ],
-    [ "Generic Circuit Diagram", "gen_schema.html", null ],
     [ "VTTEST VT100/VT102 Compatibility Test Score Sheet", "vttest.html", null ],
+    [ "FabGL Specific Terminal Sequences", "special_term_escapes.html", null ],
     [ "Modules", "modules.html", "modules" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -46,8 +46,7 @@ var NAVTREE =
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
         [ "Functions", "globals_func.html", null ],
-        [ "Variables", "globals_vars.html", null ],
-        [ "Macros", "globals_defs.html", null ]
+        [ "Variables", "globals_vars.html", null ]
       ] ]
     ] ],
     [ "Examples", "examples.html", "examples" ]
@@ -57,14 +56,17 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classfabgl_1_1_s_s_d1306_controller.html#a862a67352dd973a366e3b43dae5d0a91",
-"classfabgl_1_1ui_button.html#a93618eccc73d66e981f8c02170875226",
-"classfabgl_1_1ui_frame.html#a18735a70e697ff18647ce7034e9b480c",
-"classfabgl_1_1ui_scrollable_control.html#a089762995d65c9282f545a376810c055",
-"fabglconf_8h.html#a3dd5ee24424e059948701119687589e6",
-"fabutils_8h.html#ggae12c31a33f64281cba424d993a8a4381ae181cdfdc85625d4cc9ca616bfe27ffe",
-"group___enumerations.html#ggae12c31a33f64281cba424d993a8a4381a4969ab390b445f8404d3f1290f43edd5",
-"structfabgl_1_1_r_g_b222.html"
+"classfabgl_1_1_line_editor_a491e54a7fad0c9561bd9b029ba70638d.html#a491e54a7fad0c9561bd9b029ba70638d",
+"classfabgl_1_1_terminal_a9040fa1d479d71edf3a826f4691c35c4.html#a9040fa1d479d71edf3a826f4691c35c4",
+"classfabgl_1_1_v_g_a_paletted_controller.html#a749df909b39fd096bf6e2813f2f5324c",
+"classfabgl_1_1ui_color_combo_box.html#ac6abc7197736d26b3f9029ac1541f0d4",
+"classfabgl_1_1ui_custom_list_box_a2d4e8d13f70da4a2a381d5b6b0b38d21.html#a2d4e8d13f70da4a2a381d5b6b0b38d21",
+"classfabgl_1_1ui_list_box.html#aebdc12addfb08da7d30dbdf6faf67106",
+"classfabgl_1_1ui_window_a914317af0316c756a7d24551e30d7efb.html#a914317af0316c756a7d24551e30d7efb",
+"fabutils_8h.html#ggad0e6e31d5953384be4ea987eb3923e02a6b81c5f7d79eed028fa32da5448adc83",
+"group___enumerations_ga67edd9a04814c247a553dfde047e6f62.html#gga67edd9a04814c247a553dfde047e6f62a40e0f1b332fd17171a30aa39461877b2",
+"group___enumerations_gad0e6e31d5953384be4ea987eb3923e02.html#ggad0e6e31d5953384be4ea987eb3923e02aabdce47d44a971665c736be5a4bf78cf",
+"structfabgl_1_1ui_button_style_a28a83a5f7d4066995791678c57411fdb.html#a28a83a5f7d4066995791678c57411fdb"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

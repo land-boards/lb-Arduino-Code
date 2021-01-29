@@ -32,46 +32,46 @@
  Now you must do a few things to add it to the IRremote system:
 
  1. Open IRremote.h and make the following changes:
- REMEMEBER to change occurences of "SHUZU" with the name of your protocol
+ REMEMBER to change occurrences of "SHUZU" with the name of your protocol
 
  A. At the top, in the section "Supported Protocols", add:
  #define DECODE_SHUZU  1
  #define SEND_SHUZU    1
 
- B. In the section "enumerated list of all supported formats", add:
+ B. In the section "An enum consisting of all supported formats", add:
  SHUZU,
  to the end of the list (notice there is a comma after the protocol name)
 
  C. Further down in "Main class for receiving IR", add:
  //......................................................................
  #if DECODE_SHUZU
- bool  decodeShuzu (decode_results *aResults) ;
+ bool  decodeShuzu () ;
  #endif
 
  D. Further down in "Main class for sending IR", add:
  //......................................................................
  #if SEND_SHUZU
- void  sendShuzu (unsigned long data,  int nbits) ;
+ void  sendShuzuStandard (uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRepeats) ;
  #endif
 
  E. Save your changes and close the file
 
- 2. Now open irRecv.cpp and make the following change:
+ 2. Now open irReceive.cpp and make the following change:
 
  A. In the function IRrecv::decode(), add:
- #ifdef DECODE_NEC
+ #ifdef DECODE_SHUZU
  DBG_PRINTLN("Attempting Shuzu decode");
- if (decodeShuzu(results))  return true ;
+ if (decodeShuzu())  return true ;
  #endif
 
- B. Save your changes and close the file
+ B. In the function IRrecv::getProtocolString(), add
+ #if DECODE_SHUZU
+ case SHUZU:
+ return ("Shuzu");
+ break;
+ #endif
 
- You will probably want to add your new protocol to the example sketch
-
- 3. Open MyDocuments\Arduino\libraries\IRremote\examples\IRrecvDumpV2.ino
-
- A. In the encoding() function, add:
- case SHUZU:    Serial.print("SHUZU");     break ;
+ C. Save your changes and close the file
 
  Now open the Arduino IDE, load up the rawDump.ino sketch, and run it.
  Hopefully it will compile and upload.
@@ -91,8 +91,46 @@
  BlueChip
  */
 
+/*
+ * ir_Shuzu.cpp
+ *
+ *  Contains functions for receiving and sending Shuzu IR Protocol ...
+ *
+ *  Copyright (C) 2021  Shuzu Guru
+ *  shuzu.guru@gmail.com
+ *
+ *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *
+ ************************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2017-2021 Unknown Contributor :-)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ ************************************************************************************
+ */
+
+//#define DEBUG // Activate this for lots of lovely debug output.
 #include "IRremote.h"
 
+//#define SEND_SHUZU  1 // for testing
+//#define DECODE_SHUZU  1 // for testing
 //==============================================================================
 //
 //
@@ -100,98 +138,114 @@
 //
 //
 //==============================================================================
+// see: https://www....
 
-#define SHUZU_BITS            32  // The number of bits in the command
+// LSB first, 1 start bit + 16 bit address + 8 bit command + 1 stop bit.
+#define SHUZU_ADDRESS_BITS      16 // 16 bit address
+#define SHUZU_COMMAND_BITS      8 // Command
 
-#define SHUZU_HEADER_MARK   1000  // The length of the Header:Mark
-#define SHUZU_HEADER_SPACE  2000  // The lenght of the Header:Space
+#define SHUZU_BITS              (SHUZU_ADDRESS_BITS + SHUZU_COMMAND_BITS) // The number of bits in the protocol
+#define SHUZU_UNIT              560
 
-#define SHUZU_BIT_MARK      3000  // The length of a Bit:Mark
-#define SHUZU_ONE_SPACE     4000  // The length of a Bit:Space for 1's
-#define SHUZU_ZERO_SPACE    5000  // The length of a Bit:Space for 0's
+#define SHUZU_HEADER_MARK       (16 * SHUZU_UNIT) // The length of the Header:Mark
+#define SHUZU_HEADER_SPACE      (8 * SHUZU_UNIT)  // The length of the Header:Space
 
-#define SHUZU_OTHER         1234  // Other things you may need to define
+#define SHUZU_BIT_MARK          SHUZU_UNIT        // The length of a Bit:Mark
+#define SHUZU_ONE_SPACE         (3 * SHUZU_UNIT)  // The length of a Bit:Space for 1's
+#define SHUZU_ZERO_SPACE        SHUZU_UNIT        // The length of a Bit:Space for 0's
+
+#define SHUZU_REPEAT_HEADER_SPACE (4 * SHUZU_UNIT)  // 2250
+
+#define SHUZU_REPEAT_SPACE      45000
+
+#define SHUZU_OTHER             1234  // Other things you may need to define
 
 //+=============================================================================
 //
-#if SEND_SHUZU
-void IRsend::sendShuzu(unsigned long data, int nbits) {
+void IRsend::sendShuzu(uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRepeats) {
     // Set IR carrier frequency
-    enableIROut(38);
+    enableIROut(37); // 36.7kHz is the correct frequency
 
-    // Header
-    mark(SHUZU_HEADER_MARK);
-    space(SHUZU_HEADER_SPACE);
+    uint8_t tNumberOfCommands = aNumberOfRepeats + 1;
+    while (tNumberOfCommands > 0) {
 
-    // Data
-    sendPulseDistanceData(data, nbits,  SHUZU_BIT_MARK, SHUZU_ONE_SPACE,SHUZU_BIT_MARK, SHUZU_ZERO_SPACE);
-//    for (unsigned long mask = 1UL << (nbits - 1); mask; mask >>= 1) {
-//        if (data & mask) {
-//            mark(SHUZU_BIT_MARK);
-//            space(SHUZU_ONE_SPACE);
-//        } else {
-//            mark(SHUZU_BIT_MARK);
-//            space(SHUZU_ZERO_SPACE);
-//        }
-//    }
+        noInterrupts();
 
-    // Footer
-    mark(SHUZU_BIT_MARK);
-    space(0);  // Always end with the LED off
+        // Header
+        mark(SHUZU_HEADER_MARK);
+        space(SHUZU_HEADER_SPACE);
+
+        // Address (device and subdevice)
+        sendPulseDistanceWidthData(SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_BIT_MARK, SHUZU_ZERO_SPACE, aAddress,
+        SHUZU_ADDRESS_BITS, LSB_FIRST); // false -> LSB first
+
+        // Command + stop bit
+        sendPulseDistanceWidthData(SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_BIT_MARK, SHUZU_ZERO_SPACE, aCommand,
+        SHUZU_COMMAND_BITS, LSB_FIRST, SEND_STOP_BIT); // false, true -> LSB first, stop bit
+
+        interrupts();
+
+        tNumberOfCommands--;
+        // skip last delay!
+        if (tNumberOfCommands > 0) {
+            // send repeated command in a fixed raster
+            delay(SHUZU_REPEAT_SPACE / 1000);
+        }
+    }
 }
-#endif
 
 //+=============================================================================
 //
-#if DECODE_SHUZU
+/*
+ * First check for right data length
+ * Next check start bit
+ * Next try the decode
+ * Last check stop bit
+ */
 bool IRrecv::decodeShuzu() {
-    unsigned long data = 0;  // Somewhere to build our code
-    int offset = 1;  // Skip the gap reading
 
-    // Check we have the right amount of data
-    if (results.rawlen != 1 + 2 + (2 * SHUZU_BITS) + 1) {
+    // Check we have the right amount of data (28). The +4 is for initial gap, start bit mark and space + stop bit mark
+    if (decodedIRData.rawDataPtr->rawlen != (2 * SHUZU_BITS) + 4) {
+        // no debug output, since this check is mainly to determine the received protocol
         return false;
     }
 
-    // Check initial Mark+Space match
-    if (!MATCH_MARK(results.rawbuf[offset], SHUZU_HEADER_MARK)) {
+    // Check header "space"
+    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], SHUZU_HEADER_MARK) || !MATCH_SPACE(decodedIRData.rawDataPtr->rawbuf[2], SHUZU_HEADER_SPACE)) {
+        DBG_PRINT("Shuzu: ");
+        DBG_PRINTLN("Header mark or space length is wrong");
         return false;
     }
-    offset++;
 
-    if (!MATCH_SPACE(results.rawbuf[offset], SHUZU_HEADER_SPACE)) {
+    // false -> LSB first
+    if (!decodePulseDistanceData(SHUZU_BITS, 3, SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_ZERO_SPACE, false)) {
+        DBG_PRINT(F("Shuzu: "));
+        DBG_PRINTLN(F("Decode failed"));
         return false;
     }
-    offset++;
 
-    data = decodePulseDistanceData(results, SHUZU_BITS, offset, SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_ZERO_SPACE);
-//    // Read the bits in
-//    for (int i = 0; i < SHUZU_BITS; i++) {
-//        // Each bit looks like: MARK + SPACE_1 -> 1
-//        //                 or : MARK + SPACE_0 -> 0
-//        if (!MATCH_MARK(results.rawbuf[offset], SHUZU_BIT_MARK)) {
-//            return false;
-//        }
-//        offset++;
-//
-//        // IR data is big-endian, so we shuffle it in from the right:
-//        if (MATCH_SPACE(results.rawbuf[offset], SHUZU_ONE_SPACE)) {
-//            data = (data << 1) | 1;
-//        } else if (MATCH_SPACE(results.rawbuf[offset], SHUZU_ZERO_SPACE)) {
-//            data = (data << 1) | 0;
-//        } else {
-//            return false;
-//        }
-//        offset++;
-//    }
+    // Stop bit
+    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[3 + (2 * SHUZU_BITS)], SHUZU_BIT_MARK)) {
+        DBG_PRINT(F("Shuzu: "));
+        DBG_PRINTLN(F("Stop bit mark length is wrong"));
+        return false;
+    }
 
     // Success
-    results.bits = SHUZU_BITS;
-    results.value = data;
-    results.decode_type = SHUZU;
+//    decodedIRData.flags = IRDATA_FLAGS_IS_LSB_FIRST; // Not required, since this is the start value
+    uint8_t tCommand = decodedIRData.decodedRawData >> SHUZU_ADDRESS_BITS;  // upper 8 bits of LSB first value
+    uint8_t tAddress = decodedIRData.decodedRawData & 0xFFFF;    // lowest 16 bit of LSB first value
+
+    /*
+     *  Check for repeat
+     */
+    if (decodedIRData.rawDataPtr->rawbuf[0] < ((SHUZU_REPEAT_SPACE + (SHUZU_REPEAT_SPACE / 2)) / MICROS_PER_TICK)) {
+        decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT | IRDATA_FLAGS_IS_LSB_FIRST;
+    }
+    decodedIRData.command = tCommand;
+    decodedIRData.address = tAddress;
+    decodedIRData.numberOfBits = SHUZU_BITS;
+    decodedIRData.protocol = LG; // we have no SHUZU code
+
     return true;
 }
-bool IRrecv::decodeShuzu(decode_results *aResults) {
-    bool aReturnValue = decodeShuzu();
-}
-#endif

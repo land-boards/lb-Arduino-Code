@@ -33,6 +33,7 @@
 
 
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include <driver/adc.h>
 
@@ -42,6 +43,30 @@ namespace fabgl {
 
 
 #define GPIO_UNUSED GPIO_NUM_MAX
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// PSRAM_HACK
+// ESP32 Revision 1 has following bug: "When the CPU accesses external SRAM through cache, under certain conditions read and write errors occur"
+// A workaround is done by the compiler, so whenever PSRAM is enabled the workaround is automatically applied (-mfix-esp32-psram-cache-issue compiler option).
+// Unfortunately this workaround reduces performance, even when SRAM is not access, like in VGAXController interrupt handler. This is unacceptable for the interrupt routine.
+// In order to confuse the compiler and prevent the workaround from being applied, a "nop" is added between load and store instructions (PSRAM_HACK).
+
+#ifdef ARDUINO
+  #ifdef BOARD_HAS_PSRAM
+    #define FABGL_NEED_PSRAM_DISABLE_HACK
+  #endif
+#else
+  #ifdef CONFIG_SPIRAM_SUPPORT
+    #define FABGL_NEED_PSRAM_DISABLE_HACK
+  #endif
+#endif
+
+#ifdef FABGL_NEED_PSRAM_DISABLE_HACK
+  #define PSRAM_HACK asm(" nop")
+#else
+  #define PSRAM_HACK
+#endif
 
 
 
@@ -118,6 +143,8 @@ T moveItems(T dest, T src, size_t n)
   return dest;
 }
 
+
+void rgb222_to_hsv(int R, int G, int B, double * h, double * s, double * v);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -317,7 +344,7 @@ struct Delegate {
   template <typename Func>
   void operator=(Func f) {
     m_closure = [] (void * func, const Params & ...params) -> void { (*(Func *)func)(params...); };
-    m_func = heap_caps_malloc(sizeof(Func), MALLOC_CAP_32BIT);
+    m_func = heap_caps_malloc(sizeof(Func), MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
     moveItems<uint32_t*>((uint32_t*)m_func, (uint32_t*)&f, sizeof(Func) / sizeof(uint32_t));
   }
 
@@ -346,6 +373,7 @@ public:
   StringList();
   ~StringList();
   int append(char const * str);
+  int appendFmt(const char *format, ...);
   void append(char const * strlist[], int count);
   void insert(int index, char const * str);
   void set(int index, char const * str);
@@ -368,7 +396,7 @@ private:
   uint32_t *     m_selMap;
 
   // If true (default is false) all strings added (append/insert/set) are copied.
-  // Strings will be freed when no more used (destructor, clear(), etc...).
+  // Strings will be released when no more used (destructor, clear(), etc...).
   // This flag is permanently switched to True by takeStrings() call.
   bool           m_ownStrings;
 
@@ -491,7 +519,7 @@ public:
   DirItem const * get(int index) { return m_items + index; }
 
   /**
-   * @brief Determines if a file exists
+   * @brief Determines if a file or directory exists
    *
    * @param name Relative file or directory name
    * @param caseSensitive If true (default) comparison is case sensitive
@@ -600,7 +628,7 @@ public:
   /**
    * @brief Creates a random temporary filename, with absolute path
    *
-   * @return Pointer to temporary string. It must be freed using free().
+   * @return Pointer to temporary string. It must be released using free().
    */
   char * createTempFilename();
 
@@ -667,8 +695,8 @@ public:
    * @param mountPath Mount directory (ex. "/sdcard").
    * @param maxFiles Number of files that can be open at the time (default 4).
    * @param allocationUnitSize Allocation unit size (default 16K).
-   * @param MISO Pin for MISO signal (default 16).
-   * @param MOSI Pin for MOSI signal (default 17).
+   * @param MISO Pin for MISO signal (default 16 for WROOM-32, 2 for PICO-D4).
+   * @param MOSI Pin for MOSI signal (default 17 for WROOM-32, 12 for PICO-D4).
    * @param CLK Pin for CLK signal (default 14).
    * @param CS Pin for CS signal (default 13).
    *
@@ -794,13 +822,23 @@ void * realloc32(void * ptr, size_t size);
 void free32(void * ptr);
 
 
-void suspendInterrupts();
-void resumeInterrupts();
-
-
 inline gpio_num_t int2gpio(int gpio)
 {
   return gpio == -1 ? GPIO_UNUSED : (gpio_num_t)gpio;
+}
+
+
+// converts 0..9 -> '0'..'9', 10..15 -> 'a'..'f'
+inline char digit2hex(int digit)
+{
+  return digit < 10 ? '0' + digit : 'a' + digit - 10;
+}
+
+
+// converts '0'..'9' -> 0..9, 'a'..'f' -> 10..15
+inline int hex2digit(char hex)
+{
+  return hex < 'a' ? hex - '0' : hex - 'a' + 10;
 }
 
 
@@ -861,27 +899,30 @@ adc1_channel_t ADC1_GPIO2Channel(gpio_num_t gpio);
 void esp_intr_alloc_pinnedToCore(int source, int flags, intr_handler_t handler, void * arg, intr_handle_t * ret_handle, int core);
 
 
+// mode: GPIO_MODE_DISABLE,
+//       GPIO_MODE_INPUT,
+//       GPIO_MODE_OUTPUT,
+//       GPIO_MODE_OUTPUT_OD (open drain),
+//       GPIO_MODE_INPUT_OUTPUT_OD (open drain),
+//       GPIO_MODE_INPUT_OUTPUT
+void configureGPIO(gpio_num_t gpio, gpio_mode_t mode);
+
+
+uint32_t getApbFrequency();
+
+uint32_t getCPUFrequencyMHz();
+
+
 ///////////////////////////////////////////////////////////////////////////////////
-// AutoSuspendInterrupts
+// AutoSemaphore
 
-
-/**
- * @brief Helper class to disable fabgl interrupts and automatically resume them on scope exit
- *
- * Example:
- *
- *     void func() {
- *       AutoSuspendInterrupts autoInt; // now fabgl interrupts are suspended
- *       ...do something...
- *     }  // on exit interrupts are resumed
- */
-struct AutoSuspendInterrupts {
-  AutoSuspendInterrupts() : suspended(true) { suspendInterrupts(); }
-  ~AutoSuspendInterrupts() { resume(); }
-  void resume() { if (suspended) resumeInterrupts(); suspended = false; }
-
-  bool suspended;
+struct AutoSemaphore {
+  AutoSemaphore(SemaphoreHandle_t mutex) : m_mutex(mutex) { xSemaphoreTake(m_mutex, portMAX_DELAY); }
+  ~AutoSemaphore()                                        { xSemaphoreGive(m_mutex); }
+private:
+  SemaphoreHandle_t m_mutex;
 };
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -897,7 +938,7 @@ struct CoreUsage {
   static void setBusiestCore(int core)     { s_busiestCore = core; }
 
   private:
-    static int s_busiestCore;  // -1 = none, 0 = core 0, 1 = core 1
+    static int s_busiestCore;  // 0 = core 0, 1 = core 1 (default is FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE)
 };
 
 
@@ -911,6 +952,7 @@ enum VirtualKey {
   VK_NONE,            /**< No character (marks the first virtual key) */
 
   VK_SPACE,           /**< Space */
+  
   VK_0,               /**< Number 0 */
   VK_1,               /**< Number 1 */
   VK_2,               /**< Number 2 */
@@ -931,6 +973,7 @@ enum VirtualKey {
   VK_KP_7,            /**< Keypad number 7 */
   VK_KP_8,            /**< Keypad number 8 */
   VK_KP_9,            /**< Keypad number 9 */
+
   VK_a,               /**< Lower case letter 'a' */
   VK_b,               /**< Lower case letter 'b' */
   VK_c,               /**< Lower case letter 'c' */
@@ -983,6 +1026,7 @@ enum VirtualKey {
   VK_X,               /**< Upper case letter 'X' */
   VK_Y,               /**< Upper case letter 'Y' */
   VK_Z,               /**< Upper case letter 'Z' */
+
   VK_GRAVEACCENT,     /**< Grave accent: ` */
   VK_ACUTEACCENT,     /**< Acute accent: ´ */
   VK_QUOTE,           /**< Quote: ' */
@@ -1026,6 +1070,7 @@ enum VirtualKey {
   VK_SECTION,         /**< Section: § */
   VK_TILDE,           /**< Tilde: ~ */
   VK_NEGATION,        /**< Negation: ¬ */
+
   VK_LSHIFT,          /**< Left SHIFT */
   VK_RSHIFT,          /**< Right SHIFT */
   VK_LALT,            /**< Left ALT */
@@ -1034,10 +1079,12 @@ enum VirtualKey {
   VK_RCTRL,           /**< Right CTRL */
   VK_LGUI,            /**< Left GUI */
   VK_RGUI,            /**< Right GUI */
+
   VK_ESCAPE,          /**< ESC */
-  VK_PRINTSCREEN1,    /**< PRINTSCREEN is translated as separated VK_PRINTSCREEN1 and VK_PRINTSCREEN2. VK_PRINTSCREEN2 is also generated by CTRL or SHIFT + PRINTSCREEN. So pressing PRINTSCREEN both VK_PRINTSCREEN1 and VK_PRINTSCREEN2 are generated, while pressing CTRL+PRINTSCREEN or SHIFT+PRINTSCREEN only VK_PRINTSCREEN2 is generated. */
-  VK_PRINTSCREEN2,    /**< PRINTSCREEN. See VK_PRINTSCREEN1 */
+
+  VK_PRINTSCREEN,     /**< PRINTSCREEN */
   VK_SYSREQ,          /**< SYSREQ */
+
   VK_INSERT,          /**< INS */
   VK_KP_INSERT,       /**< Keypad INS */
   VK_DELETE,          /**< DEL */
@@ -1069,6 +1116,7 @@ enum VirtualKey {
   VK_RIGHT,           /**< Cursor RIGHT */
   VK_KP_RIGHT,        /**< Keypad cursor RIGHT */
   VK_KP_CENTER,       /**< Keypad CENTER key */
+
   VK_F1,              /**< F1 function key */
   VK_F2,              /**< F2 function key */
   VK_F3,              /**< F3 function key */
@@ -1081,20 +1129,105 @@ enum VirtualKey {
   VK_F10,             /**< F10 function key */
   VK_F11,             /**< F11 function key */
   VK_F12,             /**< F12 function key */
+  
   VK_GRAVE_a,         /**< Grave 'a': à */
   VK_GRAVE_e,         /**< Grave 'e': è */
   VK_ACUTE_e,         /**< Acute 'e': é */
   VK_GRAVE_i,         /**< Grave 'i': ì */
   VK_GRAVE_o,         /**< Grave 'o': ò */
   VK_GRAVE_u,         /**< Grave 'u': ù */
+  
   VK_CEDILLA_c,       /**< Cedilla 'c': ç */
+   
   VK_ESZETT,          /**< Eszett: ß */
   VK_UMLAUT_u,        /**< Umlaut 'u': ü */
   VK_UMLAUT_o,        /**< Umlaut 'o': ö */
   VK_UMLAUT_a,        /**< Umlaut 'a': ä */
+ 
+  // For spanish keyboard layout
+  
+  VK_CEDILLA_C,       /**< Cedilla 'C': Ç */
+  
+  VK_TILDE_n,		      /**< Lower case letter: 'ñ' */
+  VK_TILDE_N,		      /**< Upper case letter: 'Ñ' */
+  VK_UPPER_a,		      /**< primera: 'a' */
+  
+  VK_ACUTE_a,         /**< Acute 'á': á */
+  VK_ACUTE_i,         /**< Acute 'i': í */
+  VK_ACUTE_o,         /**< Acute 'o': ó */
+  VK_ACUTE_u,         /**< Acute 'u': ú */  
+      
+  VK_UMLAUT_i,        /**< Diaeresis 'i': ï */  
+  
+  VK_EXCLAIM_INV,     /**< Inverted exclamation mark: ! */
+  VK_QUESTION_INV,    /**< Inverted question mark: ? */
 
+  VK_ACUTE_A,		      /**< Acute 'Á': Á */
+  VK_ACUTE_E,		      /**< Acute 'É': É */
+  VK_ACUTE_I,		      /**< Acute 'Í': Í */
+  VK_ACUTE_O,		      /**< Acute 'Ó': Ó */
+  VK_ACUTE_U,		      /**< Acute 'Ú': Ú */
+  
+  VK_GRAVE_A,		      /**< Grave 'À': À */
+  VK_GRAVE_E,		      /**< Grave 'È': È */
+  VK_GRAVE_I,		      /**< Grave 'Ì': Ì */
+  VK_GRAVE_O,		      /**< Grave 'Ò': Ò */
+  VK_GRAVE_U,		      /**< Grave 'Ù': Ù */
+  
+  VK_INTERPUNCT,	    /**< '·': · */
+  VK_DIAERESIS,	  	  /**< Diaeresis '"': " */
+  
+  VK_UMLAUT_e,        /**< Diaeresis 'e': ë */  
+  VK_UMLAUT_A,        /**< Diaeresis 'Ä': Ä */
+  VK_UMLAUT_E,        /**< Diaeresis 'Ë': Ë */
+  VK_UMLAUT_I,        /**< Diaeresis 'Ï': Ï */
+  VK_UMLAUT_O,        /**< Diaeresis 'Ö': Ö */
+  VK_UMLAUT_U,        /**< Diaeresis 'Ü': Ü */
+  
+  VK_CARET_a,		      /**< Caret 'a': â */
+  VK_CARET_e,		      /**< Caret 'e': ê */
+  VK_CARET_i,		      /**< Caret 'i': î */
+  VK_CARET_o,		      /**< Caret 'o': ô */
+  VK_CARET_u,		      /**< Caret 'u': û */
+  VK_CARET_A,		      /**< Caret 'A': Â */
+  VK_CARET_E,		      /**< Caret 'E': Ê */
+  VK_CARET_I,		      /**< Caret 'I': Î */
+  VK_CARET_O,		      /**< Caret 'O': Ô */
+  VK_CARET_U,		      /**< Caret 'U': Û */
+
+  VK_ASCII,           /**< Specifies an ASCII code - used when virtual key is embedded in VirtualKeyItem structure and VirtualKeyItem.ASCII is valid */
+  
   VK_LAST,            // marks the last virtual key
+
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// Virtual keys helpers
+
+inline bool isSHIFT(VirtualKey value)
+{
+  return value == VK_LSHIFT || value == VK_RSHIFT;
+}
+
+
+inline bool isALT(VirtualKey value)
+{
+  return value == VK_LALT || value == VK_RALT;
+}
+
+
+inline bool isCTRL(VirtualKey value)
+{
+  return value == VK_LCTRL || value == VK_RCTRL;
+}
+
+
+inline bool isGUI(VirtualKey value)
+{
+  return value == VK_LGUI || value == VK_RGUI;  
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,5 @@
 //******************************************************************************
 // IRremoteint.h
-// IRremote
 // Version 2.0.1 June, 2015
 // Initially coded 2009 Ken Shirriff http://www.righto.com
 //
@@ -17,6 +16,10 @@
 #ifndef IRremoteint_h
 #define IRremoteint_h
 
+/*
+ * Activate this line if your receiver has an external output driver transistor / "inverted" output
+ */
+//#define IR_INPUT_IS_ACTIVE_HIGH
 //------------------------------------------------------------------------------
 // Include the Arduino header
 //
@@ -28,9 +31,6 @@
 //------------------------------------------------------------------------------
 // Information for the Interrupt Service Routine
 //
-#if ! defined(RAW_BUFFER_LENGTH)
-#define RAW_BUFFER_LENGTH  101  ///< Maximum length of raw duration buffer. Must be odd.
-#endif
 
 // ISR State-Machine : Receiver States
 #define IR_REC_STATE_IDLE      0
@@ -39,18 +39,22 @@
 #define IR_REC_STATE_STOP      3
 
 /**
- * This struct is used for the ISR (interrupt service routine)
- * and is copied once only in state STATE_STOP, so only rcvstate needs to be volatile.
+ * This struct contains the data and control used for static functions and the ISR (interrupt service routine)
+ * Only rcvstate needs to be volatile. All the other fields are not written by ISR during decoding in loop.
  */
 struct irparams_struct {
     // The fields are ordered to reduce memory over caused by struct-padding
     volatile uint8_t rcvstate;      ///< State Machine state
     uint8_t recvpin;                ///< Pin connected to IR data from detector
-    uint8_t blinkpin;
-    uint8_t blinkflag;              ///< true -> enable blinking of pin on IR processing
-    uint16_t rawlen;                ///< counter of entries in rawbuf
-    uint16_t timer;             ///< State timer, counts 50uS ticks.
-    uint16_t rawbuf[RAW_BUFFER_LENGTH]; ///< raw data, first entry is the length of the gap between previous and current command
+    uint8_t blinkpin;               ///< 0 means not valid pin
+    bool blinkflag;                 ///< true -> enable blinking of pin on IR processing
+#if RAW_BUFFER_LENGTH <= 255        // saves around 75 bytes program space and speeds up ISR
+    uint8_t rawlen;                 ///< counter of entries in rawbuf
+#else
+    unsigned int rawlen;            ///< counter of entries in rawbuf
+#endif
+    uint16_t timer;                 ///< State timer, counts 50uS ticks. The value is copied into the rawbuf array on every transition.
+    uint16_t rawbuf[RAW_BUFFER_LENGTH]; ///< raw data / tick counts per mark/space, first entry is the length of the gap between previous and current command
     uint8_t overflow;               ///< Raw buffer overflow occurred
 };
 
@@ -73,15 +77,6 @@ extern struct irparams_struct irparams;
 // Pulse parameters in uSec
 //
 
-/**
- * When received, marks  tend to be too long and spaces tend to be too short.
- * To compensate for this, MARK_EXCESS_MICROS is subtracted from all marks, and added to all spaces.
- * If you set MARK_EXCESS to approx. 50us then the TSOP4838 works best.
- * At 100us it also worked, but not as well.
- * Set MARK_EXCESS to 100us and the VS1838 doesn't work at all.
- */
-#define MARK_EXCESS_MICROS    100
-
 /** Relative tolerance (in percent) for some comparisons on measured data. */
 #define TOLERANCE       25
 
@@ -93,10 +88,10 @@ extern struct irparams_struct irparams;
 #define UTOL            (100 + TOLERANCE)
 
 /** Minimum gap between IR transmissions, in microseconds */
-#define _GAP            5000
+#define RECORD_GAP_MICROS   5000 // NEC header space is 4500
 
 /** Minimum gap between IR transmissions, in MICROS_PER_TICK */
-#define GAP_TICKS       (_GAP/MICROS_PER_TICK)
+#define RECORD_GAP_TICKS    (RECORD_GAP_MICROS / MICROS_PER_TICK)
 
 //#define TICKS_LOW(us)   ((int)(((us)*LTOL/MICROS_PER_TICK)))
 //#define TICKS_HIGH(us)  ((int)(((us)*UTOL/MICROS_PER_TICK + 1)))
@@ -109,9 +104,15 @@ extern struct irparams_struct irparams;
 #endif
 
 //------------------------------------------------------------------------------
+// IR receivers on a board with an external output transistor may have "inverted" output
+#ifdef IR_INPUT_IS_ACTIVE_HIGH
+// IR detector output is active high
+#define MARK   1 ///< Sensor output for a mark ("flash")
+#define SPACE  0 ///< Sensor output for a space ("gap")
+#else
 // IR detector output is active low
-//
 #define MARK   0 ///< Sensor output for a mark ("flash")
 #define SPACE  1 ///< Sensor output for a space ("gap")
+#endif
 
 #endif

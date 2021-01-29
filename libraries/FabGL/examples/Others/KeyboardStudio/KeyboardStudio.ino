@@ -23,23 +23,44 @@
 #include "fabgl.h"
 
 
+fabgl::VGATextController DisplayController;
+fabgl::Terminal          Terminal;
+fabgl::PS2Controller     PS2Controller;
 
-fabgl::PS2Controller PS2Controller;
+
+void xprintf(const char * format, ...)
+{
+  va_list ap;
+  va_start(ap, format);
+  int size = vsnprintf(nullptr, 0, format, ap) + 1;
+  if (size > 0) {
+    va_end(ap);
+    va_start(ap, format);
+    char buf[size + 1];
+    vsnprintf(buf, size, format, ap);
+    Serial.write(buf);
+    Terminal.write(buf);
+  }
+  va_end(ap);
+}
 
 
 void printHelp()
 {
-  Serial.printf("\n\nPS/2 Keyboard Studio\n");
-  Serial.printf("Chip Revision: %d   Chip Frequency: %d MHz\n", ESP.getChipRevision(), ESP.getCpuFreqMHz());
+  xprintf("\e[93m\n\nPS/2 Keyboard Studio\r\n");
+  xprintf("Chip Revision: %d   Chip Frequency: %d MHz\r\n", ESP.getChipRevision(), ESP.getCpuFreqMHz());
 
   printInfo();
 
-  Serial.printf("Commands:\n");
-  Serial.printf("  1 = US Layout  2 = UK Layout      3 = DE Layout   4 = IT Layout\n");
-  Serial.printf("  r = Reset      s = Scancode Mode  a = VirtualKey/ASCII Mode\n");
-  Serial.printf("  l = Test LEDs\n");
-  Serial.printf("Various:\n");
-  Serial.printf("  h = Print This help\n\n");
+  xprintf("Commands:\r\n");
+  xprintf("  1 = US Layout       2 = UK Layout       3 = DE Layout\r\n");
+  xprintf("  4 = IT Layout       5 = ES Layout\r\n");
+  xprintf("  r = Reset           s = Scancode Mode   a = VirtualKey/ASCII Mode\r\n");
+  xprintf("  q = Scancode set 1  w = Scancode set 2\r\n");
+  xprintf("  l = Test LEDs\r\n");
+  xprintf("Various:\r\n");
+  xprintf("  h = Print This help\r\n\n");
+  xprintf("Use Serial Monitor to issue commands\r\n\n");
 }
 
 
@@ -48,33 +69,33 @@ void printInfo()
   auto keyboard = PS2Controller.keyboard();
 
   if (keyboard->isKeyboardAvailable()) {
-    Serial.write("Device Id = ");
+    xprintf("Device Id = ");
     switch (keyboard->identify()) {
       case PS2DeviceType::OldATKeyboard:
-        Serial.write("\"Old AT Keyboard\"");
+        xprintf("\"Old AT Keyboard\"");
         break;
       case PS2DeviceType::MouseStandard:
-        Serial.write("\"Standard Mouse\"");
+        xprintf("\"Standard Mouse\"");
         break;
       case PS2DeviceType::MouseWithScrollWheel:
-        Serial.write("\"Mouse with scroll wheel\"");
+        xprintf("\"Mouse with scroll wheel\"");
         break;
       case PS2DeviceType::Mouse5Buttons:
-        Serial.write("\"5 Buttons Mouse\"");
+        xprintf("\"5 Buttons Mouse\"");
         break;
       case PS2DeviceType::MF2KeyboardWithTranslation:
-        Serial.write("\"MF2 Keyboard with translation\"");
+        xprintf("\"MF2 Keyboard with translation\"");
         break;
       case PS2DeviceType::M2Keyboard:
-        Serial.write("\"MF2 keyboard\"");
+        xprintf("\"MF2 keyboard\"");
         break;
       default:
-        Serial.write("\"Unknown\"");
+        xprintf("\"Unknown\"");
         break;
     }
-    Serial.printf("  Keyboard Layout: \"%s\"\n", keyboard->getLayout()->name);
+    xprintf("  Keyboard Layout: \"%s\"\r\n", keyboard->getLayout()->name);
   } else
-    Serial.write("Keyboard Error!\n");
+    xprintf("Keyboard Error!\r\n");
 }
 
 
@@ -83,7 +104,13 @@ void setup()
 {
   Serial.begin(115200);
   delay(500);  // avoid garbage into the UART
-  Serial.write("\n\nReset\n");
+  Serial.write("\r\n\nReset\r\n");
+
+  DisplayController.begin();
+  DisplayController.setResolution();
+
+  Terminal.begin(&DisplayController);
+  Terminal.enableCursor(true);
 
   PS2Controller.begin(PS2Preset::KeyboardPort0);
 
@@ -122,49 +149,62 @@ void loop()
         keyboard->setLayout(&fabgl::ItalianLayout);
         printInfo();
         break;
+      case '5':
+        keyboard->setLayout(&fabgl::SpanishLayout);
+        printInfo();
+        break;
       case 'r':
         keyboard->reset();
         printInfo();
         break;
       case 's':
+        mode = 's';
+        keyboard->suspendVirtualKeyGeneration(true);
+        xprintf("Scancode mode\r\n");
+        break;
       case 'a':
-        mode = c;
-        keyboard->suspendVirtualKeyGeneration(c == 's');
+        mode = 'a';
+        keyboard->suspendVirtualKeyGeneration(false);
+        xprintf("VirtualKey/ASCII mode\r\n");
         break;
       case 'l':
-      {
         for (int i = 0; i < 8; ++i) {
           keyboard->setLEDs(i & 1, i & 2, i & 4);
           delay(1000);
         }
         delay(2000);
         if (keyboard->setLEDs(0, 0, 0))
-          Serial.write("OK\n");
+          xprintf("OK\r\n");
         break;
-      }
+      case 'q':
+        keyboard->setScancodeSet(1);
+        xprintf("Scancode Set = %d\r\n", keyboard->scancodeSet());
+        break;
+      case 'w':
+        keyboard->setScancodeSet(2);
+        xprintf("Scancode Set = %d\r\n", keyboard->scancodeSet());
+        break;
     }
   }
 
   if (mode == 's' && keyboard->scancodeAvailable()) {
-    // scancode mode (show scancodes)
-    Serial.printf("Scancode = 0x%02X\n", keyboard->getNextScancode());
+    // scancode mode (show scancodes). Because we are using virtual keys, the scancode set here is always 2.
+    xprintf("Scancode = 0x%02X\r\n", keyboard->getNextScancode());
   } else if (keyboard->virtualKeyAvailable()) {
-    // ascii mode (show ASCII and VirtualKeys)
-    bool down;
-    auto vk = keyboard->getNextVirtualKey(&down);
-    //if (vk != lastvk) {
-      Serial.printf("VirtualKey = %s", keyboard->virtualKeyToString(vk));
-      int c = keyboard->virtualKeyToASCII(vk);
-      if (c > -1) {
-        Serial.printf("  ASCII = 0x%02X   ", c);
-        if (c >= ' ')
-          Serial.write(c);
-      }
-      if (!down)
-        Serial.write(" UP");
-      Serial.write('\n');
-      //lastvk = down ? vk : fabgl::VK_NONE;
-    //}
+    // ascii mode (show ASCIIl, VirtualKeys and scancodes)
+    fabgl::VirtualKeyItem item;
+    if (keyboard->getNextVirtualKey(&item)) {
+      xprintf("%s: ", keyboard->virtualKeyToString(item.vk));
+      xprintf("\tASCII = 0x%02X\t", item.ASCII);
+      if (item.ASCII >= ' ')
+        xprintf("'%c'", item.ASCII);
+      xprintf("\t%s", item.down ? "DN" : "UP");
+      xprintf("\t[");
+      for (int i = 0; i < 8 && item.scancode[i] != 0; ++i)
+        xprintf("%02X ", item.scancode[i]);
+      xprintf("]");
+      xprintf("\r\n");
+    }
   }
 
 }

@@ -308,6 +308,13 @@ struct RGBA2222 {
 };
 
 
+//   0 .. 63  => 0
+//  64 .. 127 => 1
+// 128 .. 191 => 2
+// 192 .. 255 => 3
+uint8_t RGB888toPackedRGB222(RGB888 const & rgb);
+
+
 /**
  * @brief Represents a glyph position, size and binary data.
  *
@@ -420,6 +427,9 @@ enum class NativePixelFormat : uint8_t {
   Mono,       /**< 1 bit per pixel. 0 = black, 1 = white */
   SBGR2222,   /**< 8 bit per pixel: VHBBGGRR (bit 7=VSync 6=HSync 5=B 4=B 3=G 2=G 1=R 0=R). Each color channel can have values from 0 to 3 (maxmum intensity). */
   RGB565BE,   /**< 16 bit per pixel: RGB565 big endian. */
+  PALETTE2,   /**< 1 bit palette (2 colors), packed as 8 pixels per byte. */
+  PALETTE4,   /**< 2 bit palette (4 colors), packed as 4 pixels per byte. */
+  PALETTE8,   /**< 3 bit palette (8 colors), packed as 8 pixels every 3 bytes. */
   PALETTE16,  /**< 4 bit palette (16 colors), packed as two pixels per byte. */
 };
 
@@ -649,6 +659,10 @@ class BaseDisplayController {
 
 public:
 
+  virtual void setResolution(char const * modeline, int viewPortWidth = -1, int viewPortHeight = -1, bool doubleBuffered = false) = 0;
+
+  virtual void begin() = 0;
+
   /**
    * @brief Determines the display controller type
    *
@@ -661,14 +675,25 @@ public:
    *
    * @return Screen width in pixels.
    */
-  virtual int getScreenWidth() = 0;
+  int getScreenWidth()                         { return m_screenWidth; }
 
   /**
    * @brief Determines the screen height in pixels.
    *
    * @return Screen height in pixels.
    */
-  virtual int getScreenHeight() = 0;
+  int getScreenHeight()                        { return m_screenHeight; }
+
+protected:
+
+  // inherited classes should call setScreenSize once display size is known
+  void setScreenSize(int width, int height)    { m_screenWidth = width; m_screenHeight = height; }
+
+private:
+
+  // we store here these info to avoid to have virtual methods (due the -vtables in flash- problem)
+  int16_t m_screenWidth;
+  int16_t m_screenHeight;
 };
 
 

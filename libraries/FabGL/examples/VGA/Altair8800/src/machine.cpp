@@ -34,7 +34,7 @@
 #include "fabgl.h"
 #include "fabutils.h"
 
-#include "i8080/i8080.h"
+
 
 
 
@@ -83,7 +83,6 @@ constexpr int bufferedFileDataSize = 4388;//4388;
 void diskFlush(FILE * file = nullptr)
 {
   // flush bufferedFile
-  AutoSuspendInterrupts autoInt;
   if (bufferedFileChanged && bufferedFile && bufferedFileDataPos != -1) {
     fseek(bufferedFile, bufferedFileDataPos, SEEK_SET);
     //fprintf(stderr, "fseek(%d) fwrite(%d)\n", bufferedFileDataPos, bufferedFileDataSize);
@@ -111,7 +110,6 @@ void fetchFileData(FILE * file, int position, int size)
     bufferedFile = file;
   }
   if (bufferedFileDataPos == -1 || position < bufferedFileDataPos || position + size >= bufferedFileDataPos + bufferedFileDataSize) {
-    AutoSuspendInterrupts autoInt;
     diskFlush();
     fseek(file, position, SEEK_SET);
     //fprintf(stderr, "fseek(%d) fread(%d)\n", position, bufferedFileDataSize);
@@ -145,7 +143,6 @@ void diskWrite(int position, void * buffer, int size, FILE * file)
 
 void diskRead(int position, void * buffer, int size, FILE * file)
 {
-  AutoSuspendInterrupts autoInt;
   fseek(file, position, SEEK_SET);
   fread(buffer, size, 1, file);
 }
@@ -153,14 +150,12 @@ void diskRead(int position, void * buffer, int size, FILE * file)
 
 void diskWrite(int position, void * buffer, int size, FILE * file)
 {
-  AutoSuspendInterrupts autoInt;
   fseek(file, position, SEEK_SET);
   fwrite(buffer, size, 1, file);
 }
 
 void diskFlush(FILE * file = nullptr)
 {
-  AutoSuspendInterrupts autoInt;
   fflush(file);
   fsync(fileno(file));  // workaround from forums...
 }
@@ -177,9 +172,10 @@ void diskFlush(FILE * file = nullptr)
 Machine::Machine()
   : m_devices(nullptr),
     m_realSpeed(false),
-    m_menuCallback(nullptr),
-    m_Z80(this)
+    m_menuCallback(nullptr)
 {
+  m_Z80.setCallbacks(this, readByte, writeByte, readWord, writeWord, readIO, writeIO);
+  m_i8080.setCallbacks(this, readByte, writeByte, readWord, writeWord, readIO, writeIO);
 }
 
 
@@ -209,24 +205,24 @@ void Machine::attachRAM(int RAMSize)
 }
 
 
-IRAM_ATTR int Machine::nextStep(CPU cpu)
+int Machine::nextStep(CPU cpu)
 {
-  auto keyboard = fabgl::PS2Controller::instance()->keyboard();
-  if (m_menuCallback && keyboard->isVKDown(VirtualKey::VK_PAUSE))
-    m_menuCallback();
-  return (cpu == CPU::i8080 ? i8080_instruction() : m_Z80.emulate(0));
+  return (cpu == CPU::i8080 ? m_i8080.step() : m_Z80.step());
 }
 
 
-IRAM_ATTR void Machine::run(CPU cpu, int address)
+void Machine::run(CPU cpu, int address)
 {
   if (cpu == CPU::i8080) {
-    i8080_init(this);
-    i8080_jump(address);
+    m_i8080.reset();
+    m_i8080.setPC(address);
   } else {
     m_Z80.reset();
     m_Z80.setPC(address);
   }
+
+  constexpr int timeToCheckKeyboardReset = 200000;
+  int timeToCheckKeyboard = timeToCheckKeyboardReset;
 
   while (true) {
     int cycles = 0;
@@ -234,7 +230,7 @@ IRAM_ATTR void Machine::run(CPU cpu, int address)
       int64_t t = esp_timer_get_time();  // time in microseconds
       cycles = nextStep(cpu);
       if (m_realSpeed) {
-        t += cycles / 2;    // at 2MHz each cycle last 0.5us, so instruction time is cycles*0.5, that is cycles/2
+        t += cycles / 2;                 // at 2MHz each cycle last 0.5us, so instruction time is cycles*0.5, that is cycles/2
         while (esp_timer_get_time() < t)
           ;
       }
@@ -243,26 +239,36 @@ IRAM_ATTR void Machine::run(CPU cpu, int address)
     }
     for (Device * d = m_devices; d; d = d->next)
       d->tick(cycles);
+
+    // time to check keyboard for menu key (F12 or PAUSE)?
+    timeToCheckKeyboard -= cycles;
+    if (timeToCheckKeyboard < 0) {
+      timeToCheckKeyboard = timeToCheckKeyboardReset;
+      auto keyboard = fabgl::PS2Controller::instance()->keyboard();
+      if (m_menuCallback && (keyboard->isVKDown(VirtualKey::VK_PAUSE) || keyboard->isVKDown(VirtualKey::VK_F12)))
+        m_menuCallback();
+    }
   }
 
 }
 
 
-uint8_t Machine::readByte(uint16_t address)
+int Machine::readByte(void * context, int address)
 {
-  return m_RAM[address];
+  return ((Machine*)context)->m_RAM[address];
 }
 
 
-void Machine::writeByte(uint16_t address, uint8_t value)
+void Machine::writeByte(void * context, int address, int value)
 {
-  m_RAM[address] = value;
+  ((Machine*)context)->m_RAM[address] = value;
 }
 
 
-uint8_t Machine::readIO(uint16_t address)
+int Machine::readIO(void * context, int address)
 {
-  for (Device * d = m_devices; d; d = d->next) {
+  auto m = (Machine*)context;
+  for (Device * d = m->m_devices; d; d = d->next) {
     int value;
     if (d->read(address, &value))
       return value;
@@ -276,9 +282,10 @@ uint8_t Machine::readIO(uint16_t address)
 }
 
 
-void Machine::writeIO(uint16_t address, uint8_t value)
+void Machine::writeIO(void * context, int address, int value)
 {
-  for (Device * d = m_devices; d; d = d->next)
+  auto m = (Machine*)context;
+  for (Device * d = m->m_devices; d; d = d->next)
     if (d->write(address, value))
       return;
 
@@ -368,14 +375,14 @@ Mits88Disk::Mits88Disk(Machine * machine, DiskFormat diskFormat)
   switch (diskFormat) {
     // 88-Disk 8'' inches has 77 tracks and 32 sectors
     case Disk_338K:
-      m_trackSize   = 32;
-      m_tracksCount = 77;
+      m_trackSize   = diskSectorsPerTrack;
+      m_tracksCount = diskTracksCount;
       m_sectorChangeDuration = sectorChangeDurationDisk;  // us
       break;
     // minidisk has 35 tracks and 16 sectors
     case MiniDisk_76K:
-      m_trackSize   = 16;
-      m_tracksCount = 35;
+      m_trackSize   = minidiskSectorsPerTrack;
+      m_tracksCount = minidiskTracksCount;
       m_sectorChangeDuration = sectorChangeDurationMiniDisk;  // us
       break;
   };
@@ -385,15 +392,15 @@ Mits88Disk::Mits88Disk(Machine * machine, DiskFormat diskFormat)
   for (int i = 0; i < DISKCOUNT; ++i) {
     m_readOnlyBuffer[i]   = nullptr;
     m_fileSectorBuffer[i] = nullptr;
-    m_file[i]  = nullptr;
-    m_track[i] = 0;
-    m_sector[i] = 0;
-    m_pos[i] = 0;
-    m_readByteTime[i] = 0;
-    m_readByteReady[i] = 1;
+    m_file[i]             = nullptr;
+    m_track[i]            = 0;
+    m_sector[i]           = 0;
+    m_pos[i]              = 0;
+    m_readByteTime[i]     = 0;
+    m_readByteReady[i]    = 1;
     m_sectorChangeTime[i] = 0;
-    m_sectorTrue[i] = 1;
-    m_headLoaded[i] = 1;
+    m_sectorTrue[i]       = 1;
+    m_headLoaded[i]       = 1;
   }
 }
 
@@ -417,7 +424,6 @@ void Mits88Disk::detach(int drive)
   if (m_readOnlyBuffer[drive]) {
     m_readOnlyBuffer[drive] = nullptr;
   } else if (m_file[drive]) {
-    AutoSuspendInterrupts autoInt;
     fclose(m_file[drive]);
     m_file[drive] = nullptr;
     delete [] m_fileSectorBuffer[drive];
@@ -439,8 +445,6 @@ void Mits88Disk::attachFile(int drive, char const * filename)
 
   m_fileSectorBuffer[drive] = new uint8_t[SECTOR_SIZE];
 
-  AutoSuspendInterrupts autoInt;
-
   // file exists?
   struct stat st;
   if (stat(filename, &st) != 0) {
@@ -455,6 +459,30 @@ void Mits88Disk::attachFile(int drive, char const * filename)
   }
 
   flush();
+}
+
+
+// create a file (filename) from specified image (data), and mount it as RW
+// file is not created if already exists
+void Mits88Disk::attachFileFromImage(int drive, char const * filename, uint8_t const * data)
+{
+  // file exists?
+  struct stat st;
+  if (stat(filename, &st) != 0) {
+    // file doesn't exist, create and fill with "data" content
+    auto imageSize = diskSize();
+    auto bufferSize = SECTOR_SIZE * sectorsPerTrack();
+    auto buffer = (uint8_t *)malloc(bufferSize);
+    auto fw = fopen(filename, "wb");
+    while (imageSize > 0) {
+      fwrite(data, bufferSize, 1, fw);
+      imageSize -= bufferSize;
+      data += bufferSize;
+    }
+    fclose(fw);
+    free(buffer);
+  }
+  attachFile(drive, filename);
 }
 
 
@@ -738,58 +766,3 @@ void Mits88Disk::receiveDiskImageFromStream(int drive, Stream * stream)
 // Mits88Disk disk drive controller
 ////////////////////////////////////////////////////////////////////////////////////
 
-
-
-////////////////////////////////////////////////////////////////////////////////////
-// required by i8080.cpp
-
-int i8080_hal_memory_read_word(void * context, int addr)
-{
-  Machine * m = (Machine*)context;
-  return m->readByte(addr) | (m->readByte(addr + 1) << 8);
-}
-
-
-void i8080_hal_memory_write_word(void * context, int addr, int word)
-{
-  Machine * m = (Machine*)context;
-  m->writeByte(addr, word & 0xff);
-  m->writeByte(addr + 1, (word >> 8) & 0xff);
-}
-
-
-int i8080_hal_memory_read_byte(void * context, int addr)
-{
-  Machine * m = (Machine*)context;
-  return m->readByte(addr);
-}
-
-
-void i8080_hal_memory_write_byte(void * context, int addr, int byte)
-{
-  Machine * m = (Machine*)context;
-  m->writeByte(addr, byte);
-}
-
-
-int i8080_hal_io_input(void * context, int port)
-{
-  Machine * m = (Machine*)context;
-  return m->readIO(port);
-}
-
-
-void i8080_hal_io_output(void * context, int port, int value)
-{
-  Machine * m = (Machine*)context;
-  m->writeIO(port, value);
-}
-
-
-void i8080_hal_iff(void * context, int on)
-{
-  //printf("i8080_hal_iff %d\n", on);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////

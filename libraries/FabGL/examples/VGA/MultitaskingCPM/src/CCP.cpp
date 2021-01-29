@@ -30,6 +30,9 @@
 #endif
 
 
+#pragma GCC optimize ("O2")
+
+
 // statically allocated variables
 
 #define CCP_STATIC_VARS_ADDR   TPA_ADDR
@@ -1225,7 +1228,7 @@ bool CCP::cmd_KEYB(uint16_t paramsAddr)
   if (paramsAddr == 0 || m_HAL->strLen(paramsAddr) <= 1) {
     // no, fail
     consoleOut("Usage:\r\n");
-    consoleOutFmt("  KEYB US, UK, DE, IT : Set keyboard layout. Example: KEYB DE\r\n");
+    consoleOutFmt("  KEYB US, UK, DE, IT, ES : Set keyboard layout. Example: KEYB DE\r\n");
     return true;
   }
 
@@ -1246,6 +1249,8 @@ bool CCP::cmd_KEYB(uint16_t paramsAddr)
     layout = &fabgl::GermanLayout;
   else if (strcasecmp(param, "IT") == 0)
     layout = &fabgl::ItalianLayout;
+  else if (strcasecmp(param, "ES") == 0)
+    layout = &fabgl::SpanishLayout;
   else {
     consoleOut("Invalid keyboard layout\r\n");
     return true;
@@ -1313,9 +1318,7 @@ bool CCP::cmd_WIFISCAN(uint16_t paramsAddr)
   m_HAL->setTerminalType(TermType::ANSILegacy);
   consoleOut("Scanning...");
   delay(100); // give time to display last terminal msg, because we will suspend interrupts...
-  fabgl::suspendInterrupts();
   int networksCount = WiFi.scanNetworks();
-  fabgl::resumeInterrupts();
   consoleOutFmt("%d network(s) found\r\n", networksCount);
   if (networksCount) {
     consoleOut("\e[90m #\e[4GSSID\e[45GRSSI\e[55GCh\e[60GEncryption\e[32m\r\n");
@@ -1359,8 +1362,6 @@ bool CCP::cmd_WIFI(uint16_t paramsAddr)
   char psw[MAX_PSW_SIZE + 1] = {0};
   if (sscanf(param, "%32s %32s", ssid, psw) >= 1) {
     consoleOut("Connecting WiFi...");
-    delay(100);
-    AutoSuspendInterrupts autoInt;
     WiFi.disconnect(true, true);
     for (int i = 0; i < 2; ++i) {
       WiFi.begin(ssid, psw);
@@ -1563,6 +1564,8 @@ bool CCP::cmd_FORMAT(uint16_t paramsAddr)
   int c = m_BDOS->BDOS_callConsoleIn();
   if (c != 'y' && c != 'Y')
     return true;
+  consoleOut("\r\nFormatting...");
+  delay(100);
   FileBrowser::format(driveType, 0);
   ESP.restart();
   return true;

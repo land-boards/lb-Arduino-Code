@@ -1,22 +1,41 @@
 //******************************************************************************
-// IRremote
-// Version 2.0.1 June, 2015
+// IRremote.cpp
+//
+//  Contains all IRreceiver static functions
+//
+//
 // Initially coded 2009 Ken Shirriff http://www.righto.com
 //
 // Modified by Paul Stoffregen <paul@pjrc.com> to support other boards and timers
-// Modified  by Mitra Ardron <mitra@mitra.biz>
-// Added Sanyo and Mitsubishi controllers
-// Modified Sony to spot the repeat codes that some Sony's send
 //
 // Interrupt code based on NECIRrcv by Joe Knapp
 // http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1210243556
 // Also influenced by http://zovirl.com/2008/11/12/building-a-universal-remote-with-an-arduino/
-//
-// JVC and Panasonic protocol added by Kristian Lauszus (Thanks to zenwheel and other people at the original blog post)
-// LG added by Darryl Smith (based on the JVC protocol)
-// Whynter A/C ARC-110WD added by Francesco Meschia
 //******************************************************************************
-
+/************************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2009-2021 Ken Shirriff, Rafi Khan, Armin Joachimsmeyer
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ ************************************************************************************
+ */
 #include "IRremote.h"
 
 struct irparams_struct irparams; // the irparams instance
@@ -34,8 +53,8 @@ struct irparams_struct irparams; // the irparams instance
 //   in a hope of finding out what is going on, but for now they will remain as
 //   functions even in non-DEBUG mode
 //
-int MATCH(unsigned int measured, unsigned int desired) {
-#if DEBUG
+bool MATCH(unsigned int measured, unsigned int desired) {
+#ifdef TRACE
     Serial.print(F("Testing: "));
     Serial.print(TICKS_LOW(desired), DEC);
     Serial.print(F(" <= "));
@@ -44,7 +63,7 @@ int MATCH(unsigned int measured, unsigned int desired) {
     Serial.print(TICKS_HIGH(desired), DEC);
 #endif
     bool passed = ((measured >= TICKS_LOW(desired)) && (measured <= TICKS_HIGH(desired)));
-#if DEBUG
+#ifdef TRACE
     if (passed) {
         Serial.println(F("?; passed"));
     } else {
@@ -55,10 +74,10 @@ int MATCH(unsigned int measured, unsigned int desired) {
 }
 
 //+========================================================
-// Due to sensor lag, when received, Marks tend to be 100us too long
+// Due to sensor lag, when received, Marks tend to be MARK_EXCESS_MICROS us too long
 //
-int MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us) {
-#if DEBUG
+bool MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us) {
+#ifdef TRACE
     Serial.print(F("Testing mark (actual vs desired): "));
     Serial.print(measured_ticks * MICROS_PER_TICK, DEC);
     Serial.print(F("us vs "));
@@ -73,7 +92,7 @@ int MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us) {
     // compensate for marks exceeded by demodulator hardware
     bool passed = ((measured_ticks >= TICKS_LOW(desired_us + MARK_EXCESS_MICROS))
             && (measured_ticks <= TICKS_HIGH(desired_us + MARK_EXCESS_MICROS)));
-#if DEBUG
+#ifdef TRACE
     if (passed) {
         Serial.println(F("?; passed"));
     } else {
@@ -84,10 +103,10 @@ int MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us) {
 }
 
 //+========================================================
-// Due to sensor lag, when received, Spaces tend to be 100us too short
+// Due to sensor lag, when received, Spaces tend to be MARK_EXCESS_MICROS us too short
 //
-int MATCH_SPACE(uint16_t measured_ticks, unsigned int desired_us) {
-#if DEBUG
+bool MATCH_SPACE(uint16_t measured_ticks, unsigned int desired_us) {
+#ifdef TRACE
     Serial.print(F("Testing space (actual vs desired): "));
     Serial.print(measured_ticks * MICROS_PER_TICK, DEC);
     Serial.print(F("us vs "));
@@ -102,7 +121,7 @@ int MATCH_SPACE(uint16_t measured_ticks, unsigned int desired_us) {
     // compensate for marks exceeded and spaces shortened by demodulator hardware
     bool passed = ((measured_ticks >= TICKS_LOW(desired_us - MARK_EXCESS_MICROS))
             && (measured_ticks <= TICKS_HIGH(desired_us - MARK_EXCESS_MICROS)));
-#if DEBUG
+#ifdef TRACE
     if (passed) {
         Serial.println(F("?; passed"));
     } else {
@@ -128,14 +147,13 @@ ISR (TIMER_INTR_NAME) {
     TIMER_RESET_INTR_PENDING; // reset timer interrupt flag if required (currently only for Teensy and ATmega4809)
 
     // Read if IR Receiver -> SPACE [xmt LED off] or a MARK [xmt LED on]
-    // digitalRead() is very slow. Optimisation is possible, but makes the code unportable
     uint8_t irdata = (uint8_t) digitalRead(irparams.recvpin);
 
     irparams.timer++;  // One more 50uS tick
-    if (irparams.rawlen >= RAW_BUFFER_LENGTH) {
-        // Flag up a read overflow; Stop the State Machine
-        irparams.overflow = true;
-        irparams.rcvstate = IR_REC_STATE_STOP;
+
+    // clip timer at maximum 0xFFFF
+    if (irparams.timer == 0) {
+        irparams.timer--;
     }
 
     /*
@@ -146,19 +164,31 @@ ISR (TIMER_INTR_NAME) {
     //......................................................................
     if (irparams.rcvstate == IR_REC_STATE_IDLE) { // In the middle of a gap
         if (irdata == MARK) {
-            if (irparams.timer < GAP_TICKS) {  // Not big enough to be a gap.
-                irparams.timer = 0;
-            } else {
-                // Gap just ended; Record gap duration; Start recording transmission
+            // check if we did not start in the middle of an command by checking the minimum length of leading space
+            if (irparams.timer > RECORD_GAP_TICKS) {
+                // Gap just ended; Record gap duration + start recording transmission
                 // Initialize all state machine variables
                 irparams.overflow = false;
-                irparams.rawlen = 0;
-                irparams.rawbuf[irparams.rawlen++] = irparams.timer;
-                irparams.timer = 0;
+                irparams.rawbuf[0] = irparams.timer;
+                irparams.rawlen = 1;
                 irparams.rcvstate = IR_REC_STATE_MARK;
             }
+            irparams.timer = 0;
         }
-    } else if (irparams.rcvstate == IR_REC_STATE_MARK) {  // Timing Mark
+    }
+
+    // First check for buffer overflow
+    if (irparams.rawlen >= RAW_BUFFER_LENGTH) {
+        // Flag up a read overflow; Stop the State Machine
+        irparams.overflow = true;
+        irparams.rcvstate = IR_REC_STATE_STOP;
+    }
+
+    /*
+     * Here we detected a start mark and record the signal
+     */
+    // record marks and spaces and detect end of code
+    if (irparams.rcvstate == IR_REC_STATE_MARK) {  // Timing Mark
         if (irdata == SPACE) {   // Mark ended; Record time
             irparams.rawbuf[irparams.rawlen++] = irparams.timer;
             irparams.timer = 0;
@@ -170,35 +200,46 @@ ISR (TIMER_INTR_NAME) {
             irparams.timer = 0;
             irparams.rcvstate = IR_REC_STATE_MARK;
 
-        } else if (irparams.timer > GAP_TICKS) {  // Space
-            // A long Space, indicates gap between codes
-            // Flag the current code as ready for processing
-            // Switch to STOP
-            // Don't reset timer; keep counting Space width
+        } else if (irparams.timer > RECORD_GAP_TICKS) {
+            /*
+             * A long Space, indicates gap between codes
+             * Switch to IR_REC_STATE_STOP, which means current code is ready for processing
+             * Don't reset timer; keep counting width of next leading space
+             */
             irparams.rcvstate = IR_REC_STATE_STOP;
         }
-    } else if (irparams.rcvstate == IR_REC_STATE_STOP) {  // Waiting; Measuring Gap
+    } else if (irparams.rcvstate == IR_REC_STATE_STOP) {
+        /*
+         * Complete command received
+         * stay here until resume() is called, which switches state to IR_REC_STATE_IDLE
+         */
         if (irdata == MARK) {
-            irparams.timer = 0;  // Reset gap timer
+            irparams.timer = 0;  // Reset gap timer, to prepare for call of resume()
         }
     }
+    setFeedbackLED(irdata == MARK);
+}
 
-#ifdef BLINKLED
-    // If requested, flash LED while receiving IR data
+// If requested, flash LED while receiving IR data
+
+void setFeedbackLED(bool aSwitchLedOn) {
     if (irparams.blinkflag) {
-        if (irdata == MARK) {
+        if (aSwitchLedOn) {
             if (irparams.blinkpin) {
                 digitalWrite(irparams.blinkpin, HIGH); // Turn user defined pin LED on
+#ifdef BLINKLED_ON
             } else {
                 BLINKLED_ON();   // if no user defined LED pin, turn default LED pin for the hardware on
+#endif
             }
         } else {
             if (irparams.blinkpin) {
-                digitalWrite(irparams.blinkpin, LOW); // Turn user defined pin LED on
+                digitalWrite(irparams.blinkpin, LOW); // Turn user defined pin LED off
+#ifdef BLINKLED_OFF
             } else {
                 BLINKLED_OFF();   // if no user defined LED pin, turn default LED pin for the hardware on
+#endif
             }
         }
     }
-#endif // BLINKLED
 }

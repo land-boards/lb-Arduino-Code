@@ -23,9 +23,9 @@
 #include "fabgl.h"
 
 
-fabgl::VGA16Controller DisplayController;
-fabgl::PS2Controller PS2Controller;
-fabgl::Terminal      Terminal;
+fabgl::BitmappedDisplayController * DisplayController;
+fabgl::PS2Controller                PS2Controller;
+fabgl::Terminal                     Terminal;
 
 
 
@@ -40,6 +40,8 @@ fabgl::Terminal      Terminal;
 #define UART_RX 34
 #define UART_TX 2
 
+#define RESET_PIN 12
+
 
 #include "confdialog.h"
 
@@ -48,55 +50,94 @@ void setup()
 {
   //Serial.begin(115200); delay(500); Serial.write("\n\nReset\n\n"); // DEBUG ONLY
 
+  // more stack is required for the UI (used inside Terminal.onVirtualKey)
+  Terminal.keyboardReaderTaskStackSize = 3000;
+
+  Terminal.inputQueueSize = 2048; // 2048 good to pass vttest
+
   preferences.begin("AnsiTerminal", false);
 
-  // only keyboard configured on port 0
-  PS2Controller.begin(PS2Preset::KeyboardPort0);
+  ConfDialogApp::checkVersion();
 
-  DisplayController.begin();
-  DisplayController.setResolution(VGA_640x480_60Hz);
+  pinMode(RESET_PIN, INPUT);
+  if (digitalRead(RESET_PIN) == 1)
+    preferences.clear();
 
-  Terminal.begin(&DisplayController);
+  // because mouse is optional, don't re-try if it is not found (to speed-up boot)
+  fabgl::Mouse::quickCheckHardware();
+
+  // keyboard configured on port 0, and optionally mouse on port 1
+  PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1);
+
+  ConfDialogApp::setupDisplay();
+
+  ConfDialogApp::loadConfiguration();  
+
   //Terminal.setLogStream(Serial);  // debug only
-
-  ConfDialogApp::loadConfiguration();
 
   Terminal.clear();
   Terminal.enableCursor(true);
 
-  Terminal.write("* *  FabGL - Serial Terminal                            * *\r\n");
-  Terminal.write("* *  2019-2020 by Fabrizio Di Vittorio - www.fabgl.com  * *\r\n\n");
-  //Terminal.printf("Screen Size        : %d x %d\r\n", DisplayController.getScreenWidth(), DisplayController.getScreenHeight());
-  Terminal.printf("Terminal Size      : %d x %d\r\n", Terminal.getColumns(), Terminal.getRows());
-  Terminal.printf("Keyboard           : %s\r\n", PS2Controller.keyboard()->isKeyboardAvailable() ? "OK" : "Error");
-  Terminal.printf("Terminal Type      : %s\r\n", SupportedTerminals::names()[(int)ConfDialogApp::getTermType()]);
-  //Terminal.printf("Free Memory        : %d bytes\r\n", heap_caps_get_free_size(MALLOC_CAP_32BIT));
-  Terminal.write("\r\nPress F12 to change terminal configuration\r\n\n");
+  if (ConfDialogApp::getBootInfo() == BOOTINFO_ENABLED) {
+    Terminal.write("* *  FabGL - Serial Terminal                            * *\r\n");
+    Terminal.write("* *  2019-2020 by Fabrizio Di Vittorio - www.fabgl.com  * *\r\n\n");
+    Terminal.printf("Screen Size        : %d x %d\r\n", DisplayController->getScreenWidth(), DisplayController->getScreenHeight());
+    Terminal.printf("Terminal Size      : %d x %d\r\n", Terminal.getColumns(), Terminal.getRows());
+    Terminal.printf("Keyboard Layout    : %s\r\n", PS2Controller.keyboard()->isKeyboardAvailable() ? SupportedLayouts::names()[ConfDialogApp::getKbdLayoutIndex()] : "No Keyboard");
+    Terminal.printf("Mouse              : %s\r\n", PS2Controller.mouse()->isMouseAvailable() ? "Yes" : "No");
+    Terminal.printf("Terminal Type      : %s\r\n", SupportedTerminals::names()[(int)ConfDialogApp::getTermType()]);
+    Terminal.printf("Free Memory        : %d bytes\r\n", heap_caps_get_free_size(MALLOC_CAP_32BIT));
+    Terminal.printf("Version            : %d.%d\r\n", TERMVERSION_MAJ, TERMVERSION_MIN);
+    Terminal.write("\r\nPress F12 to change terminal configuration and CTRL-ALT-F12 to reset settings\r\n\n");
+  } else if (ConfDialogApp::getBootInfo() == BOOTINFO_TEMPDISABLED) {
+    preferences.putInt("BootInfo", BOOTINFO_ENABLED);
+  }
 
+  // onVirtualKey is triggered whenever a key is pressed or released
   Terminal.onVirtualKey = [&](VirtualKey * vk, bool keyDown) {
     if (*vk == VirtualKey::VK_F12) {
       if (!keyDown) {
+
         // releasing F12 key to open configuration dialog
         Terminal.deactivate();
+        PS2Controller.mouse()->emptyQueue();  // avoid previous mouse movements to be showed on UI
         auto dlgApp = new ConfDialogApp;
-        dlgApp->run(&DisplayController);
+        dlgApp->run(DisplayController);
+        auto progToInstall = dlgApp->progToInstall;
         delete dlgApp;
         Terminal.keyboard()->emptyVirtualKeyQueue();
         Terminal.activate();
+
+        // it has been requested to install a demo program?
+        if (progToInstall > -1)
+          installProgram(progToInstall);
+
       } else {
         // pressing CTRL + ALT + F12, reset parameters and reboot
         if ((Terminal.keyboard()->isVKDown(VirtualKey::VK_LCTRL) || Terminal.keyboard()->isVKDown(VirtualKey::VK_RCTRL)) &&
             (Terminal.keyboard()->isVKDown(VirtualKey::VK_LALT) || Terminal.keyboard()->isVKDown(VirtualKey::VK_RALT))) {
-          Terminal.write("\r\nReset of terminal settings...");
+          Terminal.deactivate();
           preferences.clear();
-          delay(2000);
-          Terminal.write("\r\nRebooting...");
-          delay(2000);
-          ESP.restart();
+          // show reboot dialog
+          auto rebootApp = new RebootDialogApp;
+          rebootApp->run(DisplayController);
         }
       }
       *vk = VirtualKey::VK_NONE;
     }
+  };
+
+  // onUserSequence is triggered whenever a User Sequence has been received (ESC + '_#' ... '$'), where '...' is sent here
+  Terminal.onUserSequence = [&](char const * seq) {
+    // 'R': change resolution (for example: ESC + "_#R512x384x64$")
+    for (int i = 0; i < RESOLUTIONS_COUNT; ++i)
+      if (strcmp(RESOLUTIONS_CMDSTR[i], seq) == 0) {
+        // found resolution string
+        preferences.putInt("TempResolution", i);
+        if (ConfDialogApp::getBootInfo() == BOOTINFO_ENABLED)
+          preferences.putInt("BootInfo", BOOTINFO_TEMPDISABLED);
+        ESP.restart();
+      }
   };
 }
 

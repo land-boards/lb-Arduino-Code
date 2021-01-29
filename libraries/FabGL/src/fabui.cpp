@@ -36,6 +36,9 @@
 
 
 
+#pragma GCC optimize ("O2")
+
+
 namespace fabgl {
 
 
@@ -192,7 +195,7 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
 {
   m_displayController = displayController;
 
-  m_canvas            = new Canvas(m_displayController);
+  m_canvas = new Canvas(m_displayController);
 
   m_keyboard = keyboard;
   m_mouse    = mouse;
@@ -207,7 +210,7 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   m_eventsQueue = xQueueCreate(FABGLIB_UI_EVENTS_QUEUE_SIZE, sizeof(uiEvent));
 
   // setup absolute events from mouse
-  if (m_mouse)
+  if (m_mouse && m_mouse->isMouseAvailable())
     m_mouse->setupAbsolutePositioner(m_canvas->getWidth(), m_canvas->getHeight(), false, m_displayController, this);
 
   // setup keyboard
@@ -226,7 +229,7 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   m_rootWindow->frameProps().moveable   = false;
 
   // setup mouse cursor (otherwise it has to wait mouse first moving to show mouse pointer)
-  if (m_mouse)
+  if (m_mouse && m_mouse->isMouseAvailable())
     m_displayController->setMouseCursor(m_rootWindow->windowStyle().defaultCursor);
 
   // avoid slow paint on low resolutions
@@ -277,7 +280,7 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   if (m_keyboard)
     m_keyboard->setUIApp(nullptr);
 
-  if (m_mouse)
+  if (m_mouse && m_mouse->isMouseAvailable())
     m_mouse->terminateAbsolutePositioner();
 
   vQueueDelete(m_eventsQueue);
@@ -286,6 +289,27 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   delete m_canvas;
 
   return exitCode;
+}
+
+
+void uiApp::asyncRunTask(void * arg)
+{
+  auto app = (uiApp*)arg;
+  app->run(app->m_displayController, app->m_keyboard, app->m_mouse);
+  vTaskDelete(NULL);
+}
+
+
+void uiApp::runAsync(BitmappedDisplayController * displayController, int taskStack, Keyboard * keyboard, Mouse * mouse)
+{
+  m_displayController = displayController;
+  m_keyboard          = keyboard;
+  m_mouse             = mouse;
+
+  if (CoreUsage::busiestCore() == -1)
+    xTaskCreate(&asyncRunTask, "", taskStack, this, 5, nullptr);
+  else
+    xTaskCreatePinnedToCore(&asyncRunTask, "", taskStack, this, 5, nullptr, CoreUsage::quietCore());
 }
 
 
@@ -1130,14 +1154,14 @@ void uiApp::enableKeyboardAndMouseEvents(bool value)
   if (value) {
     if (m_keyboard)
       m_keyboard->setUIApp(this);
-    if (m_mouse) {
+    if (m_mouse && m_mouse->isMouseAvailable()) {
       m_mouse->setUIApp(this);
       m_displayController->setMouseCursor(m_rootWindow->windowStyle().defaultCursor);
     }
   } else {
     if (m_keyboard)
       m_keyboard->setUIApp(nullptr);
-    if (m_mouse) {
+    if (m_mouse && m_mouse->isMouseAvailable()) {
       m_mouse->setUIApp(nullptr);
       m_displayController->setMouseCursor(nullptr);
     }
@@ -1179,6 +1203,14 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
     m_canvas = app()->canvas();
     if (app()->style() && styleClassID)
       app()->style()->setStyle(this, styleClassID);
+  }
+
+  if (m_pos == UIWINDOW_PARENTCENTER) {
+    if (parent) {
+      m_pos = Point((parent->size().width - size.width) / 2, (parent->size().height - size.height) / 2);
+    } else {
+      m_pos = Point(0, 0);
+    }
   }
 
   if (parent)
@@ -2577,16 +2609,13 @@ void uiTextEdit::handleKeyDown(uiKeyEventInfo key)
         break;
 
       default:
-      {
         // normal keys
-        int c = app()->keyboard()->virtualKeyToASCII(key.VK);
-        if (c >= 0x20 && c != 0x7F) {
+        if (key.ASCII >= 0x20 && key.ASCII != 0x7F) {
           if (m_cursorCol != m_selCursorCol)
             removeSel();  // there is a selection, same behavior of VK_DELETE
-          insert(c);
+          insert(key.ASCII);
         }
         break;
-      }
     }
   }
 
@@ -3173,9 +3202,9 @@ void uiPaintBox::processEvent(uiEvent * event)
 // uiColorBox
 
 
-uiColorBox::uiColorBox(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+uiColorBox::uiColorBox(uiWindow * parent, const Point & pos, const Size & size, Color color, bool visible, uint32_t styleClassID)
   : uiControl(parent, pos, size, visible, 0),
-    m_color(Color::BrightWhite)
+    m_color(color)
 {
   objectType().uiColorBox = true;
 
@@ -3807,22 +3836,24 @@ void uiCustomListBox::setScrollBar(uiOrientation orientation, int position, int 
 }
 
 
+// >= 0 : mouse point an item
+// -1   : mouse inside items area, but doesn't point an item (ie just below last item)
+// -2   : mouse outside items area (ie over vertical or horizontal scrollbar)
 int uiCustomListBox::getItemAtMousePos(int mouseX, int mouseY)
 {
   Rect cliRect = uiScrollableControl::clientRect(uiOrigin::Window);
   if (cliRect.contains(mouseX, mouseY)) {
     int idx = m_firstVisibleItem + (mouseY - cliRect.Y1) / m_listBoxStyle.itemHeight;
-    if (idx < items_getCount())
-      return idx;
+    return idx < items_getCount() ? idx : -1;
   }
-  return -1;
+  return -2;
 }
 
 
 void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
 {
   int idx = getItemAtMousePos(mouseX, mouseY);
-  if (idx > -1) {
+  if (idx >= 0) {
     if (app()->keyboard()->isVKDown(VK_LCTRL) || app()->keyboard()->isVKDown(VK_RCTRL)) {
       // CTRL is down
       items_select(idx, !items_selected(idx));
@@ -3831,8 +3862,10 @@ void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
       items_deselectAll();
       items_select(idx, true);
     }
-  } else
+  } else if (idx == -1)
     items_deselectAll();
+  else
+    return;
   onChange();
   repaint();
 }
@@ -3940,6 +3973,14 @@ void uiFileBrowser::items_select(int index, bool select)
 void uiFileBrowser::setDirectory(char const * path)
 {
   m_dir.setDirectory(path);
+  m_selected = m_dir.count() > 0 ? 0 : -1;
+  repaint();
+}
+
+
+void uiFileBrowser::changeDirectory(char const * path)
+{
+  m_dir.changeDirectory(path);
   m_selected = m_dir.count() > 0 ? 0 : -1;
   repaint();
 }
@@ -4253,7 +4294,7 @@ uiColorComboBox::uiColorComboBox(uiWindow * parent, const Point & pos, const Siz
 {
   objectType().uiColorComboBox = true;
 
-  m_colorBox     = new uiColorBox(this, Point(windowStyle().borderSize, windowStyle().borderSize), getEditControlSize(), true, 0);
+  m_colorBox     = new uiColorBox(this, Point(windowStyle().borderSize, windowStyle().borderSize), getEditControlSize(), Color::BrightWhite, true, 0);
   m_colorListBox = new uiColorListBox(parent, Point(0, 0), Size(0, 0), false, 0);
 
   if (app()->style() && styleClassID)

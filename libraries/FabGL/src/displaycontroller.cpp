@@ -33,6 +33,8 @@
 #include "images/cursors.h"
 
 
+#pragma GCC optimize ("O2")
+
 
 namespace fabgl {
 
@@ -75,9 +77,9 @@ bool RGB222::lowBitOnly = false;
 RGB222::RGB222(RGB888 const & value)
 {
   if (lowBitOnly) {
-    R = value.R ? 1 : 0;
-    G = value.G ? 1 : 0;
-    B = value.B ? 1 : 0;
+    R = value.R ? 3 : 0;
+    G = value.G ? 3 : 0;
+    B = value.B ? 3 : 0;
   } else {
     R = value.R >> 6;
     G = value.G >> 6;
@@ -98,6 +100,48 @@ RGB888::RGB888(Color color)
 }
 
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// RGB888toPackedRGB222()
+
+uint8_t RGB888toPackedRGB222(RGB888 const & rgb)
+{
+  // 64 colors
+  static const int CONVR64[4] = { 0 << 0,    // 00XXXXXX (0..63)
+                                  1 << 0,    // 01XXXXXX (64..127)
+                                  2 << 0,    // 10XXXXXX (128..191)
+                                  3 << 0, }; // 11XXXXXX (192..255)
+  static const int CONVG64[4] = { 0 << 2,    // 00XXXXXX (0..63)
+                                  1 << 2,    // 01XXXXXX (64..127)
+                                  2 << 2,    // 10XXXXXX (128..191)
+                                  3 << 2, }; // 11XXXXXX (192..255)
+  static const int CONVB64[4] = { 0 << 4,    // 00XXXXXX (0..63)
+                                  1 << 4,    // 01XXXXXX (64..127)
+                                  2 << 4,    // 10XXXXXX (128..191)
+                                  3 << 4, }; // 11XXXXXX (192..255)
+  // 8 colors
+  static const int CONVR8[4] = { 0 << 0,    // 00XXXXXX (0..63)
+                                 3 << 0,    // 01XXXXXX (64..127)
+                                 3 << 0,    // 10XXXXXX (128..191)
+                                 3 << 0, }; // 11XXXXXX (192..255)
+  static const int CONVG8[4] = { 0 << 2,    // 00XXXXXX (0..63)
+                                 3 << 2,    // 01XXXXXX (64..127)
+                                 3 << 2,    // 10XXXXXX (128..191)
+                                 3 << 2, }; // 11XXXXXX (192..255)
+  static const int CONVB8[4] = { 0 << 4,    // 00XXXXXX (0..63)
+                                 3 << 4,    // 01XXXXXX (64..127)
+                                 3 << 4,    // 10XXXXXX (128..191)
+                                 3 << 4, }; // 11XXXXXX (192..255)
+
+  if (RGB222::lowBitOnly)
+    return (CONVR8[rgb.R >> 6]) | (CONVG8[rgb.G >> 6]) | (CONVB8[rgb.B >> 6]);
+  else
+    return (CONVR64[rgb.R >> 6]) | (CONVG64[rgb.G >> 6]) | (CONVB64[rgb.B >> 6]);
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Sprite implementation
@@ -113,6 +157,8 @@ Sprite::Sprite()
   savedBackgroundWidth    = 0;
   savedBackgroundHeight   = 0;
   savedBackground         = nullptr; // allocated or reallocated when bitmaps are added
+  savedX                  = 0;
+  savedY                  = 0;
   collisionDetectorObject = nullptr;
   visible                 = true;
   isStatic                = false;
@@ -226,13 +272,13 @@ void Bitmap::allocate()
     case PixelFormat::Native:
       break;
     case PixelFormat::Mask:
-      data = (uint8_t*) malloc((width + 7) * height / 8);
+      data = (uint8_t*) heap_caps_malloc((width + 7) / 8 * height, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
       break;
     case PixelFormat::RGBA2222:
-      data = (uint8_t*) malloc(width * height);
+      data = (uint8_t*) heap_caps_malloc(width * height, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
       break;
     case PixelFormat::RGBA8888:
-      data = (uint8_t*) malloc(width * height * 4);
+      data = (uint8_t*) heap_caps_malloc(width * height * 4, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
       break;
   }
 }
@@ -246,7 +292,7 @@ void Bitmap::copyFrom(void const * srcData)
     case PixelFormat::Native:
       break;
     case PixelFormat::Mask:
-      memcpy(data, srcData, (width + 7) * height / 8);
+      memcpy(data, srcData, (width + 7) / 8 * height);
       break;
     case PixelFormat::RGBA2222:
       memcpy(data, srcData, width * height);
@@ -311,7 +357,7 @@ int Bitmap::getAlpha(int x, int y)
 Bitmap::~Bitmap()
 {
   if (dataAllocated)
-    free((void*)data);
+    heap_caps_free((void*)data);
 }
 
 
@@ -391,7 +437,7 @@ void BitmappedDisplayController::addPrimitive(Primitive & primitive)
 
 // some primitives require additional buffers (like drawPath and fillPath).
 // this function copies primitive data into an allocated buffer (using LightMemoryPool allocator) that
-// will be freed inside primitive drawing code.
+// will be released inside primitive drawing code.
 void BitmappedDisplayController::primitiveReplaceDynamicBuffers(Primitive & primitive)
 {
   switch (primitive.cmd) {
@@ -496,7 +542,8 @@ void BitmappedDisplayController::setSprites(Sprite * sprites, int count, int spr
       int reqBackBufferSize = 0;
       for (int i = 0; i < sprite->framesCount; ++i)
         reqBackBufferSize = tmax(reqBackBufferSize, sprite->frames[i]->width * getBitmapSavePixelSize() * sprite->frames[i]->height);
-      sprite->savedBackground = (uint8_t*) realloc(sprite->savedBackground, reqBackBufferSize);
+      if (reqBackBufferSize > 0)
+        sprite->savedBackground = (uint8_t*) realloc(sprite->savedBackground, reqBackBufferSize);
     }
   }
 }

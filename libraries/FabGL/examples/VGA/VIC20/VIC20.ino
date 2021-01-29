@@ -22,8 +22,8 @@
 
 /*
  * Optional SD Card connections:
- *   MISO => GPIO 16
- *   MOSI => GPIO 17
+ *   MISO => GPIO 16  (2 for PICO-D4)
+ *   MOSI => GPIO 17  (12 for PICO-D4)
  *   CLK  => GPIO 14
  *   CS   => GPIO 13
  *
@@ -41,7 +41,7 @@
 #include "fabgl.h"
 #include "fabutils.h"
 
-#include "machine.h"
+#include "src/machine.h"
 
 
 
@@ -72,7 +72,7 @@
 
 // non-free list
 char const *  LIST_URL    = "http://cloud.cbm8bit.com/adamcost/vic20list.txt";
-constexpr int MAXLISTSIZE = 16384;
+constexpr int MAXLISTSIZE = 8192;
 
 
 // Flash and SDCard configuration
@@ -86,10 +86,13 @@ char const * basepath = nullptr;
 
 
 // name of embedded programs directory
-char const * EMBDIR = "Free";
+char const * EMBDIR  = "Free";
 
+// name of downloaded programs directory
+char const * DOWNDIR = "List";
 
-#define DEBUG 0
+// name of user directory (where LOAD and SAVE works)
+char const * USERDIR = "Free";    // same of EMBDIR
 
 
 struct EmbeddedProgDef {
@@ -105,7 +108,6 @@ struct EmbeddedProgDef {
 //   ...modify like files in progs/embedded, and put filename and binary data in following list.
 const EmbeddedProgDef embeddedProgs[] = {
   { arukanoido_filename, arukanoido_prg, sizeof(arukanoido_prg) },
-  { kweepoutmc_filename, kweepoutmc_prg, sizeof(kweepoutmc_prg) },
   { nibbler_filename, nibbler_prg, sizeof(nibbler_prg) },
   { pooyan_filename, pooyan_prg, sizeof(pooyan_prg) },
   { popeye_filename, popeye_prg, sizeof(popeye_prg) },
@@ -117,6 +119,7 @@ const EmbeddedProgDef embeddedProgs[] = {
   // you need more program flash in order to use remaining games. To do this select
   // the board name "ESP32 Dev Module" and in menu "Tools->Partition Scheme", select "No OTA 2MB/2MB" or "Huge App".
   /*
+  { kweepoutmc_filename, kweepoutmc_prg, sizeof(kweepoutmc_prg) },
   { dragonwing_filename, dragonwing_prg, sizeof(dragonwing_prg) },
   { tank_battalion_filename, tank_battalion_prg, sizeof(tank_battalion_prg) },
   { blue_star_filename, blue_star_prg, sizeof(blue_star_prg) },
@@ -129,7 +132,7 @@ const EmbeddedProgDef embeddedProgs[] = {
 };
 
 
-#if DEBUG
+#if DEBUGMACHINE
 static volatile int  scycles = 0;
 static volatile bool restart = false;
 void vTimerCallback1SecExpired(xTimerHandle pxTimer)
@@ -155,7 +158,7 @@ void copyEmbeddedPrograms()
   auto dir = FileBrowser();
   dir.setDirectory(basepath);
   if (!dir.exists(EMBDIR)) {
-    // there isn't a EMBDIR folder, let's create and populate it
+    // there isn't a EMBDIR folder, create and populate it
     dir.makeDirectory(EMBDIR);
     dir.changeDirectory(EMBDIR);
     for (int i = 0; i < sizeof(embeddedProgs) / sizeof(EmbeddedProgDef); ++i) {
@@ -172,21 +175,72 @@ void copyEmbeddedPrograms()
 }
 
 
+enum { STYLE_NONE, STYLE_LABEL, STYLE_LABELGROUP, STYLE_BUTTON, STYLE_BUTTONHELP, STYLE_COMBOBOX, STYLE_CHECKBOX, STYLE_FILEBROWSER};
+
+
+#define BACKGROUND_COLOR RGB888(0, 0, 0)
+
+
+struct DialogStyle : uiStyle {
+  void setStyle(uiObject * object, uint32_t styleClassID) {
+    switch (styleClassID) {
+      case STYLE_LABEL:
+        ((uiLabel*)object)->labelStyle().textFont                           = &fabgl::FONT_std_12;
+        ((uiLabel*)object)->labelStyle().backgroundColor                    = BACKGROUND_COLOR;
+        ((uiLabel*)object)->labelStyle().textColor                          = RGB888(255, 255, 255);
+        break;
+      case STYLE_LABELGROUP:
+        ((uiLabel*)object)->labelStyle().textFont                           = &fabgl::FONT_std_12;
+        ((uiLabel*)object)->labelStyle().backgroundColor                    = BACKGROUND_COLOR;
+        ((uiLabel*)object)->labelStyle().textColor                          = RGB888(255, 128, 0);
+        break;
+      case STYLE_BUTTON:
+        ((uiButton*)object)->windowStyle().borderColor                      = RGB888(255, 255, 255);
+        ((uiButton*)object)->buttonStyle().backgroundColor                  = RGB888(128, 128, 128);
+        break;
+      case STYLE_BUTTONHELP:
+        ((uiButton*)object)->windowStyle().borderColor                      = RGB888(255, 255, 255);
+        ((uiButton*)object)->buttonStyle().backgroundColor                  = RGB888(255, 255, 128);
+        break;
+      case STYLE_COMBOBOX:
+        ((uiFrame*)object)->windowStyle().borderColor                       = RGB888(255, 255, 255);
+        ((uiFrame*)object)->windowStyle().borderSize                        = 1;
+        break;
+      case STYLE_CHECKBOX:
+        ((uiFrame*)object)->windowStyle().borderColor                       = RGB888(255, 255, 255);
+        break;
+      case STYLE_FILEBROWSER:
+        ((uiListBox*)object)->windowStyle().borderColor                     = RGB888(128, 128, 128);
+        ((uiListBox*)object)->windowStyle().focusedBorderColor              = RGB888(255, 255, 255);
+        ((uiListBox*)object)->listBoxStyle().backgroundColor                = RGB888(0, 255, 255);
+        ((uiListBox*)object)->listBoxStyle().focusedBackgroundColor         = RGB888(0, 255, 255);
+        ((uiListBox*)object)->listBoxStyle().selectedBackgroundColor        = RGB888(128, 64, 0);
+        ((uiListBox*)object)->listBoxStyle().focusedSelectedBackgroundColor = RGB888(255, 128, 0);
+        ((uiListBox*)object)->listBoxStyle().textColor                      = RGB888(0, 0, 128);
+        ((uiListBox*)object)->listBoxStyle().selectedTextColor              = RGB888(0, 0, 255);
+        ((uiListBox*)object)->listBoxStyle().textFont                       = &fabgl::FONT_SLANT_8x14;
+        break;
+    }
+  }
+} dialogStyle;
+
+
+
 struct DownloadProgressFrame : public uiFrame {
 
-  uiLabel * label1;
-  uiLabel * label2;
+  uiLabel *  label1;
+  uiLabel *  label2;
   uiButton * button;
 
   DownloadProgressFrame(uiFrame * parent)
-    : uiFrame(parent, "Download", Point(50, 100), Size(150, 110), false) {
+    : uiFrame(parent, "Download", UIWINDOW_PARENTCENTER, Size(150, 110), false) {
     frameProps().resizeable        = false;
     frameProps().moveable          = false;
     frameProps().hasCloseButton    = false;
     frameProps().hasMaximizeButton = false;
     frameProps().hasMinimizeButton = false;
 
-    label1 = new uiLabel(this, "", Point(10, 25));
+    label1 = new uiLabel(this, "Connecting...", Point(10, 25));
     label2 = new uiLabel(this, "", Point(10, 45));
     button = new uiButton(this, "Abort", Point(50, 75), Size(50, 20));
     button->onClick = [&]() { exitModal(1); };
@@ -199,32 +253,44 @@ struct DownloadProgressFrame : public uiFrame {
 struct HelpFame : public uiFrame {
 
   HelpFame(uiFrame * parent)
-    : uiFrame(parent, "Help", Point(50, 95), Size(160, 210), false) {
+    : uiFrame(parent, "Help", UIWINDOW_PARENTCENTER, Size(218, 335), false) {
 
-    auto button = new uiButton(this, "OK", Point(57, 180), Size(50, 20));
+    auto button = new uiButton(this, "OK", Point(84, 305), Size(50, 20));
     button->onClick = [&]() { exitModal(0); };
 
     onPaint = [&]() {
       auto cv = canvas();
-      cv->selectFont(&fabgl::FONT_std_12);
-      int x = 10;
+      cv->selectFont(&fabgl::FONT_6x8);
+      int x = 4;
       int y = 10;
       cv->setPenColor(Color::Green);
       cv->drawText(x, y += 14, "Keyboard Shortcuts:");
       cv->setPenColor(Color::Black);
-      cv->drawText(x, y += 14, "   F12: Switch Emulator and Menu");
-      cv->drawText(x, y += 14, "   DEL: Delete File or Folder");
-      cv->drawText(x, y += 14, "   ALT + A-S-W-Z: Move Screen");
+      cv->setBrushColor(Color::White);
+      cv->drawText(x, y += 14, "  F12          > Run or Config");
+      cv->drawText(x, y += 14, "  DEL          > Delete File/Folder");
+      cv->drawText(x, y += 14, "  ALT + ASWZ   > Move Screen");
       cv->setPenColor(Color::Blue);
       cv->drawText(x, y += 18, "\"None\" Joystick Mode:");
       cv->setPenColor(Color::Black);
-      cv->drawText(x, y += 14, "   ALT + MENU: Joystick Fire");
-      cv->drawText(x, y += 14, "   ALT + CURSOR: Joystick Move");
+      cv->drawText(x, y += 14, "  ALT + MENU   > Joystick Fire");
+      cv->drawText(x, y += 14, "  ALT + CURSOR > Joystick Move");
       cv->setPenColor(Color::Red);
       cv->drawText(x, y += 18, "\"Cursor Keys\" Joystick Mode:");
       cv->setPenColor(Color::Black);
-      cv->drawText(x, y += 14, "   MENU: Joystick Fire");
-      cv->drawText(x, y += 14, "   CURSOR: Joystick Move");
+      cv->drawText(x, y += 14, "  MENU         > Joystick Fire");
+      cv->drawText(x, y += 14, "  CURSOR       > Joystick Move");
+      cv->setPenColor(Color::Magenta);
+      cv->drawText(x, y += 18, "Emulated keyboard:");
+      cv->setPenColor(Color::Black);
+      cv->drawText(x, y += 14, "  HOME         > CLR/HOME");
+      cv->drawText(x, y += 14, "  ESC          > RUN/STOP");
+      cv->drawText(x, y += 14, "  Left Win Key > CBM");
+      cv->drawText(x, y += 14, "  DELETE       > RESTORE");
+      cv->drawText(x, y += 14, "  BACKSPACE    > INST/DEL");
+      cv->drawText(x, y += 14, "  Caret ^      > UP ARROW");
+      cv->drawText(x, y += 14, "  Underscore _ > LEFT ARROW");
+      cv->drawText(x, y += 14, "  Tilde ~      > PI");
     };
   }
 
@@ -236,7 +302,7 @@ class Menu : public uiApp {
 
   uiFileBrowser * fileBrowser;
   uiComboBox *    RAMExpComboBox;
-  uiLabel *       WiFiStatusLbl;
+  uiComboBox *    kbdComboBox;
   uiLabel *       freeSpaceLbl;
 
   // Main machine
@@ -246,47 +312,72 @@ class Menu : public uiApp {
   void init() {
     machine = new Machine(&DisplayController);
 
-    rootWindow()->frameStyle().backgroundColor = RGB888(255, 255, 255);
+    setStyle(&dialogStyle);
+
+    rootWindow()->frameStyle().backgroundColor = BACKGROUND_COLOR;
 
     // some static text
     rootWindow()->onPaint = [&]() {
       auto cv = canvas();
+      cv->selectFont(&fabgl::FONT_SLANT_8x14);
+      cv->setPenColor(RGB888(0, 128, 255));
+      cv->drawText(136, 345, "VIC20 Emulator");
+
       cv->selectFont(&fabgl::FONT_std_12);
-      cv->setPenColor(RGB888(255, 64, 64));
-      cv->drawText(155, 345, "V I C 2 0  Emulator");
-      cv->setPenColor(RGB888(128, 64, 64));
-      cv->drawText(167, 357, "www.fabgl.com");
+      cv->setPenColor(RGB888(255, 128, 0));
+      cv->drawText(160, 358, "www.fabgl.com");
       cv->drawText(130, 371, "2019/20 by Fabrizio Di Vittorio");
     };
 
     // programs list
-    fileBrowser = new uiFileBrowser(rootWindow(), Point(5, 10), Size(140, 290));
-    fileBrowser->listBoxStyle().backgroundColor = RGB888(0, 255, 0);
-
-    fileBrowser->listBoxStyle().selectedBackgroundColor = RGB888(255, 0, 0);
-    fileBrowser->listBoxStyle().selectedBackgroundColor = RGB888(128, 0, 0);
-    fileBrowser->listBoxStyle().focusedSelectedBackgroundColor = RGB888(255, 0, 0);
-    fileBrowser->windowStyle().focusedBorderColor = RGB888(255, 0, 0);
-
-    fileBrowser->listBoxStyle().focusedBackgroundColor = RGB888(0, 255, 0);
-    fileBrowser->setDirectory(basepath);
+    fileBrowser = new uiFileBrowser(rootWindow(), Point(5, 10), Size(140, 290), true, STYLE_FILEBROWSER);
+    fileBrowser->setDirectory(basepath);  // set absolute path
+    fileBrowser->changeDirectory( fileBrowser->content().exists(DOWNDIR) ? DOWNDIR : EMBDIR ); // set relative path
     fileBrowser->onChange = [&]() {
       setSelectedProgramConf();
     };
 
     // handles following keys:
-    //   RETURN -> load selected program and return to vic
-    fileBrowser->onKeyUp = [&](uiKeyEventInfo key) {
-      if (key.VK == VirtualKey::VK_RETURN) {
-        if (!fileBrowser->isDirectory() && loadSelectedProgram())
+    //  F1         ->  show help
+    //  ESC or F12 ->  run the emulator
+    rootWindow()->onKeyUp = [&](uiKeyEventInfo key) {
+      switch (key.VK) {
+        // F1
+        case VirtualKey::VK_F1:
+          showHelp();
+          break;
+        // ESC or F12
+        case VirtualKey::VK_ESCAPE:
+        case VirtualKey::VK_F12:
           runVIC20();
-      } else if (key.VK == VirtualKey::VK_DELETE) {
-        // delete file or directory
-        if (messageBox("Delete Item", "Are you sure?", "Yes", "Cancel") == uiMessageBoxResult::Button1) {
-          fileBrowser->content().remove( fileBrowser->filename() );
-          fileBrowser->update();
-          updateFreeSpaceLabel();
-        }
+          break;
+        // just to avoid compiler warning
+        default:
+          break;
+      }
+    };
+
+    // handles following keys in filebrowser:
+    //   RETURN -> load selected program and return to vic
+    //   DELETE -> remove selected dir or file
+    fileBrowser->onKeyUp = [&](uiKeyEventInfo key) {
+      switch (key.VK) {
+        // RETURN
+        case VirtualKey::VK_RETURN:
+          if (!fileBrowser->isDirectory() && loadSelectedProgram())
+            runVIC20();
+          break;
+        // DELETE
+        case VirtualKey::VK_DELETE:
+          if (messageBox("Delete Item", "Are you sure?", "Yes", "Cancel") == uiMessageBoxResult::Button1) {
+            fileBrowser->content().remove( fileBrowser->filename() );
+            fileBrowser->update();
+            updateFreeSpaceLabel();
+          }
+          break;
+        // just to avoid compiler warning
+        default:
+          break;
       }
     };
 
@@ -296,30 +387,30 @@ class Menu : public uiApp {
         runVIC20();
     };
 
-    int x = 168;
+    int x = 158;
 
-    // "Back to VIC" button - run the VIC20
-    auto VIC20Button = new uiButton(rootWindow(), "Back to VIC", Point(x, 10), Size(65, 19));
+    // "Run" button - run the VIC20
+    auto VIC20Button = new uiButton(rootWindow(), "Run [F12]", Point(x, 10), Size(75, 19), uiButtonKind::Button, true, STYLE_BUTTON);
     VIC20Button->onClick = [&]() {
       runVIC20();
     };
 
     // "Load" button
-    auto loadButton = new uiButton(rootWindow(), "Load", Point(x, 35), Size(65, 19));
+    auto loadButton = new uiButton(rootWindow(), "Load", Point(x, 35), Size(75, 19), uiButtonKind::Button, true, STYLE_BUTTON);
     loadButton->onClick = [&]() {
       if (loadSelectedProgram())
         runVIC20();
     };
 
     // "reset" button
-    auto resetButton = new uiButton(rootWindow(), "Soft Reset", Point(x, 60), Size(65, 19));
+    auto resetButton = new uiButton(rootWindow(), "Soft Reset", Point(x, 60), Size(75, 19), uiButtonKind::Button, true, STYLE_BUTTON);
     resetButton->onClick = [&]() {
       machine->reset();
       runVIC20();
     };
 
     // "Hard Reset" button
-    auto hresetButton = new uiButton(rootWindow(), "Hard Reset", Point(x, 85), Size(65, 19));
+    auto hresetButton = new uiButton(rootWindow(), "Hard Reset", Point(x, 85), Size(75, 19), uiButtonKind::Button, true, STYLE_BUTTON);
     hresetButton->onClick = [&]() {
       machine->removeCRT();
       machine->reset();
@@ -327,18 +418,26 @@ class Menu : public uiApp {
     };
 
     // "help" button
-    auto helpButton = new uiButton(rootWindow(), "Help", Point(x, 282), Size(65, 19));
+    auto helpButton = new uiButton(rootWindow(), "HELP [F1]", Point(x, 110), Size(75, 19), uiButtonKind::Button, true, STYLE_BUTTONHELP);
     helpButton->onClick = [&]() {
-      auto hframe = new HelpFame(rootWindow());
-      showModalWindow(hframe);
-      destroyWindow(hframe);
+      showHelp();
     };
 
+    // select keyboard layout
+    int y = 145;
+    new uiLabel(rootWindow(), "Keyboard Layout:", Point(150, y), Size(0, 0), true, STYLE_LABELGROUP);
+    kbdComboBox = new uiComboBox(rootWindow(), Point(158, y + 20), Size(75, 20), 70, true, STYLE_COMBOBOX);
+    kbdComboBox->items().append(SupportedLayouts::names(), SupportedLayouts::count());
+    kbdComboBox->onChange = [&]() {
+      preferences.putInt("kbdLayout", kbdComboBox->selectedItem());
+      updateKbdLayout();
+    };
+    kbdComboBox->selectItem(updateKbdLayout());
+
     // RAM expansion options
-    int y = 120;
-    auto lbl = new uiLabel(rootWindow(), "RAM Expansion:", Point(150, y));
-    lbl->labelStyle().textColor = RGB888(64, 64, 255);
-    RAMExpComboBox = new uiComboBox(rootWindow(), Point(158, y + 20), Size(85, 19), 130);
+    y += 50;
+    new uiLabel(rootWindow(), "RAM Expansion:", Point(150, y), Size(0, 0), true, STYLE_LABELGROUP);
+    RAMExpComboBox = new uiComboBox(rootWindow(), Point(158, y + 20), Size(75, 19), 130, true, STYLE_COMBOBOX);
     char const * RAMOPTS[] = { "Unexpanded", "3K", "8K", "16K", "24K", "27K (24K+3K)", "32K", "35K (32K+3K)" };
     for (int i = 0; i < 8; ++i)
       RAMExpComboBox->items().append(RAMOPTS[i]);
@@ -349,14 +448,13 @@ class Menu : public uiApp {
 
     // joystick emulation options
     y += 50;
-    lbl = new uiLabel(rootWindow(), "Joystick:", Point(150, y));
-    lbl->labelStyle().textColor = RGB888(64, 64, 255);
-    new uiLabel(rootWindow(), "None", Point(180, y + 20));
-    auto radioJNone = new uiCheckBox(rootWindow(), Point(160, y + 20), Size(16, 16), uiCheckBoxKind::RadioButton);
-    new uiLabel(rootWindow(), "Cursor Keys", Point(180, y + 40));
-    auto radioJCurs = new uiCheckBox(rootWindow(), Point(160, y + 40), Size(16, 16), uiCheckBoxKind::RadioButton);
-    new uiLabel(rootWindow(), "Mouse", Point(180, y + 60));
-    auto radioJMous = new uiCheckBox(rootWindow(), Point(160, y + 60), Size(16, 16), uiCheckBoxKind::RadioButton);
+    new uiLabel(rootWindow(), "Joystick:", Point(150, y), Size(0, 0), true, STYLE_LABELGROUP);
+    new uiLabel(rootWindow(), "None", Point(180, y + 21), Size(0, 0), true, STYLE_LABEL);
+    auto radioJNone = new uiCheckBox(rootWindow(), Point(158, y + 20), Size(16, 16), uiCheckBoxKind::RadioButton, true, STYLE_CHECKBOX);
+    new uiLabel(rootWindow(), "Cursor Keys", Point(180, y + 41), Size(0, 0), true, STYLE_LABEL);
+    auto radioJCurs = new uiCheckBox(rootWindow(), Point(158, y + 40), Size(16, 16), uiCheckBoxKind::RadioButton, true, STYLE_CHECKBOX);
+    new uiLabel(rootWindow(), "Mouse", Point(180, y + 61), Size(0, 0), true, STYLE_LABEL);
+    auto radioJMous = new uiCheckBox(rootWindow(), Point(158, y + 60), Size(16, 16), uiCheckBoxKind::RadioButton, true, STYLE_CHECKBOX);
     radioJNone->setGroupIndex(1);
     radioJCurs->setGroupIndex(1);
     radioJMous->setGroupIndex(1);
@@ -367,44 +465,17 @@ class Menu : public uiApp {
     radioJCurs->onChange = [&]() { machine->setJoyEmu(JE_CursorKeys); };
     radioJMous->onChange = [&]() { machine->setJoyEmu(JE_Mouse); };
 
-    // setup wifi button
-    auto setupWifiBtn = new uiButton(rootWindow(), "Setup", Point(28, 330), Size(40, 19));
-    setupWifiBtn->onClick = [&]() {
-      char SSID[32] = "";
-      char psw[32]  = "";
-      if (inputBox("WiFi Connect", "WiFi Name", SSID, sizeof(SSID), "OK", "Cancel") == uiMessageBoxResult::Button1 &&
-          inputBox("WiFi Connect", "Password", psw, sizeof(psw), "OK", "Cancel") == uiMessageBoxResult::Button1) {
-        AutoSuspendInterrupts autoInt;
-        preferences.putString("SSID", SSID);
-        preferences.putString("WiFiPsw", psw);
-      }
-    };
-
-    // ON wifi button
-    auto onWiFiBtn = new uiButton(rootWindow(), "On", Point(72, 330), Size(40, 19));
-    onWiFiBtn->onClick = [&]() {
-      connectWiFi();
-    };
-
     // free space label
-    freeSpaceLbl = new uiLabel(rootWindow(), "", Point(5, 305));
+    freeSpaceLbl = new uiLabel(rootWindow(), "", Point(5, 304), Size(0, 0), true, STYLE_LABEL);
     updateFreeSpaceLabel();
 
-    // WiFi Status label
-    WiFiStatusLbl = new uiLabel(rootWindow(), "WiFi", Point(5, 332));
-    WiFiStatusLbl->labelStyle().textColor = RGB888(128, 128, 128);
-
     // "Download From" label
-    auto downloadFromLbl = new uiLabel(rootWindow(), "Download From:", Point(5, 354));
-    downloadFromLbl->labelStyle().textColor = RGB888(64, 64, 255);
-    downloadFromLbl->labelStyle().textFont = &fabgl::FONT_std_12;
+    new uiLabel(rootWindow(), "Download From:", Point(5, 326), Size(0, 0), true, STYLE_LABELGROUP);
 
     // Download List button (download programs listed and linked in LIST_URL)
-    auto downloadProgsBtn = new uiButton(rootWindow(), "List", Point(75, 352), Size(27, 19));
+    auto downloadProgsBtn = new uiButton(rootWindow(), "List", Point(13, 345), Size(27, 20), uiButtonKind::Button, true, STYLE_BUTTON);
     downloadProgsBtn->onClick = [&]() {
-      if (!WiFiConnected()) {
-        messageBox("Network Error", "Please activate WiFi", "OK", nullptr, nullptr, uiMessageBoxIcon::Error);
-      } else if (messageBox("Download Programs listed in \"LIST_URL\"", "Check your local laws for restrictions", "OK", "Cancel", nullptr, uiMessageBoxIcon::Warning) == uiMessageBoxResult::Button1) {
+      if (checkWiFi() && messageBox("Download Programs listed in \"LIST_URL\"", "Check your local laws for restrictions", "OK", "Cancel", nullptr, uiMessageBoxIcon::Warning) == uiMessageBoxResult::Button1) {
         auto pframe = new DownloadProgressFrame(rootWindow());
         auto modalStatus = initModalWindow(pframe);
         processModalWindowEvents(modalStatus, 100);
@@ -435,36 +506,34 @@ class Menu : public uiApp {
         fileBrowser->update();
         updateFreeSpaceLabel();
       }
+      WiFi.disconnect();
     };
 
     // Download from URL
-    auto downloadURLBtn = new uiButton(rootWindow(), "URL", Point(107, 352), Size(27, 19));
+    auto downloadURLBtn = new uiButton(rootWindow(), "URL", Point(48, 345), Size(27, 20), uiButtonKind::Button, true, STYLE_BUTTON);
     downloadURLBtn->onClick = [&]() {
-      char * URL = new char[128];
-      char * filename = new char[25];
-      strcpy(URL, "http://");
-      if (inputBox("Download From URL", "URL", URL, 127, "OK", "Cancel") == uiMessageBoxResult::Button1) {
-        char * lastslash = strrchr(URL, '/');
-        if (lastslash) {
-          strcpy(filename, lastslash + 1);
-          if (inputBox("Download From URL", "Filename", filename, 24, "OK", "Cancel") == uiMessageBoxResult::Button1) {
-            if (downloadURL(URL, filename)) {
-              messageBox("Success", "Download OK!", "OK", nullptr, nullptr);
-              fileBrowser->update();
-              updateFreeSpaceLabel();
-            } else
-              messageBox("Error", "Download Failed!", "OK", nullptr, nullptr, uiMessageBoxIcon::Error);
+      if (checkWiFi()) {
+        char * URL = new char[128];
+        char * filename = new char[25];
+        strcpy(URL, "http://");
+        if (inputBox("Download From URL", "URL", URL, 127, "OK", "Cancel") == uiMessageBoxResult::Button1) {
+          char * lastslash = strrchr(URL, '/');
+          if (lastslash) {
+            strcpy(filename, lastslash + 1);
+            if (inputBox("Download From URL", "Filename", filename, 24, "OK", "Cancel") == uiMessageBoxResult::Button1) {
+              if (downloadURL(URL, filename)) {
+                messageBox("Success", "Download OK!", "OK", nullptr, nullptr);
+                fileBrowser->update();
+                updateFreeSpaceLabel();
+              } else
+                messageBox("Error", "Download Failed!", "OK", nullptr, nullptr, uiMessageBoxIcon::Error);
+            }
           }
         }
+        delete [] filename;
+        delete [] URL;
+        WiFi.disconnect();
       }
-      delete [] filename;
-      delete [] URL;
-    };
-
-    // process ESC and F12: boths run the emulator
-    rootWindow()->onKeyUp = [&](uiKeyEventInfo key) {
-      if (key.VK == VirtualKey::VK_ESCAPE || key.VK == VirtualKey::VK_F12)
-        runVIC20();
     };
 
     // focus on programs list
@@ -480,6 +549,12 @@ class Menu : public uiApp {
     keyboard->emptyVirtualKeyQueue();
     machine->VIC().enableAudio(true);
 
+    // setup user directory
+    machine->fileBrowser()->setDirectory(basepath);
+    if (!machine->fileBrowser()->exists(USERDIR))
+      machine->fileBrowser()->makeDirectory(USERDIR);
+    machine->fileBrowser()->changeDirectory(USERDIR);
+
     auto cv = canvas();
     cv->setBrushColor(0, 0, 0);
     cv->clear();
@@ -488,7 +563,7 @@ class Menu : public uiApp {
     bool run = true;
     while (run) {
 
-      #if DEBUG
+      #if DEBUGMACHINE
         int cycles = machine->run();
         if (restart) {
           scycles = cycles;
@@ -609,39 +684,38 @@ class Menu : public uiApp {
     return backToVIC;
   }
 
-  // return true if WiFi is connected
-  bool WiFiConnected() {
-    AutoSuspendInterrupts autoInt;
-    bool r = WiFi.status() == WL_CONNECTED;
-    return r;
-  }
-
-  // connect to wifi using SSID and PSW from Preferences
-  void connectWiFi()
-  {
-    fabgl::suspendInterrupts();
-    char SSID[32], psw[32];
-    if (preferences.getString("SSID", SSID, sizeof(SSID)) && preferences.getString("WiFiPsw", psw, sizeof(psw))) {
-      WiFi.begin(SSID, psw);
-      for (int i = 0; i < 6 && WiFi.status() != WL_CONNECTED; ++i) {
-        WiFi.reconnect();
-        delay(1000);
-      }
+  // true if WiFi is has been connected
+  bool checkWiFi() {
+    if (WiFi.status() == WL_CONNECTED)
+      return true;
+    char SSID[32] = "";
+    char psw[32]  = "";
+    if (!preferences.getString("SSID", SSID, sizeof(SSID)) || !preferences.getString("WiFiPsw", psw, sizeof(psw))) {
+      // ask user for SSID and password
+      if (inputBox("WiFi Connect", "WiFi Name", SSID, sizeof(SSID), "OK", "Cancel") == uiMessageBoxResult::Button1 &&
+          inputBox("WiFi Connect", "Password", psw, sizeof(psw), "OK", "Cancel") == uiMessageBoxResult::Button1) {
+        preferences.putString("SSID", SSID);
+        preferences.putString("WiFiPsw", psw);
+      } else
+        return false;
     }
-    WiFiStatusLbl->labelStyle().textColor = (WiFi.status() == WL_CONNECTED ? RGB888(0, 255, 0) : RGB888(128, 128, 128));
-    WiFiStatusLbl->update();
-    fabgl::resumeInterrupts();
-    if (WiFi.status() != WL_CONNECTED)
+    WiFi.begin(SSID, psw);
+    for (int i = 0; i < 6 && WiFi.status() != WL_CONNECTED; ++i) {
+      WiFi.reconnect();
+      delay(1000);
+    }
+    bool connected = (WiFi.status() == WL_CONNECTED);
+    if (!connected) {
       messageBox("Network Error", "Failed to connect WiFi. Try again!", "OK", nullptr, nullptr, uiMessageBoxIcon::Error);
+      preferences.remove("WiFiPsw");
+    }
+    return connected;
   }
 
   // creates List folder and makes it current
   void prepareForDownload()
   {
-    static char const * DOWNDIR = "List";
     FileBrowser & dir = fileBrowser->content();
-
-    AutoSuspendInterrupts autoInt;
     dir.setDirectory(basepath);
     dir.makeDirectory(DOWNDIR);
     dir.changeDirectory(DOWNDIR);
@@ -651,7 +725,6 @@ class Menu : public uiApp {
   // ret nullptr on fail
   char * downloadList()
   {
-    AutoSuspendInterrupts autoInt;
     auto list = (char*) malloc(MAXLISTSIZE);
     auto dest = list;
     HTTPClient http;
@@ -709,10 +782,8 @@ class Menu : public uiApp {
   // download specified filename from URL
   bool downloadURL(char const * URL, char const * filename)
   {
-    AutoSuspendInterrupts autoInt;
     FileBrowser & dir = fileBrowser->content();
     if (dir.exists(filename)) {
-      fabgl::resumeInterrupts();
       return true;
     }
     bool success = false;
@@ -757,6 +828,17 @@ class Menu : public uiApp {
     freeSpaceLbl->update();
   }
 
+  int updateKbdLayout() {
+    auto curLayoutIdx = preferences.getInt("kbdLayout", 3); // default US
+    PS2Controller.keyboard()->setLayout(SupportedLayouts::layouts()[curLayoutIdx]);
+    return curLayoutIdx;
+  }
+
+  void showHelp() {
+    auto hframe = new HelpFame(rootWindow());
+    showModalWindow(hframe);
+    destroyWindow(hframe);
+  }
 
 
 };
@@ -776,18 +858,21 @@ void setup()
   #endif
 
   preferences.begin("VIC20", false);
+  //preferences.clear();
 
   PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1, KbdMode::CreateVirtualKeysQueue);
-  PS2Controller.keyboard()->setLayout(&fabgl::UKLayout);
 
   DisplayController.begin();
   DisplayController.setResolution(VGA_256x384_60Hz);
+
+  // this improves user interface speed - check possible drawbacks before enabling definitively
+  //DisplayController.enableBackgroundPrimitiveExecution(false);
 
   // adjust this to center screen in your monitor
   //DisplayController.moveScreen(20, -2);
 
   Canvas cv(&DisplayController);
-  cv.selectFont(&fabgl::FONT_8x8);
+  cv.selectFont(&fabgl::FONT_6x8);
 
   cv.clear();
   cv.drawText(25, 10, "Initializing...");
@@ -806,7 +891,7 @@ void setup()
 
 void loop()
 {
-  #if DEBUG
+  #if DEBUGMACHINE
   TimerHandle_t xtimer = xTimerCreate("", pdMS_TO_TICKS(5000), pdTRUE, (void*)0, vTimerCallback1SecExpired);
   xTimerStart(xtimer, 0);
   #endif
@@ -814,4 +899,3 @@ void loop()
   auto menu = new Menu;
   menu->run(&DisplayController);
 }
-

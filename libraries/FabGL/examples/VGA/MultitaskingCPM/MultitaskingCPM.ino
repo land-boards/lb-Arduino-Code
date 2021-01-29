@@ -22,8 +22,8 @@
 
 /*
  * Optional SD Card connections:
- *   MISO => GPIO 16
- *   MOSI => GPIO 17
+ *   MISO => GPIO 16  (2 for PICO-D4)
+ *   MOSI => GPIO 17  (12 for PICO-D4)
  *   CLK  => GPIO 14
  *   CS   => GPIO 13
  *
@@ -50,6 +50,7 @@
 
 // globals
 
+//fabgl::VGA16Controller   DisplayController;
 fabgl::VGATextController DisplayController;
 fabgl::PS2Controller     PS2Controller;
 
@@ -76,18 +77,20 @@ void setup()
   // Reduces some defaults to save RAM...
   fabgl::VGAController::queueSize                    = 128;
   fabgl::Terminal::inputQueueSize                    = 32;
-  fabgl::Terminal::inputConsumerTaskStackSize        = 1024;
+  fabgl::Terminal::inputConsumerTaskStackSize        = 1300;
   fabgl::Terminal::keyboardReaderTaskStackSize       = 800;
   fabgl::Keyboard::scancodeToVirtualKeyTaskStackSize = 1500;
 
-  // setup Keyboard (default configuration)
-  PS2Controller.begin(PS2Preset::KeyboardPort0);
+  // because mouse is optional, don't re-try if it is not found (to speed-up boot)
+  fabgl::Mouse::quickCheckHardware();
+
+  // keyboard configured on port 0, and optionally mouse on port 1
+  PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1);
 
   // setup VGA (default configuration with 64 colors)
 
   DisplayController.begin();
-  DisplayController.setResolution(VGA_640x200_70Hz);
-  //DisplayController.setResolution(VGA_640x480_60Hz, 640, 200);
+  DisplayController.setResolution(VGA_640x480_60Hz);      // good when using VGA16Controller
 
   auto term = new fabgl::Terminal;
   term->begin(&DisplayController);
@@ -125,7 +128,6 @@ void setup()
         fb.makeDirectory(programs[i].path);
       fb.changeDirectory(programs[i].path);
       // copy file
-      AutoSuspendInterrupts autoInt;
       FILE * f = fb.openFile(programs[i].filename, "wb");
       if (f) {
         fwrite(programs[i].data, 1, programs[i].size, f);

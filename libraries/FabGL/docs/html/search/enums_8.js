@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ssd1306orientation',['SSD1306Orientation',['../group___enumerations.html#gac52359a56bef8cb992b0ecd0e50d543c',1,'fabgl']]]
+  ['ssd1306orientation',['SSD1306Orientation',['../group___enumerations_ga56be86abe812065345408e6741aa1e37.html#ga56be86abe812065345408e6741aa1e37',1,'fabgl']]]
 ];

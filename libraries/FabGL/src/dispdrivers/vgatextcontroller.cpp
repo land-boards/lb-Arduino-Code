@@ -14,10 +14,8 @@
 #include "devdrivers/swgenerator.h"
 
 
-#ifdef VGATextController_PERFORMANCE_CHECK
-  #include "Arduino.h"
-  volatile uint64_t s_cycles = 0;
-#endif
+
+#pragma GCC optimize ("O2")
 
 
 namespace fabgl {
@@ -31,6 +29,12 @@ uint32_t *          VGATextController::s_fgbgPattern = nullptr;
 int                 VGATextController::s_textRow;
 bool                VGATextController::s_upperRow;
 lldesc_t volatile * VGATextController::s_frameResetDesc;
+
+#if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
+  volatile uint64_t s_vgatxtcycles = 0;
+#endif
+
+
 
 
 
@@ -81,8 +85,8 @@ void VGATextController::init(gpio_num_t VSyncGPIO)
   m_GPIOStream.begin();
 
   // load font into RAM
-  int charDataSize = 256 * FONT_8x14.height * (FONT_8x14.width + 7) / 8;
-  m_charData = (uint8_t*) heap_caps_malloc(charDataSize, MALLOC_CAP_8BIT);
+  int charDataSize = 256 * FONT_8x14.height * ((FONT_8x14.width + 7) / 8);
+  m_charData = (uint8_t*) heap_caps_malloc(charDataSize, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
   memcpy(m_charData, FONT_8x14.data, charDataSize);
 }
 
@@ -142,28 +146,31 @@ void VGATextController::setCursorBackground(Color value)
 
 void VGATextController::setupGPIO(gpio_num_t gpio, int bit, gpio_mode_t mode)
 {
-  PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[gpio], PIN_FUNC_GPIO);
-  gpio_set_direction(gpio, mode);
+  configureGPIO(gpio, mode);
   gpio_matrix_out(gpio, I2S1O_DATA_OUT0_IDX + bit, false, false);
 }
 
 
-void VGATextController::setResolution(char const * modeline)
+void VGATextController::setResolution(char const * modeline, int viewPortWidth, int viewPortHeight, bool doubleBuffered)
 {
   VGATimings timings;
-  if (VGAController::convertModelineToTimings(VGATextController_MODELINE, &timings))
+  if (VGABaseController::convertModelineToTimings(VGATextController_MODELINE, &timings))
     setResolution(timings);
 }
 
 
 void VGATextController::setResolution(VGATimings const& timings)
 {
+  // setResolution() already called? If so, stop and free buffers
   if (m_DMABuffers) {
     m_GPIOStream.stop();
     freeBuffers();
   }
 
   m_timings = timings;
+
+  // inform base class about screen size
+  setScreenSize(m_timings.HVisibleArea, m_timings.VVisibleArea);
 
   m_HVSync = packHVSync(false, false);
 
@@ -248,7 +255,7 @@ void VGATextController::setResolution(VGATimings const& timings)
   s_blankPatternDWord = m_HVSync | (m_HVSync << 8) | (m_HVSync << 16) | (m_HVSync << 24);
 
   if (s_fgbgPattern == nullptr) {
-    s_fgbgPattern = (uint32_t*) heap_caps_malloc(16384, MALLOC_CAP_8BIT);
+    s_fgbgPattern = (uint32_t*) heap_caps_malloc(16384, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
     for (int i = 0; i < 16; ++i)
       for (int fg = 0; fg < 16; ++fg)
         for (int bg = 0; bg < 16; ++bg) {
@@ -264,7 +271,7 @@ void VGATextController::setResolution(VGATimings const& timings)
 
   // ESP_INTR_FLAG_LEVEL1: should be less than PS2Controller interrupt level, necessary when running on the same core
   CoreUsage::setBusiestCore(FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE);
-  esp_intr_alloc_pinnedToCore(ETS_I2S1_INTR_SOURCE, ESP_INTR_FLAG_LEVEL1 | ESP_INTR_FLAG_IRAM, I2SInterrupt, this, &m_isr_handle, FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE);
+  esp_intr_alloc_pinnedToCore(ETS_I2S1_INTR_SOURCE, ESP_INTR_FLAG_LEVEL1 | ESP_INTR_FLAG_IRAM, ISRHandler, this, &m_isr_handle, FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE);
 
   m_GPIOStream.play(m_timings.frequency, m_DMABuffers);
 
@@ -322,10 +329,10 @@ void VGATextController::fillDMABuffers()
 }
 
 
-void IRAM_ATTR VGATextController::I2SInterrupt(void * arg)
+void IRAM_ATTR VGATextController::ISRHandler(void * arg)
 {
-  #ifdef VGATextController_PERFORMANCE_CHECK
-  auto s1 = ESP.getCycleCount();
+  #if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
+  auto s1 = getCycleCount();
   #endif
 
   VGATextController * ctrl = (VGATextController *) arg;
@@ -348,8 +355,8 @@ void IRAM_ATTR VGATextController::I2SInterrupt(void * arg)
 
       if (ctrl->m_map == nullptr) {
         I2S1.int_clr.val = I2S1.int_st.val;
-        #ifdef VGATextController_PERFORMANCE_CHECK
-        s_cycles += ESP.getCycleCount() - s1;
+        #if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
+        s_vgatxtcycles += getCycleCount() - s1;
         #endif
         return;
       }
@@ -357,8 +364,8 @@ void IRAM_ATTR VGATextController::I2SInterrupt(void * arg)
     } else if (s_scanLine == 0) {
       // out of sync, wait for next frame
       I2S1.int_clr.val = I2S1.int_st.val;
-      #ifdef VGATextController_PERFORMANCE_CHECK
-      s_cycles += ESP.getCycleCount() - s1;
+      #if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
+      s_vgatxtcycles += getCycleCount() - s1;
       #endif
       return;
     }
@@ -466,8 +473,8 @@ void IRAM_ATTR VGATextController::I2SInterrupt(void * arg)
 
   }
 
-  #ifdef VGATextController_PERFORMANCE_CHECK
-  s_cycles += ESP.getCycleCount() - s1;
+  #if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
+  s_vgatxtcycles += getCycleCount() - s1;
   #endif
 
   I2S1.int_clr.val = I2S1.int_st.val;

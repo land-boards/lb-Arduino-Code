@@ -27,11 +27,14 @@
 #include "displaycontroller.h"
 
 
-
+#pragma GCC optimize ("O2")
 
 
 
 namespace fabgl {
+
+
+bool Mouse::s_quickCheckHardware = false;
 
 
 Mouse::Mouse()
@@ -56,6 +59,8 @@ Mouse::~Mouse()
 
 void Mouse::begin(int PS2Port)
 {
+  if (s_quickCheckHardware)
+    PS2Device::quickCheckHardware();
   PS2Device::begin(PS2Port);
   reset();
 }
@@ -72,12 +77,16 @@ void Mouse::begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO)
 
 bool Mouse::reset()
 {
-  // tries up to six times for mouse reset
-  for (int i = 0; i < 3; ++i) {
+  if (s_quickCheckHardware) {
     m_mouseAvailable = send_cmdReset();
-    if (m_mouseAvailable)
-      break;
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+  } else {
+    // tries up to three times for mouse reset
+    for (int i = 0; i < 3; ++i) {
+      m_mouseAvailable = send_cmdReset();
+      if (m_mouseAvailable)
+        break;
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
   }
 
   // negotiate compatibility and default parameters
@@ -115,6 +124,9 @@ bool Mouse::getNextDelta(MouseDelta * delta, int timeOutMS, bool requestResendOn
   for (int i = 0; i < packetSize; ++i) {
     while (true) {
       rcv[i] = getData(timeOutMS);
+      if (parityError()) {
+        return false;
+      }
       if (rcv[i] == -1 && requestResendOnTimeOut) {
         requestToResendLastByte();
         continue;
@@ -165,7 +177,7 @@ void Mouse::setupAbsolutePositioner(int width, int height, bool createAbsolutePo
 
   m_uiApp = app;
 
-  if (createAbsolutePositionsQueue) {
+  if (createAbsolutePositionsQueue && m_absoluteQueue == nullptr) {
     m_absoluteQueue = xQueueCreate(FABGLIB_MOUSE_EVENTS_QUEUE_SIZE, sizeof(MouseStatus));
   }
 
@@ -174,7 +186,7 @@ void Mouse::setupAbsolutePositioner(int width, int height, bool createAbsolutePo
     m_updateDisplayController->setMouseCursorPos(m_status.X, m_status.Y);
   }
 
-  if (m_updateDisplayController || createAbsolutePositionsQueue || m_uiApp) {
+  if ((m_updateDisplayController || createAbsolutePositionsQueue || m_uiApp) && m_absoluteUpdateTimer == nullptr) {
     // create and start the timer
     m_absoluteUpdateTimer = xTimerCreate("", pdMS_TO_TICKS(10), pdTRUE, this, absoluteUpdateTimerFunc);
     xTimerStart(m_absoluteUpdateTimer, portMAX_DELAY);
@@ -309,6 +321,15 @@ MouseStatus Mouse::getNextStatus(int timeOutMS)
   if (m_absoluteQueue)
     xQueueReceive(m_absoluteQueue, &status, msToTicks(timeOutMS));
   return status;
+}
+
+
+void Mouse::emptyQueue()
+{
+  while (getData(0) != -1)
+    ;
+  if (m_absoluteQueue)
+    xQueueReset(m_absoluteQueue);
 }
 
 

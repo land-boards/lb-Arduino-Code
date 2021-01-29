@@ -88,10 +88,14 @@ public:
    */
   void unlock();
 
+  bool parityError();
+
 protected:
 
   PS2Device();
   ~PS2Device();
+
+  void quickCheckHardware();
 
   void begin(int PS2Port);
 
@@ -118,8 +122,11 @@ protected:
 
 private:
 
-  int               m_PS2Port;
   SemaphoreHandle_t m_deviceLock;
+  int16_t           m_PS2Port;
+  int16_t           m_retryCount;
+  int16_t           m_cmdTimeOut;
+  int16_t           m_cmdSubTimeOut;
 };
 
 

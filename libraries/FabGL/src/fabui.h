@@ -141,6 +141,7 @@ typedef void * uiTimerHandle;
 /** @brief Contains details about the key event */
 struct uiKeyEventInfo {
   VirtualKey VK;         /**< Virtual key */
+  uint8_t    ASCII;      /**< ASCII value (when applicable) */
   uint8_t    LALT  : 1;  /**< Status of left-ALT key */
   uint8_t    RALT  : 1;  /**< Status of right-ALT key */
   uint8_t    CTRL  : 1;  /**< Status of CTRL (left or right) key */
@@ -357,6 +358,9 @@ struct uiAnchors {
 };
 
 
+#define UIWINDOW_PARENTCENTER Point(-1000, -1000)
+
+
 /** @brief Base class for all visible UI elements (Frames and Controls) */
 class uiWindow : public uiEvtHandler {
 
@@ -368,7 +372,7 @@ public:
    * @brief Creates an instance of the object
    *
    * @param parent The parent window. A window must always have a parent window
-   * @param pos Top-left coordinates of the window relative to the parent
+   * @param pos Top-left coordinates of the window relative to the parent. Set UIWINDOW_PARENTCENTER to center over parent window
    * @param size The window size
    * @param visible If true the window is immediately visible
    * @param styleClassID Optional style class identifier
@@ -726,10 +730,10 @@ struct uiFrameStyle {
   RGB888              titleBackgroundColor           = RGB888(128, 128, 128);  /**< Title background color */
   RGB888              activeTitleBackgroundColor     = RGB888(128, 128, 255);  /**< Title background color when active */
   RGB888              titleColor                     = RGB888(0, 0, 0);        /**< Title color */
-  RGB888              activeTitleColor               = RGB888(0, 0, 0);        /**< Title color when active */
+  RGB888              activeTitleColor               = RGB888(255, 255, 255);  /**< Title color when active */
   FontInfo const *    titleFont                      = &FONT_std_12;           /**< Title font */
   RGB888              buttonColor                    = RGB888(64, 64, 64);     /**< Color used to draw Close, Maximize and Minimize buttons */
-  RGB888              activeButtonColor              = RGB888(0, 0, 0);        /**< Color used to draw Close, Maximize and Minimize buttons */
+  RGB888              activeButtonColor              = RGB888(255, 255, 255);  /**< Color used to draw Close, Maximize and Minimize buttons */
   RGB888              mouseOverBackgroundButtonColor = RGB888(0, 0, 255);      /**< Color used for background of Close, Maximize and Minimize buttons when mouse is over them */
   RGB888              mouseOverButtonColor           = RGB888(255, 255, 255);  /**< Color used for pen of Close, Maximize and Minimize buttons when mouse is over them */
 };
@@ -788,7 +792,7 @@ public:
    *
    * @param parent Parent window
    * @param title Title of the frame. An empty string hides the title bar
-   * @param pos Top-left coordinates of the frame relative to the parent
+   * @param pos Top-left coordinates of the frame relative to the parent. Set UIWINDOW_PARENTCENTER to center over parent window
    * @param size The frame size
    * @param visible If true the frame is immediately visible
    * @param styleClassID Optional style class identifier
@@ -1148,9 +1152,9 @@ private:
 /** @brief Contains the button style */
 struct uiButtonStyle {
   RGB888           backgroundColor          = RGB888(128, 128, 128); /**< Background color */
-  RGB888           downBackgroundColor      = RGB888(128, 128, 255); /**< Background color when button is down */
-  RGB888           mouseOverBackgroundColor = RGB888(128, 128, 255); /**< Background color when mouse is over */
-  RGB888           mouseDownBackgroundColor = RGB888(255, 255, 255); /**< Background color when mouse is down */
+  RGB888           downBackgroundColor      = RGB888(255, 255, 255); /**< Background color when button is down */
+  RGB888           mouseOverBackgroundColor = RGB888(255, 255, 255); /**< Background color when mouse is over */
+  RGB888           mouseDownBackgroundColor = RGB888(128, 128, 255); /**< Background color when mouse is down */
   RGB888           textColor                = RGB888(0, 0, 0);       /**< Text color */
   FontInfo const * textFont                 = &FONT_std_14;          /**< Text font */
   uint8_t          bitmapTextSpace          = 4;                     /**< Spaces between image and text */
@@ -1275,7 +1279,7 @@ private:
  */
 struct uiTextEditStyle {
   RGB888           backgroundColor            = RGB888(128, 128, 128);     /**< Background color */
-  RGB888           mouseOverBackgroundColor   = RGB888(128, 128, 255);     /**< Background color when mouse is over */
+  RGB888           mouseOverBackgroundColor   = RGB888(255, 255, 255);     /**< Background color when mouse is over */
   RGB888           focusedBackgroundColor     = RGB888(255, 255, 255);     /**< Background color when focused */
   RGB888           textColor                  = RGB888(0, 0, 0);           /**< Text color */
   FontInfo const * textFont                   = &FONT_std_14;              /**< Text font */
@@ -1688,10 +1692,11 @@ public:
    * @param parent The parent window. A panel must always have a parent window
    * @param pos Top-left coordinates of the panel relative to the parent
    * @param size The panel size
+   * @param color Initial color
    * @param visible If true the panel is immediately visible
    * @param styleClassID Optional style class identifier
    */
-  uiColorBox(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
+  uiColorBox(uiWindow * parent, const Point & pos, const Size & size, Color color = Color::BrightWhite, bool visible = true, uint32_t styleClassID = 0);
 
   virtual ~uiColorBox();
 
@@ -1729,7 +1734,7 @@ private:
 struct uiListBoxStyle {
   RGB888           backgroundColor                = RGB888(128, 128, 128);   /**< Background color */
   RGB888           focusedBackgroundColor         = RGB888(255, 255, 255);   /**< Background color when focused */
-  RGB888           selectedBackgroundColor        = RGB888(0, 0, 128);       /**< Background color when selected */
+  RGB888           selectedBackgroundColor        = RGB888(0, 0, 255);       /**< Background color when selected */
   RGB888           focusedSelectedBackgroundColor = RGB888(0, 0, 255);       /**< Background color when selected and focused */
   int              itemHeight                     = 16;                      /**< Item height in pixels */
   FontInfo const * textFont                       = &FONT_std_14;            /**< Text font */
@@ -1904,13 +1909,22 @@ public:
   uiFileBrowser(uiWindow * parent, const Point & pos, const Size & size, bool visible = true, uint32_t styleClassID = 0);
 
   /**
-   * @brief Sets current directory
+   * @brief Sets current directory as absolute path
    *
    * Path can include subdirectories (even SPIFFS emulated directories).
    *
    * @param path Absolute path. It musts include filesystem path (ie "/spiffs")
    */
   void setDirectory(char const * path);
+
+  /**
+   * @brief Changes current directory as relative path
+   *
+   * Path can include subdirectories (even SPIFFS emulated directories).
+   *
+   * @param path Relative path (ie '../subdir')
+   */
+  void changeDirectory(char const * path);
 
   /**
    * @brief Determines current directory
@@ -2270,7 +2284,7 @@ private:
 /** @brief Contains the checkbox style */
 struct uiCheckBoxStyle {
   RGB888              backgroundColor          = RGB888(128, 128, 128);  /**< Background color */
-  RGB888              checkedBackgroundColor   = RGB888(128, 128, 255);  /**< Background color when checked */
+  RGB888              checkedBackgroundColor   = RGB888(128, 128, 128);  /**< Background color when checked */
   RGB888              mouseOverBackgroundColor = RGB888(128, 128, 255);  /**< Background color when mouse is over */
   RGB888              foregroundColor          = RGB888(0, 0, 0);        /**< Foreground color */
 };
@@ -2563,6 +2577,18 @@ public:
    * @return exitCode specified calling uiApp.quit().
    */
   int run(BitmappedDisplayController * displayController, Keyboard * keyboard = nullptr, Mouse * mouse = nullptr);
+
+  /**
+   * @brief Initializes application and executes asynchronously the main event loop
+   *
+   * @param displayController Specifies the display controller where to run the UI
+   * @param taskStack Specifies the task stack size
+   * @param keyboard The keyboard device. The default (nullptr) gets it from the PS2Controller
+   * @param mouse The mouse device. The default (nullptr) gets it from the PS2Controller
+   *
+   * @return exitCode specified calling uiApp.quit().
+   */
+  void runAsync(BitmappedDisplayController * displayController, int taskStack = 3000, Keyboard * keyboard = nullptr, Mouse * mouse = nullptr);
 
   /**
    * @brief Terminates application and free resources
@@ -2950,6 +2976,8 @@ private:
   void filterModalEvent(uiEvent * event);
 
   static void timerFunc(TimerHandle_t xTimer);
+
+  static void asyncRunTask(void * arg);
 
   void blinkCaret(bool forceOFF = false);
   void suspendCaret(bool value);

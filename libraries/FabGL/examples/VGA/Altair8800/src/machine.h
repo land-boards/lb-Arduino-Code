@@ -26,7 +26,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "Z80/Z80.h"
+#include "emudevs/Z80.h"
+#include "emudevs/i8080.h"
 
 
 // Altair 88-DSK Boot ROM (starts at 0xFF00)
@@ -89,6 +90,9 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Mits88Disk (88-disk)
+//
+// 88-Disk 8'' inches has 77 tracks and 32 sectors (named here as Disk_338K)
+// minidisk has 35 tracks and 16 sectors (naed here as MiniDisk_76K)
 
 
 enum DiskFormat {
@@ -99,21 +103,38 @@ enum DiskFormat {
 
 class Mits88Disk : public Device {
 
-public:
+private:
+
+  static const int DISKCOUNT                    = 4;
 
   static const int sectorChangeDurationDisk     = 9500;  // us
   static const int sectorChangeDurationMiniDisk = 11000; // us
-  static const int sectorChangeShortDuration    = 200;    // us
-  static const int readByteDuration      = 32;    // us
-  static const int sectorTrueDuration    = 90;    // us
-  static const int DISKCOUNT             = 4;
-  static const int SECTOR_SIZE           = 137;   // number of bytes per sector
+  static const int sectorChangeShortDuration    = 200;   // us
+  static const int readByteDuration             = 32;    // us
+  static const int sectorTrueDuration           = 90;    // us
+
+  static const int SECTOR_SIZE                  = 137;   // number of bytes per sector
+
+  static const int diskTracksCount              = 77;    // number of tracks (Disk_338K)
+  static const int diskSectorsPerTrack          = 32;    // number of sectors per track (Disk_338K)
+
+  static const int minidiskTracksCount          = 35;    // number of tracks (MiniDisk_76K)
+  static const int minidiskSectorsPerTrack      = 16;    // number of sectors per track (MiniDisk_76K)
+
+
+public:
 
   Mits88Disk(Machine * machine, DiskFormat diskFormat);
   ~Mits88Disk();
 
+  DiskFormat diskFormat()    { return m_diskFormat; }
+  size_t diskSize()          { return tracksCount() * sectorsPerTrack() * SECTOR_SIZE; }
+  int sectorsPerTrack()      { return m_trackSize; }
+  int tracksCount()          { return m_tracksCount; }
+
   void attachReadOnlyBuffer(int drive, uint8_t const * data);
   void attachFile(int drive, char const * filename);
+  void attachFileFromImage(int drive, char const * filename, uint8_t const * data);
 
   void detach(int drive);
 
@@ -173,7 +194,7 @@ enum class CPU {
 typedef void (*MenuCallback)();
 
 
-class Machine : public Z80Interface {
+class Machine {
 
 public:
 
@@ -191,15 +212,14 @@ public:
 
   void run(CPU cpu, int address);
 
-  uint8_t readByte(uint16_t address);
-  void writeByte(uint16_t address, uint8_t value);
+  static int readByte(void * context, int address);
+  static void writeByte(void * context, int address, int value);
 
-  uint16_t readWord(uint16_t addr)              { return readByte(addr) | (readByte(addr + 1) << 8); }
-  void writeWord(uint16_t addr, uint16_t value) { writeByte(addr, value & 0xFF); writeByte(addr + 1, value >> 8); }
+  static int readWord(void * context, int addr)              { return readByte(context, addr) | (readByte(context, addr + 1) << 8); }
+  static void writeWord(void * context, int addr, int value) { writeByte(context, addr, value & 0xFF); writeByte(context, addr + 1, value >> 8); }
 
-
-  uint8_t readIO(uint16_t address);
-  void writeIO(uint16_t address, uint8_t value);
+  static int readIO(void * context, int address);
+  static void writeIO(void * context, int address, int value);
 
   void setRealSpeed(bool value) { m_realSpeed = value; }
   bool realSpeed() { return m_realSpeed; }
@@ -212,6 +232,7 @@ private:
   bool         m_realSpeed;
   uint8_t *    m_RAM;
   MenuCallback m_menuCallback;
-  Z80          m_Z80;
+  fabgl::Z80   m_Z80;
+  fabgl::i8080 m_i8080;
 };
 

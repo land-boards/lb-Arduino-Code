@@ -36,7 +36,7 @@
 
 
 
-
+#pragma GCC optimize ("O2")
 
 
 namespace fabgl {
@@ -900,7 +900,7 @@ void PS2Controller::begin(gpio_num_t port0_clkGPIO, gpio_num_t port0_datGPIO, gp
   // install RTC interrupt handler (on ULP Wake() instruction)
   // note about ESP_INTR_FLAG_LEVEL2: this is necessary in order to work reliably with interrupt intensive VGATextController, when running on the same core
   // must be core "1" due the RTC
-  esp_intr_alloc_pinnedToCore(ETS_RTC_CORE_INTR_SOURCE, ESP_INTR_FLAG_LEVEL2 | ESP_INTR_FLAG_IRAM, rtc_isr, this, &m_isrHandle, 1);
+  esp_intr_alloc_pinnedToCore(ETS_RTC_CORE_INTR_SOURCE, ESP_INTR_FLAG_LEVEL2, rtc_isr, this, &m_isrHandle, 1);
   SET_PERI_REG_MASK(RTC_CNTL_INT_ENA_REG, RTC_CNTL_ULP_CP_INT_ENA);
 }
 
@@ -985,11 +985,13 @@ int PS2Controller::getData(int PS2Port)
       warmInit();
       sendData(0xFE, PS2Port);  // request to resend last byte
       data = -1;
+      m_parityError[PS2Port] = true;
     } else {
       // parity OK
       ++m_readPos[PS2Port];
       if (m_readPos[PS2Port] == RTCMEM_PORTX_BUFFER_END)
         m_readPos[PS2Port] = RTCMEM_PORTX_BUFFER_START;
+      m_parityError[PS2Port] = false;
     }
   }
 
@@ -1018,6 +1020,9 @@ void PS2Controller::warmInit()
 
   // delay required to take ULP time to resume
   vTaskDelay(20 / portTICK_PERIOD_MS);
+
+  m_parityError[0] = false;
+  m_parityError[1] = false;
 }
 
 

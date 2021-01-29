@@ -85,7 +85,7 @@ public:
   /**
    * @brief Sets autodetach mode
    *
-   * @value if true: this object needs to be detached from the sound generator when there are no more samples to play.
+   * @param value if true: this object needs to be detached from the sound generator when there are no more samples to play.
    */
   void setAutoDetach(bool value) { m_autoDetach = value; }
 
@@ -94,7 +94,7 @@ public:
   /**
    * @brief Sets autodestroy mode
    *
-   * @value if true: this object needs to be destroyed by the sound generat or when there are no more samples to play. This will set also setAutoDetach(true).
+   * @param value if true: this object needs to be destroyed by the sound generat or when there are no more samples to play. This will set also setAutoDetach(true).
    */
   void setAutoDestroy(bool value) { m_autoDestroy = value; m_autoDetach |= value; }
 
@@ -310,6 +310,14 @@ private:
 };
 
 
+enum class SoundGeneratorState {
+  Stop,
+  RequestToPlay,
+  Playing,
+  RequestToStop,
+};
+
+
 /**
  * @brief SoundGenerator handles audio output
  *
@@ -323,6 +331,7 @@ private:
  * - TriangleWaveformGenerator
  * - SawtoothWaveformGenerator
  * - NoiseWaveformGenerator
+ * - VICNoiseGenerator
  * - SamplesGenerator
  */
 class SoundGenerator {
@@ -407,7 +416,7 @@ public:
    *
    * @return True when playing, False otherwise
    */
-  bool playing();
+  bool playing() { return m_play; }
 
   WaveformGenerator * channels() { return m_channels; }
 
@@ -451,9 +460,10 @@ private:
 
   void i2s_audio_init();
   static void waveGenTask(void * arg);
-  bool suspendPlay(bool value);
+  bool forcePlay(bool value);
   void mutizeOutput();
   void detachNoSuspend(WaveformGenerator * value);
+  bool actualPlaying();
 
 
   TaskHandle_t        m_waveGenTaskHandle;
@@ -465,6 +475,10 @@ private:
   int8_t              m_volume;
 
   uint16_t            m_sampleRate;
+
+  bool                m_play;
+  SoundGeneratorState m_state;
+  SemaphoreHandle_t   m_mutex;
 
 };
 

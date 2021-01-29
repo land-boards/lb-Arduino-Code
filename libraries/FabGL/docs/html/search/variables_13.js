@@ -1,6 +1,11 @@
 var searchData=
 [
-  ['x',['X',['../structfabgl_1_1_glyph.html#a308a7abab39d158169005530159b50de',1,'fabgl::Glyph::X()'],['../structfabgl_1_1_point.html#a7939e82af819211f33529b704f28642e',1,'fabgl::Point::X()'],['../structfabgl_1_1_mouse_status.html#a5ec5e7febf054e05c2f1e5f0e62b9bad',1,'fabgl::MouseStatus::X()'],['../displaycontroller_8h.html#aa6aba27bc1a89db9e350b50bbf881f57',1,'X():&#160;displaycontroller.h'],['../fabutils_8h.html#aa6aba27bc1a89db9e350b50bbf881f57',1,'X():&#160;fabutils.h']]],
-  ['x1',['X1',['../structfabgl_1_1_rect.html#aba0b255bcab670456472e1841e175306',1,'fabgl::Rect::X1()'],['../fabutils_8h.html#a0dd601bb81c34d0e0e1c71e445d8c9ed',1,'X1():&#160;fabutils.h']]],
-  ['x2',['X2',['../structfabgl_1_1_rect.html#af27cb175620ac5a3846fd8037c776a07',1,'fabgl::Rect::X2()'],['../fabutils_8h.html#aacc253365e856de8781b525223af3c52',1,'X2():&#160;fabutils.h']]]
+  ['vbackporch',['VBackPorch',['../structfabgl_1_1_v_g_a_timings_af066ac43dd24f4cb7c53b9638f294cac.html#af066ac43dd24f4cb7c53b9638f294cac',1,'fabgl::VGATimings']]],
+  ['vfrontporch',['VFrontPorch',['../structfabgl_1_1_v_g_a_timings_ad7e6b3d52f2d169aa0d923ff11bf7806.html#ad7e6b3d52f2d169aa0d923ff11bf7806',1,'fabgl::VGATimings']]],
+  ['virtualkey',['virtualKey',['../structfabgl_1_1_virtual_key_def_a9a49d6e8115ca008d08edd19819118e8.html#a9a49d6e8115ca008d08edd19819118e8',1,'fabgl::VirtualKeyDef::virtualKey()'],['../structfabgl_1_1_alt_virtual_key_def_a9a49d6e8115ca008d08edd19819118e8.html#a9a49d6e8115ca008d08edd19819118e8',1,'fabgl::AltVirtualKeyDef::virtualKey()']]],
+  ['visible',['visible',['../structfabgl_1_1ui_window_state_a81b50196ed90c63596da2ace4dd2a97b.html#a81b50196ed90c63596da2ace4dd2a97b',1,'fabgl::uiWindowState']]],
+  ['vk',['VK',['../structfabgl_1_1ui_key_event_info_a54913adc26c6ea7f3e241a0938d4dfff.html#a54913adc26c6ea7f3e241a0938d4dfff',1,'fabgl::uiKeyEventInfo']]],
+  ['vsynclogic',['VSyncLogic',['../structfabgl_1_1_v_g_a_timings_ad9442bd6c59917fcbe5da35c8fc043e9.html#ad9442bd6c59917fcbe5da35c8fc043e9',1,'fabgl::VGATimings']]],
+  ['vsyncpulse',['VSyncPulse',['../structfabgl_1_1_v_g_a_timings_a0432b1f9658d0c0a6d68788993e88a32.html#a0432b1f9658d0c0a6d68788993e88a32',1,'fabgl::VGATimings']]],
+  ['vvisiblearea',['VVisibleArea',['../structfabgl_1_1_v_g_a_timings_a8e0f8713cd834b7a8e039134405e44e0.html#a8e0f8713cd834b7a8e039134405e44e0',1,'fabgl::VGATimings']]]
 ];

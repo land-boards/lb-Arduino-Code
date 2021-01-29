@@ -1,6 +1,15 @@
 var searchData=
 [
-  ['name',['name',['../structfabgl_1_1_dir_item.html#af5618f279b4a215396ef4d76a63414b7',1,'fabgl::DirItem::name()'],['../structfabgl_1_1_keyboard_layout.html#ab4056289e6b9726900042349a455c41b',1,'fabgl::KeyboardLayout::name()']]],
-  ['not',['NOT',['../structfabgl_1_1_paint_options.html#afcec82d9cae77adfe9208a072d58d529',1,'fabgl::PaintOptions::NOT()'],['../displaycontroller_8h.html#a5802f48a4a51260d01324a9a46c4d840',1,'NOT():&#160;displaycontroller.h']]],
-  ['numlock',['numlock',['../structfabgl_1_1_alt_virtual_key_def.html#aee0ebb2c26b431d1f448e675ecd8c03e',1,'fabgl::AltVirtualKeyDef']]]
+  ['maximized',['maximized',['../structfabgl_1_1ui_window_state_a1a57be4a7336000792a73537dc277576.html#a1a57be4a7336000792a73537dc277576',1,'fabgl::uiWindowState']]],
+  ['middle',['middle',['../structfabgl_1_1_mouse_buttons_a7b197ff052f8e1d25bfed56da9fa0450.html#a7b197ff052f8e1d25bfed56da9fa0450',1,'fabgl::MouseButtons']]],
+  ['minimized',['minimized',['../structfabgl_1_1ui_window_state_a0a4abe69659369f0aa731ff9292aa68a.html#a0a4abe69659369f0aa731ff9292aa68a',1,'fabgl::uiWindowState']]],
+  ['minutes',['minutes',['../structfabgl_1_1_date_time_ab376075e230a393b480cdd45fe454c75.html#ab376075e230a393b480cdd45fe454c75',1,'fabgl::DateTime']]],
+  ['month',['month',['../structfabgl_1_1_date_time_a82e68d1d8e1634ac2ba0d01fe0cd95c9.html#a82e68d1d8e1634ac2ba0d01fe0cd95c9',1,'fabgl::DateTime']]],
+  ['mousedownbackgroundcolor',['mouseDownBackgroundColor',['../structfabgl_1_1ui_button_style_a0d9e9a978ddf231016210e8ef988c39f.html#a0d9e9a978ddf231016210e8ef988c39f',1,'fabgl::uiButtonStyle']]],
+  ['mouseoverbackgroundbuttoncolor',['mouseOverBackgroundButtonColor',['../structfabgl_1_1ui_frame_style_a89d78d62a5f04cbbf0ce6a1488d45f53.html#a89d78d62a5f04cbbf0ce6a1488d45f53',1,'fabgl::uiFrameStyle']]],
+  ['mouseoverbackgroundcolor',['mouseOverBackgroundColor',['../structfabgl_1_1ui_button_style_aaba0c1279d11cbfdb065822d53e277eb.html#aaba0c1279d11cbfdb065822d53e277eb',1,'fabgl::uiButtonStyle::mouseOverBackgroundColor()'],['../structfabgl_1_1ui_text_edit_style_aaba0c1279d11cbfdb065822d53e277eb.html#aaba0c1279d11cbfdb065822d53e277eb',1,'fabgl::uiTextEditStyle::mouseOverBackgroundColor()'],['../structfabgl_1_1ui_check_box_style_aaba0c1279d11cbfdb065822d53e277eb.html#aaba0c1279d11cbfdb065822d53e277eb',1,'fabgl::uiCheckBoxStyle::mouseOverBackgroundColor()']]],
+  ['mouseoverbuttoncolor',['mouseOverButtonColor',['../structfabgl_1_1ui_frame_style_a459bfe8f3acd7e0644244edd92a8eb2c.html#a459bfe8f3acd7e0644244edd92a8eb2c',1,'fabgl::uiFrameStyle']]],
+  ['mouseoverscrollbarforegroundcolor',['mouseOverScrollBarForegroundColor',['../structfabgl_1_1ui_scrollable_control_style_a6dfff8a622dd31c0bfed98fbecf96821.html#a6dfff8a622dd31c0bfed98fbecf96821',1,'fabgl::uiScrollableControlStyle']]],
+  ['moveable',['moveable',['../structfabgl_1_1ui_frame_props_a8dd2130eaaa23a10bac0bc0c7acc4718.html#a8dd2130eaaa23a10bac0bc0c7acc4718',1,'fabgl::uiFrameProps']]],
+  ['multiscanblack',['multiScanBlack',['../structfabgl_1_1_v_g_a_timings_a9246d5bc691bfa91b1f97eb99bfa6dca.html#a9246d5bc691bfa91b1f97eb99bfa6dca',1,'fabgl::VGATimings']]]
 ];
