@@ -47,10 +47,10 @@ void LandBoards_Digio128_64::begin(void)
 	Wire.begin();			// Join I2C as a master (void = master)
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
-#elif defined(ARDUINO_ARCH_STM32F1)
+#elif defined(ARDUINO_ARCH_STM32)
 	Wire.setClock(400000);	// 400KHz speed
 #else
-  #error “This library only supports boards with an AVR or SAM processor.”
+  #error “This library only supports boards with an AVR or STM processor.”
 #endif
 	for (uint8_t chipNum = 0; chipNum < CHIP_COUNT_D128_64; chipNum++)	// Set all pins to input by default
 	{

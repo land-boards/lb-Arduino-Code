@@ -9,7 +9,6 @@
 */
 
 // digital pin PA0 has a pushbutton attached to it. Give it a name:
-// int pushButton = 2;
 
 // the setup routine runs once when you press reset:
 void setup() {

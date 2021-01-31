@@ -44,7 +44,7 @@ void setup()
 #elif defined(ARDUINO_ARCH_STM32)
   Wire.setClock(400000);  // 400KHz speed
 #else
-  #error “This library only supports boards with an AVR or SAM processor.”
+  #error “This library only supports boards with an AVR or STM processor.”
 #endif
   mcpWrite8(M08_IODIR,0xf0);         // Set I/O direction control
   mcpWrite8(M08_IOCON, INTPOLACTHI); // Set interrupt polarity to high

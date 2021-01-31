@@ -30,10 +30,10 @@ void LandBoards_I2CTEMP01::begin(uint8_t addr)
 	Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
-#elif defined(ARDUINO_ARCH_STM32F1)
+#elif defined(ARDUINO_ARCH_STM32)
 	Wire.setClock(400000);	// 400KHz speed
 #else
-  #error “This library only supports boards with an AVR or SAM processor.”
+  #error “This library only supports boards with an AVR or STM processor.”
 #endif	
 	Wire.beginTransmission(TCN75A_BASEADDR | i2cAddrOffset);// Start I2C connection
 	Wire.write((uint8_t)TCN75A_CONFIG);           			// Register Point to config register

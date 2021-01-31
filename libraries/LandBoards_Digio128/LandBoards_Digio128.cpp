@@ -42,10 +42,10 @@ void Digio128::begin(void)
 	mcp7.begin(7);
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
-#elif defined(ARDUINO_ARCH_STM32F1)
+#elif defined(ARDUINO_ARCH_STM32)
 	Wire.setClock(400000);	// 400KHz speed
 #else
-  #error “This library only supports boards with an AVR or SAM processor.”
+  #error “This library only supports boards with an AVR or STM processor.”
 #endif
 	for (uint8_t pinNum = 0; pinNum < 16; pinNum++)	// Set all pins to input by default
 	{
