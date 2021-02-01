@@ -51,7 +51,7 @@ void LandBoards_Digio128V2::begin(void)
 #elif defined(ARDUINO_ARCH_STM32)
 	Wire.setClock(400000);	// 400KHz speed
 #else
-  #error “This library only supports boards with an AVR or SAM processor.”
+  #error “This library only supports boards with an AVR or STM processor.”
 #endif
 	// Serial.println("begin: ignored twbr write");
 

@@ -40,6 +40,8 @@ void LandBoards_MCP23017::begin(uint8_t baseAddr)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
 #elif defined(ARDUINO_ARCH_STM32)
 	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or STM processor.”
 #endif
 	writeRegister(MCP23017_IODIRA, 0xff);		// bits are all inputs
 	writeRegister(MCP23017_GPPUA, 0x00);		// Turn off pullups
