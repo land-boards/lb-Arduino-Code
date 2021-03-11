@@ -10,9 +10,14 @@
  *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
  */
 
-//------------------------------------------------------------------------------
-// Include the IRremote library header
-//
+/*
+ * You can change this value accordingly to the receiver module you use.
+ * The required value can be derived from the timings printed here.
+ * Keep in mind that the timings may change with the distance
+ * between sender and receiver as well as with the ambient light intensity.
+ */
+#define MARK_EXCESS_MICROS    20 // recommended for the cheap VS1838 modules
+
 #include <IRremote.h>
 
 //------------------------------------------------------------------------------
@@ -50,7 +55,7 @@ void loop() {
     if (IrReceiver.decode()) {  // Grab an IR code
         // Check if the buffer overflowed
         if (IrReceiver.results.overflow) {
-            Serial.println("IR code too long. Edit IRremote.h and increase RAW_BUFFER_LENGTH");
+            Serial.println("IR code too long. Edit IRremoteInt.h and increase RAW_BUFFER_LENGTH");
         } else {
             Serial.println();                               // 2 blank lines between entries
             Serial.println();

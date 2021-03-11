@@ -1,4 +1,4 @@
-#include "IRremote.h"
+#include "IRremoteInt.h"
 
 //==============================================================================
 //                       DDDD   IIIII   SSSS  H   H
@@ -33,14 +33,11 @@ void IRsend::sendDISH(unsigned long data, int nbits) {
     // Set IR carrier frequency
     enableIROut(56);
 
-    noInterrupts();
-
     mark(DISH_HEADER_MARK);
     space(DISH_HEADER_SPACE);
 
-    sendPulseDistanceWidthData(DISH_BIT_MARK, DISH_ONE_SPACE, DISH_BIT_MARK, DISH_ZERO_SPACE, data, nbits, MSB_FIRST);
+    sendPulseDistanceWidthData(DISH_BIT_MARK, DISH_ONE_SPACE, DISH_BIT_MARK, DISH_ZERO_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST);
     mark(DISH_HEADER_MARK); //added 26th March 2016, by AnalysIR ( https://www.AnalysIR.com )
-    space(0);  // Always end with the LED off
-    interrupts();
+    ledOff();  // Always end with the LED off
 }
 

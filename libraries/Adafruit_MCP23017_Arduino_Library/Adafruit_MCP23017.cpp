@@ -128,6 +128,14 @@ void Adafruit_MCP23017::begin(uint8_t addr, TwoWire *theWire) {
   // all inputs on port A and B
   writeRegister(MCP23017_IODIRA, 0xff);
   writeRegister(MCP23017_IODIRB, 0xff);
+
+  // Turn off interrupt triggers
+  writeRegister(MCP23017_GPINTENA, 0x00);
+  writeRegister(MCP23017_GPINTENB, 0x00);
+
+  // Turn off pull up resistors
+  writeRegister(MCP23017_GPPUA, 0x00);
+  writeRegister(MCP23017_GPPUB, 0x00);
 }
 
 /**
@@ -293,6 +301,17 @@ void Adafruit_MCP23017::setupInterruptPin(uint8_t pin, uint8_t mode) {
 
   // enable the pin for interrupt
   updateRegisterBit(pin, HIGH, MCP23017_GPINTENA, MCP23017_GPINTENB);
+}
+
+/**
+ * Disable a pin for interrupt.
+ *
+ * @param pin Pin to set
+ *
+ */
+void Adafruit_MCP23017::disableInterruptPin(uint8_t pin) {
+  // disable the pin for interrupt
+  updateRegisterBit(pin, LOW, MCP23017_GPINTENA, MCP23017_GPINTENB);
 }
 
 /*!

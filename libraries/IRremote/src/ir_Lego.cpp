@@ -31,7 +31,7 @@
  */
 
 //#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremote.h"
+#include "IRremoteInt.h"
 
 //==============================================================================
 //         L       EEEEEE   EEEE    OOOO
@@ -115,7 +115,7 @@ void IRsend::sendLegoPowerFunctions(uint16_t aRawData, uint8_t aChannel, bool aD
 
     aChannel &= 0x03; // we have 4 channels
 
-    uint8_t tNumberOfCommands = 1;
+    uint_fast8_t tNumberOfCommands = 1;
     if (aDoSend5Times) {
         tNumberOfCommands = 5;
     }
@@ -123,16 +123,13 @@ void IRsend::sendLegoPowerFunctions(uint16_t aRawData, uint8_t aChannel, bool aD
     uint8_t tRepeatPeriod = (110 - (LEGO_AVERAGE_DURATION / 1000)) + (aChannel * 40); // from 100 to 220
 
     while (tNumberOfCommands > 0) {
-        noInterrupts();
 
         // Header
         mark(LEGO_HEADER_MARK);
         space(LEGO_HEADER_SPACE);
 
-        sendPulseDistanceWidthData(LEGO_BIT_MARK, LEGO_ONE_SPACE, LEGO_BIT_MARK, LEGO_ZERO_SPACE, aRawData, LEGO_BITS, MSB_FIRST,
+        sendPulseDistanceWidthData(LEGO_BIT_MARK, LEGO_ONE_SPACE, LEGO_BIT_MARK, LEGO_ZERO_SPACE, aRawData, LEGO_BITS, PROTOCOL_IS_MSB_FIRST,
         SEND_STOP_BIT);
-
-        interrupts();
 
         tNumberOfCommands--;
         // skip last delay!
@@ -143,7 +140,6 @@ void IRsend::sendLegoPowerFunctions(uint16_t aRawData, uint8_t aChannel, bool aD
     }
 }
 
-#if DECODE_LEGO_PF
 /*
  * Mode is stored in the upper nibble of command
  */
@@ -227,5 +223,3 @@ bool IRrecv::decodeLegoPowerFunctions() {
 
     return true;
 }
-
-#endif // DECODE_LEGO_PF

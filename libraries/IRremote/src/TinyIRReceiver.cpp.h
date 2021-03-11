@@ -45,6 +45,11 @@
 
 TinyIRReceiverStruct TinyIRReceiverControl;
 
+#if defined(ESP8266)
+ICACHE_RAM_ATTR
+#elif defined(ESP32)
+IRAM_ATTR
+#endif
 void handleReceivedIRData(uint16_t aAddress, uint8_t aCommand, bool isRepetition);
 
 bool MatchDuration(uint16_t aDuration, uint16_t aLowerMatchValue, uint16_t aUpperMatchValue) {
@@ -52,22 +57,16 @@ bool MatchDuration(uint16_t aDuration, uint16_t aLowerMatchValue, uint16_t aUppe
 }
 
 #if defined(ESP8266)
-void ICACHE_RAM_ATTR IRPinChangeInterruptHandler(void)
+ICACHE_RAM_ATTR
 #elif defined(ESP32)
-void IRAM_ATTR IRPinChangeInterruptHandler(void)
-#else
-void IRPinChangeInterruptHandler(void)
+IRAM_ATTR
 #endif
-        {
+void IRPinChangeInterruptHandler(void) {
     // save IR input level - negative logic, true means inactive / IR pause
     uint_fast8_t tIRLevel = digitalReadFast(IR_INPUT_PIN);
 
 #if !defined(DO_NOT_USE_FEEDBACK_LED) && defined(IR_FEEDBACK_LED_PIN)
-#  if defined(__AVR_ATtiny3217__) // TinyCore introduced PinStatus type
-    digitalWriteFast(IR_FEEDBACK_LED_PIN, (PinStatus)!tIRLevel);
-#  else
     digitalWriteFast(IR_FEEDBACK_LED_PIN, !tIRLevel);
-#  endif
 #endif
 
     /*
@@ -166,7 +165,7 @@ void IRPinChangeInterruptHandler(void)
                      * Code complete -> call callback
                      * No parity check
                      */
-                    // can not check the length of trailing space
+                    // Set state for new start
                     tState = IR_RECEIVER_STATE_WAITING_FOR_START_MARK;
 #if !defined(ARDUINO_ARCH_MBED)
                     interrupts();

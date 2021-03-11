@@ -8,7 +8,7 @@
  */
 
 //#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremote.h"
+#include "IRremoteInt.h"
 
 //==============================================================================
 //                           BBBB    OOO    SSSS  EEEEE
@@ -38,13 +38,12 @@
 
 //+=============================================================================
 
-void IRsend::sendBoseWave(uint8_t aCommand, uint8_t aNumberOfRepeats) {
+void IRsend::sendBoseWave(uint8_t aCommand, uint_fast8_t aNumberOfRepeats) {
     // Set IR carrier frequency
     enableIROut(38);
 
-    uint8_t tNumberOfCommands = aNumberOfRepeats + 1;
+    uint_fast8_t tNumberOfCommands = aNumberOfRepeats + 1;
     while (tNumberOfCommands > 0) {
-        noInterrupts();
 
         // Header
         mark(BOSEWAVE_HEADER_MARK);
@@ -53,9 +52,7 @@ void IRsend::sendBoseWave(uint8_t aCommand, uint8_t aNumberOfRepeats) {
         uint16_t tData = ((~aCommand) << 8) | aCommand;
 
         sendPulseDistanceWidthData(BOSEWAVE_BIT_MARK, BOSEWAVE_ONE_SPACE, BOSEWAVE_BIT_MARK, BOSEWAVE_ZERO_SPACE, tData,
-        BOSEWAVE_BITS, LSB_FIRST, SEND_STOP_BIT);
-
-        interrupts();
+        BOSEWAVE_BITS, PROTOCOL_IS_LSB_FIRST, SEND_STOP_BIT);
 
         tNumberOfCommands--;
         // skip last delay!

@@ -23,8 +23,11 @@
 #ifndef IRremoteBoardDefs_h
 #define IRremoteBoardDefs_h
 
-// Define some defaults, that some boards may like to override
-// (This is to avoid negative logic, ! DONT_... is just awkward.)
+/*
+ * Define some defaults, portable but possibly slower than necessary,
+ * that some boards may like to override
+ * (This is to avoid negative logic, ! DONT_... is just awkward.)
+ */
 
 /**
  * Defined if the standard enableIRIn function should be used.
@@ -44,124 +47,40 @@
  */
 #define USE_DEFAULT_ENABLE_IR_OUT
 
+/*
+ * digitalWrite() is supposed to be slow. If this is an issue, define faster,
+ * board-dependent versions of these macros SENDPIN_ON(pin) and SENDPIN_OFF(pin).
+ */
+#ifndef SENDPIN_ON
+/** Board dependent macro to turn on the pin given as argument. */
+#define SENDPIN_ON(pin)  digitalWrite(pin, HIGH)
+#endif
+
+#ifndef SENDPIN_OFF
+/**
+ * Board dependent macro to turn off the pin given as argument.
+ */
+#define SENDPIN_OFF(pin) digitalWrite(pin, LOW)
+#endif
+
+/**
+ * Check for CPU frequency macro and "copy" it to SYSCLOCK
+ */
+#if !defined(SYSCLOCK) // allow for processor specific code to define SYSCLOCK
+#  ifndef F_CPU
+#error SYSCLOCK or F_CPU cannot be determined. Define it for your board in IRremoteBoardDefs.h.
+#  endif // ! F_CPU
+/**
+ * Clock frequency to be used for timing.
+ */
+#define SYSCLOCK F_CPU // main Arduino clock
+#endif // ! SYSCLOCK
+
 /**
  * Duty cycle in percent for sent signals.
  */
 #if ! defined(IR_SEND_DUTY_CYCLE)
 #define IR_SEND_DUTY_CYCLE 30 // 30 saves power and is compatible to the old existing code
-#endif
-
-//------------------------------------------------------------------------------
-// This first #ifdef statement contains defines for blinking the LED,
-// as well as all other board specific information, with the exception of
-// timers and the sending pin (IR_SEND_PIN).
-
-#ifdef DOXYGEN
-/**
- * If defined, denotes pin number of LED that should be blinked during IR reception.
- * Leave undefined to disable blinking.
- */
-#define BLINKLED        LED_BUILTIN
-
-/**
- * Board dependent macro to turn BLINKLED on.
- */
-#define BLINKLED_ON()   digitalWrite(BLINKLED, HIGH)
-
-/**
- * Board dependent macro to turn BLINKLED off.
- */
-#define BLINKLED_OFF()  digitalWrite(BLINKLED, LOW)
-
-#elif ! defined(ARDUINO)
-// Assume that we compile a test version, to be executed on the host, not on a board.
-
-// Do not define anything.
-
-#elif defined(CORE_LED0_PIN)
-#define BLINKLED        CORE_LED0_PIN
-#define BLINKLED_ON()   (digitalWrite(CORE_LED0_PIN, HIGH))
-#define BLINKLED_OFF()  (digitalWrite(CORE_LED0_PIN, LOW))
-
-// Sparkfun Pro Micro is __AVR_ATmega32U4__ but has different external circuit
-#elif defined(ARDUINO_AVR_PROMICRO)
-// We have no built in LED -> reuse RX LED
-#define BLINKLED        LED_BUILTIN_RX
-#define BLINKLED_ON()   RXLED1
-#define BLINKLED_OFF()  RXLED0
-
-// Arduino Leonardo + others
-#elif defined(__AVR_ATmega32U4__)
-#define BLINKLED        LED_BUILTIN
-#define BLINKLED_ON()   (PORTC |= B10000000)
-#define BLINKLED_OFF()  (PORTC &= B01111111)
-
-#elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega8U2__) || defined(__AVR_ATmega16U2__)  || defined(__AVR_ATmega32U2__)
-#define BLINKLED        LED_BUILTIN
-#define BLINKLED_ON()   (digitalWrite(LED_BUILTIN, HIGH))
-#define BLINKLED_OFF()  (digitalWrite(LED_BUILTIN, LOW))
-
-// Arduino Uno, Nano etc
-#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega168__)
-#define BLINKLED        LED_BUILTIN
-#define BLINKLED_ON()   (PORTB |= B00100000)
-#define BLINKLED_OFF()  (PORTB &= B11011111)
-
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define BLINKLED        13
-#define BLINKLED_ON()   (PORTB |= B10000000)
-#define BLINKLED_OFF()  (PORTB &= B01111111)
-
-#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644__)
-#define BLINKLED        0
-#define BLINKLED_ON()   (PORTD |= B00000001)
-#define BLINKLED_OFF()  (PORTD &= B11111110)
-
-// Nano Every, Uno WiFi Rev2, nRF5 BBC MicroBit, Nano33_BLE
-#elif defined(__AVR_ATmega4809__) || defined(NRF5) || defined(ARDUINO_ARCH_NRF52840) || defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny85__)
-#define BLINKLED        LED_BUILTIN
-#define BLINKLED_ON()   (digitalWrite(BLINKLED, HIGH))
-#define BLINKLED_OFF()  (digitalWrite(BLINKLED, LOW))
-
-// TinyCore boards
-#elif defined(__AVR_ATtiny1616__)  || defined(__AVR_ATtiny3216__) || defined(__AVR_ATtiny3217__)
-// No LED available on the board, take LED_BUILTIN which is also the DAC output
-#define BLINKLED        LED_BUILTIN // PA6
-#define BLINKLED_ON()   (PORTC.OUTSET = _BV(6))
-#define BLINKLED_OFF()  (PORTC.OUTCLR = _BV(6))
-
-// Arduino Zero
-#elif defined(ARDUINO_ARCH_SAMD)
-#define BLINKLED        LED_BUILTIN
-#define BLINKLED_ON()   (digitalWrite(LED_BUILTIN, HIGH))
-#define BLINKLED_OFF()  (digitalWrite(LED_BUILTIN, LOW))
-
-#define USE_SOFT_SEND_PWM
-// Define to use spin wait instead of delayMicros()
-//#define USE_SPIN_WAIT
-// Supply own enableIRIn()
-#undef USE_DEFAULT_ENABLE_IR_IN
-
-#elif defined(ESP32)
-// No system LED on ESP32, disable blinking by NOT defining BLINKLED
-
-// Supply own enableIRIn() and enableIROut()
-#undef USE_DEFAULT_ENABLE_IR_IN
-#undef USE_DEFAULT_ENABLE_IR_OUT
-
-#elif defined(PARTICLE)
-
-#define BLINKLED       D7
-#define BLINKLED_ON()  digitalWrite(BLINKLED,1)
-#define BLINKLED_OFF() digitalWrite(BLINKLED,0)
-
-#else
-#warning No blinking definition found. Check IRremoteBoardDefs.h.
-#ifdef LED_BUILTIN
-#define BLINKLED        LED_BUILTIN
-#define BLINKLED_ON()   digitalWrite(BLINKLED, HIGH)
-#define BLINKLED_OFF()  digitalWrite(BLINKLED, LOW)
-#endif
 #endif
 
 //------------------------------------------------------------------------------
@@ -174,90 +93,72 @@
 // Define which timer to use
 //
 // Uncomment the timer you wish to use on your board.
-// If you are using another library which uses timer2, you have options to
-//   switch IRremote to use a different timer.
-//
-
-#ifndef ARDUINO
-// Assume that we compile a test version, to be executed on the host,
-// not on a board.
-
-// Do not define any timer.
+// Here you have the option to switch IRremote to use a different timer and send pin.
 
 /*********************
  * ARDUINO Boards
  *********************/
 // Arduino Duemilanove, Diecimila, LilyPad, Mini, Fio, Nano, etc
 // ATmega48, ATmega88, ATmega168, ATmega328
-#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega168__) // old default clause
+#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega168__)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER2)
-//#define IR_USE_TIMER1   // tx = pin 9
-#define IR_USE_TIMER2     // tx = pin 3
+//#define IR_USE_TIMER1   // send pin = pin 9
+#define IR_USE_TIMER2     // send pin = pin 3
 #  endif
 
 // Arduino Mega
 #elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER2) && !defined(IR_USE_TIMER3) && !defined(IR_USE_TIMER4) && !defined(IR_USE_TIMER5)
-//#define IR_USE_TIMER1   // tx = pin 11
-#define IR_USE_TIMER2     // tx = pin 9
-//#define IR_USE_TIMER3   // tx = pin 5
-//#define IR_USE_TIMER4   // tx = pin 6
-//#define IR_USE_TIMER5   // tx = pin 46
+//#define IR_USE_TIMER1   // send pin = pin 11
+#define IR_USE_TIMER2     // send pin = pin 9
+//#define IR_USE_TIMER3   // send pin = pin 5
+//#define IR_USE_TIMER4   // send pin = pin 6
+//#define IR_USE_TIMER5   // send pin = pin 46
 #  endif
 
 // Leonardo
 #elif defined(__AVR_ATmega32U4__) && ! defined(TEENSYDUINO) && ! defined(ARDUINO_AVR_PROMICRO)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER3) && !defined(IR_USE_TIMER4_HS)
-//#define IR_USE_TIMER1     // tx = pin 9
-#define IR_USE_TIMER3       // tx = pin 5
-//#define IR_USE_TIMER4_HS  // tx = pin 13
+//#define IR_USE_TIMER1     // send pin = pin 9
+#define IR_USE_TIMER3       // send pin = pin 5
+//#define IR_USE_TIMER4_HS  // send pin = pin 13
 #  endif
-
-// ATmega8U2, ATmega16U2, ATmega32U2
-#elif defined(__AVR_ATmega8U2__) || defined(__AVR_ATmega16U2__)  || defined(__AVR_ATmega32U2__)
-#  if !defined(IR_USE_TIMER1)
-    #define IR_USE_TIMER1     // tx = pin C6
-#endif
 
 // Nano Every, Uno WiFi Rev2
 #elif defined(__AVR_ATmega4809__)
 #  if !defined(IR_USE_TIMER_4809_1) && !defined(IR_USE_TIMER_4809_2)
-#define IR_USE_TIMER_4809_1     //  tx = pin 24
-//#define IR_USE_TIMER_4809_2     // Not yet implemented tx = pin 21
+#define IR_USE_TIMER_4809_1     //  send pin = pin 24
+//#define IR_USE_TIMER_4809_2     // Not yet implemented send pin = pin 21
 #  endif
 
-/*********************
- * Plain AVR CPU's
- *********************/
+/*****************************
+ * Plain AVR CPU's, no boards
+ *****************************/
 // ATmega8u2, ATmega16U2, ATmega32U2
 #elif defined(__AVR_ATmega8U2__) || defined(__AVR_ATmega16U2__)  || defined(__AVR_ATmega32U2__)
 #  if !defined(IR_USE_TIMER1)
-    #define IR_USE_TIMER1     // tx = pin C6
+    #define IR_USE_TIMER1     // send pin = pin C6
 #endif
 
 // Atmega8
 #elif defined(__AVR_ATmega8__)
 #  if !defined(IR_USE_TIMER1)
-#define IR_USE_TIMER1     // tx = pin 9
+#define IR_USE_TIMER1     // send pin = pin 9
 #  endif
 
 
 // ATtiny84
 #elif defined(__AVR_ATtiny84__)
 #  if !defined(IR_USE_TIMER1)
-#define IR_USE_TIMER1     // tx = pin 6
+#define IR_USE_TIMER1     // send pin = pin 6
 #  endif
 
 //ATtiny85
 #elif defined(__AVR_ATtiny85__)
 #  if !defined(IR_USE_TIMER_TINY0) && !defined(IR_USE_TIMER_TINY1)
-#    if defined(TIMER_TO_USE_FOR_MILLIS) && (TIMER_TO_USE_FOR_MILLIS== 0)
-// standard ATTinyCore settings use timer 0 for millis() and micros()
-#define IR_USE_TIMER_TINY1   // tx = pin 4
-#    else
-#define IR_USE_TIMER_TINY0   // tx = pin 1
-//#define IR_USE_TIMER_TINY1   // tx = pin 4
-#    endif
+// standard Digispark and ATTinyCore settings use timer 0 for millis() and micros()
+#define IR_USE_TIMER_TINY1   // send pin = pin 4
+//#define IR_USE_TIMER_TINY0   // send pin = pin 1
 #  endif
 
 /*********************
@@ -266,9 +167,9 @@
 // Sparkfun Pro Micro
 #elif defined(ARDUINO_AVR_PROMICRO)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER3) && !defined(IR_USE_TIMER4_HS)
-//#define IR_USE_TIMER1     // tx = pin 9
-#define IR_USE_TIMER3       // tx = pin 5
-//#define IR_USE_TIMER4_HS  // tx = pin 13
+//#define IR_USE_TIMER1     // send pin = pin 9
+#define IR_USE_TIMER3       // send pin = pin 5
+//#define IR_USE_TIMER4_HS  // send pin = pin 13
 #  endif
 
 /*********************
@@ -277,35 +178,35 @@
 // Teensy 1.0
 #elif defined(__AVR_AT90USB162__)
 #  if !defined(IR_USE_TIMER1)
-#define IR_USE_TIMER1     // tx = pin 17
+#define IR_USE_TIMER1     // send pin = pin 17
 #  endif
 
 // Teensy 2.0
 #elif defined(__AVR_ATmega32U4__) && defined(TEENSYDUINO)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER3) && !defined(IR_USE_TIMER4_HS)
-//#define IR_USE_TIMER1     // tx = pin 14 (Teensy 2.0 - physical pin: B5)
-#define IR_USE_TIMER3       // tx = pin 9  (Teensy 2.0 - physical pin: C6)
-//#define IR_USE_TIMER4_HS  // tx = pin 10 (Teensy 2.0 - physical pin: C7)
+//#define IR_USE_TIMER1     // send pin = pin 14 (Teensy 2.0 - physical pin: B5)
+#define IR_USE_TIMER3       // send pin = pin 9  (Teensy 2.0 - physical pin: C6)
+//#define IR_USE_TIMER4_HS  // send pin = pin 10 (Teensy 2.0 - physical pin: C7)
 #  endif
 
 // Teensy 3.0 / Teensy 3.1
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__)
 #  if !defined(IR_USE_TIMER_CMT)
-#define IR_USE_TIMER_CMT    // tx = pin 5
+#define IR_USE_TIMER_CMT    // send pin = pin 5
 #  endif
 
 // Teensy-LC
 #elif defined(__MKL26Z64__)
 #  if !defined(IR_USE_TIMER_TPM1)
-#define IR_USE_TIMER_TPM1 // tx = pin 16
+#define IR_USE_TIMER_TPM1 // send pin = pin 16
 #  endif
 
 // Teensy++ 1.0 & 2.0
 #elif defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB1286__)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER2) && !defined(IR_USE_TIMER3)
-//#define IR_USE_TIMER1   // tx = pin 25
-#define IR_USE_TIMER2     // tx = pin 1
-//#define IR_USE_TIMER3   // tx = pin 16
+//#define IR_USE_TIMER1   // send pin = pin 25
+#define IR_USE_TIMER2     // send pin = pin 1
+//#define IR_USE_TIMER3   // send pin = pin 16
 #  endif
 
 /*********************
@@ -314,7 +215,7 @@
 // MegaCore - ATmega64, ATmega128
 #elif defined(__AVR_ATmega64__) || defined(__AVR_ATmega128__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__)
 #  if !defined(IR_USE_TIMER1)
- #define IR_USE_TIMER1     // tx = pin 13
+ #define IR_USE_TIMER1     // send pin = pin 13
 #  endif
 
 /*********************
@@ -322,8 +223,8 @@
  *********************/
 #elif defined(__AVR_ATmega8515__) || defined(__AVR_ATmega162__)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER3)
-    #define IR_USE_TIMER1     // tx = pin 13
-    //#define IR_USE_TIMER3   // tx = pin 12 - ATmega162 only
+    #define IR_USE_TIMER1     // send pin = pin 13
+    //#define IR_USE_TIMER3   // send pin = pin 12 - ATmega162 only
 #endif
 
 /*********************
@@ -332,9 +233,9 @@
 // MightyCore - ATmega1284
 #elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER2) && !defined(IR_USE_TIMER3)
-//#define IR_USE_TIMER1   // tx = pin 13
-#define IR_USE_TIMER2     // tx = pin 14
-//#define IR_USE_TIMER3   // tx = pin 6
+//#define IR_USE_TIMER1   // send pin = pin 13
+#define IR_USE_TIMER2     // send pin = pin 14
+//#define IR_USE_TIMER3   // send pin = pin 6
 #  endif
 
 // MightyCore - ATmega164, ATmega324, ATmega644
@@ -343,14 +244,14 @@
 || defined(__AVR_ATmega324PA__) || defined(__AVR_ATmega164A__) \
 || defined(__AVR_ATmega164P__)
 #  if !defined(IR_USE_TIMER1) && !defined(IR_USE_TIMER2)
-//#define IR_USE_TIMER1   // tx = pin 13
-#define IR_USE_TIMER2     // tx = pin 14
+//#define IR_USE_TIMER1   // send pin = pin 13
+#define IR_USE_TIMER2     // send pin = pin 14
 #  endif
 
 // MightyCore - ATmega8535, ATmega16, ATmega32
 #elif defined(__AVR_ATmega8535__) || defined(__AVR_ATmega16__) || defined(__AVR_ATmega32__)
 #  if !defined(IR_USE_TIMER1)
-#define IR_USE_TIMER1     // tx = pin 13
+#define IR_USE_TIMER1     // send pin = pin 13
 #  endif
 
 /*********************
@@ -358,7 +259,7 @@
  *********************/
 #elif defined(__AVR_ATtiny1616__)  || defined(__AVR_ATtiny3216__) || defined(__AVR_ATtiny3217__) // TinyCore boards
 #  if !defined(IR_USE_TIMER_D)
-#define IR_USE_TIMER_D     // tx = pin 13 or 14
+#define IR_USE_TIMER_D     // send pin = pin 13 or 14
 #  endif
 
 /*********************
@@ -390,41 +291,9 @@
 #else
 // Arduino Duemilanove, Diecimila, LilyPad, Mini, Fio, Nano, etc
 // ATmega48, ATmega88, ATmega168, ATmega328
-#define IR_USE_TIMER1   // tx = pin 9
+#define IR_USE_TIMER1   // send pin = pin 9
 #warning Board could not be identified from pre-processor symbols. By Default, TIMER1 has been selected for use with IRremote. Please extend IRremoteBoardDefs.h.
 #endif
-
-// Provide default definitions, portable but possibly slower than necessary.
-// digitalWrite is supposed to be slow. If this is an issue, define faster,
-// board-dependent versions of these macros SENDPIN_ON(pin) and SENDPIN_OFF(pin).
-// Portable, possibly slow, default definitions are given at the end of this file.
-// If defining new versions, feel free to ignore the pin argument if it
-// is not configurable on the current board.
-
-#ifndef SENDPIN_ON
-/** Board dependent macro to turn on the pin given as argument. */
-#define SENDPIN_ON(pin)  digitalWrite(pin, HIGH)
-#endif
-
-#ifndef SENDPIN_OFF
-/**
- * Board dependent macro to turn off the pin given as argument.
- */
-#define SENDPIN_OFF(pin) digitalWrite(pin, LOW)
-#endif
-
-//------------------------------------------------------------------------------
-// CPU Frequency
-//
-#if !defined(SYSCLOCK) && defined(ARDUINO) // allow for processor specific code to define SYSCLOCK
-#  ifndef F_CPU
-#error SYSCLOCK or F_CPU cannot be determined. Define it for your board in IRremoteBoardDefs.h.
-#  endif // ! F_CPU
-/**
- * Clock frequency to be used for timing.
- */
-#define SYSCLOCK F_CPU // main Arduino clock
-#endif // ! SYSCLOCK
 
 //------------------------------------------------------------------------------
 // Defines for Timer
@@ -445,16 +314,6 @@
  */
 #define  ISR
 
-#elif ! defined(ARDUINO)
-// Assume that we compile a test version, to be executed on the host,
-// not on a board.
-// Do nothing.
-#  ifdef ISR
-#undef ISR
-#  endif
-#define ISR(f) void do_not_use__(void)
-#define TIMER_RESET_INTR_PENDING
-
 //---------------------------------------------------------
 // Timer2 (8 bits)
 //
@@ -472,7 +331,7 @@
 /*
  * timerConfigForSend() is used exclusively by IRsend::enableIROut()
  */
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint16_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR2A = _BV(WGM20); // PWM, Phase Correct, Top is OCR2A
     TCCR2B = _BV(WGM22) | _BV(CS20); // CS20 -> no prescaling
@@ -548,7 +407,7 @@ static void timerConfigForReceive() {
 #define TIMER_INTR_NAME       TIM1_COMPA_vect
 #endif
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR1A = _BV(WGM11); // PWM, Phase Correct, Top is ICR1
     TCCR1B = _BV(WGM13) | _BV(CS10); // CS10 -> no prescaling
@@ -601,7 +460,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK3 = 0)
 #define TIMER_INTR_NAME             TIMER3_COMPB_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR3A = _BV(WGM31);
     TCCR3B = _BV(WGM33) | _BV(CS30); // PWM, Phase Correct, ICRn as TOP, complete period is double of pwmval
@@ -651,7 +510,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK4 = 0)
 #define TIMER_INTR_NAME             TIMER4_OVF_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = ((SYSCLOCK / 2000) / (aFrequencyKHz)) - 1; // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR4A = (1 << PWM4A);
     TCCR4B = _BV(CS40);
@@ -700,7 +559,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK4 = 0)
 #define TIMER_INTR_NAME             TIMER4_COMPA_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR4A = _BV(WGM41);
     TCCR4B = _BV(WGM43) | _BV(CS40);
@@ -737,7 +596,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK5 = 0)
 #define TIMER_INTR_NAME             TIMER5_COMPA_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR5A = _BV(WGM51);
     TCCR5B = _BV(WGM53) | _BV(CS50);
@@ -777,7 +636,7 @@ static void timerEnablSendPWM() {
     TCD0.CTRLA = TCD_ENABLE_bm | TCD_CLKSEL_SYSCLK_gc| TCD_CNTPRES_DIV1_gc; // System clock, no prescale, no synchronization prescaler
 }
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = (SYSCLOCK / 1000) / (aFrequencyKHz);    // 526,31 for 38 kHz @20 MHz clock
     // use one ramp mode and overflow interrupt
     TCD0.CTRLA = 0;                                                 // reset enable bit in order to unprotect the other bits
@@ -848,7 +707,7 @@ CORE_PIN5_CONFIG = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE;  \
 #error IRremote requires at least 8 MHz on Teensy 3.x
 #  endif
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     SIM_SCGC4 |= SIM_SCGC4_CMT;
     SIM_SOPT2 |= SIM_SOPT2_PTD7PAD;
     CMT_PPS = CMT_PPS_DIV - 1;
@@ -890,7 +749,7 @@ static void timerConfigForReceive() {
 #  endif
 #define ISR(f) void do_not_use__(void)
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     SIM_SCGC6 |= SIM_SCGC6_TPM1;
     FTM1_SC = 0;
     FTM1_CNT = 0;
@@ -918,7 +777,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR      (TIMSK &= ~(_BV(OCIE0A)))
 #define TIMER_INTR_NAME                 TIMER0_COMPA_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint16_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCCR0A = _BV(WGM00); // PWM, Phase Correct, Top is OCR0A
     TCCR0B = _BV(WGM02) | _BV(CS00); // CS00 -> no prescaling
@@ -953,7 +812,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TIMSK &= ~(_BV(OCIE1B)))
 #define TIMER_INTR_NAME             TIMER1_COMPB_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
 #  if (((SYSCLOCK / 1000) / 38) < 256)
     const uint16_t pwmval = (SYSCLOCK / 1000) / (aFrequencyKHz); // 421 @16 MHz, 26 @1 MHz and 38 kHz
     TCCR1 = _BV(CTC1) | _BV(CS10);  // CTC1 = 1: TOP value set to OCR1C, CS10 No Prescaling
@@ -997,7 +856,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  (TCB0.INTCTRL &= ~(TCB_CAPT_bm))
 #define TIMER_INTR_NAME             TCB0_INT_vect
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
     const uint32_t pwmval = (SYSCLOCK / 2000) / (aFrequencyKHz); // 210,52 for 38 kHz @16 MHz clock, 2000 instead of 1000 because of Phase Correct PWM
     TCB0.CTRLB = TCB_CNTMODE_PWM8_gc;
     TCB0.CCMPL = pwmval - 1;
@@ -1042,7 +901,7 @@ static void timerConfigForReceive() {
 #ifdef ISR
 #undef ISR
 #endif
-#define ISR(f) void IRAM_ATTR IRTimer()
+#define ISR(f) IRAM_ATTR void IRTimer()
 
 #elif defined(ARDUINO_ARCH_SAMD)
 // use timer 3 hardcoded at this time
@@ -1056,7 +915,7 @@ static void timerConfigForReceive() {
 #define TIMER_DISABLE_RECEIVE_INTR  NVIC_DisableIRQ(TC3_IRQn)
 #define TIMER_INTR_NAME             TC3_Handler // Not presently used
 #pragma GCC diagnostic ignored "-Wunused-function"
-static void timerConfigForSend(uint16_t aFrequencyKHz __attribute__((unused))) {}
+static void timerConfigForSend(uint8_t aFrequencyKHz __attribute__((unused))) {}
 
 #ifdef ISR
 #undef ISR
@@ -1091,14 +950,14 @@ static void timerConfigForSend(uint16_t aFrequencyKHz __attribute__((unused))) {
 
 extern IntervalTimer timer;
 extern int ir_send_pin;
-extern int ir_out_khz;
+extern int ir_out_kHz;
 
 
 void IRTimer();
 
 #define TIMER_RESET_INTR_PENDING
-#define TIMER_ENABLE_SEND_PWM       analogWrite(ir_send_pin, 128, ir_out_khz*1000)
-#define TIMER_DISABLE_SEND_PWM      analogWrite(ir_send_pin, 0, ir_out_khz*1000)
+#define TIMER_ENABLE_SEND_PWM       analogWrite(ir_send_pin, 128, ir_out_kHz*1000)
+#define TIMER_DISABLE_SEND_PWM      analogWrite(ir_send_pin, 0, ir_out_kHz*1000)
 #define TIMER_ENABLE_RECEIVE_INTR   timer.begin(IRTimer, 50, uSec);
 #define TIMER_DISABLE_RECEIVE_INTR  timer.end()
 
@@ -1106,12 +965,12 @@ void IRTimer();
 #undef ISR
 #  endif
 #define ISR(f)  IntervalTimer timer; \
-                ir_out_khz = IR_OUT_KHZ; \
+                ir_out_kHz = IR_OUT_KHZ; \
                 ir_send_pin = IR_SEND_PIN; \
                 void IRTimer(void)
 
-static void timerConfigForSend(uint16_t aFrequencyKHz) {
-  ir_out_khz = aFrequencyKHz;
+static void timerConfigForSend(uint8_t aFrequencyKHz) {
+  ir_out_kHz = aFrequencyKHz;
 }
 
 static void timerConfigForReceive() {
@@ -1124,4 +983,113 @@ static void timerConfigForReceive() {
 #error Internal code configuration error, no known IR_USE_TIMER* defined
 #endif
 
+//------------------------------------------------------------------------------
+// Here are defines for blinking the LED,
+// as well as all other board specific information, with the exception of
+// timers and the sending pin (IR_SEND_PIN).
+
+#ifdef DOXYGEN
+/**
+ * If defined, denotes pin number of LED that should be blinked during IR reception.
+ * Leave undefined to disable blinking.
+ */
+#define BLINKLED        LED_BUILTIN
+
+/**
+ * Board dependent macro to turn BLINKLED on.
+ */
+#define BLINKLED_ON()   digitalWrite(BLINKLED, HIGH)
+
+/**
+ * Board dependent macro to turn BLINKLED off.
+ */
+#define BLINKLED_OFF()  digitalWrite(BLINKLED, LOW)
+
+#elif defined(CORE_LED0_PIN)
+#define BLINKLED        CORE_LED0_PIN
+#define BLINKLED_ON()   (digitalWrite(CORE_LED0_PIN, HIGH))
+#define BLINKLED_OFF()  (digitalWrite(CORE_LED0_PIN, LOW))
+
+// Sparkfun Pro Micro is __AVR_ATmega32U4__ but has different external circuit
+#elif defined(ARDUINO_AVR_PROMICRO)
+// We have no built in LED -> reuse RX LED
+#define BLINKLED        LED_BUILTIN_RX
+#define BLINKLED_ON()   RXLED1
+#define BLINKLED_OFF()  RXLED0
+
+// Arduino Leonardo + others
+#elif defined(__AVR_ATmega32U4__)
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   (PORTC |= B10000000)
+#define BLINKLED_OFF()  (PORTC &= B01111111)
+
+#elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega8U2__) || defined(__AVR_ATmega16U2__)  || defined(__AVR_ATmega32U2__)
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   (digitalWrite(LED_BUILTIN, HIGH))
+#define BLINKLED_OFF()  (digitalWrite(LED_BUILTIN, LOW))
+
+// Arduino Uno, Nano etc
+#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__) || defined(__AVR_ATmega168__)
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   (PORTB |= B00100000)
+#define BLINKLED_OFF()  (PORTB &= B11011111)
+
+#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#define BLINKLED        13
+#define BLINKLED_ON()   (PORTB |= B10000000)
+#define BLINKLED_OFF()  (PORTB &= B01111111)
+
+#elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644__)
+#define BLINKLED        0
+#define BLINKLED_ON()   (PORTD |= B00000001)
+#define BLINKLED_OFF()  (PORTD &= B11111110)
+
+// Nano Every, Uno WiFi Rev2, nRF5 BBC MicroBit, Nano33_BLE
+#elif defined(__AVR_ATmega4809__) || defined(NRF5) || defined(ARDUINO_ARCH_NRF52840) || defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny85__)
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   (digitalWrite(BLINKLED, HIGH))
+#define BLINKLED_OFF()  (digitalWrite(BLINKLED, LOW))
+
+// TinyCore boards
+#elif defined(__AVR_ATtiny1616__)  || defined(__AVR_ATtiny3216__) || defined(__AVR_ATtiny3217__)
+// No LED available on the board, take LED_BUILTIN which is also the DAC output
+#define BLINKLED        LED_BUILTIN // PA6
+#define BLINKLED_ON()   (PORTC.OUTSET = _BV(6))
+#define BLINKLED_OFF()  (PORTC.OUTCLR = _BV(6))
+
+// Arduino Zero
+#elif defined(ARDUINO_ARCH_SAMD)
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   (digitalWrite(LED_BUILTIN, HIGH))
+#define BLINKLED_OFF()  (digitalWrite(LED_BUILTIN, LOW))
+
+#define USE_SOFT_SEND_PWM
+// Supply own enableIRIn()
+#undef USE_DEFAULT_ENABLE_IR_IN
+
+#elif defined(ESP32)
+// No system LED on ESP32, disable blinking by NOT defining BLINKLED
+
+// Supply own enableIRIn() and enableIROut()
+#undef USE_DEFAULT_ENABLE_IR_IN
+#undef USE_DEFAULT_ENABLE_IR_OUT
+
+#elif defined(PARTICLE)
+
+#define BLINKLED       D7
+#define BLINKLED_ON()  digitalWrite(BLINKLED,1)
+#define BLINKLED_OFF() digitalWrite(BLINKLED,0)
+
+#else
+#warning No blinking definition found. Check IRremoteBoardDefs.h.
+#  ifdef LED_BUILTIN
+#define BLINKLED        LED_BUILTIN
+#define BLINKLED_ON()   digitalWrite(BLINKLED, HIGH)
+#define BLINKLED_OFF()  digitalWrite(BLINKLED, LOW)
+#  endif
+#endif
+
 #endif // ! IRremoteBoardDefs_h
+
+#pragma once
+

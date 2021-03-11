@@ -243,14 +243,8 @@ void dumpProtocols() {
     Serial.print(F("SAMSUNG:      "));
     printDecodeEnabled(DECODE_SAMSUNG);
 
-    Serial.print(F("WHYNTER:      "));
-    printDecodeEnabled(DECODE_WHYNTER);
-
     Serial.print(F("LG:           "));
     printDecodeEnabled(DECODE_LG);
-
-    Serial.print(F("SANYO:        "));
-    printDecodeEnabled(DECODE_SANYO);
 
     Serial.print(F("SHARP:        "));
     printDecodeEnabled(DECODE_SHARP);
@@ -258,8 +252,14 @@ void dumpProtocols() {
     Serial.print(F("DENON:        "));
     printDecodeEnabled(DECODE_DENON);
 
+#if !defined(EXCLUDE_EXOTIC_PROTOCOLS) // saves around 2000 bytes program space
+
     Serial.print(F("BOSEWAVE:     "));
     printDecodeEnabled(DECODE_BOSEWAVE);
+
+    Serial.print(F("WHYNTER:      "));
+    printDecodeEnabled(DECODE_WHYNTER);
+#endif
 }
 
 void printDecodeEnabled(int flag) {

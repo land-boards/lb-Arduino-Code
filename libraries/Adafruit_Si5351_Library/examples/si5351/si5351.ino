@@ -20,6 +20,10 @@ void setup(void)
     Serial.print("Ooops, no Si5351 detected ... Check your wiring or I2C ADDR!");
     while(1);
   }
+  
+  /* Uncomment the next line to speed up the I2C communication */
+  // Wire.setClock(400000);
+  
   Serial.println("OK!");
 
   /* INTEGER ONLY MODE --> most accurate output */  

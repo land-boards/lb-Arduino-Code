@@ -12,6 +12,7 @@
  *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
  */
 
+//#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 240 bytes program space if IrSender.write is used
 #include <IRremote.h>
 #if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny87__) || defined(__AVR_ATtiny167__)
 #include "ATtinySerialOut.h"
@@ -27,17 +28,26 @@ void setup() {
 
     Serial.begin(115200);
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
-    delay(2000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
     Serial.print(F("Ready to send IR signals at pin "));
     Serial.println(IR_SEND_PIN);
 
-    IrSender.begin(true); // Enable feedback LED,
+#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
+    IrSender.begin(IR_SEND_PIN, true); // Specify send pin and enable feedback LED at default feedback LED pin
+#else
+    IrSender.begin(true); // Enable feedback LED at default feedback LED pin
+#endif
 }
 
-// Some protocols have 5, some 8 and some 16 bit Address
+/*
+ * Set up the data to be sent.
+ * For most protocols, the data is build up with a constant 8 (or 16 byte) address
+ * and a variable 8 bit command.
+ * There are exceptions like Sony and Denon, which have 5 bit address.
+ */
 uint16_t sAddress = 0x0102;
 uint8_t sCommand = 0x34;
 uint8_t sRepeats = 0;
@@ -54,6 +64,7 @@ void loop() {
     Serial.print(F(" repeats="));
     Serial.print(sRepeats);
     Serial.println();
+    Serial.flush();
 
     Serial.println(F("Send NEC with 8 bit address"));
     IrSender.sendNEC(sAddress & 0xFF, sCommand, sRepeats);
@@ -64,6 +75,7 @@ void loop() {
     delay(2000);
 
     if (sRepeats == 0) {
+#if !defined(__AVR_ATtiny85__)
         /*
          * Send constant values only once in this demo
          */
@@ -75,11 +87,30 @@ void loop() {
                 "0019 0013 0019 003C 0017 0015 0017 003F 0017 003E 0017 003F 0017 0015 0017 003E " /* inverted command byte */
                 "0017 0806"), 0); //stop bit, no repeat possible, because of missing repeat pattern
         delay(2000);
+#endif
+        /*
+         * With sendNECRaw() you can send even "forbidden" codes with parity errors
+         */
+        Serial.println(
+                F(
+                        "Send NEC with 16 bit address 0x0102 and command 0x34 with NECRaw(0xCC340102) which results in a parity error, since 34 == ~CB and not C0"));
+        IrSender.sendNECRaw(0xC0340102, sRepeats);
+        delay(2000);
 
-        Serial.println(F("Send NECRaw 0xCC340102 with 16 bit address 0x102 and command 0x34 which results in a parity error, since CC != ~34"));
-        IrSender.sendNECRaw(0xCC340102, sRepeats);
+        /*
+         * With Send sendNECMSB() you can send your old 32 bit codes.
+         * To convert one into the other, you must reverse the byte positions and then reverse all positions of each byte.
+         * Example:
+         * 0xCB340102 byte reverse -> 0x020134CB bit reverse-> 40802CD3
+         */
+        Serial.println(F("Send NEC with 16 bit address 0x0102 and command 0x34 with old 32 bit format MSB first"));
+        IrSender.sendNECMSB(0x40802CD3, 32, false);
         delay(2000);
     }
+
+    Serial.println(F("Send Apple"));
+    IrSender.sendApple(sAddress, sCommand, sRepeats);
+    delay(2000);
 
     Serial.println(F("Send Panasonic"));
     IrSender.sendPanasonic(sAddress, sCommand, sRepeats);
@@ -101,6 +132,10 @@ void loop() {
     IrSender.sendSony(sAddress, sCommand, sRepeats);
     delay(2000);
 
+    Serial.println(F("Send Sony/SIRCS with 7 command and 8 address bits"));
+    IrSender.sendSony(sAddress, sCommand, sRepeats, SIRCS_15_PROTOCOL);
+    delay(2000);
+
     Serial.println(F("Send Sony/SIRCS with 7 command and 13 address bits"));
     IrSender.sendSony(sAddress, sCommand, sRepeats, SIRCS_20_PROTOCOL);
     delay(2000);
@@ -117,16 +152,32 @@ void loop() {
     IrSender.sendRC6(sAddress, sCommand, sRepeats, true);
     delay(2000);
 
-    Serial.println(F("Send Samsung"));
-    IrSender.sendSamsung(sAddress, sCommand, sRepeats);
+#if !defined(__AVR_ATtiny85__) // code does not fit in program space of ATtiny85
+    /*
+     * Next example how to use the IrSender.write function
+     */
+    IRData IRSendData;
+    // prepare data
+    IRSendData.address = sAddress;
+    IRSendData.command = sCommand;
+    IRSendData.flags = IRDATA_FLAGS_EMPTY;
+
+    IRSendData.protocol = SAMSUNG;
+    Serial.print(F("Send "));
+    Serial.println(getProtocolString(IRSendData.protocol));
+    IrSender.write(&IRSendData, sRepeats);
     delay(2000);
 
-    Serial.println(F("Send JVC"));
-    IrSender.sendJVC(sAddress, sCommand, sRepeats);
+    IRSendData.protocol = JVC; // switch protocol
+    Serial.print(F("Send "));
+    Serial.println(getProtocolString(IRSendData.protocol));
+    IrSender.write(&IRSendData, sRepeats);
     delay(2000);
 
-    Serial.println(F("Send LG"));
-    IrSender.sendLG((uint8_t) sAddress, sCommand, sRepeats);
+    IRSendData.protocol = LG;
+    Serial.print(F("Send "));
+    Serial.println(getProtocolString(IRSendData.protocol));
+    IrSender.write(&IRSendData, sRepeats);
     delay(2000);
 
     if (sRepeats == 0) {
@@ -141,9 +192,9 @@ void loop() {
         delay(2000);
     }
 
-#if !defined(__AVR_ATtiny85__) // code does not fit in program space of ATtiny85
-    Serial.println(F("Send Bosewave with 8 command bits"));
-    IrSender.sendBoseWave(sCommand, sRepeats);
+    IRSendData.protocol = BOSEWAVE;
+    Serial.println(F("Send Bosewave with no address and 8 command bits"));
+    IrSender.write(&IRSendData, sRepeats);
     delay(2000);
 
     /*
@@ -165,6 +216,7 @@ void loop() {
 
     /*
      * Increment values
+     * Also increment address just for demonstration, which normally makes no sense
      */
     sAddress += 0x0101;
     sCommand += 0x11;

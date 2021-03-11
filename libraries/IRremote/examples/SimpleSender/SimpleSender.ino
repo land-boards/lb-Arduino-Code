@@ -6,30 +6,21 @@
  *
  * For Arduino Uno, Nano etc., an IR LED must be connected to PWM pin 3 (IR_SEND_PIN).
  *
- *
  *  Copyright (C) 2020-2021  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
  *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *
+ *  MIT License
  */
 
 #include <IRremote.h>
-#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny87__) || defined(__AVR_ATtiny167__)
-#include "ATtinySerialOut.h"
-#endif
-
-// On the Zero and others we switch explicitly to SerialUSB
-#if defined(ARDUINO_ARCH_SAMD)
-#define Serial SerialUSB
-#endif
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
-    delay(2000); // To be able to connect Serial monitor after reset or power up and before first printout
-#endif
+
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
     Serial.print(F("Ready to send IR signals at pin "));
@@ -40,16 +31,22 @@ void setup() {
      * The Output pin is board specific and fixed at IR_SEND_PIN.
      * see https://github.com/Arduino-IRremote/Arduino-IRremote#hardware-specifications
      */
-    IrSender.begin(true); // Enable feedback LED,
+#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
+    IrSender.begin(IR_SEND_PIN, true); // Specify send pin and enable feedback LED at default feedback LED pin
+#else
+    IrSender.begin(true); // Enable feedback LED at default feedback LED pin
+#endif
 }
 
 /*
- * Be aware, that some protocols have 5, some 8 and some 16 bit Address
+ * Set up the data to be sent.
+ * For most protocols, the data is build up with a constant 8 (or 16 byte) address
+ * and a variable 8 bit command.
+ * There are exceptions like Sony and Denon, which have 5 bit address.
  */
 uint16_t sAddress = 0x0102;
 uint8_t sCommand = 0x34;
 uint8_t sRepeats = 0;
-// Results to Protocol=NEC Address=0x102 Command=0x34 Raw-Data=0xCB340102 (32 bits)
 
 void loop() {
     /*
@@ -65,17 +62,19 @@ void loop() {
     Serial.println();
 
     Serial.println(F("Send NEC with 16 bit address"));
-    IrSender.sendNEC(sAddress, sCommand, sRepeats);
+
     // Results for the first loop to: Protocol=NEC Address=0x102 Command=0x34 Raw-Data=0xCB340102 (32 bits)
+    IrSender.sendNEC(sAddress, sCommand, sRepeats);
 
     /*
-     * If you cannot avoid to send a raw value like 0xCB340102 you must use sendNECRaw()
+     * If you cannot avoid to send a raw value directly like e.g. 0xCB340102 you must use sendNECRaw()
      */
-    Serial.println(F("Send NECRaw 0xCB340102"));
+//    Serial.println(F("Send NECRaw 0xCB340102"));
 //    IrSender.sendNECRaw(0xCB340102, sRepeats);
 
     /*
      * Increment send values
+     * Also increment address just for demonstration, which normally makes no sense
      */
     sAddress += 0x0101;
     sCommand += 0x11;

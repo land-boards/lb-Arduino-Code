@@ -190,15 +190,14 @@ void loop()
  * Just add to the appropriate timing structure.
  */
 #if defined(ESP8266)
-void ICACHE_RAM_ATTR measureTimingISR()
+ICACHE_RAM_ATTR
 #elif defined(ESP32)
-void IRAM_ATTR measureTimingISR()
-#else
-#  if defined(EICRA) && defined(EIFR) && defined(EIMSK)
+IRAM_ATTR
+#endif
+#if defined(EICRA) && defined(EIFR) && defined(EIMSK)
 ISR(INT1_vect)
-#  else
+#else
 void measureTimingISR()
-#  endif
 #endif
 {
     uint32_t tMicros = micros();
@@ -208,11 +207,7 @@ void measureTimingISR()
      * read level and give feedback
      */
     uint8_t tInputLevel = digitalRead(IR_INPUT_PIN);
-#if defined(__AVR_ATtiny3217__)
-    digitalWrite(LED_BUILTIN, (PinStatus)!tInputLevel);
-#else
     digitalWrite(LED_BUILTIN, !tInputLevel);
-#endif
 
     if (tMicrosDelta > 10000)
     {

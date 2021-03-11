@@ -1,5 +1,5 @@
 //******************************************************************************
-// IRremote.cpp
+// IRremote.cpp.h
 //
 //  Contains all IRreceiver static functions
 //
@@ -36,7 +36,7 @@
  *
  ************************************************************************************
  */
-#include "IRremote.h"
+#include "IRremoteInt.h"
 
 struct irparams_struct irparams; // the irparams instance
 
@@ -53,7 +53,7 @@ struct irparams_struct irparams; // the irparams instance
 //   in a hope of finding out what is going on, but for now they will remain as
 //   functions even in non-DEBUG mode
 //
-bool MATCH(unsigned int measured, unsigned int desired) {
+bool MATCH(uint16_t measured, uint16_t desired) {
 #ifdef TRACE
     Serial.print(F("Testing: "));
     Serial.print(TICKS_LOW(desired), DEC);
@@ -73,10 +73,15 @@ bool MATCH(unsigned int measured, unsigned int desired) {
     return passed;
 }
 
+// used for ir_Pronto
+int getMarkExcessMicros() {
+    return MARK_EXCESS_MICROS;
+}
+
 //+========================================================
 // Due to sensor lag, when received, Marks tend to be MARK_EXCESS_MICROS us too long
 //
-bool MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us) {
+bool MATCH_MARK(uint16_t measured_ticks, uint16_t desired_us) {
 #ifdef TRACE
     Serial.print(F("Testing mark (actual vs desired): "));
     Serial.print(measured_ticks * MICROS_PER_TICK, DEC);
@@ -105,7 +110,7 @@ bool MATCH_MARK(uint16_t measured_ticks, unsigned int desired_us) {
 //+========================================================
 // Due to sensor lag, when received, Spaces tend to be MARK_EXCESS_MICROS us too short
 //
-bool MATCH_SPACE(uint16_t measured_ticks, unsigned int desired_us) {
+bool MATCH_SPACE(uint16_t measured_ticks, uint16_t desired_us) {
 #ifdef TRACE
     Serial.print(F("Testing space (actual vs desired): "));
     Serial.print(measured_ticks * MICROS_PER_TICK, DEC);
@@ -132,28 +137,36 @@ bool MATCH_SPACE(uint16_t measured_ticks, unsigned int desired_us) {
 }
 
 //+=============================================================================
-// Interrupt Service Routine - Fires every 50uS
-// TIMER2 interrupt code to collect raw data.
-// Widths of alternating SPACE, MARK are recorded in rawbuf.
-// Recorded in ticks of 50uS [microseconds, 0.000050 seconds]
+// Interrupt Service Routine - Fires every 50 us
+// Widths of alternating SPACE, MARK are recorded in irparams.rawbuf.
+// Recorded in ticks of 50 us [microseconds, 0.000050 seconds]
 // 'rawlen' counts the number of entries recorded so far.
 // First entry is the SPACE between transmissions.
-// As soon as a the first [SPACE] entry gets long:
-//   Ready is set; State switches to IDLE; Timing of SPACE continues.
-// As soon as first MARK arrives:
-//   Gap width is recorded; Ready is cleared; New logging starts
+// As soon as a the first [SPACE] entry gets longer than RECORD_GAP_TICKS:
+//   State switches to STOP (frame received); Timing of SPACE continues.
+// A resume() switches from STOP to IDLE.
+// As soon as first MARK arrives in IDLE:
+//   Gap width is recorded; New logging starts.
 //
+//#define IR_MEASURE_TIMING
+//#define IR_TIMING_TEST_PIN 7 // do not forget to execute:  pinMode(7, OUTPUT);
+#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
+#include "digitalWriteFast.h"
+#endif
 ISR (TIMER_INTR_NAME) {
+#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
+    digitalWriteFast(IR_TIMING_TEST_PIN, HIGH); // 2 clock cycles
+#endif
+    // 7 - 8.5 us for ISR body (without pushes and pops) for ATmega328 @16MHz
+
     TIMER_RESET_INTR_PENDING; // reset timer interrupt flag if required (currently only for Teensy and ATmega4809)
 
     // Read if IR Receiver -> SPACE [xmt LED off] or a MARK [xmt LED on]
     uint8_t irdata = (uint8_t) digitalRead(irparams.recvpin);
 
-    irparams.timer++;  // One more 50uS tick
-
-    // clip timer at maximum 0xFFFF
-    if (irparams.timer == 0) {
-        irparams.timer--;
+    // clip timer at maximum 0xFFFF / 3.2 seconds at 50 us ticks
+    if (irparams.timer < 0xFFFF) {
+        irparams.timer++;  // One more 50uS tick
     }
 
     /*
@@ -168,6 +181,9 @@ ISR (TIMER_INTR_NAME) {
             if (irparams.timer > RECORD_GAP_TICKS) {
                 // Gap just ended; Record gap duration + start recording transmission
                 // Initialize all state machine variables
+#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
+//                digitalWriteFast(IR_TIMING_TEST_PIN, HIGH); // 2 clock cycles
+#endif
                 irparams.overflow = false;
                 irparams.rawbuf[0] = irparams.timer;
                 irparams.rawlen = 1;
@@ -175,35 +191,37 @@ ISR (TIMER_INTR_NAME) {
             }
             irparams.timer = 0;
         }
-    }
 
-    // First check for buffer overflow
-    if (irparams.rawlen >= RAW_BUFFER_LENGTH) {
-        // Flag up a read overflow; Stop the State Machine
-        irparams.overflow = true;
-        irparams.rcvstate = IR_REC_STATE_STOP;
-    }
-
-    /*
-     * Here we detected a start mark and record the signal
-     */
-    // record marks and spaces and detect end of code
-    if (irparams.rcvstate == IR_REC_STATE_MARK) {  // Timing Mark
+    } else if (irparams.rcvstate == IR_REC_STATE_MARK) {  // Timing Mark
         if (irdata == SPACE) {   // Mark ended; Record time
+#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
+//            digitalWriteFast(IR_TIMING_TEST_PIN, HIGH); // 2 clock cycles
+#endif
             irparams.rawbuf[irparams.rawlen++] = irparams.timer;
-            irparams.timer = 0;
             irparams.rcvstate = IR_REC_STATE_SPACE;
+            irparams.timer = 0;
         }
+
     } else if (irparams.rcvstate == IR_REC_STATE_SPACE) {  // Timing Space
         if (irdata == MARK) {  // Space just ended; Record time
-            irparams.rawbuf[irparams.rawlen++] = irparams.timer;
+            if (irparams.rawlen >= RAW_BUFFER_LENGTH) {
+                // Flag up a read overflow; Stop the State Machine
+                irparams.overflow = true;
+                irparams.rcvstate = IR_REC_STATE_STOP;
+            } else {
+#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
+//                digitalWriteFast(IR_TIMING_TEST_PIN, HIGH); // 2 clock cycles
+#endif
+                irparams.rawbuf[irparams.rawlen++] = irparams.timer;
+                irparams.rcvstate = IR_REC_STATE_MARK;
+            }
             irparams.timer = 0;
-            irparams.rcvstate = IR_REC_STATE_MARK;
 
         } else if (irparams.timer > RECORD_GAP_TICKS) {
             /*
-             * A long Space, indicates gap between codes
-             * Switch to IR_REC_STATE_STOP, which means current code is ready for processing
+             * Current code is ready for processing!
+             * We received a long space, which indicates gap between codes.
+             * Switch to IR_REC_STATE_STOP
              * Don't reset timer; keep counting width of next leading space
              */
             irparams.rcvstate = IR_REC_STATE_STOP;
@@ -213,15 +231,23 @@ ISR (TIMER_INTR_NAME) {
          * Complete command received
          * stay here until resume() is called, which switches state to IR_REC_STATE_IDLE
          */
+#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
+//        digitalWriteFast(IR_TIMING_TEST_PIN, HIGH); // 2 clock cycles
+#endif
         if (irdata == MARK) {
             irparams.timer = 0;  // Reset gap timer, to prepare for call of resume()
         }
     }
     setFeedbackLED(irdata == MARK);
+#ifdef IR_MEASURE_TIMING
+    digitalWriteFast(IR_TIMING_TEST_PIN, LOW); // 2 clock cycles
+#endif
 }
 
 // If requested, flash LED while receiving IR data
-
+#if defined(ESP32)
+IRAM_ATTR
+#endif
 void setFeedbackLED(bool aSwitchLedOn) {
     if (irparams.blinkflag) {
         if (aSwitchLedOn) {

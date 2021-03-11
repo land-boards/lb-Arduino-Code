@@ -1,7 +1,22 @@
-## 2.9.0 2021/01
+## 3.0.2
+- Bug fix for USE_OLD_DECODE.
+- Increase RECORD_GAP_MICROS to 11000.
+- Fix overflow message. (#793).
+- Improved handling for HASH decoder.
+- Tested for ATtiny85.
+- Added `printIRResultMinimal()`.
+- Added missing IRAM_ATTR for ESP32.
+- Adapted to TinyCore 0.0.7.
+- Fixed decodeSony 20 bit bug #811.
+- Replaced delayMicroseconds with customDelayMicroseconds and removed NoInterrupt() for send functions, removed SPIN_WAIT macro, sleepMicros() and sleepUntilMicros().
+- Fixed LG checksum error.
+- Fixed JVC repeat error.
+
+## 3.0.0 + 3.0.1 2021/02
 - Added SendRaw with byte data.
 - Fixed resume bug if irparams.rawlen >= RAW_BUFFER_LENGTH. Thanks to Iosif Peterfi
 - Added `dumpPronto(String *aString, unsigned int frequency)` with String object as argument. Thanks to Iosif Peterfi
+- Removed Test2 example.
 - Fixed swapped cases in `getProtocolString()`. Thanks to Jim-2249
 - Added compile option `IR_INPUT_IS_ACTIVE_HIGH`. Thanks to Jim-2249
 - Corrected template. Thanks to Jim-2249
@@ -9,7 +24,8 @@
 - Added compatibility with tone for AVR's.
 - New TinyIRreceiver does not require a timer.
 - New MinimalReceiver and IRDispatcherDemo examples.
-- Removed Test2 example.
+- Added TinyCore 32 / ATtiny3217 support.
+- Added Apple protocol.
 
 ## 2.8.1 2020/10
 - Fixed bug in Sony decode introduced in 2.8.0.

@@ -1,5 +1,6 @@
 /*
- * irReceive.cpp
+ * irReceive.cpp.h
+ * This file is exclusively included by IRremote.h to enable easy configuration of library switches
  *
  *  Contains all IRrecv class functions
  *
@@ -31,8 +32,6 @@
  */
 
 //#define DEBUG
-#include "IRremote.h"
-
 // The receiver instance
 IRrecv IrReceiver;
 
@@ -46,7 +45,7 @@ IRrecv::IRrecv() {
     irparams.blinkflag = false;
 }
 
-IRrecv::IRrecv(int recvpin) {
+IRrecv::IRrecv(uint8_t recvpin) {
     irparams.recvpin = recvpin;
     irparams.blinkflag = false;
 }
@@ -55,7 +54,7 @@ IRrecv::IRrecv(int recvpin) {
  * @param recvpin Arduino pin to use, where a demodulating IR receiver is connected.
  * @param blinkpin pin to blink when receiving IR. Not supported by all hardware. No sanity check is made.
  */
-IRrecv::IRrecv(int recvpin, int blinkpin) {
+IRrecv::IRrecv(uint8_t recvpin, uint8_t blinkpin) {
     irparams.recvpin = recvpin;
     irparams.blinkpin = blinkpin;
     pinMode(blinkpin, OUTPUT);
@@ -89,6 +88,13 @@ void IRrecv::start() {
     enableIRIn();
 }
 
+void IRrecv::start(uint16_t aMillisToAddToGapCounter) {
+    enableIRIn();
+    noInterrupts();
+    irparams.timer += aMillisToAddToGapCounter / MICROS_PER_TICK;
+    interrupts();
+}
+
 void IRrecv::stop() {
     disableIRIn();
 }
@@ -113,10 +119,9 @@ void IRrecv::enableIRIn() {
     TIMER_ENABLE_RECEIVE_INTR;  // Timer interrupt enable
     TIMER_RESET_INTR_PENDING;   // NOP for most platforms
 
-    interrupts();
-
     // Initialize state machine state
     resume();
+    interrupts(); // after resume to avoid running through STOP state 1 time before switching to IDLE
 
     // Set pin modes
     pinMode(irparams.recvpin, INPUT);
@@ -262,7 +267,7 @@ bool IRrecv::decode() {
     }
 #endif
 
-#if DECODE_KASEIKYO && !defined(USE_STANDARD_DECODE) // if USE_STANDARD_DECODE enabled, decodeKaseikyo() is already called by decodePanasonic()
+#if DECODE_KASEIKYO && defined(USE_OLD_DECODE) // if not USE_OLD_DECODE enabled, decodeKaseikyo() is already called by decodePanasonic()
         TRACE_PRINTLN("Attempting Panasonic/Kaseikyo decode");
         if (decodeKaseikyo()) {
             return true;
@@ -320,7 +325,7 @@ bool IRrecv::decode() {
 
 #if DECODE_SAMSUNG
     TRACE_PRINTLN("Attempting Samsung decode");
-#if defined(USE_STANDARD_DECODE)
+#if !defined(USE_OLD_DECODE)
     if (decodeSamsung()) {
         return true;
     }
@@ -362,14 +367,6 @@ bool IRrecv::decode() {
     }
 #endif
 
-// to be removed!
-//#if DECODE_SANYO
-//    TRACE_PRINTLN("Attempting Sanyo decode");
-//    if (decodeSanyo()) {
-//        return true;
-//    }
-//#endif
-
     /*
      * Last resort is the universal hash decode which always return true
      */
@@ -384,11 +381,9 @@ bool IRrecv::decode() {
 #endif
 
     /*
-     * Not reached, if Hash is enabled and rawlen >= 6!!!
-     * Throw away received data and start over
+     * Return true here, to let the loop decide to call resume or to print raw data.
      */
-    resume();
-    return false;
+    return true;
 }
 
 /*
@@ -400,14 +395,14 @@ bool IRrecv::decode() {
  * Input is     results.rawbuf
  * Output is    results.value
  */
-bool IRrecv::decodePulseWidthData(uint8_t aNumberOfBits, uint8_t aStartOffset, unsigned int aOneMarkMicros,
-        unsigned int aZeroMarkMicros, unsigned int aBitSpaceMicros, bool aMSBfirst) {
+bool IRrecv::decodePulseWidthData(uint8_t aNumberOfBits, uint8_t aStartOffset, uint16_t aOneMarkMicros, uint16_t aZeroMarkMicros,
+        uint16_t aBitSpaceMicros, bool aMSBfirst) {
 
     uint16_t *tRawBufPointer = &decodedIRData.rawDataPtr->rawbuf[aStartOffset];
     uint32_t tDecodedData = 0;
 
     if (aMSBfirst) {
-        for (uint8_t i = 0; i < aNumberOfBits; i++) {
+        for (uint_fast8_t i = 0; i < aNumberOfBits; i++) {
             // Check for variable length mark indicating a 0 or 1
             if (MATCH_MARK(*tRawBufPointer, aOneMarkMicros)) {
                 tDecodedData = (tDecodedData << 1) | 1;
@@ -495,14 +490,14 @@ bool IRrecv::decodePulseWidthData(uint8_t aNumberOfBits, uint8_t aStartOffset, u
  * Output is    results.value
  * @return false if decoding failed
  */
-bool IRrecv::decodePulseDistanceData(uint8_t aNumberOfBits, uint8_t aStartOffset, unsigned int aBitMarkMicros,
-        unsigned int aOneSpaceMicros, unsigned int aZeroSpaceMicros, bool aMSBfirst) {
+bool IRrecv::decodePulseDistanceData(uint8_t aNumberOfBits, uint8_t aStartOffset, uint16_t aBitMarkMicros, uint16_t aOneSpaceMicros,
+        uint16_t aZeroSpaceMicros, bool aMSBfirst) {
 
     uint16_t *tRawBufPointer = &decodedIRData.rawDataPtr->rawbuf[aStartOffset];
     uint32_t tDecodedData = 0;
 
     if (aMSBfirst) {
-        for (uint8_t i = 0; i < aNumberOfBits; i++) {
+        for (uint_fast8_t i = 0; i < aNumberOfBits; i++) {
             // Check for constant length mark
             if (!MATCH_MARK(*tRawBufPointer, aBitMarkMicros)) {
                 DBG_PRINT(F("Mark="));
@@ -587,15 +582,15 @@ bool IRrecv::decodePulseDistanceData(uint8_t aNumberOfBits, uint8_t aStartOffset
  * Output is    results.value
  */
 bool IRrecv::decodeBiPhaseData(uint8_t aNumberOfBits, uint8_t aStartOffset, uint8_t aValueOfSpaceToMarkTransition,
-        unsigned int aBiphaseTimeUnit) {
+        uint16_t aBiphaseTimeUnit) {
 
     uint16_t *tRawBufPointer = &decodedIRData.rawDataPtr->rawbuf[aStartOffset];
     bool tCheckMark = aStartOffset & 1;
-    uint8_t tClockCount = 0; // assume that first transition is significant
+    uint_fast8_t tClockCount = 0; // assume that first transition is significant
     aValueOfSpaceToMarkTransition &= 1; // only 0 or 1 are valid
     uint32_t tDecodedData = 0;
 
-    for (uint8_t tBitIndex = 0; tBitIndex < aNumberOfBits;) {
+    for (uint_fast8_t tBitIndex = 0; tBitIndex < aNumberOfBits;) {
         if (tCheckMark) {
             /*
              *  Check mark and determine current (and next) bit value
@@ -713,7 +708,7 @@ uint8_t IRrecv::compare(unsigned int oldval, unsigned int newval) {
 #define FNV_PRIME_32 16777619
 #define FNV_BASIS_32 2166136261
 
-#  if defined(USE_STANDARD_DECODE)
+#  if !defined(USE_OLD_DECODE)
 bool IRrecv::decodeHash() {
     long hash = FNV_BASIS_32;
 
@@ -736,8 +731,6 @@ bool IRrecv::decodeHash() {
 }
 #  else
 
-#warning "Old decoder function decodeHash() is enabled. Enable USE_STANDARD_DECODE on line 34 of IRremote.h to enable new version of decodeHash() instead."
-
 bool IRrecv::decodeHash() {
     long hash = FNV_BASIS_32;
 
@@ -758,115 +751,17 @@ bool IRrecv::decodeHash() {
 
     return true;
 }
-#  endif // defined(USE_STANDARD_DECODE)
+#  endif // !defined(USE_OLD_DECODE)
 #endif // DECODE_HASH
 
-const char* IRrecv::getProtocolString(decode_type_t aProtocol) {
-    switch (aProtocol) {
-    default:
-    case UNKNOWN:
-        return ("UNKNOWN");
-        break;
-#if DECODE_BOSEWAVE
-    case BOSEWAVE:
-        return ("BOSEWAVE");
-        break;
-#endif
-#if DECODE_DENON
-    case DENON:
-        return ("DENON");
-        break;
-#endif
-#if DECODE_SHARP
-    case SHARP:
-        return ("SHARP");
-        break;
-#endif
-#if DECODE_JVC
-    case JVC:
-        return ("JVC");
-        break;
-#endif
-#if DECODE_LEGO_PF
-    case LEGO_PF:
-        return ("LEGO_PF");
-        break;
-#endif
-#if DECODE_LG
-    case LG:
-        return ("LG");
-        break;
-#endif
-#if DECODE_MAGIQUEST
-    case MAGIQUEST:
-        return ("MAGIQUEST");
-        break;
-#endif
-#if DECODE_NEC
-    case NEC:
-        return ("NEC");
-        break;
-#endif
-#if DECODE_PANASONIC
-    case PANASONIC:
-        return ("PANASONIC");
-        break;
-#endif
-#if DECODE_KASEIKYO
-    case KASEIKYO:
-        return ("KASEIKYO");
-        break;
-    case KASEIKYO_DENON:
-        return ("KASEIKYO_DENON");
-        break;
-    case KASEIKYO_SHARP:
-        return ("KASEIKYO_SHARP");
-        break;
-    case KASEIKYO_JVC:
-        return ("KASEIKYO_JVC");
-        break;
-    case KASEIKYO_MITSUBISHI:
-        return ("KASEIKYO_MITSUBISHI");
-        break;
-#endif
-#if DECODE_RC5
-    case RC5:
-        return ("RC5");
-        break;
-#endif
-#if DECODE_RC6
-    case RC6:
-        return ("RC6");
-        break;
-#endif
-#if DECODE_SAMSUNG
-    case SAMSUNG:
-        return ("SAMSUNG");
-        break;
-#endif
-#if DECODE_SANYO
-    case SANYO:
-        return ("SANYO");
-        break;
-#endif
-
-#if DECODE_SONY
-    case SONY:
-        return ("SONY");
-        break;
-#endif
-#if DECODE_WHYNTER
-    case WHYNTER:
-        return ("WHYNTER");
-        break;
-#endif
-    }
-}
-
-void IRrecv::printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLeadingSpaceTicks) {
+void printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLeadingSpaceTicks) {
     aSerial->print(F("Protocol="));
     aSerial->print(getProtocolString(aIRDataPtr->protocol));
     if (aIRDataPtr->protocol == UNKNOWN) {
+#if DECODE_HASH
+        aSerial->print(F(" Hash=0x"));
+        aSerial->print(aIRDataPtr->decodedRawData, HEX);
+#endif
         aSerial->print(' ');
         aSerial->print((aIRDataPtr->rawDataPtr->rawlen + 1) / 2, DEC);
         aSerial->println(F(" bits received"));
@@ -880,12 +775,10 @@ void IRrecv::printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLe
         aSerial->print(F(" Command=0x"));
         aSerial->print(aIRDataPtr->command, HEX);
 
-#if defined(ENABLE_EXTRA_INFO)
         if (aIRDataPtr->flags & IRDATA_FLAGS_EXTRA_INFO) {
             aSerial->print(F(" Extra=0x"));
             aSerial->print(aIRDataPtr->extra, HEX);
         }
-#endif
 
         if (aIRDataPtr->flags & IRDATA_FLAGS_PARITY_FAILED) {
             aSerial->print(F(" Parity fail"));
@@ -895,17 +788,15 @@ void IRrecv::printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLe
             aSerial->print(F(" Toggle=1"));
         }
 
-        if (aIRDataPtr->flags & IRDATA_FLAGS_IS_AUTO_REPEAT) {
-            aSerial->print(F(" Auto-repeat gap="));
-            aSerial->print(aLeadingSpaceTicks * MICROS_PER_TICK);
-            aSerial->print(F("us"));
-        }
-
-        if (aIRDataPtr->flags & IRDATA_FLAGS_IS_REPEAT) {
-            aSerial->print(F(" Repeat"));
+        if (aIRDataPtr->flags & (IRDATA_FLAGS_IS_AUTO_REPEAT | IRDATA_FLAGS_IS_REPEAT)) {
+            aSerial->print(' ');
+            if (aIRDataPtr->flags & IRDATA_FLAGS_IS_AUTO_REPEAT) {
+                aSerial->print(F("Auto-"));
+            }
+            aSerial->print(F("Repeat"));
             if (aLeadingSpaceTicks != 0) {
                 aSerial->print(F(" gap="));
-                aSerial->print(aLeadingSpaceTicks * MICROS_PER_TICK);
+                aSerial->print((uint32_t) aLeadingSpaceTicks * MICROS_PER_TICK);
                 aSerial->print(F("us"));
             }
         }
@@ -920,24 +811,56 @@ void IRrecv::printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLe
             /*
              * Print number of bits processed
              */
-            aSerial->print(F(" ("));
+            aSerial->print(' ');
             aSerial->print(aIRDataPtr->numberOfBits, DEC);
-            aSerial->print(F(" bits)"));
+            aSerial->print(F(" bits"));
 
+#if !defined(USE_OLD_DECODE)
             if (aIRDataPtr->flags & IRDATA_FLAGS_IS_MSB_FIRST) {
                 aSerial->println(F(" MSB first"));
             } else {
                 aSerial->println(F(" LSB first"));
-
             }
+#else
+            aSerial->println();
+#endif
+
         } else {
             aSerial->println();
         }
     }
-
 }
+
 void IRrecv::printIRResultShort(Print *aSerial) {
-    printIRResultShort(aSerial, &decodedIRData, decodedIRData.rawDataPtr->rawbuf[0]);
+    ::printIRResultShort(aSerial, &decodedIRData, decodedIRData.rawDataPtr->rawbuf[0]);
+}
+
+void IRrecv::printIRResultMinimal(Print *aSerial) {
+    aSerial->print(F("P="));
+    aSerial->print(getProtocolString(decodedIRData.protocol));
+    if (decodedIRData.protocol == UNKNOWN) {
+#if DECODE_HASH
+        aSerial->print(F(" #=0x"));
+        aSerial->print(decodedIRData.decodedRawData, HEX);
+#endif
+        aSerial->print(' ');
+        aSerial->print((decodedIRData.rawDataPtr->rawlen + 1) / 2, DEC);
+        aSerial->println(F(" bits received"));
+    } else {
+        /*
+         * New decoders have address and command
+         */
+        aSerial->print(F(" A=0x"));
+        aSerial->print(decodedIRData.address, HEX);
+
+        aSerial->print(F(" C=0x"));
+        aSerial->print(decodedIRData.command, HEX);
+        aSerial->print(F(" Raw=0x"));
+        aSerial->print(decodedIRData.decodedRawData, HEX);
+        if (decodedIRData.flags & (IRDATA_FLAGS_IS_AUTO_REPEAT | IRDATA_FLAGS_IS_REPEAT)) {
+            aSerial->print(F(" R"));
+        }
+    }
 }
 
 //+=============================================================================
@@ -962,7 +885,7 @@ void IRrecv::printIRResultRawFormatted(Print *aSerial, bool aOutputMicrosecondsI
     aSerial->print(F("     -"));
     aSerial->println(tDurationMicros, DEC);
 
-    for (unsigned int i = 1; i < decodedIRData.rawDataPtr->rawlen; i++) {
+    for (uint8_t i = 1; i < decodedIRData.rawDataPtr->rawlen; i++) {
         if (aOutputMicrosecondsInsteadOfTicks) {
             tDurationMicros = decodedIRData.rawDataPtr->rawbuf[i] * MICROS_PER_TICK;
         } else {
@@ -970,33 +893,24 @@ void IRrecv::printIRResultRawFormatted(Print *aSerial, bool aOutputMicrosecondsI
         }
         if (!(i & 1)) {  // even
             aSerial->print('-');
-            if (tDurationMicros < 1000) {
-                aSerial->print(' ');
-            }
-            if (tDurationMicros < 100) {
-                aSerial->print(' ');
-            }
-            if (tDurationMicros < 10) {
-                aSerial->print(' ');
-            }
-            aSerial->print(tDurationMicros, DEC);
         } else {  // odd
-            aSerial->print(F("     "));
-            aSerial->print('+');
-            if (tDurationMicros < 1000) {
-                aSerial->print(' ');
-            }
-            if (tDurationMicros < 100) {
-                aSerial->print(' ');
-            }
-            if (tDurationMicros < 10) {
-                aSerial->print(' ');
-            }
-            aSerial->print(tDurationMicros, DEC);
-            if (i + 1 < decodedIRData.rawDataPtr->rawlen) {
-                aSerial->print(','); //',' not required for last one
-            }
+            aSerial->print(F("     +"));
         }
+        if (tDurationMicros < 1000) {
+            aSerial->print(' ');
+        }
+        if (tDurationMicros < 100) {
+            aSerial->print(' ');
+        }
+        if (tDurationMicros < 10) {
+            aSerial->print(' ');
+        }
+        aSerial->print(tDurationMicros, DEC);
+
+        if ((i & 1) && (i + 1) < decodedIRData.rawDataPtr->rawlen) {
+            aSerial->print(','); //',' not required for last one
+        }
+
         if (!(i % 8)) {
             aSerial->println("");
         }
@@ -1013,7 +927,7 @@ void IRrecv::printIRResultRawFormatted(Print *aSerial, bool aOutputMicrosecondsI
  * Recording of IRremote anyway stops at a gap of RECORD_GAP_MICROS (5 ms).
  */
 void IRrecv::compensateAndPrintIRResultAsCArray(Print *aSerial, bool aOutputMicrosecondsInsteadOfTicks) {
-    // Start declaration
+// Start declaration
     if (aOutputMicrosecondsInsteadOfTicks) {
         aSerial->print(F("uint16_t "));            // variable type
         aSerial->print(F("rawData["));            // array name
@@ -1065,7 +979,7 @@ void IRrecv::compensateAndPrintIRResultAsCArray(Print *aSerial, bool aOutputMicr
  * Compensate received values by MARK_EXCESS_MICROS, like it is done for decoding!
  *
  * Maximum foruint8_t is 255*50 microseconds = 12750 microseconds = 12.75 ms, which hardly ever occurs inside an IR sequence.
- * Recording of IRremote anyway stops at a gap of RECORD_GAP_MICROS (5 ms).
+ * Recording of IRremote anyway stops at a gap of RECORD_GAP_MICROS (11 ms).
  */
 void IRrecv::compensateAndStoreIRResultInArray(uint8_t *aArrayPtr) {
 
@@ -1092,20 +1006,12 @@ void IRrecv::printIRResultAsCVariables(Print *aSerial) {
         /*
          * New decoders have address and command
          */
-        if (decodedIRData.address > 0xFFFF) {
-            aSerial->print(F("uint32_t"));
-        } else {
-            aSerial->print(F("uint16_t"));
-        }
+        aSerial->print(F("uint16_t"));
         aSerial->print(F(" address = 0x"));
         aSerial->print(decodedIRData.address, HEX);
         aSerial->println(';');
 
-        if (decodedIRData.command > 0xFFFF) {
-            aSerial->print(F("uint32_t"));
-        } else {
-            aSerial->print(F("uint16_t"));
-        }
+        aSerial->print(F("uint16_t"));
         aSerial->print(F(" command = 0x"));
         aSerial->print(decodedIRData.command, HEX);
         aSerial->println(';');
@@ -1124,7 +1030,79 @@ void IRrecv::printIRResultAsCVariables(Print *aSerial) {
  * Contains no new (since 5/2020) protocols.
  */
 bool IRrecv::decode(decode_results *aResults) {
-    Serial.println("The function decode(&results)) is deprecated and may not work as expected! Just use decode() - without any parameter.");
+    Serial.println(
+            "The function decode(&results)) is deprecated and may not work as expected! Just use decode() - without any parameter.");
     (void) aResults;
     return decode();
+}
+
+const char* getProtocolString(decode_type_t aProtocol) {
+    switch (aProtocol) {
+    default:
+    case UNKNOWN:
+        return ("UNKNOWN");
+        break;
+    case DENON:
+        return ("DENON");
+        break;
+    case SHARP:
+        return ("SHARP");
+        break;
+    case JVC:
+        return ("JVC");
+        break;
+    case LG:
+        return ("LG");
+        break;
+    case NEC:
+        return ("NEC");
+        break;
+    case PANASONIC:
+        return ("PANASONIC");
+        break;
+    case KASEIKYO:
+        return ("KASEIKYO");
+        break;
+    case KASEIKYO_DENON:
+        return ("KASEIKYO_DENON");
+        break;
+    case KASEIKYO_SHARP:
+        return ("KASEIKYO_SHARP");
+        break;
+    case KASEIKYO_JVC:
+        return ("KASEIKYO_JVC");
+        break;
+    case KASEIKYO_MITSUBISHI:
+        return ("KASEIKYO_MITSUBISHI");
+        break;
+    case RC5:
+        return ("RC5");
+        break;
+    case RC6:
+        return ("RC6");
+        break;
+    case SAMSUNG:
+        return ("SAMSUNG");
+        break;
+    case SONY:
+        return ("SONY");
+        break;
+    case APPLE:
+        return ("APPLE");
+        break;
+#if !defined(EXCLUDE_EXOTIC_PROTOCOLS)
+    case BOSEWAVE:
+        return ("BOSEWAVE");
+        break;
+    case LEGO_PF:
+        return ("LEGO_PF");
+        break;
+    case MAGIQUEST:
+        return ("MAGIQUEST");
+        break;
+    case WHYNTER:
+        return ("WHYNTER");
+        break;
+#endif
+    }
 }

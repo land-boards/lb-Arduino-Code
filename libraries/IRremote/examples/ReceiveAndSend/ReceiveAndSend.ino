@@ -1,5 +1,5 @@
 /*
- * IRrecord.cpp
+ * ReceiveAndSend.cpp
  *
  * Record and play back IR signals as a minimal
  * An IR detector/demodulator must be connected to the input RECV_PIN.
@@ -14,7 +14,33 @@
  * Initially coded 2009 Ken Shirriff http://www.righto.com
  *
  *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *
+ ************************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2020-2021 Armin Joachimsmeyer
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ ************************************************************************************
  */
+
+//#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 900 bytes program space
 
 #include <IRremote.h>
 
@@ -37,6 +63,7 @@ int DELAY_BETWEEN_REPEAT = 50;
 // Storage for the recorded code
 struct storedIRDataStruct {
     IRData receivedIRData;
+    // extensions for sendRaw
     uint8_t rawCode[RAW_BUFFER_LENGTH]; // The durations if raw
     uint8_t rawCodeLength; // The length of the code
 } sStoredIRData;
@@ -56,7 +83,11 @@ void setup() {
 
     IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); // Start the receiver, enable feedback LED, take LED feedback pin from the internal boards definition
 
-    IrSender.begin(true); // Enable feedback LED,
+#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
+    IrSender.begin(IR_SEND_PIN, true); // Specify send pin and enable feedback LED at default feedback LED pin
+#else
+    IrSender.begin(true); // Enable feedback LED at default feedback LED pin
+#endif
 
     pinMode(SEND_BUTTON_PIN, INPUT_PULLUP);
     pinMode(STATUS_PIN, OUTPUT);
@@ -138,9 +169,10 @@ void storeCode(IRData *aIRReceivedData) {
     sStoredIRData.receivedIRData = *aIRReceivedData;
 
     if (sStoredIRData.receivedIRData.protocol == UNKNOWN) {
-        Serial.print(F("Received unknown code saving "));
+        Serial.print(F("Received unknown code and store "));
         Serial.print(IrReceiver.results.rawlen - 1);
-        Serial.println(F(" TickCounts as raw "));
+        Serial.println(F(" timing entries as raw "));
+        IrReceiver.printIRResultRawFormatted(&Serial, true); // Output the results in RAW format
         sStoredIRData.rawCodeLength = IrReceiver.results.rawlen - 1;
         IrReceiver.compensateAndStoreIRResultInArray(sStoredIRData.rawCode);
     } else {
@@ -160,10 +192,13 @@ void sendCode(storedIRDataStruct *aIRDataToSend) {
         Serial.println(F(" marks or spaces"));
     } else {
 
+        /*
+         * Use the write function, which does the switch for different protocols
+         */
         IrSender.write(&aIRDataToSend->receivedIRData, NO_REPEATS);
 
         Serial.print(F("Sent: "));
-        IrReceiver.printIRResultShort(&Serial, &aIRDataToSend->receivedIRData);
+        printIRResultShort(&Serial, &aIRDataToSend->receivedIRData);
     }
 }
 

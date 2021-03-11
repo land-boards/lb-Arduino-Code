@@ -31,32 +31,33 @@
 
  Now you must do a few things to add it to the IRremote system:
 
- 1. Open IRremote.h and make the following changes:
+ 1. Open IRremote.h and make the following change:
  REMEMBER to change occurrences of "SHUZU" with the name of your protocol
-
- A. At the top, in the section "Supported Protocols", add:
+ At the top, in the section "Supported Protocols", add:
  #define DECODE_SHUZU  1
  #define SEND_SHUZU    1
 
- B. In the section "An enum consisting of all supported formats", add:
+ 2. Open irProtocol.h and make the following change:
+ In the section "An enum consisting of all supported formats", add:
  SHUZU,
  to the end of the list (notice there is a comma after the protocol name)
 
- C. Further down in "Main class for receiving IR", add:
+ 3. Open IRremoteInt.h and make the following changes:
+ A. Further down in "Main class for receiving IR", add:
  //......................................................................
  #if DECODE_SHUZU
  bool  decodeShuzu () ;
  #endif
 
- D. Further down in "Main class for sending IR", add:
+ B. Further down in "Main class for sending IR", add:
  //......................................................................
  #if SEND_SHUZU
- void  sendShuzuStandard (uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRepeats) ;
+ void  sendShuzuStandard (uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats) ;
  #endif
 
- E. Save your changes and close the file
+ 4. Save your changes and close the files
 
- 2. Now open irReceive.cpp and make the following change:
+ 5. Now open irReceive.cpp and make the following change:
 
  A. In the function IRrecv::decode(), add:
  #ifdef DECODE_SHUZU
@@ -64,16 +65,14 @@
  if (decodeShuzu())  return true ;
  #endif
 
- B. In the function IRrecv::getProtocolString(), add
- #if DECODE_SHUZU
+ B. In the function getProtocolString(), add
  case SHUZU:
  return ("Shuzu");
  break;
- #endif
 
  C. Save your changes and close the file
 
- Now open the Arduino IDE, load up the rawDump.ino sketch, and run it.
+ 6. Now open the Arduino IDE, load up the rawDump.ino sketch, and run it.
  Hopefully it will compile and upload.
  If it doesn't, you've done something wrong. Check your work.
  If you can't get it to work - seek help from somewhere.
@@ -81,9 +80,9 @@
  If you get this far, I will assume you have successfully added your new protocol
  There is one last thing to do.
 
- 1. Delete this giant instructional comment.
+ 7. Delete this giant instructional comment.
 
- 2. Send a copy of your work to us so we can include it in the library and
+ 8. Send a copy of your work to us so we can include it in the library and
  others may benefit from your hard work and maybe even write a song about how
  great you are for helping them! :)
 
@@ -127,7 +126,7 @@
  */
 
 //#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremote.h"
+#include "IRremoteInt.h"
 
 //#define SEND_SHUZU  1 // for testing
 //#define DECODE_SHUZU  1 // for testing
@@ -162,14 +161,12 @@
 
 //+=============================================================================
 //
-void IRsend::sendShuzu(uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRepeats) {
+void IRsend::sendShuzu(uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats) {
     // Set IR carrier frequency
     enableIROut(37); // 36.7kHz is the correct frequency
 
-    uint8_t tNumberOfCommands = aNumberOfRepeats + 1;
+    uint_fast8_t tNumberOfCommands = aNumberOfRepeats + 1;
     while (tNumberOfCommands > 0) {
-
-        noInterrupts();
 
         // Header
         mark(SHUZU_HEADER_MARK);
@@ -177,13 +174,11 @@ void IRsend::sendShuzu(uint16_t aAddress, uint8_t aCommand, uint8_t aNumberOfRep
 
         // Address (device and subdevice)
         sendPulseDistanceWidthData(SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_BIT_MARK, SHUZU_ZERO_SPACE, aAddress,
-        SHUZU_ADDRESS_BITS, LSB_FIRST); // false -> LSB first
+        SHUZU_ADDRESS_BITS, PROTOCOL_IS_LSB_FIRST); // false -> LSB first
 
         // Command + stop bit
         sendPulseDistanceWidthData(SHUZU_BIT_MARK, SHUZU_ONE_SPACE, SHUZU_BIT_MARK, SHUZU_ZERO_SPACE, aCommand,
-        SHUZU_COMMAND_BITS, LSB_FIRST, SEND_STOP_BIT); // false, true -> LSB first, stop bit
-
-        interrupts();
+        SHUZU_COMMAND_BITS, PROTOCOL_IS_LSB_FIRST, SEND_STOP_BIT); // false, true -> LSB first, stop bit
 
         tNumberOfCommands--;
         // skip last delay!

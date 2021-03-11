@@ -66,13 +66,17 @@
 /**************************************************************************/
 Adafruit_SI5351::Adafruit_SI5351(void) {
   m_si5351Config.initialised = false;
-  m_si5351Config.crystalFreq = SI5351_CRYSTAL_FREQ_27MHZ;
+  m_si5351Config.crystalFreq = SI5351_CRYSTAL_FREQ_25MHZ;
   m_si5351Config.crystalLoad = SI5351_CRYSTAL_LOAD_10PF;
   m_si5351Config.crystalPPM = 30;
   m_si5351Config.plla_configured = false;
   m_si5351Config.plla_freq = 0;
   m_si5351Config.pllb_configured = false;
   m_si5351Config.pllb_freq = 0;
+
+  for (uint8_t i = 0; i < 3; i++) {
+    lastRdivValue[i] = 0;
+  }
 }
 
 /**************************************************************************/
@@ -323,6 +327,7 @@ err_t Adafruit_SI5351::setupRdiv(uint8_t output, si5351RDiv_t div) {
   divider &= 0x07;
   divider <<= 4;
   regval |= divider;
+  lastRdivValue[output] = divider;
   return write8(Rreg, regval);
 }
 
@@ -427,8 +432,13 @@ err_t Adafruit_SI5351::setupMultisynth(uint8_t output, si5351PLL_t pllSource,
   if (num == 0) {
     /* Integer mode */
     P1 = 128 * div - 512;
-    P2 = num;
+    P2 = 0;
     P3 = denom;
+  } else if (denom == 1) {
+    /* Fractional mode, simplified calculations */
+    P1 = 128 * div + 128 * num - 512;
+    P2 = 128 * num - 128;
+    P3 = 1;
   } else {
     /* Fractional mode */
     P1 = (uint32_t)(128 * div + floor(128 * ((float)num / (float)denom)) - 512);
@@ -452,20 +462,21 @@ err_t Adafruit_SI5351::setupMultisynth(uint8_t output, si5351PLL_t pllSource,
   }
 
   /* Set the MSx config registers */
-  ASSERT_STATUS(write8(baseaddr, (P3 & 0x0000FF00) >> 8));
-  ASSERT_STATUS(write8(baseaddr + 1, (P3 & 0x000000FF)));
-  ASSERT_STATUS(write8(
-      baseaddr + 2,
-      (P1 & 0x00030000) >>
-          16)); /* ToDo: Add DIVBY4 (>150MHz) and R0 support (<500kHz) later */
-  ASSERT_STATUS(write8(baseaddr + 3, (P1 & 0x0000FF00) >> 8));
-  ASSERT_STATUS(write8(baseaddr + 4, (P1 & 0x000000FF)));
-  ASSERT_STATUS(write8(baseaddr + 5,
-                       ((P3 & 0x000F0000) >> 12) | ((P2 & 0x000F0000) >> 16)));
-  ASSERT_STATUS(write8(baseaddr + 6, (P2 & 0x0000FF00) >> 8));
-  ASSERT_STATUS(write8(baseaddr + 7, (P2 & 0x000000FF)));
+  /* Burst mode: register address auto-increases */
+  uint8_t sendBuffer[9];
+  sendBuffer[0] = baseaddr;
+  sendBuffer[1] = (P3 & 0xFF00) >> 8;
+  sendBuffer[2] = P3 & 0xFF;
+  sendBuffer[3] = ((P1 & 0x30000) >> 16) | lastRdivValue[output];
+  sendBuffer[4] = (P1 & 0xFF00) >> 8;
+  sendBuffer[5] = P1 & 0xFF;
+  sendBuffer[6] = ((P3 & 0xF0000) >> 12) | ((P2 & 0xF0000) >> 16);
+  sendBuffer[7] = (P2 & 0xFF00) >> 8;
+  sendBuffer[8] = P2 & 0xFF;
+  ASSERT_STATUS(writeN(sendBuffer, 9));
 
   /* Configure the clk control and enable the output */
+  /* TODO: Check if the clk control byte needs to be updated. */
   uint8_t clkControlReg = 0x0F; /* 8mA drive strength, MS0 as CLK0 source, Clock
                                    not inverted, powered up */
   if (pllSource == SI5351_PLL_B)
@@ -525,6 +536,17 @@ err_t Adafruit_SI5351::write8(uint8_t reg, uint8_t value) {
 
   // ToDo: Check for I2C errors
 
+  return ERROR_NONE;
+}
+
+err_t Adafruit_SI5351::writeN(uint8_t *data, uint8_t n) {
+  Wire.beginTransmission(SI5351_ADDRESS);
+#if ARDUINO >= 100
+  Wire.write(data, n);
+#else
+  Wire.send(data, n);
+#endif
+  Wire.endTransmission();
   return ERROR_NONE;
 }
 

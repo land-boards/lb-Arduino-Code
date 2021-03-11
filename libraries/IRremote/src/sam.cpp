@@ -32,7 +32,7 @@
 #if defined(ARDUINO_ARCH_SAMD)
 // Support routines for SAM processor boards
 
-#include "IRremote.h"
+#include "IRremoteInt.h"
 
 // "Idiot check"
 #ifdef USE_DEFAULT_ENABLE_IR_IN
@@ -45,8 +45,8 @@
 
 // following based on setup from GitHub jdneo/timerInterrupt.ino
 
-static void setTimerFrequency(int frequencyHz) {
-    int compareValue = (SYSCLOCK / (TIMER_PRESCALER_DIV * frequencyHz)) - 1;
+static void setTimerFrequency(unsigned int aFrequencyHz) {
+    int compareValue = (SYSCLOCK / (TIMER_PRESCALER_DIV * aFrequencyHz)) - 1;
     //Serial.println(compareValue);
     TcCount16* TC = (TcCount16*) TC3;
     // Make sure the count is in a proportional position to where it was
@@ -115,7 +115,7 @@ void IRrecv::disableIRIn() {
     TC3->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
 }
 
-void IRTimer(); // Defined in IRRemote as ISR(TIMER_INTR_NAME)
+void IRTimer(); // Defined in IRremoteBoardDefs.h as ISR(TIMER_INTR_NAME)
 
 void TC3_Handler(void) {
     TcCount16* TC = (TcCount16*) TC3;
