@@ -584,7 +584,9 @@ uint8_t testProto16(void)
           Serial.print(F(" and port "));
           Serial.print(port);
           Serial.println(F(" Expected High"));
+          Dio128.pinMode((chip << 4) + port, INPUT);
           testResults = TEST_FAILED;
+          return testResults;
         }
         Dio128.digitalWrite((chip << 4) + port, LOW);
         //      delay(2);
@@ -595,7 +597,9 @@ uint8_t testProto16(void)
           Serial.print(F(" and port "));
           Serial.print(port);
           Serial.println(F(" Expected LOW"));
+          Dio128.pinMode((chip << 4) + port, INPUT);
           testResults = TEST_FAILED;
+          return testResults;
         }
         Dio128.pinMode((chip << 4) + port, INPUT);
         //      delay(2);

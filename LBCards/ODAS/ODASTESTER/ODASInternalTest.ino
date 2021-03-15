@@ -3,14 +3,14 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalextLBTestCard(void) -
+// uint8_t internalLBTestCard(void) -
 //  Set all pins to inputs
 //  Write to OLATAB registers
 //  Read-back from OLATAB registers
 //  Bounce a 1 across all the output lines
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t internalextLBTestCard(void)
+uint8_t internalLBTestCard(void)
 {
   BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
@@ -34,7 +34,7 @@ uint8_t internalextLBTestCard(void)
       break;
     // Cards with 8 MCP23017 parts
     case DIGIO128_CARD:
-      return (internalextLBTestDIGIO128_CARD());
+      return (internalLBTestDIGIO128_CARD());
       break;
     case DIGIO128_64_CARD:
       return (internalextLBTestDIGIO128_64_CARD());
@@ -208,10 +208,10 @@ uint8_t internaltestDigio32Card(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t internalextLBTestDIGIO128_CARD(void) -
+// uint8_t internalLBTestDIGIO128_CARD(void) -
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t internalextLBTestDIGIO128_CARD(void)
+uint8_t internalLBTestDIGIO128_CARD(void)
 {
   uint8_t testResults = 1;
   for (uint8_t port = 0; port < 128; port++)

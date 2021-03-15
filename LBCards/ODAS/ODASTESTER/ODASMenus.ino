@@ -126,7 +126,10 @@ void cardTestMenu(void)
               if (extLBTestCard() == TEST_PASSED)
                 passCount++;
               else
+              {
                 failCount++;
+                single0loop1 = 0; // break out of looping
+              }
               Serial.print(F("Test PASS = "));
               Serial.print(passCount);
               Serial.print(F(", FAIL = "));
@@ -135,7 +138,7 @@ void cardTestMenu(void)
             }
           case INTERNAL_TEST:
             {
-              if (internalextLBTestCard() == TEST_PASSED)
+              if (internalLBTestCard() == TEST_PASSED)
                 passCount++;
               else
                 failCount++;
