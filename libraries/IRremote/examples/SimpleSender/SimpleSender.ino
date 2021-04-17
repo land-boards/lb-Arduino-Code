@@ -2,17 +2,24 @@
  * SimpleSender.cpp
  *
  *  Demonstrates sending IR codes in standard format with address and command
- *  An extended example for sending can be found as IRsendDemo.
- *
- * For Arduino Uno, Nano etc., an IR LED must be connected to PWM pin 3 (IR_SEND_PIN).
+ *  An extended example for sending can be found as SendDemo.
  *
  *  Copyright (C) 2020-2021  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  *  MIT License
  */
+#include <Arduino.h>
+
+/*
+ * Define macros for input and output pin etc.
+ */
+#include "PinDefinitionsAndMore.h"
+
+//#define SEND_PWM_BY_TIMER
+//#define USE_NO_SEND_PWM
 
 #include <IRremote.h>
 
@@ -23,19 +30,14 @@ void setup() {
 
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
-    Serial.print(F("Ready to send IR signals at pin "));
-    Serial.println(IR_SEND_PIN);
 
     /*
      * The IR library setup. That's all!
-     * The Output pin is board specific and fixed at IR_SEND_PIN.
-     * see https://github.com/Arduino-IRremote/Arduino-IRremote#hardware-specifications
      */
-#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
-    IrSender.begin(IR_SEND_PIN, true); // Specify send pin and enable feedback LED at default feedback LED pin
-#else
-    IrSender.begin(true); // Enable feedback LED at default feedback LED pin
-#endif
+    IrSender.begin(IR_SEND_PIN, ENABLE_LED_FEEDBACK); // Specify send pin and enable feedback LED at default feedback LED pin
+
+    Serial.print(F("Ready to send IR signals at pin "));
+    Serial.println(IR_SEND_PIN);
 }
 
 /*
@@ -62,6 +64,7 @@ void loop() {
     Serial.println();
 
     Serial.println(F("Send NEC with 16 bit address"));
+    Serial.flush();
 
     // Results for the first loop to: Protocol=NEC Address=0x102 Command=0x34 Raw-Data=0xCB340102 (32 bits)
     IrSender.sendNEC(sAddress, sCommand, sRepeats);
@@ -71,7 +74,6 @@ void loop() {
      */
 //    Serial.println(F("Send NECRaw 0xCB340102"));
 //    IrSender.sendNECRaw(0xCB340102, sRepeats);
-
     /*
      * Increment send values
      * Also increment address just for demonstration, which normally makes no sense
@@ -84,5 +86,5 @@ void loop() {
         sRepeats = 4;
     }
 
-    delay(5000);  // delay must be greater than 5 ms (RECORD_GAP_MICROS), otherwise the receiver sees it as one long signal
+    delay(1000);  // delay must be greater than 5 ms (RECORD_GAP_MICROS), otherwise the receiver sees it as one long signal
 }

@@ -1,3 +1,23 @@
+# Changelog
+The latest version may not be released!
+
+## 3.1.0
+- USE_SOFT_SEND_PWM is active by default.
+- Removed decode_results results.
+- Renamed most irparams_struct values.
+- Fixed LG send bug and added unit test.
+- Replaced `#define DECODE_NEC 1/0` by defining/not defining.
+- Use LED_BUILTIN instead of FEEDBACK_LED if FeedbackLEDPin is 0.
+- Use F_CPU instead of SYSCLOCK.
+- Removed SENDPIN_ON and SENDPIN_OFF macros.
+
+- Refactored board specific code for timer and feedback LED.
+- Extracted common LED feedback functions and implemented feedback for send.
+- MATCH_MARK() etc. now available as matchMark().
+- Added STM32F1 by (by Roger Clark) support.
+- Added stm32 (by ST) support. Thanks to Paolo Malaspina.
+- Added ATtiny88 support.
+
 ## 3.0.2
 - Bug fix for USE_OLD_DECODE.
 - Increase RECORD_GAP_MICROS to 11000.
@@ -65,7 +85,7 @@
 - NEC repeat implementation.
 - Formatting and changing `TIMER_CONFIG_KHZ` and `TIMER_CONFIG_NORMAL` macros to static functions.
 - Added `IRAM_ATTR` for ESP32 ISR.
-- Removed #define `HAS_AVR_INTERRUPT_H`.
+- Removed `#define HAS_AVR_INTERRUPT_H`.
 - Changed Receiver States. Now starting with 0.
 - Changed switch to if / else if in IRRemote.cpp because of ESP32 compiler bug.
 - Changed `DEBUG` handling since compiler warns about empty "IF" or "ELSE" statements in IRRemote.cpp.
@@ -84,7 +104,7 @@
 Changes from #283 by bengtmartensson
 - Added function sendRaw_P() for sending data from flash.
 Changes from #268 by adamlhumphreys
-- Optimized by reducing floating point operations as suggested by @madmalkav (#193).
+- Optimized by reducing floating point operations as suggested by madmalkav (#193).
 - Optimized with macros when using default `MICROS_PER_TICK` and `TOLERANCE`.
 - Made decodeHash as a settable protocol defined by `DECODE_HASH`.
 - Added Philips Extended RC-5 protocol support [PR #522] (https://github.com/Arduino-IRremote/Arduino-IRremote/pull/522)
@@ -150,7 +170,7 @@ Changes from #268 by adamlhumphreys
 - Fixed and Improved many coding errors
 - Fixed Aiwa RC-T501 Decoding
 - Fixed Interrupt on ATmega8
-- Switched to Stable Release of @PlatformIO
+- Switched to Stable Release of PlatformIO
 
 ### Additions
 - Added Aiwa RC-T501 Protocol

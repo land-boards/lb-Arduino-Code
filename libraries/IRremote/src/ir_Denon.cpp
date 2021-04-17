@@ -3,7 +3,7 @@
  *
  *  Contains functions for receiving and sending Denon/Sharp IR Protocol
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  ************************************************************************************
  * MIT License
@@ -29,10 +29,14 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 
+/** \addtogroup Decoder Decoders and encoders for different protocols
+ * @{
+ */
 //==============================================================================
 //                    DDDD   EEEEE  N   N   OOO   N   N
 //                     D  D  E      NN  N  O   O  NN  N
@@ -131,7 +135,7 @@ bool IRrecv::decodeDenon() {
 
     // we have no start bit, so check for the exact amount of data bits
     // Check we have the right amount of data (32). The + 2 is for initial gap + stop bit mark
-    if (irparams.rawlen != (2 * DENON_BITS) + 2) {
+    if (decodedIRData.rawDataPtr->rawlen != (2 * DENON_BITS) + 2) {
         return false;
     }
 
@@ -143,7 +147,7 @@ bool IRrecv::decodeDenon() {
     }
 
     // Check for stop mark
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[(2 * DENON_BITS) + 1], DENON_HEADER_MARK)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[(2 * DENON_BITS) + 1], DENON_HEADER_MARK)) {
         DBG_PRINT("Denon: ");
         DBG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;
@@ -191,16 +195,16 @@ bool IRrecv::decodeDenon() {
 bool IRrecv::decodeDenon() {
 
     // Check we have the right amount of data
-    if (irparams.rawlen != 1 + 2 + (2 * DENON_BITS) + 1) {
+    if (decodedIRData.rawDataPtr->rawlen != 1 + 2 + (2 * DENON_BITS) + 1) {
         return false;
     }
 
     // Check initial Mark+Space match
-    if (!MATCH_MARK(results.rawbuf[1], DENON_HEADER_MARK)) {
+    if (!matchMark(results.rawbuf[1], DENON_HEADER_MARK)) {
         return false;
     }
 
-    if (!MATCH_SPACE(results.rawbuf[2], DENON_HEADER_SPACE)) {
+    if (!matchSpace(results.rawbuf[2], DENON_HEADER_SPACE)) {
         return false;
     }
 
@@ -236,3 +240,5 @@ void IRsend::sendDenon(unsigned long data, int nbits) {
 void IRsend::sendSharp(unsigned int aAddress, unsigned int aCommand) {
     sendDenon(aAddress, aCommand, true, 0);
 }
+
+/** @}*/

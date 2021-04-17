@@ -37,7 +37,7 @@
  #define DECODE_SHUZU  1
  #define SEND_SHUZU    1
 
- 2. Open irProtocol.h and make the following change:
+ 2. Open IRProtocol.h and make the following change:
  In the section "An enum consisting of all supported formats", add:
  SHUZU,
  to the end of the list (notice there is a comma after the protocol name)
@@ -57,7 +57,7 @@
 
  4. Save your changes and close the files
 
- 5. Now open irReceive.cpp and make the following change:
+ 5. Now open IRReceive.cpp.h and make the following change:
 
  A. In the function IRrecv::decode(), add:
  #ifdef DECODE_SHUZU
@@ -98,7 +98,7 @@
  *  Copyright (C) 2021  Shuzu Guru
  *  shuzu.guru@gmail.com
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  ************************************************************************************
  * MIT License
@@ -124,9 +124,10 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 
 //#define SEND_SHUZU  1 // for testing
 //#define DECODE_SHUZU  1 // for testing
@@ -206,7 +207,7 @@ bool IRrecv::decodeShuzu() {
     }
 
     // Check header "space"
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], SHUZU_HEADER_MARK) || !MATCH_SPACE(decodedIRData.rawDataPtr->rawbuf[2], SHUZU_HEADER_SPACE)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], SHUZU_HEADER_MARK) || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], SHUZU_HEADER_SPACE)) {
         DBG_PRINT("Shuzu: ");
         DBG_PRINTLN("Header mark or space length is wrong");
         return false;
@@ -220,7 +221,7 @@ bool IRrecv::decodeShuzu() {
     }
 
     // Stop bit
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[3 + (2 * SHUZU_BITS)], SHUZU_BIT_MARK)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[3 + (2 * SHUZU_BITS)], SHUZU_BIT_MARK)) {
         DBG_PRINT(F("Shuzu: "));
         DBG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;

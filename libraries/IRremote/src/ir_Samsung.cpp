@@ -3,7 +3,7 @@
  *
  *  Contains functions for receiving and sending Samsung IR Protocol in "raw" and standard format with 16 bit address and 16 or 32 bit command
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  ************************************************************************************
  * MIT License
@@ -29,11 +29,15 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 #include "LongUnion.h"
 
+/** \addtogroup Decoder Decoders and encoders for different protocols
+ * @{
+ */
 //==============================================================================
 //              SSSS   AAA    MMM    SSSS  U   U  N   N   GGGG
 //             S      A   A  M M M  S      U   U  NN  N  G
@@ -63,8 +67,8 @@
 #define SAMSUNG_REPEAT_DURATION     (SAMSUNG_HEADER_MARK  + SAMSUNG_HEADER_SPACE + SAMSUNG_BIT_MARK + SAMSUNG_ZERO_SPACE + SAMSUNG_BIT_MARK)
 #define SAMSUNG_REPEAT_PERIOD       110000 // Commands are repeated every 110 ms (measured from start to start) for as long as the key on the remote control is held down.
 
-//+=============================================================================
-/*
+
+/**
  * Send repeat
  * Repeat commands should be sent in a 110 ms raster.
  */
@@ -75,7 +79,6 @@ void IRsend::sendSamsungRepeat() {
     mark(SAMSUNG_BIT_MARK);
     space(SAMSUNG_ZERO_SPACE);
     mark(SAMSUNG_BIT_MARK);
-    ledOff(); // Always end with the LED off
 }
 
 void IRsend::sendSamsung(uint16_t aAddress, uint16_t aCommand, uint_fast8_t aNumberOfRepeats, bool aIsRepeat) {
@@ -126,8 +129,8 @@ bool IRrecv::decodeSamsung() {
     }
 
     // Check header "mark" + "space"
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], SAMSUNG_HEADER_MARK)
-            || !MATCH_SPACE(decodedIRData.rawDataPtr->rawbuf[2], SAMSUNG_HEADER_SPACE)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], SAMSUNG_HEADER_MARK)
+            || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], SAMSUNG_HEADER_SPACE)) {
         DBG_PRINT("Samsung: ");
         DBG_PRINTLN("Header mark or space length is wrong");
 
@@ -202,18 +205,19 @@ bool IRrecv::decodeSamsung() {
     return true;
 }
 
+#if defined(USE_OLD_DECODE)
 bool IRrecv::decodeSAMSUNG() {
     unsigned int offset = 1;  // Skip first space
 
     // Initial mark
-    if (!MATCH_MARK(results.rawbuf[offset], SAMSUNG_HEADER_MARK)) {
+    if (!matchMark(results.rawbuf[offset], SAMSUNG_HEADER_MARK)) {
         return false;
     }
     offset++;
 
 // Check for repeat -- like a NEC repeat
-    if ((results.rawlen == 4) && MATCH_SPACE(results.rawbuf[offset], 2250)
-            && MATCH_MARK(results.rawbuf[offset + 1], SAMSUNG_BIT_MARK)) {
+    if ((results.rawlen == 4) && matchSpace(results.rawbuf[offset], 2250)
+            && matchMark(results.rawbuf[offset + 1], SAMSUNG_BIT_MARK)) {
         results.bits = 0;
         results.value = 0xFFFFFFFF;
         decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT;
@@ -225,7 +229,7 @@ bool IRrecv::decodeSAMSUNG() {
     }
 
 // Initial space
-    if (!MATCH_SPACE(results.rawbuf[offset], SAMSUNG_HEADER_SPACE)) {
+    if (!matchSpace(results.rawbuf[offset], SAMSUNG_HEADER_SPACE)) {
         return false;
     }
     offset++;
@@ -239,6 +243,7 @@ bool IRrecv::decodeSAMSUNG() {
     decodedIRData.protocol = SAMSUNG;
     return true;
 }
+#endif //defined(USE_OLD_DECODE)
 
 // Old version with MSB first
 void IRsend::sendSAMSUNG(unsigned long data, int nbits) {
@@ -253,3 +258,5 @@ void IRsend::sendSAMSUNG(unsigned long data, int nbits) {
     sendPulseDistanceWidthData(SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_BIT_MARK, SAMSUNG_ZERO_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST,
     SEND_STOP_BIT);
 }
+
+/** @}*/

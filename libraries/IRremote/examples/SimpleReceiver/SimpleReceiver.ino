@@ -6,7 +6,7 @@
  *  Copyright (C) 2020-2021  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  *  MIT License
  */
@@ -15,30 +15,33 @@
  * Specify which protocol(s) should be used for decoding.
  * If no protocol is defined, all protocols are active.
  */
-#define DECODE_NEC 1
+//#define DECODE_DENON
+//#define DECODE_SHARP        // the same as DECODE_DENON
+//#define DECODE_JVC
+//#define DECODE_KASEIKYO
+//#define DECODE_PANASONIC    // the same as DECODE_KASEIKYO
+//#define DECODE_LG
+#define DECODE_NEC
+//#define DECODE_SAMSUNG
+//#define DECODE_SONY
+//#define DECODE_RC5
+//#define DECODE_RC6
 
-#include <IRremote.h>
+//#define DECODE_BOSEWAVE
+//#define DECODE_LEGO_PF
+//#define DECODE_MAGIQUEST
+//#define DECODE_WHYNTER
+
+//#define DECODE_HASH         // special decoder for all protocols
+
+#include <Arduino.h>
 
 /*
- * Set sensible receive pin for different CPU's
+ * Define macros for input and output pin etc.
  */
-#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny87__) || defined(__AVR_ATtiny167__)
-// Serial output for Digispark boards is at pin 2
-#  if defined(ARDUINO_AVR_DIGISPARKPRO)
-#define IR_RECEIVE_PIN    9 // PA3 - on Digispark board labeled as pin 9
-#  else
-#define IR_RECEIVE_PIN    0
-#  endif
-#  if defined(ARDUINO_AVR_DIGISPARK)
-#define LED_BUILTIN PB1
-#  endif
-#elif defined(ESP32)
-int IR_RECEIVE_PIN = 15;
-#elif defined(ARDUINO_AVR_PROMICRO)
-int IR_RECEIVE_PIN = 10;
-#else
-int IR_RECEIVE_PIN = 11;
-#endif
+#include "PinDefinitionsAndMore.h"
+
+#include <IRremote.h>
 
 void setup() {
     Serial.begin(115200);

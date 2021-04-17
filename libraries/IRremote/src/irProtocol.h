@@ -1,8 +1,8 @@
 /**
- * @file irProtocol.h
+ * @file IRProtocol.h
  * @brief Common declarations for receiving and sending.
  *
- * This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ * This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  *
  ************************************************************************************
@@ -61,7 +61,7 @@ typedef enum {
     WHYNTER,
 } decode_type_t;
 
-const char* getProtocolString(decode_type_t aProtocol);
+const __FlashStringHelper* getProtocolString(decode_type_t aProtocol);
 
 #define PROTOCOL_IS_LSB_FIRST false
 #define PROTOCOL_IS_MSB_FIRST true

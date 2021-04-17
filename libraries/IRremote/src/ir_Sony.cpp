@@ -3,7 +3,7 @@
  *
  *  Contains functions for receiving and sending SIRCS/Sony IR Protocol in "raw" and standard format with 5 bit address 7 bit command
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  ************************************************************************************
  * MIT License
@@ -27,10 +27,14 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 
+/** \addtogroup Decoder Decoders and encoders for different protocols
+ * @{
+ */
 //==============================================================================
 //                           SSSS   OOO   N   N  Y   Y
 //                          S      O   O  NN  N   Y Y
@@ -98,7 +102,7 @@ void IRsend::sendSony(uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberO
 bool IRrecv::decodeSony() {
 
     // Check header "mark"
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], SONY_HEADER_MARK)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], SONY_HEADER_MARK)) {
         return false;
     }
 
@@ -113,7 +117,7 @@ bool IRrecv::decodeSony() {
         return false;
     }
     // Check header "space"
-    if (!MATCH_SPACE(decodedIRData.rawDataPtr->rawbuf[2], SONY_SPACE)) {
+    if (!matchSpace(decodedIRData.rawDataPtr->rawbuf[2], SONY_SPACE)) {
         DBG_PRINT("Sony: ");
         DBG_PRINTLN("Header space length is wrong");
         return false;
@@ -170,7 +174,7 @@ bool IRrecv::decodeSony() {
     offset++;
 
     // Check header "mark"
-    if (!MATCH_MARK(results.rawbuf[offset], SONY_HEADER_MARK)) {
+    if (!matchMark(results.rawbuf[offset], SONY_HEADER_MARK)) {
         return false;
     }
     offset++;
@@ -180,15 +184,15 @@ bool IRrecv::decodeSony() {
 
         // First check for the constant space length, we do not have a space at the end of raw data
         // we are lucky, since the start space is equal the data space.
-        if (!MATCH_SPACE(results.rawbuf[offset], SONY_SPACE)) {
+        if (!matchSpace(results.rawbuf[offset], SONY_SPACE)) {
             return false;
         }
         offset++;
 
         // bit value is determined by length of the mark
-        if (MATCH_MARK(results.rawbuf[offset], SONY_ONE_MARK)) {
+        if (matchMark(results.rawbuf[offset], SONY_ONE_MARK)) {
             data = (data << 1) | 1;
-        } else if (MATCH_MARK(results.rawbuf[offset], SONY_ZERO_MARK)) {
+        } else if (matchMark(results.rawbuf[offset], SONY_ZERO_MARK)) {
             data = (data << 1) | 0;
         } else {
             return false;
@@ -219,3 +223,5 @@ void IRsend::sendSony(unsigned long data, int nbits) {
     // Old version with MSB first Data
     sendPulseDistanceWidthData(SONY_ONE_MARK, SONY_SPACE, SONY_ZERO_MARK, SONY_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST);
 }
+
+/** @}*/

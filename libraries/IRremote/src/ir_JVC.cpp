@@ -3,7 +3,7 @@
  *
  *  Contains functions for receiving and sending JVC IR Protocol in "raw" and standard format with 8 bit address and 8 bit command
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  ************************************************************************************
  * MIT License
@@ -29,10 +29,14 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 
+/** \addtogroup Decoder Decoders and encoders for different protocols
+ * @{
+ */
 //==============================================================================
 //                             JJJJJ  V   V   CCCC
 //                               J    V   V  C
@@ -116,8 +120,8 @@ bool IRrecv::decodeJVC() {
          * Check leading space and first and last mark length
          */
         if (decodedIRData.rawDataPtr->rawbuf[0] < ((JVC_REPEAT_SPACE + (JVC_REPEAT_SPACE / 2) / MICROS_PER_TICK))
-                && MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], JVC_BIT_MARK)
-                && MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[decodedIRData.rawDataPtr->rawlen - 1], JVC_BIT_MARK)) {
+                && matchMark(decodedIRData.rawDataPtr->rawbuf[1], JVC_BIT_MARK)
+                && matchMark(decodedIRData.rawDataPtr->rawbuf[decodedIRData.rawDataPtr->rawlen - 1], JVC_BIT_MARK)) {
             /*
              * We have a repeat here, so do not check for start bit
              */
@@ -129,8 +133,8 @@ bool IRrecv::decodeJVC() {
     } else {
 
         // Check header "mark" and "space"
-        if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], JVC_HEADER_MARK)
-                || !MATCH_SPACE(decodedIRData.rawDataPtr->rawbuf[2], JVC_HEADER_SPACE)) {
+        if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], JVC_HEADER_MARK)
+                || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], JVC_HEADER_SPACE)) {
 //            DBG_PRINT("JVC: ");
 //            DBG_PRINTLN("Header mark or space length is wrong");
             return false;
@@ -162,8 +166,8 @@ bool IRrecv::decodeJVC() {
     unsigned int offset = 1; // Skip first space
 
     // Check for repeat
-    if ((results.rawlen - 1 == 33) && MATCH_MARK(results.rawbuf[offset], JVC_BIT_MARK)
-            && MATCH_MARK(results.rawbuf[results.rawlen - 1], JVC_BIT_MARK)) {
+    if ((results.rawlen - 1 == 33) && matchMark(results.rawbuf[offset], JVC_BIT_MARK)
+            && matchMark(results.rawbuf[results.rawlen - 1], JVC_BIT_MARK)) {
         results.bits = 0;
         results.value = 0xFFFFFFFF;
         decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT;
@@ -172,7 +176,7 @@ bool IRrecv::decodeJVC() {
     }
 
     // Initial mark
-    if (!MATCH_MARK(results.rawbuf[offset], JVC_HEADER_MARK)) {
+    if (!matchMark(results.rawbuf[offset], JVC_HEADER_MARK)) {
         return false;
     }
     offset++;
@@ -187,7 +191,7 @@ bool IRrecv::decodeJVC() {
     }
 
     // Initial space
-    if (!MATCH_SPACE(results.rawbuf[offset], JVC_HEADER_SPACE)) {
+    if (!matchSpace(results.rawbuf[offset], JVC_HEADER_SPACE)) {
         return false;
     }
     offset++;
@@ -197,7 +201,7 @@ bool IRrecv::decodeJVC() {
     }
 
     // Stop bit
-    if (!MATCH_MARK(results.rawbuf[offset + (2 * JVC_BITS)], JVC_BIT_MARK)) {
+    if (!matchMark(results.rawbuf[offset + (2 * JVC_BITS)], JVC_BIT_MARK)) {
         DBG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;
     }
@@ -228,5 +232,6 @@ void IRsend::sendJVCMSB(unsigned long data, int nbits, bool repeat) {
     // Old version with MSB first Data
     sendPulseDistanceWidthData(JVC_BIT_MARK, JVC_ONE_SPACE, JVC_BIT_MARK, JVC_ZERO_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST,
     SEND_STOP_BIT);
-
 }
+
+/** @}*/

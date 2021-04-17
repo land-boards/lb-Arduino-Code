@@ -517,7 +517,7 @@ uint8_t testProto16(void)
       Dio32.pinMode(port, OUTPUT);
       Dio32.digitalWrite(port, LOW);
     }
-    for (port = 8; port < 16; port++)   	// Goes to Power pins of the OptoOut card
+    for (port = 8; port < 16; port++)   	// Goes to Power pins of the OptoOut card connector
     {
       Dio32.pinMode(port, OUTPUT);
       Dio32.digitalWrite(port, HIGH);
@@ -540,17 +540,21 @@ uint8_t testProto16(void)
     {
       singleMCP23008.digitalWrite(port, LOW);	// Turn on the LEDs one at a time
       BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Leave LED off when done
+      delay(10);
       if (Dio32.digitalRead(port) != LOW)
       {
         testResults = TEST_FAILED;
         Serial.print(F("OptoOut8-I2C failed - Expected LOW on bit "));
         Serial.println(port);
       }
+      delay(10);
       BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+      delay(10);
       singleMCP23008.digitalWrite(port, HIGH);	// Leave LED off after the test
+      delay(10);
     }
 
-    return TEST_PASSED;
+    return testResults;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////

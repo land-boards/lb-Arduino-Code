@@ -3,7 +3,7 @@
  *
  *  Contains functions for receiving and sending Kaseikyo/Panasonic IR Protocol in "raw" and standard format with 16 bit address + 8 bit command
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  ************************************************************************************
  * MIT License
@@ -29,11 +29,15 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this  for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 #include "LongUnion.h"
 
+/** \addtogroup Decoder Decoders and encoders for different protocols
+ * @{
+ */
 //==============================================================================
 //       PPPP    AAA   N   N   AAA    SSSS   OOO   N   N  IIIII   CCCC
 //       P   P  A   A  NN  N  A   A  S      O   O  NN  N    I    C
@@ -134,13 +138,13 @@ bool IRrecv::decodeKaseikyo() {
         return false;
     }
 
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], KASEIKYO_HEADER_MARK)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], KASEIKYO_HEADER_MARK)) {
         DBG_PRINT("Kaseikyo: ");
         DBG_PRINTLN("Header mark length is wrong");
         return false;
     }
 
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[2], KASEIKYO_HEADER_SPACE)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[2], KASEIKYO_HEADER_SPACE)) {
         DBG_PRINT("Kaseikyo: ");
         DBG_PRINTLN("Header space length is wrong");
         return false;
@@ -241,11 +245,11 @@ bool IRrecv::decodePanasonic() {
         return false;
     }
 
-    if (!MATCH_MARK(results.rawbuf[offset], KASEIKYO_HEADER_MARK)) {
+    if (!matchMark(results.rawbuf[offset], KASEIKYO_HEADER_MARK)) {
         return false;
     }
     offset++;
-    if (!MATCH_MARK(results.rawbuf[offset], KASEIKYO_HEADER_SPACE)) {
+    if (!matchMark(results.rawbuf[offset], KASEIKYO_HEADER_SPACE)) {
         return false;
     }
     offset++;
@@ -280,6 +284,6 @@ void IRsend::sendPanasonic(uint16_t aAddress, uint32_t aData) {
     // Old version with MSB first Data Data + stop bit
     sendPulseDistanceWidthData(KASEIKYO_BIT_MARK, KASEIKYO_ONE_SPACE, KASEIKYO_BIT_MARK, KASEIKYO_ZERO_SPACE, aData,
     KASEIKYO_DATA_BITS, PROTOCOL_IS_MSB_FIRST);
-
 }
 
+/** @}*/

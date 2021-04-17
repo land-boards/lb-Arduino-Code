@@ -2,7 +2,7 @@
  * @file IRremoteInt.h
  * @brief Contains all declarations required for the internal functions.
  *
- * This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ * This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  *
  ************************************************************************************
@@ -32,6 +32,8 @@
 #ifndef IRremoteInt_h
 #define IRremoteInt_h
 
+#include <Arduino.h>
+
 #if ! defined(RAW_BUFFER_LENGTH)
 #define RAW_BUFFER_LENGTH  100  ///< Maximum length of raw duration buffer. Must be even. 100 supports up to 48 bit codings inclusive 1 start and 1 stop bit.
 #endif
@@ -39,46 +41,18 @@
 #error RAW_BUFFER_LENGTH must be even, since the array consists of space / mark pairs.
 #endif
 
-#define VERSION_IRREMOTE "3.0.3"
-#define VERSION_IRREMOTE_MAJOR 3
-#define VERSION_IRREMOTE_MINOR 0
-/*
- * Just for better readability of code
- */
-#define DISABLE_LED_FEEDBACK false
-#define ENABLE_LED_FEEDBACK true
-
-#define SEND_STOP_BIT true
-#define SEND_REPEAT_COMMAND true ///< used for e.g. NEC, where a repeat is different from just repeating the data.
+#define MARK   1
+#define SPACE  0
 
 /*
  * Try to activate it, if you have legacy code to compile with version >= 3
  */
 //#define USE_OLD_DECODE // enables the old NEC and other old decoders.
-//------------------------------------------------------------------------------
-#include <Arduino.h>
+#include "IRProtocol.h"
 
-#include "irProtocol.h"
-
-// All board specific stuff have been moved to its own file, included here.
-#include "private/IRremoteBoardDefs.h"
-
-//------------------------------------------------------------------------------
-// Information for the Interrupt Service Routine
-//
-
-/**
- * Minimum gap between IR transmissions, in microseconds
- * Keep in mind that this is the delay between the end of the received command and the start of decoding
- * and some of the protocols have gaps of around 20 ms.
- */
-#if !defined(RECORD_GAP_MICROS)
-#define RECORD_GAP_MICROS   5000 // FREDRICH28AC header space is 9700, NEC header space is 4500
-#endif
-
-/** Minimum gap between IR transmissions, in MICROS_PER_TICK */
-#define RECORD_GAP_TICKS    (RECORD_GAP_MICROS / MICROS_PER_TICK) // 221 for 1100
-
+/****************************************************
+ * Declarations for the receiver Interrupt Service Routine
+ ****************************************************/
 // ISR State-Machine : Receiver States
 #define IR_REC_STATE_IDLE      0
 #define IR_REC_STATE_MARK      1
@@ -86,55 +60,31 @@
 #define IR_REC_STATE_STOP      3
 
 /**
- * This struct contains the data and control used for static functions and the ISR (interrupt service routine)
- * Only rcvstate needs to be volatile. All the other fields are not written by ISR during decoding in loop.
+ * This struct contains the data and control used for receiver static functions and the ISR (interrupt service routine)
+ * Only StateForISR needs to be volatile. All the other fields are not written by ISR after data available and before start/resume.
  */
 struct irparams_struct {
     // The fields are ordered to reduce memory over caused by struct-padding
-    volatile uint8_t rcvstate;      ///< State Machine state
-    uint8_t recvpin;                ///< Pin connected to IR data from detector
-    uint8_t blinkpin;               ///< 0 means not valid pin
-    bool blinkflag;                 ///< true -> enable blinking of pin on IR processing
+    volatile uint8_t StateForISR;   ///< State Machine state
+    uint8_t IRReceivePin;           ///< Pin connected to IR data from detector
+#if defined(__AVR__)
+    volatile uint8_t *IRReceivePinPortInputRegister;
+    uint8_t IRReceivePinMask;
+#endif
 #if RAW_BUFFER_LENGTH <= 255        // saves around 75 bytes program space and speeds up ISR
     uint8_t rawlen;                 ///< counter of entries in rawbuf
 #else
     unsigned int rawlen;            ///< counter of entries in rawbuf
 #endif
-    uint16_t timer;              ///< State timer, counts 50uS ticks. The value is copied into the rawbuf array on every transition.
-    uint8_t overflow;               ///< Raw buffer overflow occurred
+    uint16_t TickCounterForISR;     ///< Counts 50uS ticks. The value is copied into the rawbuf array on every transition.
+    bool OverflowFlag;              ///< Raw buffer OverflowFlag occurred
     uint16_t rawbuf[RAW_BUFFER_LENGTH]; ///< raw data / tick counts per mark/space, first entry is the length of the gap between previous and current command
 };
 
-extern struct irparams_struct irparams;
-
+//#define DEBUG // Activate this for lots of lovely debug output from the IRremote core and all protocol decoders.
 /*
- * Result required by an application
+ * Debug directives
  */
-#define IRDATA_FLAGS_EMPTY              0x00
-#define IRDATA_FLAGS_IS_REPEAT          0x01
-#define IRDATA_FLAGS_IS_AUTO_REPEAT     0x02
-#define IRDATA_FLAGS_PARITY_FAILED      0x04 // the current (autorepeat) frame violated parity check
-#define IRDATA_TOGGLE_BIT_MASK          0x08
-#define IRDATA_FLAGS_EXTRA_INFO         0x10 // there is unexpected extra info not contained in address and data (e.g. Kaseikyo unknown vendor ID)
-#define IRDATA_FLAGS_WAS_OVERFLOW       0x40 // irparams.rawlen is 0 in this case to avoid endless overflow
-#define IRDATA_FLAGS_IS_LSB_FIRST       0x00
-#define IRDATA_FLAGS_IS_MSB_FIRST       0x80 // Just for info. Value is simply determined by the protocol
-
-struct IRData {
-    decode_type_t protocol;     ///< UNKNOWN, NEC, SONY, RC5, ...
-    uint16_t address;           ///< Decoded address
-    uint16_t command;           ///< Decoded command
-    uint16_t extra;             ///< Used by MagiQuest and for Kaseikyo unknown vendor ID
-    uint8_t numberOfBits; ///< Number of bits received for data (address + command + parity) - to determine protocol length if different length are possible (currently only Sony).
-    uint8_t flags;              ///< See definitions above
-    uint32_t decodedRawData;    ///< up to 32 bit decoded raw data, formerly used for send functions.
-    irparams_struct *rawDataPtr; /// pointer of the raw timing data to be decoded
-};
-
-//#define DEBUG // Activate this for lots of lovely debug output.
-//------------------------------------------------------------------------------
-// Debug directives
-//
 #ifdef DEBUG
 #  define DBG_PRINT(...)    Serial.print(__VA_ARGS__)
 #  define DBG_PRINTLN(...)  Serial.println(__VA_ARGS__)
@@ -156,22 +106,6 @@ struct IRData {
 #  define TRACE_PRINT(...) void()
 #  define TRACE_PRINTLN(...) void()
 #endif
-//------------------------------------------------------------------------------
-// Helper macro for getting a macro definition as string
-//
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
-//------------------------------------------------------------------------------
-// Mark & Space matching functions
-//
-bool MATCH(uint16_t measured, uint16_t desired);
-bool MATCH_MARK(uint16_t measured_ticks, uint16_t desired_us);
-bool MATCH_SPACE(uint16_t measured_ticks, uint16_t desired_us);
-
-int getMarkExcessMicros();
-
-void setFeedbackLED(bool aSwitchLedOn);
 
 /****************************************************
  *                     RECEIVING
@@ -193,27 +127,50 @@ struct decode_results {
     bool overflow;              // deprecated, moved to decodedIRData.flags ///< true if IR raw code too long
 };
 
+
 /*
+ * Definitions for member IRData.flags
+ */
+#define IRDATA_FLAGS_EMPTY              0x00
+#define IRDATA_FLAGS_IS_REPEAT          0x01
+#define IRDATA_FLAGS_IS_AUTO_REPEAT     0x02
+#define IRDATA_FLAGS_PARITY_FAILED      0x04 ///< the current (autorepeat) frame violated parity check
+#define IRDATA_TOGGLE_BIT_MASK          0x08
+#define IRDATA_FLAGS_EXTRA_INFO         0x10 ///< there is unexpected extra info not contained in address and data (e.g. Kaseikyo unknown vendor ID)
+#define IRDATA_FLAGS_WAS_OVERFLOW       0x40 ///< irparams.rawlen is 0 in this case to avoid endless OverflowFlag
+#define IRDATA_FLAGS_IS_LSB_FIRST       0x00
+#define IRDATA_FLAGS_IS_MSB_FIRST       0x80 ///< Just for info. Value is simply determined by the protocol
+
+/**
+ * Data structure for the user application, available as decodedIRData.
+ * Filled by decoders and read by print functions or user application.
+ */
+struct IRData {
+    decode_type_t protocol;     ///< UNKNOWN, NEC, SONY, RC5, ...
+    uint16_t address;           ///< Decoded address
+    uint16_t command;           ///< Decoded command
+    uint16_t extra;             ///< Used by MagiQuest and for Kaseikyo unknown vendor ID
+    uint8_t numberOfBits;       ///< Number of bits received for data (address + command + parity) - to determine protocol length if different length are possible.
+    uint8_t flags;              ///< See IRDATA_FLAGS_* definitions above
+    uint32_t decodedRawData;    ///< Up to 32 bit decoded raw data, used for sendRaw functions.
+    irparams_struct *rawDataPtr; ///< Pointer of the raw timing data to be decoded. Mainly the data buffer filled by receiving ISR.
+};
+
+/**
  * Just for better readability of code
  */
-#define DISABLE_LED_FEEDBACK false
-#define ENABLE_LED_FEEDBACK true
-
-#define SEND_STOP_BIT true
-#define SEND_REPEAT_COMMAND true // used for e.g. NEC, where a repeat is different from just repeating the data.
-
 #define USE_DEFAULT_FEEDBACK_LED_PIN 0
+
 /**
- * Main class for receiving IR
+ * Main class for receiving IR signals
  */
 class IRrecv {
 public:
 
     IRrecv();
-    IRrecv(uint8_t recvpin);
-    IRrecv(uint8_t recvpin, uint8_t blinkpin);
-    static void blink13(bool aEnableLEDFeedback);
-    static void setBlinkPin(uint8_t aBlinkPin); // if 0, then take board BLINKLED_ON() and BLINKLED_OFF() functions
+    IRrecv(uint8_t aReceivePin);
+    IRrecv(uint8_t aReceivePin, uint8_t aFeedbackLEDPin);
+    void setReceivePin(uint8_t aReceivePinNumber);
 
     void enableIRIn();
     void disableIRIn();
@@ -221,9 +178,9 @@ public:
     /*
      * Stream like API
      */
-    void begin(uint8_t aReceivePin, bool aEnableLEDFeedback = false, uint8_t aLEDFeedbackPin = USE_DEFAULT_FEEDBACK_LED_PIN); // if aBlinkPin == 0 then take board default BLINKPIN
+    void begin(uint8_t aReceivePin, bool aEnableLEDFeedback = false, uint8_t aFeedbackLEDPin = USE_DEFAULT_FEEDBACK_LED_PIN);
     void start(); // alias for enableIRIn
-    void start(uint16_t aMillisToAddToGapCounter);
+    void start(uint16_t aMicrosecondsToAddToGapCounter);
     bool available();
     IRData* read(); // returns decoded data
     // write is a method of class IRsend below
@@ -265,8 +222,11 @@ public:
     bool decodePulseWidthData(uint8_t aNumberOfBits, uint8_t aStartOffset, uint16_t aOneMarkMicros, uint16_t aZeroMarkMicros,
             uint16_t aBitSpaceMicros, bool aMSBfirst);
 
-    bool decodeBiPhaseData(uint8_t aNumberOfBits, uint8_t aStartOffset, uint8_t aValueOfSpaceToMarkTransition,
+    bool decodeBiPhaseData(uint_fast8_t aNumberOfBits, uint_fast8_t aStartOffset, uint_fast8_t aStartClockCount, uint_fast8_t aValueOfSpaceToMarkTransition,
             uint16_t aBiphaseTimeUnit);
+
+    void initBiphaselevel(uint8_t aRCDecodeRawbuffOffset, uint16_t aBiphaseTimeUnit);
+    uint8_t getBiphaselevel();
 
     /*
      * All standard (decode address + command) protocol decoders
@@ -305,57 +265,118 @@ public:
     void initDecodedIRData();
     uint8_t compare(unsigned int oldval, unsigned int newval);
 
-    decode_results results; // deprecated, only for legacy compatibility
-    IRData decodedIRData;           // decoded IR data for the application
+#if defined(USE_OLD_DECODE)
+    decode_results results;     // Only for legacy compatibility
+#endif
+    IRData decodedIRData;       // New: decoded IR data for the application
 
     // Last decoded IR data for repeat detection
     uint32_t lastDecodedAddress;
     uint32_t lastDecodedCommand;
 
-    uint8_t repeatCount;            // Used e.g. for Denon decode for autorepeat decoding.
+    uint8_t repeatCount;        // Used e.g. for Denon decode for autorepeat decoding.
 };
 
-// The receiver instance
-extern IRrecv IrReceiver;
-// static function
+extern uint8_t sBiphaseDecodeRawbuffOffset; //
+
+/*
+ * Mark & Space matching functions
+ */
+bool matchTicks(uint16_t aMeasuredTicks, uint16_t aMatchValueMicros);
+bool matchMark(uint16_t aMeasuredTicks, uint16_t aMatchValueMicros);
+bool matchSpace(uint16_t aMeasuredTicks, uint16_t aMatchValueMicros);
+
+/*
+ * Old function names
+ */
+bool MATCH(uint16_t measured, uint16_t desired);
+bool MATCH_MARK(uint16_t measured_ticks, uint16_t desired_us);
+bool MATCH_SPACE(uint16_t measured_ticks, uint16_t desired_us);
+
+int getMarkExcessMicros();
+
 void printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLeadingSpaceDuration = 0);
+
+/****************************************************
+ * Feedback LED related functions
+ ****************************************************/
+void setFeedbackLED(bool aSwitchLedOn);
+void setLEDFeedback(uint8_t aFeedbackLEDPin, bool aEnableLEDFeedback); // if aFeedbackLEDPin == 0, then take board BLINKLED_ON() and BLINKLED_OFF() functions
+void enableLEDFeedback();
+void disableLEDFeedback();
+
+void blink13(bool aEnableLEDFeedback)
+        __attribute__ ((deprecated ("Please use setLEDFeedback() or enableLEDFeedback() / disableLEDFeedback."))); // deprecated
+void setBlinkPin(uint8_t aFeedbackLEDPin) __attribute__ ((deprecated ("Please use setLEDFeedback()."))); // deprecated
+
+
+/**
+ * microseconds per clock interrupt tick
+ */
+#if ! defined(MICROS_PER_TICK)
+#define MICROS_PER_TICK    50
+#endif
+
+/*
+ * Pulse parms are ((X*50)-100) for the Mark and ((X*50)+100) for the Space.
+ * First MARK is the one after the long gap
+ * Pulse parameters in uSec
+ */
+/** Relative tolerance (in percent) for some comparisons on measured data. */
+#define TOLERANCE       25
+
+/** Lower tolerance for comparison of measured data */
+//#define LTOL            (1.0 - (TOLERANCE/100.))
+#define LTOL            (100 - TOLERANCE)
+/** Upper tolerance for comparison of measured data */
+//#define UTOL            (1.0 + (TOLERANCE/100.))
+#define UTOL            (100 + TOLERANCE)
+
+//#define TICKS_LOW(us)   ((int)(((us)*LTOL/MICROS_PER_TICK)))
+//#define TICKS_HIGH(us)  ((int)(((us)*UTOL/MICROS_PER_TICK + 1)))
+#if MICROS_PER_TICK == 50 && TOLERANCE == 25           // Defaults
+#define TICKS_LOW(us)   ((us)/67 )     // (us) / ((MICROS_PER_TICK:50 / LTOL:75 ) * 100)
+#define TICKS_HIGH(us)  ((us)/40 + 1)  // (us) / ((MICROS_PER_TICK:50 / UTOL:125) * 100) + 1
+#else
+    #define TICKS_LOW(us)   ((uint16_t) ((long) (us) * LTOL / (MICROS_PER_TICK * 100) ))
+    #define TICKS_HIGH(us)  ((uint16_t) ((long) (us) * UTOL / (MICROS_PER_TICK * 100) + 1))
+#endif
+
+/*
+ * The receiver instance
+ */
+extern IRrecv IrReceiver;
 
 /****************************************************
  *                     SENDING
  ****************************************************/
+
 /**
- * Define to use no carrier PWM, just simulate an active low receiver signal.
- */
-//#define USE_NO_SEND_PWM
-/**
- * Define to use carrier PWM generation in software, instead of hardware PWM.
- */
-//#define USE_SOFT_SEND_PWM
-/**
- * If USE_SOFT_SEND_PWM, this amount is subtracted from the on-time of the pulses.
- * It should be the time used for SENDPIN_OFF(sendPin) and the call to delayMicros()
- */
-#ifndef PULSE_CORRECTION_MICROS
-#define PULSE_CORRECTION_MICROS 3
-#endif
-/*
  * Just for better readability of code
  */
 #define NO_REPEATS  0
+#define SEND_STOP_BIT true
+#define SEND_REPEAT_COMMAND true ///< used for e.g. NEC, where a repeat is different from just repeating the data.
+
 /**
- * Main class for sending IR
+ * Duty cycle in percent for sent signals.
+ */
+#if ! defined(IR_SEND_DUTY_CYCLE)
+#define IR_SEND_DUTY_CYCLE 30 // 30 saves power and is compatible to the old existing code
+#endif
+
+/**
+ * Main class for sending IR signals
  */
 class IRsend {
 public:
-#if defined(USE_SOFT_SEND_PWM) || defined(USE_NO_SEND_PWM)
-    IRsend(uint8_t aSendPin = IR_SEND_PIN);
+    IRsend(uint8_t aSendPin);
     void setSendPin(uint8_t aSendPinNumber);
-    void begin(uint8_t aSendPin, bool aEnableLEDFeedback, uint8_t aLEDFeedbackPin = USE_DEFAULT_FEEDBACK_LED_PIN);
+    void begin(uint8_t aSendPin, bool aEnableLEDFeedback = true, uint8_t aFeedbackLEDPin = USE_DEFAULT_FEEDBACK_LED_PIN);
 
-#else
     IRsend();
-    void begin(bool aEnableLEDFeedback, uint8_t aLEDFeedbackPin = USE_DEFAULT_FEEDBACK_LED_PIN);
-#endif
+    void begin(bool aEnableLEDFeedback, uint8_t aFeedbackLEDPin = USE_DEFAULT_FEEDBACK_LED_PIN)
+            __attribute__ ((deprecated ("Please use begin(<sendPin>, <EnableLEDFeedback>, <LEDFeedbackPin>)")));
 
     size_t write(IRData *aIRSendData, uint_fast8_t aNumberOfRepeats = NO_REPEATS);
 
@@ -408,7 +429,6 @@ public:
     void sendSharp(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats); // redirected to sendDenon
     void sendSony(uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats, uint8_t numberOfBits = SIRCS_12_PROTOCOL);
 
-    void sendLegoPowerFunctions(IRData *aIRSendData, bool aDoSend5Times = true);
     void sendLegoPowerFunctions(uint8_t aChannel, uint8_t tCommand, uint8_t aMode, bool aDoSend5Times = true);
     void sendLegoPowerFunctions(uint16_t aRawData, bool aDoSend5Times = true);
     void sendLegoPowerFunctions(uint16_t aRawData, uint8_t aChannel, bool aDoSend5Times = true);
@@ -438,7 +458,7 @@ public:
             uint32_t aData)
                     __attribute__ ((deprecated ("This old function sends MSB first! Please use sendPanasonic(aAddress, aCommand, aNumberOfRepeats).")));
     void sendRC5(uint32_t data, uint8_t nbits);
-    void sendRC5ext(uint8_t addr, uint8_t cmd, boolean toggle);
+    void sendRC5ext(uint8_t addr, uint8_t cmd, bool toggle);
     void sendRC6(uint32_t data, uint8_t nbits);
     void sendRC6(uint64_t data, uint8_t nbits);
     void sendSharpRaw(unsigned long data, int nbits);
@@ -453,71 +473,16 @@ public:
 
     uint8_t sendPin;
 
-#if defined(USE_SOFT_SEND_PWM)
     unsigned int periodTimeMicros;
-    unsigned int periodOnTimeMicros;
-#endif
+    unsigned int periodOnTimeMicros; // compensated with PULSE_CORRECTION_NANOS for duration of digitalWrite.
 
-private:
     void customDelayMicroseconds(unsigned long aMicroseconds);
 };
 
-// The sender instance
-extern IRsend IrSender;
-
-// Content is from V2 IRremoteint.h
 /*
- * Activate this line if your receiver has an external output driver transistor / "inverted" output
+ * The sender instance
  */
-//#define IR_INPUT_IS_ACTIVE_HIGH
-//------------------------------------------------------------------------------
-// Defines for setting and clearing register bits
-//
-#ifndef cbi
-#define cbi(sfr, bit)  (_SFR_BYTE(sfr) &= ~_BV(bit))
-#endif
-
-#ifndef sbi
-#define sbi(sfr, bit)  (_SFR_BYTE(sfr) |= _BV(bit))
-#endif
-
-//------------------------------------------------------------------------------
-// Pulse parms are ((X*50)-100) for the Mark and ((X*50)+100) for the Space.
-// First MARK is the one after the long gap
-// Pulse parameters in uSec
-//
-
-/** Relative tolerance (in percent) for some comparisons on measured data. */
-#define TOLERANCE       25
-
-/** Lower tolerance for comparison of measured data */
-//#define LTOL            (1.0 - (TOLERANCE/100.))
-#define LTOL            (100 - TOLERANCE)
-/** Upper tolerance for comparison of measured data */
-//#define UTOL            (1.0 + (TOLERANCE/100.))
-#define UTOL            (100 + TOLERANCE)
-
-//#define TICKS_LOW(us)   ((int)(((us)*LTOL/MICROS_PER_TICK)))
-//#define TICKS_HIGH(us)  ((int)(((us)*UTOL/MICROS_PER_TICK + 1)))
-#if MICROS_PER_TICK == 50 && TOLERANCE == 25           // Defaults
-#define TICKS_LOW(us)   ((us)/67 )     // (us) / ((MICROS_PER_TICK:50 / LTOL:75 ) * 100)
-#define TICKS_HIGH(us)  ((us)/40 + 1)  // (us) / ((MICROS_PER_TICK:50 / UTOL:125) * 100) + 1
-#else
-    #define TICKS_LOW(us)   ((uint16_t) ((long) (us) * LTOL / (MICROS_PER_TICK * 100) ))
-    #define TICKS_HIGH(us)  ((uint16_t) ((long) (us) * UTOL / (MICROS_PER_TICK * 100) + 1))
-#endif
-
-//------------------------------------------------------------------------------
-// IR receivers on a board with an external output transistor may have "inverted" output
-#ifdef IR_INPUT_IS_ACTIVE_HIGH
-// IR detector output is active high
-#define MARK   1 ///< Sensor output for a mark ("flash")
-#define SPACE  0 ///< Sensor output for a space ("gap")
-#else
-// IR detector output is active low
-#define MARK   0 ///< Sensor output for a mark ("flash")
-#define SPACE  1 ///< Sensor output for a space ("gap")
-#endif
+extern IRsend IrSender;
 
 #endif // IRremoteInt_h
 

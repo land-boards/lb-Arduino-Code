@@ -3,13 +3,17 @@
  *
  *  Contains functions for receiving and sending Bose IR Protocol
  *
- *  This file is part of Arduino-IRremote https://github.com/z3t0/Arduino-IRremote.
+ *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  */
+#include <Arduino.h>
 
-//#define DEBUG // Activate this for lots of lovely debug output.
-#include "IRremoteInt.h"
+//#define DEBUG // Activate this for lots of lovely debug output from this decoder.
+#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
 
+/** \addtogroup Decoder Decoders and encoders for different protocols
+ * @{
+ */
 //==============================================================================
 //                           BBBB    OOO    SSSS  EEEEE
 //                           B   B  O   O  S      E
@@ -67,7 +71,7 @@ void IRsend::sendBoseWave(uint8_t aCommand, uint_fast8_t aNumberOfRepeats) {
 bool IRrecv::decodeBoseWave() {
 
     // Check header "mark"
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[1], BOSEWAVE_HEADER_MARK)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], BOSEWAVE_HEADER_MARK)) {
         // no debug output, since this check is mainly to determine the received protocol
         return false;
     }
@@ -81,7 +85,7 @@ bool IRrecv::decodeBoseWave() {
         return false;
     }
     // Check header "space"
-    if (!MATCH_SPACE(decodedIRData.rawDataPtr->rawbuf[2], BOSEWAVE_HEADER_SPACE)) {
+    if (!matchSpace(decodedIRData.rawDataPtr->rawbuf[2], BOSEWAVE_HEADER_SPACE)) {
         DBG_PRINT("Bose: ");
         DBG_PRINTLN("Header space length is wrong");
         return false;
@@ -94,7 +98,7 @@ bool IRrecv::decodeBoseWave() {
     }
 
     // Stop bit
-    if (!MATCH_MARK(decodedIRData.rawDataPtr->rawbuf[3 + (2 * BOSEWAVE_BITS)], BOSEWAVE_BIT_MARK)) {
+    if (!matchMark(decodedIRData.rawDataPtr->rawbuf[3 + (2 * BOSEWAVE_BITS)], BOSEWAVE_BIT_MARK)) {
         DBG_PRINT("Bose: ");
         DBG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;
@@ -123,3 +127,5 @@ bool IRrecv::decodeBoseWave() {
 
     return true;
 }
+
+/** @}*/
