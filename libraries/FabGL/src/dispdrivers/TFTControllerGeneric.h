@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -250,6 +250,7 @@ public:
    * @brief Set display orientation and rotation
    *
    * @param value Display orientation and rotation
+   * @param force
    *
    * Example:
    *

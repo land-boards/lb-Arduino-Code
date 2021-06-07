@@ -53,11 +53,7 @@
 
 #include <IRremote.h>
 
-#if defined(ESP32)
-int SEND_BUTTON_PIN = 16; // RX2 pin
-#else
-int SEND_BUTTON_PIN = 12;
-#endif
+int SEND_BUTTON_PIN = APPLICATION_PIN;
 int STATUS_PIN = LED_BUILTIN;
 
 int DELAY_BETWEEN_REPEAT = 50;
@@ -83,7 +79,7 @@ void sendCode(storedIRDataStruct *aIRDataToSend);
 void setup() {
     Serial.begin(115200);
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
@@ -95,10 +91,18 @@ void setup() {
     pinMode(STATUS_PIN, OUTPUT);
 
     Serial.print(F("Ready to receive IR signals at pin "));
+#if defined(ARDUINO_ARCH_STM32) || defined(ESP8266)
+    Serial.println(IR_RECEIVE_PIN_STRING);
+#else
     Serial.println(IR_RECEIVE_PIN);
+#endif
 
     Serial.print(F("Ready to send IR signals at pin "));
+#if defined(ARDUINO_ARCH_STM32) || defined(ESP8266)
+    Serial.println(IR_SEND_PIN_STRING);
+#else
     Serial.print(IR_SEND_PIN);
+#endif
     Serial.print(F(" on press of button at pin "));
     Serial.println(SEND_BUTTON_PIN);
 
@@ -172,6 +176,9 @@ void storeCode(IRData *aIRReceivedData) {
         Serial.println(F(" timing entries as raw "));
         IrReceiver.printIRResultRawFormatted(&Serial, true); // Output the results in RAW format
         sStoredIRData.rawCodeLength = IrReceiver.decodedIRData.rawDataPtr->rawlen - 1;
+        /*
+         * Store the current raw data in a dedicated array for later usage
+         */
         IrReceiver.compensateAndStoreIRResultInArray(sStoredIRData.rawCode);
     } else {
         IrReceiver.printIRResultShort(&Serial);

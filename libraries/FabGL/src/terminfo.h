@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -41,36 +41,39 @@ namespace fabgl {
 constexpr int EmuTerminalMaxChars = 8;
 
 
+/** \ingroup Enumerations
+ * @brief
+ */
 enum class ConvCtrl {
-  END,
-  CarriageReturn,
-  LineFeed,
-  CursorLeft,
-  CursorUp,
-  CursorRight,
-  EraseToEndOfScreen,
-  EraseToEndOfLine,
-  CursorHome,
-  AttrNormal,
-  AttrBlank,
-  AttrBlink,
-  AttrBlinkOff,
-  AttrReverse,
-  AttrReverseOff,
-  AttrUnderline,
-  AttrUnderlineOff,
-  AttrReduce,
-  AttrReduceOff,
-  CursorPos,
-  CursorPos2,
-  InsertLine,
-  InsertChar,
-  DeleteLine,
-  DeleteCharacter,
-  CursorOn,
-  CursorOff,
-  SaveCursor,
-  RestoreCursor,
+  END,                      /**<    */
+  CarriageReturn,           /**<    */
+  LineFeed,                 /**<    */
+  CursorLeft,               /**<    */
+  CursorUp,                 /**<    */
+  CursorRight,              /**<    */
+  EraseToEndOfScreen,       /**<    */
+  EraseToEndOfLine,         /**<    */
+  CursorHome,               /**<    */
+  AttrNormal,               /**<    */
+  AttrBlank,                /**<    */
+  AttrBlink,                /**<    */
+  AttrBlinkOff,             /**<    */
+  AttrReverse,              /**<    */
+  AttrReverseOff,           /**<    */
+  AttrUnderline,            /**<    */
+  AttrUnderlineOff,         /**<    */
+  AttrReduce,               /**<    */
+  AttrReduceOff,            /**<    */
+  CursorPos,                /**<    */
+  CursorPos2,               /**<    */
+  InsertLine,               /**<    */
+  InsertChar,               /**<    */
+  DeleteLine,               /**<    */
+  DeleteCharacter,          /**<    */
+  CursorOn,                 /**<    */
+  CursorOff,                /**<    */
+  SaveCursor,               /**<    */
+  RestoreCursor,            /**<    */
 };
 
 

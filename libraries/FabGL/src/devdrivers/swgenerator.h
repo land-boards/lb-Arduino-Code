@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -34,7 +34,12 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "rom/lldesc.h"
+
+#if __has_include("esp32/rom/lldesc.h")
+  #include "esp32/rom/lldesc.h"
+#else
+  #include "rom/lldesc.h"
+#endif
 
 #include "fabglconf.h"
 

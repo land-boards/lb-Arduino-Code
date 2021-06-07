@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -244,7 +244,7 @@ void Machine::run(CPU cpu, int address)
     timeToCheckKeyboard -= cycles;
     if (timeToCheckKeyboard < 0) {
       timeToCheckKeyboard = timeToCheckKeyboardReset;
-      auto keyboard = fabgl::PS2Controller::instance()->keyboard();
+      auto keyboard = fabgl::PS2Controller::keyboard();
       if (m_menuCallback && (keyboard->isVKDown(VirtualKey::VK_PAUSE) || keyboard->isVKDown(VirtualKey::VK_F12)))
         m_menuCallback();
     }

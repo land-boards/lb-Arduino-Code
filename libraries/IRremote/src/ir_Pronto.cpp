@@ -31,10 +31,13 @@
  *
  ************************************************************************************
  */
+
+// The first number, here 0000, denotes the type of the signal. 0000 denotes a raw IR signal with modulation,
+// The second number, here 006C, denotes a frequency code
 #include <Arduino.h>
 
 //#define DEBUG // Activate this for lots of lovely debug output from this decoder.
-#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT"
+#include "IRremoteInt.h" // evaluates the DEBUG for DEBUG_PRINT"
 
 /** \addtogroup Decoder Decoders and encoders for different protocols
  * @{
@@ -85,10 +88,10 @@ void IRsend::sendPronto(const uint16_t *data, unsigned int length, uint_fast8_t 
     }
     unsigned int intros = 2 * data[2];
     unsigned int repeats = 2 * data[3];
-    DBG_PRINT(F("sendPronto intros="));
-    DBG_PRINT(intros);
-    DBG_PRINT(F(" repeats="));
-    DBG_PRINTLN(repeats);
+    DEBUG_PRINT(F("sendPronto intros="));
+    DEBUG_PRINT(intros);
+    DEBUG_PRINT(F(" repeats="));
+    DEBUG_PRINTLN(repeats);
     if (numbersInPreamble + intros + repeats != length) { // inconsistent sizes
         return;
     }
@@ -119,7 +122,9 @@ void IRsend::sendPronto(const uint16_t *data, unsigned int length, uint_fast8_t 
     /*
      * Now send the trailing space/gap of the intro and all the repeats
      */
-    delay(durations[intros - 1] / 1000U); // equivalent to space(durations[intros - 1]); but allow bigger values for the gap
+    if (intros >= 2) {
+        delay(durations[intros - 1] / 1000U); // equivalent to space(durations[intros - 1]); but allow bigger values for the gap
+    }
     for (unsigned int i = 0; i < aNumberOfRepeats; i++) {
         sendRaw(durations + intros, repeats - 1, khz);
         if ((i + 1) < aNumberOfRepeats) { // skip last trailing space/gap, see above
@@ -138,7 +143,7 @@ void IRsend::sendPronto(const uint16_t *data, unsigned int length, uint_fast8_t 
  *
  * Note: Using this function is very wasteful for the memory consumption on
  * a small board.
- * Normally it is a much better ide to use a tool like e.g. IrScrutinizer
+ * Normally it is a much better idea to use a tool like e.g. IrScrutinizer
  * to transform Pronto type signals offline
  * to a more memory efficient format.
  *
@@ -324,7 +329,8 @@ size_t IRrecv::compensateAndStorePronto(String *aString, unsigned int frequency)
     size += dumpNumber(aString, toFrequencyCode(frequency));
     size += dumpNumber(aString, (decodedIRData.rawDataPtr->rawlen + 1) / 2);
     size += dumpNumber(aString, 0);
-    size += compensateAndDumpSequence(aString, &decodedIRData.rawDataPtr->rawbuf[1], decodedIRData.rawDataPtr->rawlen - 1, timebase); // skip leading space
+    size += compensateAndDumpSequence(aString, &decodedIRData.rawDataPtr->rawbuf[1], decodedIRData.rawDataPtr->rawlen - 1,
+            timebase); // skip leading space
 
     return size;
 }

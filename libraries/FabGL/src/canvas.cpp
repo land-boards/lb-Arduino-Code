@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -116,6 +116,9 @@ void Canvas::reset()
   Primitive p;
   p.cmd = PrimitiveCmd::Reset;
   m_displayController->addPrimitive(p);
+  m_origin = Point(0, 0);
+  m_clippingRect = INVALIDRECT;
+  m_textHorizRate = 1;
 }
 
 

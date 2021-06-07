@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -32,7 +32,6 @@
 #include "soc/i2s_struct.h"
 #include "soc/i2s_reg.h"
 #include "driver/periph_ctrl.h"
-#include "rom/lldesc.h"
 #include "soc/rtc.h"
 #include "esp_spi_flash.h"
 #include "esp_heap_caps.h"
@@ -100,6 +99,7 @@ void VGAPalettedController::end()
   if (m_primitiveExecTask) {
     vTaskDelete(m_primitiveExecTask);
     m_primitiveExecTask = nullptr;
+    m_taskProcessingPrimitives = false;
   }
   VGABaseController::end();
 }

@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -25,8 +25,9 @@
 
 const char * PresetResolutions[] = {
   VGA_256x384_60Hz,
+  VGA_320x200_60HzD,
+  VGA_320x200_70Hz,
   VGA_320x200_75Hz,
-  VGA_320x200_75HzRetro,
   QVGA_320x240_60Hz,
   VGA_400x300_60Hz,
   VGA_480x300_75Hz,
@@ -34,8 +35,8 @@ const char * PresetResolutions[] = {
   VGA_512x384_60Hz,
   VGA_512x448_60Hz,
   VGA_512x512_58Hz,
+  VGA_640x200_60HzD,
   VGA_640x200_70Hz,
-  VGA_640x200_70HzRetro,
   VGA_640x240_60Hz,
   VGA_640x350_70Hz,
   VGA_640x350_70HzAlt1,
@@ -49,6 +50,9 @@ const char * PresetResolutions[] = {
   VGA_640x480_60HzD,
   VGA_640x480_73Hz,
   VESA_640x480_75Hz,
+  VGA_720x348_50HzD,
+  VGA_720x348_73Hz,
+  VGA_720x400_70Hz,
   VESA_720x400_85Hz,
   PAL_720x576_50Hz,
   VESA_768x576_60Hz,

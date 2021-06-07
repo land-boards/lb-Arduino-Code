@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -107,7 +107,7 @@ void dumpEvent(uiEvent * event)
   }
   Serial.write("\n");
 }
-//*/
+*/
 
 
 
@@ -143,6 +143,8 @@ uiEvtHandler::uiEvtHandler(uiApp * app)
 
 uiEvtHandler::~uiEvtHandler()
 {
+  if (m_app)
+    m_app->killEvtHandlerTimers(this);
 }
 
 
@@ -199,12 +201,12 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
 
   m_keyboard = keyboard;
   m_mouse    = mouse;
-  if (PS2Controller::instance()) {
+  if (PS2Controller::initialized()) {
     // get default keyboard and mouse from the PS/2 controller
     if (m_keyboard == nullptr)
-      m_keyboard = PS2Controller::instance()->keyboard();
+      m_keyboard = PS2Controller::keyboard();
     if (m_mouse == nullptr)
-      m_mouse = PS2Controller::instance()->mouse();
+      m_mouse = PS2Controller::mouse();
   }
 
   m_eventsQueue = xQueueCreate(FABGLIB_UI_EVENTS_QUEUE_SIZE, sizeof(uiEvent));
@@ -235,6 +237,8 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   // avoid slow paint on low resolutions
   m_displayController->enableBackgroundPrimitiveTimeout(false);
 
+  m_lastUserActionTimeMS = esp_timer_get_time() / 1000;
+
   showWindow(m_rootWindow, true);
 
   m_activeWindow = m_rootWindow;
@@ -264,6 +268,8 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
       }
     }
   }
+
+  killEvtHandlerTimers(this);
 
   showCaret(nullptr);
 
@@ -412,6 +418,8 @@ void uiApp::preprocessMouseEvent(uiEvent * event)
       getEvent(event, -1);
   }
 
+  m_lastUserActionTimeMS = esp_timer_get_time() / 1000;
+
   Point mousePos = Point(event->params.mouse.status.X, event->params.mouse.status.Y);
 
   // search for window under the mouse or mouse capturing window
@@ -469,6 +477,8 @@ void uiApp::preprocessMouseEvent(uiEvent * event)
 
 void uiApp::preprocessKeyboardEvent(uiEvent * event)
 {
+  m_lastUserActionTimeMS = esp_timer_get_time() / 1000;
+
   // keyboard events go to focused window
   if (m_focusedWindow) {
     event->dest = m_focusedWindow;
@@ -834,6 +844,7 @@ void uiApp::timerFunc(TimerHandle_t xTimer)
 uiTimerHandle uiApp::setTimer(uiEvtHandler * dest, int periodMS)
 {
   TimerHandle_t h = xTimerCreate("", pdMS_TO_TICKS(periodMS), pdTRUE, dest, &uiApp::timerFunc);
+  m_timers.push_back(uiTimerAssoc(dest, h));
   xTimerStart(h, 0);
   return h;
 }
@@ -841,7 +852,21 @@ uiTimerHandle uiApp::setTimer(uiEvtHandler * dest, int periodMS)
 
 void uiApp::killTimer(uiTimerHandle handle)
 {
+  auto dest = (uiEvtHandler *) pvTimerGetTimerID(handle);
+  m_timers.remove(uiTimerAssoc(dest, handle));
+  xTimerStop(handle, portMAX_DELAY);
   xTimerDelete(handle, portMAX_DELAY);
+}
+
+
+void uiApp::killEvtHandlerTimers(uiEvtHandler * dest)
+{
+  for (auto t : m_timers)
+    if (t.first == dest) {
+      xTimerStop(t.second, portMAX_DELAY);
+      xTimerDelete(t.second, portMAX_DELAY);
+    }
+  m_timers.remove_if([&](uiTimerAssoc const & p) { return p.first == dest; });
 }
 
 
@@ -1087,7 +1112,7 @@ uiMessageBoxResult uiApp::inputBox(char const * title, char const * text, char *
   mainFrame->frameProps().hasMaximizeButton = false;
   mainFrame->frameProps().hasMinimizeButton = false;
   mainFrame->onKeyUp = [&](uiKeyEventInfo key) {
-    if (key.VK == VK_RETURN)
+    if (key.VK == VK_RETURN || key.VK == VK_KP_ENTER)
       mainFrame->exitModal(1);
     else if (key.VK == VK_ESCAPE)
       mainFrame->exitModal(0);
@@ -2700,6 +2725,8 @@ void uiTextEdit::paintTextEdit()
 // return glyph data of the specified character
 uint8_t const * uiTextEdit::getCharInfo(char ch, int * width)
 {
+  if (m_textEditProps.passwordMode)
+    ch = '*';
   uint8_t const * chptr;
   if (m_textEditStyle.textFont->chptr) {
     // variable width
@@ -3644,7 +3671,12 @@ void uiCustomListBox::processEvent(uiEvent * event)
 
     case UIEVT_MOUSEBUTTONDOWN:
       if (event->params.mouse.changedButton == 1)
-        handleMouseDown(event->params.mouse.status.X, event->params.mouse.status.Y);
+        mouseDownSelect(event->params.mouse.status.X, event->params.mouse.status.Y);
+      break;
+
+    case UIEVT_MOUSEMOVE:
+      if (m_listBoxProps.selectOnMouseOver)
+        mouseMoveSelect(event->params.mouse.status.X, event->params.mouse.status.Y);
       break;
 
     case UIEVT_KEYDOWN:
@@ -3714,9 +3746,9 @@ void uiCustomListBox::selectItem(int index, bool add, bool range)
   if (items_getCount() > 0) {
     index = iclamp(index, 0, items_getCount() - 1);
     int first = firstSelectedItem();
-    if (!add)
+    if (!add || !m_listBoxProps.allowMultiSelect)
       items_deselectAll();
-    if (range) {
+    if (m_listBoxProps.allowMultiSelect && range) {
       if (index <= first) {
         for (int i = index; i <= first; ++i)
           items_select(i, true);
@@ -3850,13 +3882,20 @@ int uiCustomListBox::getItemAtMousePos(int mouseX, int mouseY)
 }
 
 
-void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
+void uiCustomListBox::mouseDownSelect(int mouseX, int mouseY)
 {
   int idx = getItemAtMousePos(mouseX, mouseY);
   if (idx >= 0) {
     if (app()->keyboard()->isVKDown(VK_LCTRL) || app()->keyboard()->isVKDown(VK_RCTRL)) {
       // CTRL is down
-      items_select(idx, !items_selected(idx));
+      bool wasSelected = items_selected(idx);
+      if (m_listBoxProps.allowMultiSelect) {
+        items_select(idx, !wasSelected);
+      } else {
+        items_deselectAll();
+        if (!wasSelected)
+          items_select(idx, true);
+      }
     } else {
       // CTRL is up
       items_deselectAll();
@@ -3868,6 +3907,18 @@ void uiCustomListBox::handleMouseDown(int mouseX, int mouseY)
     return;
   onChange();
   repaint();
+}
+
+
+void uiCustomListBox::mouseMoveSelect(int mouseX, int mouseY)
+{
+  int idx = getItemAtMousePos(mouseX, mouseY);
+  if (idx >= 0 && !items_selected(idx)) {
+    items_deselectAll();
+    items_select(idx, true);
+    onChange();
+    repaint();
+  }
 }
 
 
@@ -4679,6 +4730,88 @@ void uiSlider::handleKeyDown(uiKeyEventInfo key)
 // uiSlider
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiProgressBar
+
+
+uiProgressBar::uiProgressBar(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, size, visible, 0)
+{
+  objectType().uiProgressBar = true;
+
+  windowProps().focusable = false;
+  windowStyle().borderSize = 1;
+  windowStyle().borderColor = RGB888(64, 64, 64);
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+
+  m_percentage = 0;
+}
+
+
+uiProgressBar::~uiProgressBar()
+{
+}
+
+
+void uiProgressBar::paintProgressBar()
+{
+  Rect cRect = uiControl::clientRect(uiOrigin::Window);
+
+  int splitPos = cRect.width() * m_percentage / 100;
+  Rect fRect = Rect(cRect.X1, cRect.Y1, cRect.X1 + splitPos, cRect.Y2);
+  Rect bRect = Rect(cRect.X1 + splitPos + 1, cRect.Y1, cRect.X2, cRect.Y2);
+
+  // the bar
+  canvas()->setBrushColor(m_progressBarStyle.foregroundColor);
+  canvas()->fillRectangle(fRect);
+  canvas()->setBrushColor(m_progressBarStyle.backgroundColor);
+  canvas()->fillRectangle(bRect);
+
+  if (m_progressBarProps.showPercentage) {
+    char txt[5];
+    sprintf(txt, "%d%%", m_percentage);
+    canvas()->setGlyphOptions(GlyphOptions().FillBackground(false).DoubleWidth(0).Bold(false).Italic(false).Underline(false).Invert(0));
+    canvas()->setPenColor(m_progressBarStyle.textColor);
+    int x = fRect.X2 - canvas()->textExtent(m_progressBarStyle.textFont, txt);
+    int y = cRect.Y1 + (cRect.height() - m_progressBarStyle.textFont->height) / 2;
+    canvas()->drawText(m_progressBarStyle.textFont, x, y, txt);
+  }
+}
+
+
+void uiProgressBar::processEvent(uiEvent * event)
+{
+  uiControl::processEvent(event);
+
+  switch (event->id) {
+
+    case UIEVT_PAINT:
+      beginPaint(event, uiControl::clientRect(uiOrigin::Window));
+      paintProgressBar();
+      break;
+
+    default:
+      break;
+  }
+}
+
+
+void uiProgressBar::setPercentage(int value)
+{
+  value = imin(imax(0, value), 100);
+  if (value != m_percentage) {
+    m_percentage = value;
+    repaint();
+  }
+}
+
+
+// uiProgressBar
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 

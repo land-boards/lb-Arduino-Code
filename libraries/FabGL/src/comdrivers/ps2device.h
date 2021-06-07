@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -90,6 +90,44 @@ public:
 
   bool parityError();
 
+  bool syncError();
+
+  bool CLKTimeOutError();
+
+  /**
+   * @brief Sends a raw command to the PS/2 device and wait for reply
+   *
+   * @param cmd The command byte
+   * @param expectedReply Expected reply from PS/2 device
+   *
+   * @return True on success
+   */
+  bool sendCommand(uint8_t cmd, uint8_t expectedReply);
+
+  /**
+   * @brief Sends a raw command to the PS/2 device
+   *
+   * @param cmd The command byte
+   */
+  void sendCommand(uint8_t cmd);
+
+  /**
+   * @brief Suspends PS/2 port driving the CLK line Low
+   *
+   * Use resumePort() to release CLK line.
+   */
+  void suspendPort();
+
+  /**
+   * @brief Resumes PS/2 port releasing CLK line
+   *
+   * Use suspendPort() to suspend.
+   */
+  void resumePort();
+
+  uint16_t deviceID()    { return m_deviceID; }
+
+
 protected:
 
   PS2Device();
@@ -103,8 +141,6 @@ protected:
   int getData(int timeOutMS);
 
   void requestToResendLastByte();
-
-  bool sendCommand(uint8_t cmd, uint8_t expectedReply);
 
   bool send_cmdLEDs(bool numLock, bool capsLock, bool scrollLock);
   bool send_cmdEcho();
@@ -122,11 +158,10 @@ protected:
 
 private:
 
-  SemaphoreHandle_t m_deviceLock;
   int16_t           m_PS2Port;
-  int16_t           m_retryCount;
   int16_t           m_cmdTimeOut;
   int16_t           m_cmdSubTimeOut;
+  uint16_t          m_deviceID;       // read by send_cmdIdentify()
 };
 
 

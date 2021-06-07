@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -27,8 +27,8 @@
 #include <sys/stat.h>
 #include <math.h>
 
-#include "diskio.h"
 #include "ff.h"
+#include "diskio.h"
 #include "esp_vfs_fat.h"
 #include "esp_task_wdt.h"
 #include "driver/sdspi_host.h"
@@ -37,6 +37,7 @@
 #include "soc/efuse_reg.h"
 #include "soc/rtc.h"
 #include "esp_ipc.h"
+#include "soc/adc_channel.h"
 
 #include "fabutils.h"
 #include "dispdrivers/vgacontroller.h"
@@ -147,13 +148,13 @@ ChipPackage getChipPackage()
   uint32_t ver_pkg = (REG_READ(EFUSE_BLK0_RDATA3_REG) >> 9) & 7;
   switch (ver_pkg) {
     case 0:
-      return ChipPackage::ESP32D0WDQ6;
+      return ChipPackage::ESP32D0WDQ6;  // WROOOM-32
     case 1:
-      return ChipPackage::ESP32D0WDQ5;
+      return ChipPackage::ESP32D0WDQ5;  // WROVER-B
     case 2:
       return ChipPackage::ESP32D2WDQ5;
     case 5:
-      return ChipPackage::ESP32PICOD4;
+      return ChipPackage::ESP32PICOD4;  // TTGO-VGA32
     default:
       return ChipPackage::Unknown;
   }
@@ -438,6 +439,14 @@ void StringList::copyFrom(StringList const & src)
 }
 
 
+void StringList::copySelectionMapFrom(StringList const & src)
+{
+  int maskLen = (31 + m_allocated) / 32;
+  for (int i = 0; i < maskLen; ++i)
+    m_selMap[i] = src.m_selMap[i];
+}
+
+
 void StringList::checkAllocatedSpace(int requiredItems)
 {
   if (m_allocated < requiredItems) {
@@ -498,6 +507,27 @@ void StringList::append(char const * strlist[], int count)
 }
 
 
+// separator cannot be "0"
+void StringList::appendSepList(char const * strlist, char separator)
+{
+  if (strlist) {
+    takeStrings();
+    char const * start = strlist;
+    while (*start) {
+      auto end = strchr(start, separator);
+      if (!end)
+        end = strchr(start, 0);
+      int len = end - start;
+      char str[len + 1];
+      memcpy(str, start, len);
+      str[len] = 0;
+      insert(m_count, str);
+      start += len + (*end == 0 ? 0 : 1);
+    }
+  }
+}
+
+
 void StringList::set(int index, char const * str)
 {
   if (m_ownStrings) {
@@ -544,6 +574,16 @@ void StringList::deselectAll()
 bool StringList::selected(int index)
 {
   return m_selMap[index / 32] & (1 << (index % 32));
+}
+
+
+// -1 = no items selected
+int StringList::getFirstSelected()
+{
+  for (int i = 0; i < m_count; ++i)
+    if (selected(i))
+      return i;
+  return -1;
 }
 
 
@@ -1117,9 +1157,17 @@ bool FileBrowser::format(DriveType driveType, int drive)
 
 bool FileBrowser::mountSDCard(bool formatOnFail, char const * mountPath, size_t maxFiles, int allocationUnitSize, int MISO, int MOSI, int CLK, int CS)
 {
-  if (getChipPackage() == ChipPackage::ESP32PICOD4) {
-    MISO = 2;
-    MOSI = 12;
+  switch (getChipPackage()) {
+    case ChipPackage::ESP32PICOD4:
+      MISO = 2;
+      MOSI = 12;
+      break;
+    case ChipPackage::ESP32D0WDQ5:
+      MISO = 35;
+      MOSI = 12;
+      break;
+    default:
+      break;
   }
 
   s_SDCardMountPath          = mountPath;

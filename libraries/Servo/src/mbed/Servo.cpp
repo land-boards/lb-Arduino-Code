@@ -4,6 +4,12 @@
 #include <Servo.h>
 #include <mbed.h>
 
+#if defined __has_include
+#  if __has_include ("pinDefinitions.h")
+#    include "pinDefinitions.h"
+#  endif
+#endif
+
 class ServoImpl {
     mbed::DigitalOut   *pin;
     mbed::Timeout      timeout;  // calls a callback once when a timeout expires
@@ -40,10 +46,10 @@ public:
 static ServoImpl* servos[MAX_SERVOS];                      // static array of servo structures
 uint8_t ServoCount = 0;                                    // the total number of attached servos
 
-#define SERVO_MIN() (MIN_PULSE_WIDTH - this->min)   // minimum value in uS for this servo
-#define SERVO_MAX() (MAX_PULSE_WIDTH - this->max)   // maximum value in uS for this servo
+#define SERVO_MIN() (MIN_PULSE_WIDTH - this->min)   // minimum value in us for this servo
+#define SERVO_MAX() (MAX_PULSE_WIDTH - this->max)   // maximum value in us for this servo
 
-#define TRIM_DURATION   15                           //callback overhead (35 uS) -> 15uS if toggle() is called after starting the timeout
+#define TRIM_DURATION   15                           //callback overhead (35 us) -> 15 us if toggle() is called after starting the timeout
 
 Servo::Servo()
 {

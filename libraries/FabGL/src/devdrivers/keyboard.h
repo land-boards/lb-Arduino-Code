@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -47,10 +47,17 @@ namespace fabgl {
  * @brief A struct which contains a virtual key, key state and associated scan code
  */
 struct VirtualKeyItem {
-  VirtualKey vk;          /**< Virtual key */
-  uint8_t    down;        /**< 0 = up, 1 = down */
-  uint8_t    scancode[8]; /**< Keyboard scancode. Ends with zero if length is <8, otherwise gets the entire length (like PAUSE, which is 8 bytes) */
-  uint8_t    ASCII;       /**< ASCII value (0 = if it isn't possible to translate from virtual key) */
+  VirtualKey vk;            /**< Virtual key */
+  uint8_t    down;          /**< 0 = up, 1 = down */
+  uint8_t    scancode[8];   /**< Keyboard scancode. Ends with zero if length is <8, otherwise gets the entire length (like PAUSE, which is 8 bytes) */
+  uint8_t    ASCII;         /**< ASCII value (0 = if it isn't possible to translate from virtual key) */
+  uint8_t    CTRL     : 1;  /**< CTRL key state at the time of this virtual key event */
+  uint8_t    LALT     : 1;  /**< LEFT ALT key state at the time of this virtual key event */
+  uint8_t    RALT     : 1;  /**< RIGHT ALT key state at the time of this virtual key event */
+  uint8_t    SHIFT    : 1;  /**< SHIFT key state at the time of this virtual key event */
+  uint8_t    GUI      : 1;  /**< GUI key state at the time of this virtual key event */
+  uint8_t    CAPSLOCK : 1;  /**< CAPSLOCK key state at the time of this virtual key event */
+  uint8_t    NUMLOCK  : 1;  /**< NUMLOCK key state at the time of this virtual key event */
 };
 
 
@@ -87,6 +94,7 @@ class Keyboard : public PS2Device {
 public:
 
   Keyboard();
+  ~Keyboard();
 
   /**
    * @brief Initializes Keyboard specifying CLOCK and DATA GPIOs.
@@ -271,7 +279,6 @@ public:
    *
    * Scancodes are always generated but they can be consumed by the scancode-to-virtualkeys task. So, in order to use this
    * method Keyboard.begin() method should be called with generateVirtualKeys = false and createVKQueue = false.<br>
-   * Alternatively it is also possible to suspend the conversion task calling Keyboard.suspendVirtualKeyGeneration() method.
    *
    * @return The number of scancodes available to read.
    */
@@ -282,7 +289,6 @@ public:
    *
    * Scancodes are always generated but they can be consumed by the scancode-to-virtualkeys task. So, in order to use this
    * method Keyboard.begin() method should be called with generateVirtualKeys = false and createVKQueue = false.<br>
-   * Alternatively it is also possible to suspend the conversion task calling Keyboard.suspendVirtualKeyGeneration() method.
    *
    * @param timeOutMS Timeout in milliseconds. -1 means no timeout (infinite time).
    * @param requestResendOnTimeOut If true and timeout has expired then asks the keyboard to resend the scancode.
@@ -290,16 +296,6 @@ public:
    * @return The first scancode of the queue (-1 if no data is available in the timeout period).
    */
   int getNextScancode(int timeOutMS = -1, bool requestResendOnTimeOut = false);
-
-  /**
-   * @brief Suspends or resume the virtual key generation task.
-   *
-   * Use this method to temporarily suspend the scancode to virtual key conversion task. This is useful when
-   * scancode are necessary for a limited time.
-   *
-   * @param value If true conversion task is suspended. If false conversion task is resumed.
-   */
-  void suspendVirtualKeyGeneration(bool value);
 
   /**
    * @brief Sets keyboard LEDs status.
@@ -312,7 +308,7 @@ public:
    *
    * @return True if command has been successfully delivered to the keyboard.
    */
-  bool setLEDs(bool numLock, bool capsLock, bool scrollLock) { return send_cmdLEDs(numLock, capsLock, scrollLock); }
+  bool setLEDs(bool numLock, bool capsLock, bool scrollLock);
 
   /**
    * @brief Gets keyboard LEDs status.
@@ -359,6 +355,8 @@ public:
    */
   int scancodeSet()                { return m_scancodeSet; }
 
+  static uint8_t convScancodeSet2To1(uint8_t code);
+
 #if FABGLIB_HAS_VirtualKeyO_STRING
   static char const * virtualKeyToString(VirtualKey virtualKey);
 #endif
@@ -393,6 +391,7 @@ private:
 
   VirtualKey scancodeToVK(uint8_t scancode, bool isExtended, KeyboardLayout const * layout = nullptr);
   VirtualKey VKtoAlternateVK(VirtualKey in_vk, bool down, KeyboardLayout const * layout = nullptr);
+  VirtualKey manageCAPSLOCK(VirtualKey vk);
   void updateLEDs();
   bool blockingGetVirtualKey(VirtualKeyItem * item);
   void convertScancode2to1(VirtualKeyItem * item);
@@ -420,9 +419,11 @@ private:
   uiApp *                   m_uiApp;
 
   bool                      m_CTRL;
-  bool                      m_ALT;
+  bool                      m_LALT;
+  bool                      m_RALT;
   bool                      m_SHIFT;
   bool                      m_CAPSLOCK;
+  bool                      m_GUI;
   bool                      m_NUMLOCK;
   bool                      m_SCROLLLOCK;
 

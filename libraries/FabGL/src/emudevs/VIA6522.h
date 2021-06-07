@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -33,6 +33,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+
+#include "fabgl.h"
 
 
 #define DEBUG6522 0
@@ -79,13 +81,16 @@ namespace fabgl {
 #define VIA_ACR_T1_OUTENABLE    0x80
 
 
+/** \ingroup Enumerations
+ * @brief I/O port
+ */
 enum class VIA6522Port {
-  PA,  // (8 bit)
-  PB,  // (8 bit)
-  CA1, // (1 bit)
-  CA2, // (1 bit)
-  CB1, // (1 bit)
-  CB2, // (1 bit)
+  PA,  /**< (8 bit) */
+  PB,  /**< (8 bit) */
+  CA1, /**< (1 bit) */
+  CA2, /**< (1 bit) */
+  CB1, /**< (1 bit) */
+  CB2, /**< (1 bit) */
 };
 
 

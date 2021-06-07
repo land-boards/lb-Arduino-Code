@@ -31,9 +31,10 @@
  * -----------------------------------------
  * DEFAULT/AVR  2           3           4
  * ATtinyX5     0           4           3
- * ATtin167     9           8           5 // Digispark pro number schema
- * ATtin167     3           2           7
- * ATtin3217    10          11          3 // TinyCore schema
+ * ATtiny167    9           8           5 // Digispark pro number schema
+ * ATtiny167    3           2           7
+ * ATtiny3217   10          11          3 // TinyCore schema
+ * ATtiny1604   2           PA5/3       %
  * SAMD21       3           4           5
  * ESP8266      14 // D5    12 // D6    %
  * ESP32        15          4           %
@@ -44,19 +45,23 @@
 //
 #if defined(ESP8266)
 #define FEEDBACK_LED_IS_ACTIVE_LOW // The LED on my board is active LOW
-#define IR_RECEIVE_PIN      14 // D5
-#define IR_SEND_PIN         12 // D6 - D4/2 is internal LED
-#define tone(a,b) void()        // tone() inhibits receive timer
+#define IR_RECEIVE_PIN          14 // D5
+#define IR_RECEIVE_PIN_STRING   "D5"
+#define IR_SEND_PIN             12 // D6 - D4/pin 2 is internal LED
+#define IR_SEND_PIN_STRING      "D6"
+#define tone(a,b,c) void()      // tone() inhibits receive timer
 #define noTone(a) void()
-#define TONE_PIN            42 // Dummy for examples using it
-#define IR_TIMING_TEST_PIN  13 // D7
+#define TONE_PIN                42 // Dummy for examples using it
+#define IR_TIMING_TEST_PIN      13 // D7
+#define APPLICATION_PIN         0 // D3
 
 #elif defined(ESP32)
-#define IR_RECEIVE_PIN      15  // D15
-#define IR_SEND_PIN          4  // D4
-#define tone(a,b) void()        // no tone() available on ESP32
+#define IR_RECEIVE_PIN          15  // D15
+#define IR_SEND_PIN              4  // D4
+#define tone(a,b,c) void()      // no tone() available on ESP32
 #define noTone(a) void()
-#define TONE_PIN            42 // Dummy for examples using it
+#define TONE_PIN                42 // Dummy for examples using it
+#define APPLICATION_PIN         16 // RX2 pin
 
 #elif defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_STM32F1)
 // BluePill in 2 flavors
@@ -67,9 +72,10 @@
 #define IR_SEND_PIN_STRING      "PA7"
 #define TONE_PIN                PA3
 #define IR_TIMING_TEST_PIN      PA5
+#define APPLICATION_PIN         PA2
 
 #elif defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-#include "ATtinySerialOut.h" // Available as Arduino library. saves 370 bytes program space and 38 bytes RAM
+#include "ATtinySerialOut.h" // Available as Arduino library. saves 370 bytes program space and 38 bytes RAM for digistump core
 #define IR_RECEIVE_PIN  0
 #define IR_SEND_PIN     4 // Pin 2 is serial output with ATtinySerialOut. Pin 1 is internal LED and Pin3 is USB+ with pullup on Digispark board.
 #define TONE_PIN        3
@@ -84,7 +90,6 @@
 #define IR_SEND_PIN      8 // PA2 - on Digispark board labeled as pin 8
 #define TONE_PIN         5 // PA7
 #define IR_TIMING_TEST_PIN 10 // PA4
-
 #  else
 #define IR_RECEIVE_PIN  3
 #define IR_SEND_PIN     2
@@ -103,6 +108,15 @@
 #define IR_RECEIVE_PIN  10
 #define IR_SEND_PIN     11
 #define TONE_PIN         3
+#define APPLICATION_PIN  5
+
+#elif defined(__AVR_ATtiny1604__)
+#define IR_RECEIVE_PIN   2 // To be compatible with interrupt example, pin 2 is chosen here.
+#define IR_SEND_PIN      3
+#define APPLICATION_PIN  5
+#define TONE_PIN        42 // Dummy for examples using it
+#define tone(a,b,c) void() // tone() uses the same vector as receive timer
+#define noTone(a) void()
 
 #  elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) \
 || defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__) \
@@ -181,6 +195,9 @@
 #define IR_TIMING_TEST_PIN  7
 #endif // defined(ESP8266)
 
+#if !defined (FLASHEND)
+#define FLASHEND 0xFFFF // Dummy value for platforms where FLASHEND is not defined
+#endif
 /*
  * Helper macro for getting a macro definition as string
  */

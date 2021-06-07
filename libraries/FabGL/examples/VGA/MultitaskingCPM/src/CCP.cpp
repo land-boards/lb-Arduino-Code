@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -1143,7 +1143,7 @@ bool CCP::cmd_INFO(uint16_t paramsAddr)
 
   m_termCtrl.setBackgroundColor(Color::Blue);
   m_termCtrl.setForegroundColor(Color::BrightCyan);
-  consoleOut("(c) 2020 by Fabrizio Di Vittorio - fdivitto2013@gmail.com");
+  consoleOut("(c) 2021 by Fabrizio Di Vittorio - fdivitto2013@gmail.com");
 
   m_termCtrl.setForegroundColor(Color::BrightYellow);
   m_termCtrl.setBackgroundColor(Color::Black);
@@ -1165,6 +1165,9 @@ bool CCP::cmd_INFO(uint16_t paramsAddr)
     consoleOutFmt("Current IP : %s\r\n", WiFi.localIP().toString().c_str());
   }
   #endif
+
+  m_termCtrl.setForegroundColor(Color::BrightWhite);
+  consoleOut("\r\nPress F1...F12 to change session. Type \"help\" to get command list\r\n");
 
   return true;
 }

@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -535,6 +535,11 @@ void loop()
 
   setupTerminalColors();
 
+  Terminal.setColorForAttribute(CharStyle::Bold, Color::BrightYellow, false);
+  Terminal.setColorForAttribute(CharStyle::Italic, Color::BrightRed, false);
+  Terminal.setColorForAttribute(CharStyle::Underline, Color::BrightWhite, false);
+  Terminal.setColorForAttribute(CharStyle::ReducedLuminosity, Color::BrightYellow, false);
+
   // setup keyboard layout
   setupKbdLayout();
 
@@ -547,4 +552,3 @@ void loop()
   CPU cpu = (getCPU() == 1 ? CPU::Z80 : CPU::i8080);
   altair.run(cpu, Altair88DiskBootROMRun);
 }
-

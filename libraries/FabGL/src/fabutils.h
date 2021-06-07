@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -36,9 +36,20 @@
 #include "freertos/semphr.h"
 
 #include <driver/adc.h>
+#include <esp_system.h>
 
 
 namespace fabgl {
+
+
+// manage IDF versioning
+#ifdef ESP_IDF_VERSION
+  #define FABGL_ESP_IDF_VERSION_VAL                      ESP_IDF_VERSION_VAL
+  #define FABGL_ESP_IDF_VERSION                          ESP_IDF_VERSION
+#else
+  #define FABGL_ESP_IDF_VERSION_VAL(major, minor, patch) ((major << 16) | (minor << 8) | (patch))
+  #define FABGL_ESP_IDF_VERSION                          FABGL_ESP_IDF_VERSION_VAL(0, 0, 0)
+#endif
 
 
 
@@ -67,6 +78,11 @@ namespace fabgl {
 #else
   #define PSRAM_HACK
 #endif
+
+// ESP32 PSRAM bug workaround (use when the library is NOT compiled with PSRAM hack enabled)
+// Plase between a write and a read PSRAM operation (write->ASM_MEMW->read), not viceversa
+#define ASM_MEMW asm(" MEMW");
+
 
 
 
@@ -179,6 +195,8 @@ struct Size {
 
   Size() : width(0), height(0) { }
   Size(int width_, int height_) : width(width_), height(height_) { }
+  bool operator==(Size const & r) { return width == r.width && height == r.height; }
+  bool operator!=(Size const & r) { return width != r.width || height != r.height; }
 } __attribute__ ((packed));
 
 
@@ -341,16 +359,34 @@ private:
 template <typename ...Params>
 struct Delegate {
 
+  // empty constructor
+  Delegate() : m_func(nullptr) {
+  }
+
+  // denied copy
+  Delegate(const Delegate & c) = delete;
+
+  // construct from lambda
   template <typename Func>
-  void operator=(Func f) {
-    m_closure = [] (void * func, const Params & ...params) -> void { (*(Func *)func)(params...); };
-    m_func = heap_caps_malloc(sizeof(Func), MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
-    moveItems<uint32_t*>((uint32_t*)m_func, (uint32_t*)&f, sizeof(Func) / sizeof(uint32_t));
+  Delegate(Func f) : Delegate() {
+    *this = f;
   }
 
   ~Delegate() {
-    heap_caps_free(m_func);
+    cleanUp();
   }
+
+  // assignment operator from Func
+  template <typename Func>
+  void operator=(Func f) {
+    cleanUp();
+    m_closure  = [] (void * func, const Params & ...params) -> void { (*(Func *)func)(params...); };
+    m_func     = heap_caps_malloc(sizeof(Func), MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
+    moveItems<uint32_t*>((uint32_t*)m_func, (uint32_t*)&f, sizeof(Func) / sizeof(uint32_t));
+  }
+
+  // denied assignment from Delegate
+  void operator=(const Delegate&) = delete;
 
   void operator()(const Params & ...params) {
     if (m_func)
@@ -358,8 +394,14 @@ struct Delegate {
   }
 
 private:
+
   void (*m_closure)(void * func, const Params & ...params);
-  void * m_func = nullptr;
+  void * m_func;
+
+  void cleanUp() {
+    if (m_func)
+      heap_caps_free(m_func);
+  }
 };
 
 
@@ -375,6 +417,7 @@ public:
   int append(char const * str);
   int appendFmt(const char *format, ...);
   void append(char const * strlist[], int count);
+  void appendSepList(char const * strlist, char separator);
   void insert(int index, char const * str);
   void set(int index, char const * str);
   void remove(int index);
@@ -385,7 +428,9 @@ public:
   void select(int index, bool value);
   void deselectAll();
   bool selected(int index);
+  int getFirstSelected();
   void copyFrom(StringList const & src);
+  void copySelectionMapFrom(StringList const & src);
 
 private:
   void checkAllocatedSpace(int requiredItems);
@@ -847,12 +892,15 @@ inline int hex2digit(char hex)
 uint32_t msToTicks(int ms);
 
 
+/** \ingroup Enumerations
+* @brief This enum defines ESP32 module types (packages)
+*/
 enum class ChipPackage {
   Unknown,
-  ESP32D0WDQ6,
-  ESP32D0WDQ5,
-  ESP32D2WDQ5,
-  ESP32PICOD4,
+  ESP32D0WDQ6,  /**< Unknown */
+  ESP32D0WDQ5,  /**< ESP32D0WDQ5 */
+  ESP32D2WDQ5,  /**< ESP32D2WDQ5 */
+  ESP32PICOD4,  /**< ESP32PICOD4 */
 };
 
 

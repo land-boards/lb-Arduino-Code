@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -69,7 +69,7 @@ void demo1()
   Terminal.write("\e[2J");     // clear screen
   Terminal.write("\e[1;1H");   // move cursor to 1,1
   slowPrintf("* * * *  W E L C O M E   T O   F a b G L  * * * *\r\n");
-  slowPrintf("2019-2020 by Fabrizio Di Vittorio - www.fabgl.com\r\n");
+  slowPrintf("2019-2021 by Fabrizio Di Vittorio - www.fabgl.com\r\n");
   slowPrintf("=================================================\r\n\n");
   slowPrintf("A Display Controller, PS2 Mouse and Keyboard Controller, Graphics Library, Audio Engine, Game Engine and ANSI/VT Terminal for the ESP32\r\n\n");
   slowPrintf("Current settings\r\n");
@@ -196,6 +196,35 @@ void demo5()
   Terminal.write("\e[20l"); // automatic new line off
 }
 
+void demo6()
+{
+  Terminal.write("\e[40;32m"); // background: black, foreground: green
+  Terminal.setColorForAttribute(CharStyle::Bold, Color::BrightYellow, true);
+  Terminal.setColorForAttribute(CharStyle::Italic, Color::BrightRed, true);
+  Terminal.setColorForAttribute(CharStyle::Underline, Color::BrightWhite, true);
+  slowPrintf("\nColored Attributes with styles:\r\n");
+  slowPrintf("\e[0mNormal\r\n");
+  slowPrintf("\e[1mBold\e[0m\r\n");
+  slowPrintf("\e[3mItalic\e[0m\r\n");
+  slowPrintf("\e[4mUnderlined\e[0m\r\n");
+
+  delay(1000);
+
+  Terminal.setColorForAttribute(CharStyle::Bold, Color::BrightYellow, false);
+  Terminal.setColorForAttribute(CharStyle::Italic, Color::BrightRed, false);
+  Terminal.setColorForAttribute(CharStyle::Underline, Color::BrightWhite, false);
+  slowPrintf("\nColored Attributes without styles:\r\n");
+  slowPrintf("\e[0mNormal\r\n");
+  slowPrintf("\e[1mBold\e[0m\r\n");
+  slowPrintf("\e[3mItalic\e[0m\r\n");
+  slowPrintf("\e[4mUnderlined\e[0m\r\n");
+
+  Terminal.setColorForAttribute(CharStyle::Bold);
+  Terminal.setColorForAttribute(CharStyle::Italic);
+  Terminal.setColorForAttribute(CharStyle::Underline);
+}
+
+
 void loop()
 {
   delay(1000);
@@ -208,4 +237,7 @@ void loop()
   demo4();
   delay(4000);
   demo5();
+  delay(4000);
+  demo6();
+  delay(4000);
 }

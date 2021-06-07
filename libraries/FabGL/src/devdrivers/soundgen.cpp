@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -32,6 +32,10 @@
 #include "driver/i2s.h"
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+#if __has_include("hal/i2s_types.h")
+  #include "hal/i2s_types.h"
+#endif
+#include "esp_log.h"
 
 
 #include "soundgen.h"
@@ -487,13 +491,18 @@ void SoundGenerator::i2s_audio_init()
   i2s_config.mode                 = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN);
   i2s_config.sample_rate          = m_sampleRate;
   i2s_config.bits_per_sample      = I2S_BITS_PER_SAMPLE_16BIT;
-  i2s_config.communication_format = (i2s_comm_format_t) I2S_COMM_FORMAT_I2S_MSB;
+  #if FABGL_ESP_IDF_VERSION <= FABGL_ESP_IDF_VERSION_VAL(4, 1, 1)
+    i2s_config.communication_format = (i2s_comm_format_t) I2S_COMM_FORMAT_I2S_MSB;
+  #else
+    i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
+  #endif
   i2s_config.channel_format       = I2S_CHANNEL_FMT_ONLY_RIGHT;
   i2s_config.intr_alloc_flags     = 0;
   i2s_config.dma_buf_count        = 2;
   i2s_config.dma_buf_len          = FABGL_SAMPLE_BUFFER_SIZE * sizeof(uint16_t);
   i2s_config.use_apll             = 0;
   i2s_config.tx_desc_auto_clear   = 0;
+  i2s_config.fixed_mclk           = 0;
   // install and start i2s driver
   i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
   // init DAC pad
@@ -608,7 +617,7 @@ void SoundGenerator::detachNoSuspend(WaveformGenerator * value)
 }
 
 
-void SoundGenerator::waveGenTask(void * arg)
+void IRAM_ATTR SoundGenerator::waveGenTask(void * arg)
 {
   SoundGenerator * soundGenerator = (SoundGenerator*) arg;
 

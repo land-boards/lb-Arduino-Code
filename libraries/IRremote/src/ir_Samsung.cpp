@@ -32,7 +32,7 @@
 #include <Arduino.h>
 
 //#define DEBUG // Activate this for lots of lovely debug output from this decoder.
-#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
+#include "IRremoteInt.h" // evaluates the DEBUG for DEBUG_PRINT
 #include "LongUnion.h"
 
 /** \addtogroup Decoder Decoders and encoders for different protocols
@@ -125,14 +125,18 @@ bool IRrecv::decodeSamsung() {
     // Check we have enough data (68). The +4 is for initial gap, start bit mark and space + stop bit mark
     if (decodedIRData.rawDataPtr->rawlen != ((2 * SAMSUNG_BITS) + 4)
             && decodedIRData.rawDataPtr->rawlen != ((2 * SAMSUNG48_BITS) + 4) && (decodedIRData.rawDataPtr->rawlen != 6)) {
+        DEBUG_PRINT(F("Samsung: "));
+        DEBUG_PRINT("Data length=");
+        DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
+        DEBUG_PRINTLN(" is not 68 or 100 or 6");
         return false;
     }
 
     // Check header "mark" + "space"
     if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], SAMSUNG_HEADER_MARK)
             || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], SAMSUNG_HEADER_SPACE)) {
-        DBG_PRINT("Samsung: ");
-        DBG_PRINTLN("Header mark or space length is wrong");
+        DEBUG_PRINT("Samsung: ");
+        DEBUG_PRINTLN("Header mark or space length is wrong");
 
         return false;
     }
@@ -151,17 +155,17 @@ bool IRrecv::decodeSamsung() {
          * Samsung48
          */
         // decode address
-        if (!decodePulseDistanceData(SAMSUNG_ADDRESS_BITS, 3, SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_ZERO_SPACE, false)) {
-            DBG_PRINT("Samsung: ");
-            DBG_PRINTLN("Decode failed");
+        if (!decodePulseDistanceData(SAMSUNG_ADDRESS_BITS, 3, SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_ZERO_SPACE, PROTOCOL_IS_LSB_FIRST)) {
+            DEBUG_PRINT("Samsung: ");
+            DEBUG_PRINTLN("Decode failed");
             return false;
         }
         decodedIRData.address = decodedIRData.decodedRawData;
 
         // decode 32 bit command
-        if (!decodePulseDistanceData(SAMSUNG_COMMAND32_BITS, 3, SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_ZERO_SPACE, false)) {
-            DBG_PRINT("Samsung: ");
-            DBG_PRINTLN("Decode failed");
+        if (!decodePulseDistanceData(SAMSUNG_COMMAND32_BITS, 3, SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_ZERO_SPACE, PROTOCOL_IS_LSB_FIRST)) {
+            DEBUG_PRINT("Samsung: ");
+            DEBUG_PRINTLN("Decode failed");
             return false;
         }
 
@@ -181,9 +185,9 @@ bool IRrecv::decodeSamsung() {
         /*
          * Samsung32
          */
-        if (!decodePulseDistanceData(SAMSUNG_BITS, 3, SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_ZERO_SPACE, false)) {
-            DBG_PRINT("Samsung: ");
-            DBG_PRINTLN("Decode failed");
+        if (!decodePulseDistanceData(SAMSUNG_BITS, 3, SAMSUNG_BIT_MARK, SAMSUNG_ONE_SPACE, SAMSUNG_ZERO_SPACE, PROTOCOL_IS_LSB_FIRST)) {
+            DEBUG_PRINT("Samsung: ");
+            DEBUG_PRINTLN("Decode failed");
             return false;
         }
         LongUnion tValue;
@@ -205,31 +209,31 @@ bool IRrecv::decodeSamsung() {
     return true;
 }
 
-#if defined(USE_OLD_DECODE)
-bool IRrecv::decodeSAMSUNG() {
+#if !defined(NO_LEGACY_COMPATIBILITY)
+bool IRrecv::decodeSAMSUNG(decode_results *aResults) {
     unsigned int offset = 1;  // Skip first space
 
     // Initial mark
-    if (!matchMark(results.rawbuf[offset], SAMSUNG_HEADER_MARK)) {
+    if (!matchMark(aResults->rawbuf[offset], SAMSUNG_HEADER_MARK)) {
         return false;
     }
     offset++;
 
 // Check for repeat -- like a NEC repeat
-    if ((results.rawlen == 4) && matchSpace(results.rawbuf[offset], 2250)
-            && matchMark(results.rawbuf[offset + 1], SAMSUNG_BIT_MARK)) {
-        results.bits = 0;
-        results.value = 0xFFFFFFFF;
+    if ((aResults->rawlen == 4) && matchSpace(aResults->rawbuf[offset], 2250)
+            && matchMark(aResults->rawbuf[offset + 1], SAMSUNG_BIT_MARK)) {
+        aResults->bits = 0;
+        aResults->value = 0xFFFFFFFF;
         decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT;
         decodedIRData.protocol = SAMSUNG;
         return true;
     }
-    if (results.rawlen < (2 * SAMSUNG_BITS) + 4) {
+    if (aResults->rawlen < (2 * SAMSUNG_BITS) + 4) {
         return false;
     }
 
 // Initial space
-    if (!matchSpace(results.rawbuf[offset], SAMSUNG_HEADER_SPACE)) {
+    if (!matchSpace(aResults->rawbuf[offset], SAMSUNG_HEADER_SPACE)) {
         return false;
     }
     offset++;
@@ -239,11 +243,13 @@ bool IRrecv::decodeSAMSUNG() {
     }
 
 // Success
-    results.bits = SAMSUNG_BITS;
+    aResults->value = decodedIRData.decodedRawData;
+    aResults->bits = SAMSUNG_BITS;
+    aResults->decode_type = SAMSUNG;
     decodedIRData.protocol = SAMSUNG;
     return true;
 }
-#endif //defined(USE_OLD_DECODE)
+#endif
 
 // Old version with MSB first
 void IRsend::sendSAMSUNG(unsigned long data, int nbits) {

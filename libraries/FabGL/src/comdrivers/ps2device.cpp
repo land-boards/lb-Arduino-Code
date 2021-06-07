@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -58,33 +58,27 @@ namespace fabgl {
 #define PS2_REPLY_SELFTEST_FAILED2           0xFD
 #define PS2_REPLY_RESEND                     0xFE
 
-#define PS2_DEFAULT_CMD_RETRY_COUNT       3
-#define PS2_DEFAULT_CMD_TIMEOUT           400
+#define PS2_DEFAULT_CMD_TIMEOUT           500
 #define PS2_DEFAULT_CMD_SUBTIMEOUT        (PS2_DEFAULT_CMD_TIMEOUT / 2)
 
-#define PS2_QUICK_CMD_RETRY_COUNT         1
 #define PS2_QUICK_CMD_TIMEOUT             50
 #define PS2_QUICK_CMD_SUBTIMEOUT          (PS2_QUICK_CMD_TIMEOUT / 2)
 
 
 PS2Device::PS2Device()
 {
-  m_retryCount    = PS2_DEFAULT_CMD_RETRY_COUNT;
   m_cmdTimeOut    = PS2_DEFAULT_CMD_TIMEOUT;
   m_cmdSubTimeOut = PS2_DEFAULT_CMD_SUBTIMEOUT;
-  m_deviceLock    = xSemaphoreCreateRecursiveMutex();
 }
 
 
 PS2Device::~PS2Device()
 {
-  vSemaphoreDelete(m_deviceLock);
 }
 
 
 void PS2Device::quickCheckHardware()
 {
-  m_retryCount    = PS2_QUICK_CMD_RETRY_COUNT;
   m_cmdTimeOut    = PS2_QUICK_CMD_TIMEOUT;
   m_cmdSubTimeOut = PS2_QUICK_CMD_SUBTIMEOUT;
 }
@@ -92,13 +86,13 @@ void PS2Device::quickCheckHardware()
 
 bool PS2Device::lock(int timeOutMS)
 {
-  return xSemaphoreTakeRecursive(m_deviceLock, msToTicks(timeOutMS));
+  return PS2Controller::lock(m_PS2Port, timeOutMS);
 }
 
 
 void PS2Device::unlock()
 {
-  xSemaphoreGiveRecursive(m_deviceLock);
+  PS2Controller::unlock(m_PS2Port);
 }
 
 
@@ -110,30 +104,57 @@ void PS2Device::begin(int PS2Port)
 
 int PS2Device::dataAvailable()
 {
-  return PS2Controller::instance()->dataAvailable(m_PS2Port);
+  return PS2Controller::dataAvailable(m_PS2Port);
 }
 
 
 bool PS2Device::parityError()
 {
-  return PS2Controller::instance()->parityError(m_PS2Port);
+  return PS2Controller::parityError(m_PS2Port);
+}
+
+
+bool PS2Device::syncError()
+{
+  return PS2Controller::syncError(m_PS2Port);
+}
+
+
+bool PS2Device::CLKTimeOutError()
+{
+  return PS2Controller::CLKTimeOutError(m_PS2Port);
+}
+
+
+void PS2Device::suspendPort()
+{
+  PS2Controller::disableRX(m_PS2Port);
+}
+
+
+void PS2Device::resumePort()
+{
+  PS2Controller::enableRX(m_PS2Port);
 }
 
 
 int PS2Device::getData(int timeOutMS)
 {
-  TimeOut timeout;
+  constexpr int INTER_GETDATA_TIMEOUT_MS = 100;
+  constexpr int INTER_GETDATA_PAUSE_MS   = 10;
+
+  int interTimeOut = timeOutMS > -1 ? imin(timeOutMS, INTER_GETDATA_TIMEOUT_MS) : INTER_GETDATA_TIMEOUT_MS;
+
   int ret = -1;
-  while (!timeout.expired(timeOutMS)) {
+  TimeOut timeout;
+  while (true) {
     lock(-1);
-    ret = PS2Controller::instance()->getData(m_PS2Port);
+    ret = PS2Controller::getData(m_PS2Port, interTimeOut);
     unlock();
-    if (ret > -1 || parityError())
+    if (ret > -1 || parityError() || syncError() || CLKTimeOutError() || timeout.expired(timeOutMS))
       break;
-    lock(-1);
-    PS2Controller::instance()->waitData((timeOutMS > -1 ? timeOutMS : m_cmdSubTimeOut), m_PS2Port);
-    unlock();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    // give the opportunity for other sends
+    vTaskDelay(INTER_GETDATA_PAUSE_MS / portTICK_PERIOD_MS);
   }
   return ret;
 }
@@ -141,35 +162,44 @@ int PS2Device::getData(int timeOutMS)
 
 bool PS2Device::sendCommand(uint8_t cmd, uint8_t expectedReply)
 {
-  for (int i = 0; i < m_retryCount; ++i) {
-    PS2Controller::instance()->sendData(cmd, m_PS2Port);
-    if (getData(m_cmdTimeOut) != expectedReply)
-      continue;
-    return true;
-  }
+  constexpr int INTER_WAITREPLY_TIMEOUT_MS = 10;
+
+  PS2DeviceLock deviceLock(this);
+
+  // temporary disable RX for the other port
+  PS2PortAutoDisableRX autoDisableRX(!m_PS2Port);
+
+  PS2Controller::sendData(cmd, m_PS2Port);
+  TimeOut timeout;
+  do {
+    if (PS2Controller::getData(m_PS2Port, INTER_WAITREPLY_TIMEOUT_MS) == expectedReply)
+      return true;
+  } while (!timeout.expired(m_cmdTimeOut));
   return false;
+}
+
+
+void PS2Device::sendCommand(uint8_t cmd)
+{
+  PS2Controller::sendData(cmd, m_PS2Port);
 }
 
 
 void PS2Device::requestToResendLastByte()
 {
-  PS2Controller::instance()->sendData(PS2_CMD_RESEND_LAST_BYTE, m_PS2Port);
+  PS2Controller::sendData(PS2_CMD_RESEND_LAST_BYTE, m_PS2Port);
 }
 
 
 bool PS2Device::send_cmdLEDs(bool numLock, bool capsLock, bool scrollLock)
 {
   PS2DeviceLock deviceLock(this);
-  if (!sendCommand(PS2_CMD_SETLEDS, PS2_REPLY_ACK))
-    return false;
-  bool ret = sendCommand((scrollLock << 0) | (numLock << 1) | (capsLock << 2), PS2_REPLY_ACK);
-  return ret;
+  return sendCommand(PS2_CMD_SETLEDS, PS2_REPLY_ACK) && sendCommand((scrollLock << 0) | (numLock << 1) | (capsLock << 2), PS2_REPLY_ACK);
 }
 
 
 bool PS2Device::send_cmdEcho()
 {
-  PS2DeviceLock deviceLock(this);
   return sendCommand(PS2_CMD_ECHO, PS2_REPLY_ECHO);
 }
 
@@ -206,6 +236,7 @@ bool PS2Device::send_cmdIdentify(PS2DeviceType * result)
     return false;
   int b1 = getData(m_cmdTimeOut);
   int b2 = getData(m_cmdTimeOut);
+  m_deviceID = (uint8_t)b1 | ((uint8_t)b2 << 8);
   if (b1 == -1 && b2 == -1)
     *result = PS2DeviceType::OldATKeyboard;
   else if (b1 == 0x00 && b2 == -1)
@@ -224,14 +255,12 @@ bool PS2Device::send_cmdIdentify(PS2DeviceType * result)
 
 bool PS2Device::send_cmdDisableScanning()
 {
-  PS2DeviceLock deviceLock(this);
   return sendCommand(PS2_CMD_DISABLE_SCANNING, PS2_REPLY_ACK);
 }
 
 
 bool PS2Device::send_cmdEnableScanning()
 {
-  PS2DeviceLock deviceLock(this);
   return sendCommand(PS2_CMD_ENABLE_SCANNING, PS2_REPLY_ACK);
 }
 
@@ -297,7 +326,6 @@ bool PS2Device::send_cmdSetScaling(int scaling)
 
 bool PS2Device::send_cmdSetDefaultParams()
 {
-  PS2DeviceLock deviceLock(this);
   return sendCommand(PS2_CMD_SET_DEFAULT_PARAMS, PS2_REPLY_ACK);
 }
 

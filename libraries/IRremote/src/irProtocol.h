@@ -38,6 +38,8 @@
  */
 typedef enum {
     UNKNOWN = 0,
+    PULSE_DISTANCE,
+    PULSE_WIDTH,
     DENON,
     DISH,
     JVC,
@@ -54,6 +56,7 @@ typedef enum {
     SAMSUNG,
     SHARP,
     SONY,
+    ONKYO,
     APPLE,
     BOSEWAVE,
     LEGO_PF,

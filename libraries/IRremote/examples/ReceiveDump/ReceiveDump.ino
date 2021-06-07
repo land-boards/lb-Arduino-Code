@@ -45,6 +45,7 @@
  */
 #define MARK_EXCESS_MICROS    20 // recommended for the cheap VS1838 modules
 
+//#define RECORD_GAP_MICROS 12000 // Activate it for some LG air conditioner protocols
 #include <IRremote.h>
 
 //+=============================================================================
@@ -55,7 +56,7 @@ void setup() {
 
     Serial.begin(115200);   // Status message will be sent to PC at 9600 baud
 #if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
-    delay(4000); // To be able to connect Serial monitor after reset or power up and before first printout
+    delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
@@ -84,9 +85,11 @@ void loop() {
             Serial.println(F("Raw result in microseconds - with leading gap"));
             IrReceiver.printIRResultRawFormatted(&Serial, true);  // Output the results in RAW format
             Serial.println();                               // blank line between entries
-            Serial.println(F("Result as internal ticks (50 us) array - compensated with MARK_EXCESS_MICROS"));
+            Serial.print(F("Result as internal ticks (50 us) array - compensated with MARK_EXCESS_MICROS="));
+            Serial.println(MARK_EXCESS_MICROS);
             IrReceiver.compensateAndPrintIRResultAsCArray(&Serial, false); // Output the results as uint8_t source code array of ticks
-            Serial.println(F("Result as microseconds array - compensated with MARK_EXCESS_MICROS"));
+            Serial.print(F("Result as microseconds array - compensated with MARK_EXCESS_MICROS="));
+            Serial.println(MARK_EXCESS_MICROS);
             IrReceiver.compensateAndPrintIRResultAsCArray(&Serial, true); // Output the results as uint16_t source code array of micros
             IrReceiver.printIRResultAsCVariables(&Serial);  // Output address and data as source code variables
 

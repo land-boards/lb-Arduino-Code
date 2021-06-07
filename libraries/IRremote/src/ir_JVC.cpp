@@ -32,7 +32,7 @@
 #include <Arduino.h>
 
 //#define DEBUG // Activate this for lots of lovely debug output from this decoder.
-#include "IRremoteInt.h" // evaluates the DEBUG for DBG_PRINT
+#include "IRremoteInt.h" // evaluates the DEBUG for DEBUG_PRINT
 
 /** \addtogroup Decoder Decoders and encoders for different protocols
  * @{
@@ -44,7 +44,6 @@
 //                             J J     V V   C
 //                              J       V     CCCC
 //==============================================================================
-
 // https://www.sbprojects.net/knowledge/ir/jvc.php
 // http://www.hifi-remote.com/johnsfine/DecodeIR.html#JVC
 // IRP: {38k,525}<1,-1|1,-3>(16,-8,(D:8,F:8,1,-45)+)
@@ -69,12 +68,6 @@
 // JVC does NOT repeat by sending a separate code (like NEC does).
 // The JVC protocol repeats by skipping the header.
 //
-/*
- * Only for backwards compatibility
- */
-void IRsend::sendJVCRaw(uint16_t aRawData, uint_fast8_t aNumberOfRepeats) {
-    sendJVC((uint8_t) aRawData & 0xFF, (uint8_t) (aRawData >> JVC_ADDRESS_BITS), aNumberOfRepeats);
-}
 
 void IRsend::sendJVC(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats) {
     // Set IR carrier frequency
@@ -100,7 +93,6 @@ void IRsend::sendJVC(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfR
     }
 }
 
-#if !defined(USE_OLD_DECODE)
 /*
  * First check for right data length
  * Next check start bit
@@ -108,9 +100,12 @@ void IRsend::sendJVC(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfR
  */
 bool IRrecv::decodeJVC() {
 
-    // Check we have the right amount of data (36 or 34). The +4 is for initial gap, start bit mark and space + stop bit mark.
+    // Check we have the right amount of data (36 or 34). The +4 is for initial gap, start bit mark and space + stop bit mark. +2 is for repeats
     if (decodedIRData.rawDataPtr->rawlen != ((2 * JVC_BITS) + 4) && decodedIRData.rawDataPtr->rawlen != ((2 * JVC_BITS) + 2)) {
-        // no debug output, since this check is mainly to determine the received protocol
+        DEBUG_PRINT(F("JVC: "));
+        DEBUG_PRINT("Data length=");
+        DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
+        DEBUG_PRINTLN(" is not 34 or 36");
         return false;
     }
 
@@ -135,14 +130,14 @@ bool IRrecv::decodeJVC() {
         // Check header "mark" and "space"
         if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], JVC_HEADER_MARK)
                 || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], JVC_HEADER_SPACE)) {
-//            DBG_PRINT("JVC: ");
-//            DBG_PRINTLN("Header mark or space length is wrong");
+            DEBUG_PRINT("JVC: ");
+            DEBUG_PRINTLN("Header mark or space length is wrong");
             return false;
         }
 
         if (!decodePulseDistanceData(JVC_BITS, 3, JVC_BIT_MARK, JVC_ONE_SPACE, JVC_ZERO_SPACE, PROTOCOL_IS_LSB_FIRST)) {
-            DBG_PRINT(F("JVC: "));
-            DBG_PRINTLN(F("Decode failed"));
+            DEBUG_PRINT(F("JVC: "));
+            DEBUG_PRINTLN(F("Decode failed"));
             return false;
         }
 
@@ -159,39 +154,38 @@ bool IRrecv::decodeJVC() {
 
     return true;
 }
-#else
 
-//+=============================================================================
-bool IRrecv::decodeJVC() {
+#if !defined(NO_LEGACY_COMPATIBILITY)
+bool IRrecv::decodeJVCMSB(decode_results *aResults) {
     unsigned int offset = 1; // Skip first space
 
     // Check for repeat
-    if ((results.rawlen - 1 == 33) && matchMark(results.rawbuf[offset], JVC_BIT_MARK)
-            && matchMark(results.rawbuf[results.rawlen - 1], JVC_BIT_MARK)) {
-        results.bits = 0;
-        results.value = 0xFFFFFFFF;
+    if ((aResults->rawlen - 1 == 33) && matchMark(aResults->rawbuf[offset], JVC_BIT_MARK)
+            && matchMark(aResults->rawbuf[aResults->rawlen - 1], JVC_BIT_MARK)) {
+        aResults->bits = 0;
+        aResults->value = 0xFFFFFFFF;
         decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT;
         decodedIRData.protocol = JVC;
         return true;
     }
 
     // Initial mark
-    if (!matchMark(results.rawbuf[offset], JVC_HEADER_MARK)) {
+    if (!matchMark(aResults->rawbuf[offset], JVC_HEADER_MARK)) {
         return false;
     }
     offset++;
 
     // Check we have enough data - +3 for start bit mark and space + stop bit mark
-    if (results.rawlen <= (2 * JVC_BITS) + 3) {
-        DBG_PRINT("Data length=");
-        DBG_PRINT(results.rawlen);
-        DBG_PRINTLN(" is too small. >= 36 is required.");
+    if (aResults->rawlen <= (2 * JVC_BITS) + 3) {
+        DEBUG_PRINT("Data length=");
+        DEBUG_PRINT(aResults->rawlen);
+        DEBUG_PRINTLN(" is too small. >= 36 is required.");
 
         return false;
     }
 
     // Initial space
-    if (!matchSpace(results.rawbuf[offset], JVC_HEADER_SPACE)) {
+    if (!matchSpace(aResults->rawbuf[offset], JVC_HEADER_SPACE)) {
         return false;
     }
     offset++;
@@ -201,13 +195,15 @@ bool IRrecv::decodeJVC() {
     }
 
     // Stop bit
-    if (!matchMark(results.rawbuf[offset + (2 * JVC_BITS)], JVC_BIT_MARK)) {
-        DBG_PRINTLN(F("Stop bit mark length is wrong"));
+    if (!matchMark(aResults->rawbuf[offset + (2 * JVC_BITS)], JVC_BIT_MARK)) {
+        DEBUG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;
     }
 
     // Success
-    results.bits = JVC_BITS;
+    aResults->value = decodedIRData.decodedRawData;
+    aResults->bits = JVC_BITS;
+    aResults->decode_type = JVC;
     decodedIRData.protocol = JVC;
 
     return true;
@@ -215,10 +211,16 @@ bool IRrecv::decodeJVC() {
 
 #endif
 
-//+=============================================================================
-// JVC does NOT repeat by sending a separate code (like NEC does).
-// The JVC protocol repeats by skipping the header.
-// Old version with MSB first Data
+/**
+ * With Send sendJVCMSB() you can send your old 32 bit codes.
+ * To convert one into the other, you must reverse the byte positions and then reverse all bit positions of each byte.
+ * Or write it as one binary string and reverse/mirror it.
+ * Example:
+ * 0xCB340102 byte reverse -> 02 01 34 CB bit reverse-> 40 80 2C D3.
+ * 0xCB340102 is binary 11001011001101000000000100000010.
+ * 0x40802CD3 is binary 01000000100000000010110011010011.
+ * If you read the first binary sequence backwards (right to left), you get the second sequence.
+ */
 void IRsend::sendJVCMSB(unsigned long data, int nbits, bool repeat) {
     // Set IR carrier frequency
     enableIROut(38);

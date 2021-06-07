@@ -1,6 +1,6 @@
  /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -20,6 +20,13 @@
  */
 
 
+/*
+
+  Credits:
+     - Guido Lehwalder, https://github.com/guidol70 : using USB-serial Port for ANSI-Terminal (https://github.com/fdivitto/FabGL/issues/110)
+
+*/
+
 #include "fabgl.h"
 
 
@@ -37,8 +44,15 @@ fabgl::Terminal                     Terminal;
 //                       WARN!! Good for ESP32 with 3.3V voltage (ESP-WROOM-32). This will BRICK your ESP32 if the flash isn't 3.3V
 //                       NOTE1: replace "/dev/cu.SLAB_USBtoUART" with your serial port
 //                       NOTE2: espefuse.py is downloadable from https://github.com/espressif/esptool
-#define UART_RX 34
-#define UART_TX 2
+
+// UART Pins for USB serial
+#define UART_URX 3
+#define UART_UTX 1
+
+// UART Pins for normal serial Port
+#define UART_SRX 34
+#define UART_STX 2
+
 
 #define RESET_PIN 12
 
@@ -80,24 +94,35 @@ void setup()
 
   if (ConfDialogApp::getBootInfo() == BOOTINFO_ENABLED) {
     Terminal.write("* *  FabGL - Serial Terminal                            * *\r\n");
-    Terminal.write("* *  2019-2020 by Fabrizio Di Vittorio - www.fabgl.com  * *\r\n\n");
+    Terminal.write("* *  2019-2021 by Fabrizio Di Vittorio - www.fabgl.com  * *\r\n\n");
+    Terminal.printf("Version            : %d.%d\r\n", TERMVERSION_MAJ, TERMVERSION_MIN);
     Terminal.printf("Screen Size        : %d x %d\r\n", DisplayController->getScreenWidth(), DisplayController->getScreenHeight());
     Terminal.printf("Terminal Size      : %d x %d\r\n", Terminal.getColumns(), Terminal.getRows());
     Terminal.printf("Keyboard Layout    : %s\r\n", PS2Controller.keyboard()->isKeyboardAvailable() ? SupportedLayouts::names()[ConfDialogApp::getKbdLayoutIndex()] : "No Keyboard");
-    Terminal.printf("Mouse              : %s\r\n", PS2Controller.mouse()->isMouseAvailable() ? "Yes" : "No");
+    //Terminal.printf("Mouse              : %s\r\n", PS2Controller.mouse()->isMouseAvailable() ? "Yes" : "No");
     Terminal.printf("Terminal Type      : %s\r\n", SupportedTerminals::names()[(int)ConfDialogApp::getTermType()]);
-    Terminal.printf("Free Memory        : %d bytes\r\n", heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    Terminal.printf("Version            : %d.%d\r\n", TERMVERSION_MAJ, TERMVERSION_MIN);
+    //Terminal.printf("Free Memory        : %d bytes\r\n", heap_caps_get_free_size(MALLOC_CAP_32BIT));
+    if (ConfDialogApp::getSerCtl() == SERCTL_ENABLED)
+      Terminal.printf("Serial Port        : USB RX-Pin[%d] TX-Pin[%d]\r\n", UART_URX, UART_UTX);
+    else
+      Terminal.printf("Serial Port        : Serial RX-Pin[%d] TX-Pin[%d]\r\n", UART_SRX, UART_STX);
+    Terminal.printf("Serial Parameters  : %s\r\n", ConfDialogApp::getSerParamStr());
+
     Terminal.write("\r\nPress F12 to change terminal configuration and CTRL-ALT-F12 to reset settings\r\n\n");
   } else if (ConfDialogApp::getBootInfo() == BOOTINFO_TEMPDISABLED) {
     preferences.putInt("BootInfo", BOOTINFO_ENABLED);
   }
 
   // onVirtualKey is triggered whenever a key is pressed or released
-  Terminal.onVirtualKey = [&](VirtualKey * vk, bool keyDown) {
-    if (*vk == VirtualKey::VK_F12) {
-      if (!keyDown) {
-
+  Terminal.onVirtualKeyItem = [&](VirtualKeyItem * vkItem) {
+    if (vkItem->vk == VirtualKey::VK_F12) {
+      if (vkItem->CTRL && (vkItem->LALT || vkItem->RALT)) {
+        Terminal.deactivate();
+        preferences.clear();
+        // show reboot dialog
+        auto rebootApp = new RebootDialogApp;
+        rebootApp->run(DisplayController);
+      } else if (!vkItem->CTRL && !vkItem->LALT && !vkItem->RALT && !vkItem->down) {
         // releasing F12 key to open configuration dialog
         Terminal.deactivate();
         PS2Controller.mouse()->emptyQueue();  // avoid previous mouse movements to be showed on UI
@@ -107,23 +132,11 @@ void setup()
         delete dlgApp;
         Terminal.keyboard()->emptyVirtualKeyQueue();
         Terminal.activate();
-
         // it has been requested to install a demo program?
         if (progToInstall > -1)
           installProgram(progToInstall);
-
-      } else {
-        // pressing CTRL + ALT + F12, reset parameters and reboot
-        if ((Terminal.keyboard()->isVKDown(VirtualKey::VK_LCTRL) || Terminal.keyboard()->isVKDown(VirtualKey::VK_RCTRL)) &&
-            (Terminal.keyboard()->isVKDown(VirtualKey::VK_LALT) || Terminal.keyboard()->isVKDown(VirtualKey::VK_RALT))) {
-          Terminal.deactivate();
-          preferences.clear();
-          // show reboot dialog
-          auto rebootApp = new RebootDialogApp;
-          rebootApp->run(DisplayController);
-        }
+        vkItem->vk = VirtualKey::VK_NONE;
       }
-      *vk = VirtualKey::VK_NONE;
     }
   };
 

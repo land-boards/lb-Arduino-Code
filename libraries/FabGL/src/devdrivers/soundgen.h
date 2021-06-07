@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -51,7 +51,7 @@ namespace fabgl {
 // 200 samples, at 16Khz generate a send every 200/16000*1000 = 12.5ms (16000/200=80 sends per second)
 #define I2S_SAMPLE_BUFFER_SIZE 200  // must be even
 
-#define WAVEGENTASK_STACK_SIZE 1024
+#define WAVEGENTASK_STACK_SIZE 2000
 
 
 /** @brief Base abstract class for waveform generators. A waveform generator can be seen as an audio channel that will be mixed by SoundGenerator. */
@@ -310,11 +310,14 @@ private:
 };
 
 
+/** \ingroup Enumerations
+ * @brief
+ */
 enum class SoundGeneratorState {
-  Stop,
-  RequestToPlay,
-  Playing,
-  RequestToStop,
+  Stop,             /**<  */
+  RequestToPlay,    /**<  */
+  Playing,          /**<  */
+  RequestToStop,    /**<  */
 };
 
 

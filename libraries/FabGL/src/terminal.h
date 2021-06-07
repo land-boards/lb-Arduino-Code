@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -1383,6 +1383,35 @@ public:
    */
   bool isActive() { return s_activeTerminal == this; }
 
+  /**
+   * @brief Selects a color for the specified attribute
+   *
+   * This method allows to indicate a color when the terminal prints a character with a specific attribute.
+   * If a character has multiple attributes then the resulting color is undefined.
+   * To disable attribute color call the other setColorForAttribute() overload.
+   *
+   * @param attribute Style/attribute to set color. Only CharStyle::Bold, CharStyle::ReducedLuminosity, CharStyle::Italic and CharStyle::Underline are supported
+   * @param color Color of the attribute
+   * @param maintainStyle If True style is applied. If False just the specified color is applied.
+   */
+  void setColorForAttribute(CharStyle attribute, Color color, bool maintainStyle);
+
+  /**
+   * @brief Disables color for the specified attribute
+   *
+   * This method disables color specification for the specified attribute.
+   *
+   * @param attribute Style/attribute to disable color. Only CharStyle::Bold, CharStyle::ReducedLuminosity, CharStyle::Italic and CharStyle::Underline are supported
+   */
+  void setColorForAttribute(CharStyle attribute);
+
+  /**
+   * @brief Gets embedded sound generator
+   *
+   * @return SoundGenerator object
+   */
+  SoundGenerator * soundGenerator();
+
 
   //// Delegates ////
 
@@ -1393,6 +1422,14 @@ public:
    * Second parameter specifies if the key is Down (true) or Up (false)
    */
   Delegate<VirtualKey *, bool> onVirtualKey;
+
+
+  /**
+   * @brief Delegate called whenever a new virtual key is received from keyboard, including shift states
+   *
+   * The parameter is a pointer to the decoded virtual key info
+   */
+  Delegate<VirtualKeyItem *> onVirtualKeyItem;
 
 
   /**
@@ -1566,6 +1603,8 @@ private:
 
   void freeSprites();
 
+  uint32_t makeGlyphItem(uint8_t c, GlyphOptions * glyphOptions, Color * newForegroundColor);
+
   // indicates which is the active terminal when there are multiple instances of Terminal
   static Terminal *  s_activeTerminal;
 
@@ -1685,6 +1724,10 @@ private:
 
   Sprite *                  m_sprites;
   int                       m_spritesCount;
+
+  bool                      m_coloredAttributesMaintainStyle;
+  int                       m_coloredAttributesMask;    // related bit 1 if enabled
+  Color                     m_coloredAttributesColor[4];
 
 };
 

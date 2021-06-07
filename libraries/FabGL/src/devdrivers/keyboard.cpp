@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
   This file is part of FabGL Library.
@@ -51,14 +51,26 @@ Keyboard::Keyboard()
 }
 
 
+Keyboard::~Keyboard()
+{
+  PS2DeviceLock lock(this);
+  if (m_SCodeToVKConverterTask)
+    vTaskDelete(m_SCodeToVKConverterTask);
+  if (m_virtualKeyQueue)
+    vQueueDelete(m_virtualKeyQueue);
+}
+
+
 void Keyboard::begin(bool generateVirtualKeys, bool createVKQueue, int PS2Port)
 {
   PS2Device::begin(PS2Port);
 
   m_CTRL       = false;
-  m_ALT        = false;
+  m_LALT       = false;
+  m_RALT       = false;
   m_SHIFT      = false;
   m_CAPSLOCK   = false;
+  m_GUI        = false;
   m_NUMLOCK    = false;
   m_SCROLLLOCK = false;
 
@@ -83,9 +95,8 @@ void Keyboard::begin(bool generateVirtualKeys, bool createVKQueue, int PS2Port)
 
 void Keyboard::begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO, bool generateVirtualKeys, bool createVKQueue)
 {
-  PS2Controller * PS2 = PS2Controller::instance();
-  PS2->begin(clkGPIO, dataGPIO);
-  PS2->setKeyboard(this);
+  PS2Controller::begin(clkGPIO, dataGPIO);
+  PS2Controller::setKeyboard(this);
   begin(generateVirtualKeys, createVKQueue, 0);
 }
 
@@ -98,13 +109,20 @@ bool Keyboard::reset()
   // sets default layout
   setLayout(&USLayout);
 
+  // 350ms keyboard poweron delay (look at NXP M68HC08 designer reference manual)
+  vTaskDelay(350 / portTICK_PERIOD_MS);
+
   // tries up to three times to reset keyboard
   for (int i = 0; i < 3; ++i) {
-    m_keyboardAvailable = send_cmdReset() && send_cmdSetScancodeSet(2);
+    m_keyboardAvailable = send_cmdReset();
     if (m_keyboardAvailable)
       break;
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(350 / portTICK_PERIOD_MS);
   }
+  // give the time to the device to be fully initialized
+  vTaskDelay(200 / portTICK_PERIOD_MS);
+
+  send_cmdSetScancodeSet(2);
 
   return m_keyboardAvailable;
 }
@@ -129,11 +147,29 @@ bool Keyboard::setScancodeSet(int value)
 }
 
 
+bool Keyboard::setLEDs(bool numLock, bool capsLock, bool scrollLock)
+{
+  m_numLockLED    = numLock;
+  m_capsLockLED   = capsLock;
+  m_scrollLockLED = scrollLock;
+  return send_cmdLEDs(numLock, capsLock, scrollLock);
+}
+
+
 void Keyboard::getLEDs(bool * numLock, bool * capsLock, bool * scrollLock)
 {
   *numLock    = m_numLockLED;
   *capsLock   = m_capsLockLED;
   *scrollLock = m_scrollLockLED;
+}
+
+
+void Keyboard::updateLEDs()
+{
+  send_cmdLEDs(m_NUMLOCK, m_CAPSLOCK, m_SCROLLLOCK);
+  m_numLockLED    = m_NUMLOCK;
+  m_capsLockLED   = m_CAPSLOCK;
+  m_scrollLockLED = m_SCROLLLOCK;
 }
 
 
@@ -147,21 +183,16 @@ int Keyboard::getNextScancode(int timeOutMS, bool requestResendOnTimeOut)
 {
   while (true) {
     int r = getData(timeOutMS);
+    if (r == -1 && CLKTimeOutError()) {
+      // try to recover a stall sending a re-enable scanning command
+      send_cmdEnableScanning();
+    }
     if (r == -1 && requestResendOnTimeOut) {
       requestToResendLastByte();
       continue;
     }
     return r;
   }
-}
-
-
-void Keyboard::updateLEDs()
-{
-  send_cmdLEDs(m_NUMLOCK, m_CAPSLOCK, m_SCROLLLOCK);
-  m_numLockLED    = m_NUMLOCK;
-  m_capsLockLED   = m_CAPSLOCK;
-  m_scrollLockLED = m_SCROLLLOCK;
 }
 
 
@@ -202,9 +233,20 @@ int Keyboard::virtualKeyToASCII(VirtualKey virtualKey)
 {
   switch (virtualKey) {
     case VK_SPACE:
-      return m_CTRL ? ASCII_NUL : ASCII_SPC;   // CTRL + SPACE = NUL, otherwise 0x20
+      return m_CTRL ? ASCII_NUL : ASCII_SPC;   // CTRL SPACE = NUL, otherwise 0x20
 
     case VK_0 ... VK_9:
+      if (m_CTRL) {
+        switch (virtualKey) {
+          case VK_2:
+            return ASCII_NUL;  // CTRL + 2 = NUL
+          case VK_6:
+            return ASCII_RS;   // CTRL + 6 = RS
+          default:
+            return -1;
+        }
+      }
+      // otherwise digits
       return virtualKey - VK_0 + '0';
 
     case VK_KP_0 ... VK_KP_9:
@@ -265,6 +307,8 @@ int Keyboard::virtualKeyToASCII(VirtualKey virtualKey)
       return '=';
 
     case VK_MINUS:
+      return m_CTRL ? ASCII_US : '-'; // CTRL - = US, otherwise '-'
+
     case VK_KP_MINUS:
       return '-';
 
@@ -339,7 +383,7 @@ int Keyboard::virtualKeyToASCII(VirtualKey virtualKey)
       return m_CTRL ? ASCII_ESC : '['; // CTRL [ = ESC, otherwise '['
 
     case VK_RIGHTBRACKET:
-      return m_CTRL ? ASCII_GS : ']'; // CTRL ] = GS, otherwise ']'
+      return m_CTRL ? ASCII_GS : ']';  // CTRL ] = GS, otherwise ']'
 
     case VK_LEFTPAREN:
       return '(';
@@ -369,7 +413,7 @@ int Keyboard::virtualKeyToASCII(VirtualKey virtualKey)
       return 0xAA;  // "¬"
 
     case VK_BACKSPACE:
-      return ASCII_BS;
+      return m_CTRL ? ASCII_DEL : ASCII_BS;  // CTRL BACKSPACE = DEL, otherwise BS
 
     case VK_DELETE:
     case VK_KP_DELETE:
@@ -377,10 +421,10 @@ int Keyboard::virtualKeyToASCII(VirtualKey virtualKey)
 
     case VK_RETURN:
     case VK_KP_ENTER:
-      return ASCII_CR;
+      return m_CTRL ? ASCII_LF : ASCII_CR;  // CTRL ENTER = LF, otherwise CR
 
     case VK_TAB:
-      return ASCII_HT;
+      return m_CTRL || m_SHIFT ? -1 : ASCII_HT;
 
     case VK_ESCAPE:
       return ASCII_ESC;
@@ -528,8 +572,14 @@ VirtualKey Keyboard::scancodeToVK(uint8_t scancode, bool isExtended, KeyboardLay
     vk = scancodeToVK(scancode, isExtended, layout->inherited);
 
   // manage keypad
-  if (m_NUMLOCK) {
+  // NUMLOCK ON, SHIFT OFF => generate VK_KP_number
+  // NUMLOCK ON, SHIFT ON  => generate VK_KP_cursor_control (as when NUMLOCK is OFF)
+  // NUMLOCK OFF           => generate VK_KP_cursor_control
+  if (m_NUMLOCK & !m_SHIFT) {
     switch (vk) {
+      case VK_KP_DELETE:
+        vk = VK_KP_PERIOD;
+        break;
       case VK_KP_INSERT:
         vk = VK_KP_0;
         break;
@@ -569,6 +619,19 @@ VirtualKey Keyboard::scancodeToVK(uint8_t scancode, bool isExtended, KeyboardLay
 }
 
 
+VirtualKey Keyboard::manageCAPSLOCK(VirtualKey vk)
+{
+  if (m_CAPSLOCK) {
+    // inverts letters case
+    if (vk >= VK_a && vk <= VK_z)
+      vk = (VirtualKey)(vk - VK_a + VK_A);
+    else if (vk >= VK_A && vk <= VK_Z)
+      vk = (VirtualKey)(vk - VK_A + VK_a);
+  }
+  return vk;
+}
+
+
 VirtualKey Keyboard::VKtoAlternateVK(VirtualKey in_vk, bool down, KeyboardLayout const * layout)
 {
   VirtualKey vk = VK_NONE;
@@ -598,8 +661,9 @@ VirtualKey Keyboard::VKtoAlternateVK(VirtualKey in_vk, bool down, KeyboardLayout
     //   - KEY up with SHIFTs still down
     for (AltVirtualKeyDef const * def = layout->alternateVK; def->reqVirtualKey != VK_NONE; ++def) {
       if (def->reqVirtualKey == in_vk && def->ctrl == m_CTRL &&
-                                         def->alt == m_ALT &&
-                                         (def->shift == m_SHIFT || (def->capslock && def->capslock == m_CAPSLOCK))) {
+                                         def->lalt == m_LALT &&
+                                         def->ralt == m_RALT &&
+                                         def->shift == m_SHIFT) {
         vk = def->virtualKey;
         break;
       }
@@ -615,8 +679,15 @@ VirtualKey Keyboard::VKtoAlternateVK(VirtualKey in_vk, bool down, KeyboardLayout
 
 bool Keyboard::blockingGetVirtualKey(VirtualKeyItem * item)
 {
-  item->vk   = VK_NONE;
-  item->down = true;
+  item->vk       = VK_NONE;
+  item->down     = true;
+  item->CTRL     = m_CTRL;
+  item->LALT     = m_LALT;
+  item->RALT     = m_RALT;
+  item->SHIFT    = m_SHIFT;
+  item->GUI      = m_GUI;
+  item->CAPSLOCK = m_CAPSLOCK;
+  item->NUMLOCK  = m_NUMLOCK;
 
   uint8_t * scode = item->scancode;
 
@@ -655,6 +726,9 @@ bool Keyboard::blockingGetVirtualKey(VirtualKeyItem * item)
 
   if (item->vk != VK_NONE) {
 
+    // manage CAPSLOCK
+    item->vk = manageCAPSLOCK(item->vk);
+
     // alternate VK (virtualkeys modified by shift, alt, ...)
     item->vk = VKtoAlternateVK(item->vk, item->down);
 
@@ -665,12 +739,18 @@ bool Keyboard::blockingGetVirtualKey(VirtualKeyItem * item)
         m_CTRL = item->down;
         break;
       case VK_LALT:
+        m_LALT = item->down;
+        break;
       case VK_RALT:
-        m_ALT = item->down;
+        m_RALT = item->down;
         break;
       case VK_LSHIFT:
       case VK_RSHIFT:
         m_SHIFT = item->down;
+        break;
+      case VK_LGUI:
+      case VK_RGUI:
+        m_GUI = item->down;
         break;
       case VK_CAPSLOCK:
         if (!item->down) {
@@ -752,6 +832,13 @@ void Keyboard::injectVirtualKey(VirtualKey virtualKey, bool keyDown, bool insert
   item.down        = keyDown;
   item.scancode[0] = 0;  // this is a manual insert, not scancode associated
   item.ASCII       = virtualKeyToASCII(virtualKey);
+  item.CTRL        = m_CTRL;
+  item.LALT        = m_LALT;
+  item.RALT        = m_RALT;
+  item.SHIFT       = m_SHIFT;
+  item.GUI         = m_GUI;
+  item.CAPSLOCK    = m_CAPSLOCK;
+  item.NUMLOCK     = m_NUMLOCK;
   injectVirtualKey(item, insert);
 }
 
@@ -767,11 +854,11 @@ void Keyboard::postVirtualKeyItem(VirtualKeyItem const & item)
     uiEvent evt = uiEvent(nullptr, item.down ? UIEVT_KEYDOWN : UIEVT_KEYUP);
     evt.params.key.VK    = item.vk;
     evt.params.key.ASCII = item.ASCII;
-    evt.params.key.LALT  = isVKDown(VK_LALT);
-    evt.params.key.RALT  = isVKDown(VK_RALT);
-    evt.params.key.CTRL  = isVKDown(VK_LCTRL)  || isVKDown(VK_RCTRL);
-    evt.params.key.SHIFT = isVKDown(VK_LSHIFT) || isVKDown(VK_RSHIFT);
-    evt.params.key.GUI   = isVKDown(VK_LGUI)   || isVKDown(VK_RGUI);
+    evt.params.key.LALT  = item.LALT;
+    evt.params.key.RALT  = item.RALT;
+    evt.params.key.CTRL  = item.CTRL;
+    evt.params.key.SHIFT = item.SHIFT;
+    evt.params.key.GUI   = item.GUI;
     m_uiApp->postEvent(&evt);
   }
 }
@@ -836,8 +923,8 @@ void Keyboard::SCodeToVKConverterTask(void * pvParameters)
 
       if (item.vk != VK_NONE) {
 
-        // manage ALT + NUM
-        if (!isALT(item.vk) && keyboard->m_ALT && keyboard->m_NUMLOCK) {
+        // manage left-ALT + NUM
+        if (!isALT(item.vk) && keyboard->m_LALT) {
           // ALT was down, is this a keypad number?
           int num = convKeypadVKToNum(item.vk);
           if (num >= 0) {
@@ -871,15 +958,6 @@ void Keyboard::SCodeToVKConverterTask(void * pvParameters)
 
   }
 
-}
-
-
-void Keyboard::suspendVirtualKeyGeneration(bool value)
-{
-  if (value)
-    vTaskSuspend(m_SCodeToVKConverterTask);
-  else
-    vTaskResume(m_SCodeToVKConverterTask);
 }
 
 
@@ -930,6 +1008,23 @@ void Keyboard::emptyVirtualKeyQueue()
 
 void Keyboard::convertScancode2to1(VirtualKeyItem * item)
 {
+  uint8_t * rpos = item->scancode;
+  uint8_t * wpos = rpos;
+  uint8_t * epos = rpos + sizeof(VirtualKeyItem::scancode);
+  while (*rpos && rpos < epos) {
+    if (*rpos == 0xf0) {
+      ++rpos;
+      *wpos++ = 0x80 | convScancodeSet2To1(*rpos++);
+    } else
+      *wpos++ = convScancodeSet2To1(*rpos++);
+  }
+  if (wpos < epos)
+    *wpos = 0;
+}
+
+
+uint8_t Keyboard::convScancodeSet2To1(uint8_t code)
+{
   // 8042 scancodes set 2 to 1 translation table
   static const uint8_t S2TOS1[256] = {
     0xff, 0x43, 0x41, 0x3f, 0x3d, 0x3b, 0x3c, 0x58, 0x64, 0x44, 0x42, 0x40, 0x3e, 0x0f, 0x29, 0x59,
@@ -949,18 +1044,7 @@ void Keyboard::convertScancode2to1(VirtualKeyItem * item)
     0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef,
     0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff,
   };
-  uint8_t * rpos = item->scancode;
-  uint8_t * wpos = rpos;
-  uint8_t * epos = rpos + sizeof(VirtualKeyItem::scancode);
-  while (*rpos && rpos < epos) {
-    if (*rpos == 0xf0) {
-      ++rpos;
-      *wpos++ = 0x80 | S2TOS1[*rpos++];
-    } else
-      *wpos++ = S2TOS1[*rpos++];
-  }
-  if (wpos < epos)
-    *wpos = 0;
+  return S2TOS1[code];
 }
 
 
