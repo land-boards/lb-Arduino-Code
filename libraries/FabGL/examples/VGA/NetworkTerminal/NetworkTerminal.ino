@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -102,7 +106,7 @@ void exe_help()
   Terminal.write("\e[93mreboot\r\n");
   Terminal.write("\e[97m  Restart the system.\e[92m\r\n");
   Terminal.write("\e[93mkeyb LAYOUT\r\n");
-  Terminal.write("\e[97m  Set keyboard layout. LAYOUT can be 'us', 'uk', 'de', 'it' or 'es'\r\n");
+  Terminal.write("\e[97m  Set keyboard layout. LAYOUT can be 'us', 'uk', 'de', 'it', 'es', 'fr', 'be'\r\n");
   Terminal.write("\e[97m  Example:\r\n");
   Terminal.write("\e[97m    keyb de\e[92m\r\n");
   error = false;
@@ -349,6 +353,10 @@ void exe_keyb()
         Terminal.keyboard()->setLayout(&fabgl::ItalianLayout);
       else if (strcasecmp(layout, "ES") == 0)
         Terminal.keyboard()->setLayout(&fabgl::SpanishLayout);
+      else if (strcasecmp(layout, "FR") == 0)
+        Terminal.keyboard()->setLayout(&fabgl::FrenchLayout);
+      else if (strcasecmp(layout, "BE") == 0)
+        Terminal.keyboard()->setLayout(&fabgl::BelgianLayout);
       else {
         Terminal.printf("Error! Invalid keyboard layout.\r\n");
         state = State::Prompt;

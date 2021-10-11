@@ -6,7 +6,7 @@
 
   OLED is 128x32 I2C device
   Si5351 is on a custom board
-  Runs on MiniDuino so no 5V to 3.3V level shifting is needed
+  Runs on a 3.3V Ardiono Pro Mini so no 5V to 3.3V level shifting is needed
 
   Borrowed bits pieces from all over the place
   Si6361 driver is from si5351_example

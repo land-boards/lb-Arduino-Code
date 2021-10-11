@@ -39,7 +39,7 @@
  * Set sensible receive pin for different CPU's
  */
 #if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny87__) || defined(__AVR_ATtiny167__)
-#include "ATtinySerialOut.h" // Available as Arduino library "ATtinySerialOut"
+#include "ATtinySerialOut.hpp" // Available as Arduino library "ATtinySerialOut"
 #  if defined(ARDUINO_AVR_DIGISPARKPRO)
 #define IR_INPUT_PIN    9 // PA3 - on Digispark board labeled as pin 9
 #  else
@@ -57,7 +57,7 @@
 /*
  * Second: include the code and compile it.
  */
-#include "TinyIRReceiver.cpp.h"
+#include "TinyIRReceiver.hpp"
 
 /*
  * Helper macro for getting a macro definition as string
@@ -89,11 +89,13 @@ void loop() {
  * This is the function is called if a complete command was received
  */
 #if defined(ESP8266)
-ICACHE_RAM_ATTR
+void ICACHE_RAM_ATTR handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat)
 #elif defined(ESP32)
-IRAM_ATTR
+void IRAM_ATTR handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat)
+#else
+void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat)
 #endif
-void handleReceivedTinyIRData(uint16_t aAddress, uint8_t aCommand, bool isRepeat) {
+{
     /*
      * Print only very short output, since we are in an interrupt context and do not want to miss the next interrupts of the repeats coming soon
      */

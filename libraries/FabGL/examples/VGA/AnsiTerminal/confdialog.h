@@ -1,9 +1,13 @@
- /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+/*
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -44,7 +48,7 @@ constexpr int       BAUDRATES_COUNT = sizeof(BAUDRATES_INT) / sizeof(int);
 static const char * DATALENS_STR[]  = { "5 bits", "6 bits", "7 bits", "8 bits" };
 static const char * PARITY_STR[]    = { "None", "Even", "Odd" };
 static const char * STOPBITS_STR[]  = { "1 bit", "1.5 bits", "2 bits" };
-static const char * FLOWCTRL_STR[]  = { "None", "Software" };
+static const char * FLOWCTRL_STR[]  = { "None", "XON/XOFF", "RTS/CTS", "Combi" };
 
 constexpr int RESOLUTION_DEFAULT           = 5;
 static const char * RESOLUTIONS_STR[]      = { "1280x768, B&W",           // 0
@@ -119,11 +123,32 @@ constexpr int       BOOTINFO_TEMPDISABLED = 2;
 constexpr int       SERCTL_DISABLED     = 0;
 constexpr int       SERCTL_ENABLED      = 1;
 
+// preferences keys
+static const char * PREF_VERMAJ         = "VerMaj";
+static const char * PREF_VERMIN         = "VerMin";
+static const char * PREF_TERMTYPE       = "TermType";
+static const char * PREF_KBDLAYOUT      = "KbdLayout";
+static const char * PREF_BAUDRATE       = "BaudRate";
+static const char * PREF_DATALEN        = "DataLen";
+static const char * PREF_PARITY         = "Parity";
+static const char * PREF_STOPBITS       = "StopBits";
+static const char * PREF_FLOWCTRL       = "FlowCtrl";
+static const char * PREF_BGCOLOR        = "BGColor";
+static const char * PREF_FGCOLOR        = "FGColor";
+static const char * PREF_RESOLUTION     = "Resolution";
+static const char * PREF_FONT           = "Font";
+static const char * PREF_COLUMNS        = "Columns";
+static const char * PREF_ROWS           = "Rows";
+static const char * PREF_BOOTINFO       = "BootInfo";
+static const char * PREF_SERCTL         = "SerCtl";
+static const char * PREF_TEMPRESOLUTION = "TempResolution";
+
 
 struct ConfDialogApp : public uiApp {
 
   Rect              frameRect;
   int               progToInstall;
+  bool              lastCTSStatus;
 
   uiFrame *         frame;
   uiComboBox *      termComboBox;
@@ -141,6 +166,9 @@ struct ConfDialogApp : public uiApp {
   uiComboBox *      rowsComboBox;
   uiCheckBox *      infoCheckBox;
   uiCheckBox *      serctlCheckBox;
+  uiLabel *         RTSStatus;
+  uiLabel *         CTSStatus;
+
 
   void init() {
 
@@ -159,11 +187,15 @@ struct ConfDialogApp : public uiApp {
 
     progToInstall = -1;
 
-    // ESC : exit without save
-    // F10 : save and exit
+    // ESC        : exit without save
+    // CTRL + ESC : reboot
+    // F10        : save and exit
     frame->onKeyUp = [&](uiKeyEventInfo key) {
-      if (key.VK == VirtualKey::VK_ESCAPE)
+      if (key.VK == VirtualKey::VK_ESCAPE) {
+        if (key.CTRL)
+          performReboot();  // no return from here!
         quit(0);
+      }
       if (key.VK == VirtualKey::VK_F10) {
         saveProps();
         quit(0);
@@ -231,7 +263,7 @@ struct ConfDialogApp : public uiApp {
     // flow control
     new uiLabel(frame, "Flow Control", Point(300,  y), Size(0, 0), true, STYLE_LABEL);
     flowCtrlComboBox = new uiComboBox(frame, Point(300, y + 12), Size(65, 20), 35, true, STYLE_COMBOBOX);
-    flowCtrlComboBox->items().append(FLOWCTRL_STR, 2);
+    flowCtrlComboBox->items().append(FLOWCTRL_STR, 4);
     flowCtrlComboBox->selectItem((int)getFlowCtrl());
 
 
@@ -278,21 +310,27 @@ struct ConfDialogApp : public uiApp {
 
     y += 24;
 
-    // exit without save button
-    auto exitNoSaveButton = new uiButton(frame, "Quit [ESC]", Point(10, y), Size(90, 20), uiButtonKind::Button, true, STYLE_BUTTON);
+    // Quit button: exit without save
+    auto exitNoSaveButton = new uiButton(frame, "Quit [ESC]", Point(10, y), Size(58, 20), uiButtonKind::Button, true, STYLE_BUTTON);
     exitNoSaveButton->onClick = [&]() {
       quit(0);
     };
 
-    // exit with save button
-    auto exitSaveButton = new uiButton(frame, "Save & Quit [F10]", Point(110, y), Size(90, 20), uiButtonKind::Button, true, STYLE_BUTTON);
+    // Save & Quit button: exit with save
+    auto exitSaveButton = new uiButton(frame, "Save & Quit [F10]", Point(74, y), Size(90, 20), uiButtonKind::Button, true, STYLE_BUTTON);
     exitSaveButton->onClick = [&]() {
       saveProps();
       quit(0);
     };
 
+    // reboot button
+    auto rebootButton = new uiButton(frame, "Reboot [CTRL+ESC]", Point(170, y), Size(100, 20), uiButtonKind::Button, true, STYLE_BUTTON);
+    rebootButton->onClick = [&]() {
+      performReboot();
+    };
+
     // install a program
-    auto installButton = new uiButton(frame, "Install Programs", Point(278, y), Size(90, 20), uiButtonKind::Button, true, STYLE_BUTTON);
+    auto installButton = new uiButton(frame, "Install Programs", Point(276, y), Size(90, 20), uiButtonKind::Button, true, STYLE_BUTTON);
     installButton->onClick = [&]() {
       progToInstall = -1;
       auto progsDialog = new ProgsDialog(rootWindow());
@@ -303,10 +341,46 @@ struct ConfDialogApp : public uiApp {
       destroyWindow(progsDialog);
     };
 
+    // RTS Status (clickable)
+    RTSStatus = new uiLabel(frame, "RTS", Point(300, 210), Size(30, 15), true, STYLE_LABELBUTTON);
+    setRTSStatus(Terminal.RTSStatus());
+    RTSStatus->onClick = [&]() {
+      bool newval = !Terminal.RTSStatus();
+      Terminal.setRTSStatus(newval);
+      setRTSStatus(newval);
+    };
+
+    // CTS Status
+    CTSStatus = new uiLabel(frame, "CTS", Point(335, 210), Size(30, 15), true, STYLE_LABELBUTTON);
+    lastCTSStatus = Terminal.CTSStatus();
+    setCTSStatus(lastCTSStatus);
+
+    // timer
+    frame->onTimer = [&](uiTimerHandle) {
+      // monitor CTS status
+      if (Terminal.CTSStatus() != lastCTSStatus) {
+        lastCTSStatus = !lastCTSStatus;
+        setCTSStatus(lastCTSStatus);
+      }
+    };
+    setTimer(frame, 100);
+
 
     setActiveWindow(frame);
     setFocusedWindow(exitNoSaveButton);
 
+  }
+
+
+  void setRTSStatus(bool status) {
+    RTSStatus->labelStyle().backgroundColor = status ? RGB888(0, 128, 0) : RGB888(128, 128, 128);
+    RTSStatus->repaint();
+  }
+
+
+  void setCTSStatus(bool status) {
+    CTSStatus->labelStyle().backgroundColor = status ? RGB888(128, 0, 0) : RGB888(128, 128, 128);
+    CTSStatus->repaint();
   }
 
 
@@ -318,28 +392,32 @@ struct ConfDialogApp : public uiApp {
                   rowsComboBox->selectedItem()       != getRowsIndex()       ||
                   bgColorComboBox->selectedColor()   != getBGColor();
 
-    preferences.putInt("TermType", termComboBox->selectedItem());
-    preferences.putInt("KbdLayout", kbdComboBox->selectedItem());
-    preferences.putInt("BaudRate", baudRateComboBox->selectedItem());
-    preferences.putInt("DataLen", datalenComboBox->selectedItem());
-    preferences.putInt("Parity", parityComboBox->selectedItem());
-    preferences.putInt("StopBits", stopBitsComboBox->selectedItem() + 1);
-    preferences.putInt("FlowCtrl", flowCtrlComboBox->selectedItem());
-    preferences.putInt("BGColor", (int)bgColorComboBox->selectedColor());
-    preferences.putInt("FGColor", (int)fgColorComboBox->selectedColor());
-    preferences.putInt("Resolution", resolutionComboBox->selectedItem());
-    preferences.putInt("Font", fontComboBox->selectedItem());
-    preferences.putInt("Columns", columnsComboBox->selectedItem());
-    preferences.putInt("Rows", rowsComboBox->selectedItem());
-    preferences.putInt("BootInfo", infoCheckBox->checked() ? BOOTINFO_ENABLED : BOOTINFO_DISABLED);
-    preferences.putInt("SerCtl", serctlCheckBox->checked() ? SERCTL_ENABLED : SERCTL_DISABLED);
+    preferences.putInt(PREF_TERMTYPE, termComboBox->selectedItem());
+    preferences.putInt(PREF_KBDLAYOUT, kbdComboBox->selectedItem());
+    preferences.putInt(PREF_BAUDRATE, baudRateComboBox->selectedItem());
+    preferences.putInt(PREF_DATALEN, datalenComboBox->selectedItem());
+    preferences.putInt(PREF_PARITY, parityComboBox->selectedItem());
+    preferences.putInt(PREF_STOPBITS, stopBitsComboBox->selectedItem() + 1);
+    preferences.putInt(PREF_FLOWCTRL, flowCtrlComboBox->selectedItem());
+    preferences.putInt(PREF_BGCOLOR, (int)bgColorComboBox->selectedColor());
+    preferences.putInt(PREF_FGCOLOR, (int)fgColorComboBox->selectedColor());
+    preferences.putInt(PREF_RESOLUTION, resolutionComboBox->selectedItem());
+    preferences.putInt(PREF_FONT, fontComboBox->selectedItem());
+    preferences.putInt(PREF_COLUMNS, columnsComboBox->selectedItem());
+    preferences.putInt(PREF_ROWS, rowsComboBox->selectedItem());
+    preferences.putInt(PREF_BOOTINFO, infoCheckBox->checked() ? BOOTINFO_ENABLED : BOOTINFO_DISABLED);
+    preferences.putInt(PREF_SERCTL, serctlCheckBox->checked() ? SERCTL_ENABLED : SERCTL_DISABLED);
 
-    if (reboot) {
-      auto rebootDialog = new RebootDialog(frame);
-      showModalWindow(rebootDialog);  // no return!
-    }
+    if (reboot)
+      performReboot(); // no return from here!
 
     loadConfiguration();
+  }
+
+
+  void performReboot() {
+    auto rebootDialog = new RebootDialog(frame);
+    showModalWindow(rebootDialog);  // no return from here!
   }
 
 
@@ -352,86 +430,105 @@ struct ConfDialogApp : public uiApp {
 
 
   static TermType getTermType() {
-    return (TermType) preferences.getInt("TermType", 7);    // default 7 = ANSILegacy
+    return (TermType) preferences.getInt(PREF_TERMTYPE, 7);    // default 7 = ANSILegacy
   }
+
 
   static int getKbdLayoutIndex() {
-    return preferences.getInt("KbdLayout", 3);              // default 3 = "US"
+    return preferences.getInt(PREF_KBDLAYOUT, 3);              // default 3 = "US"
   }
+
 
   static int getBaudRateIndex() {
-    return preferences.getInt("BaudRate", 11);              // default 11 = 115200
+    return preferences.getInt(PREF_BAUDRATE, 11);              // default 11 = 115200
   }
+
 
   static int getDataLenIndex() {
-    return preferences.getInt("DataLen", 3);                // default 3 = 8 bits
+    return preferences.getInt(PREF_DATALEN, 3);                // default 3 = 8 bits
   }
+
 
   static int getParityIndex() {
-    return preferences.getInt("Parity", 0);                 // default 0 = no parity
+    return preferences.getInt(PREF_PARITY, 0);                 // default 0 = no parity
   }
+
 
   static int getStopBitsIndex() {
-    return preferences.getInt("StopBits", 1);               // default 1 = 1 stop bit
+    return preferences.getInt(PREF_STOPBITS, 1);               // default 1 = 1 stop bit
   }
+
 
   static FlowControl getFlowCtrl() {
-    return (FlowControl) preferences.getInt("FlowCtrl", 0); // default 0 = no flow control
+    return (FlowControl) preferences.getInt(PREF_FLOWCTRL, 0); // default 0 = no flow control
   }
+
 
   static Color getBGColor() {
-    return (Color) preferences.getInt("BGColor", (int)Color::Black);
+    return (Color) preferences.getInt(PREF_BGCOLOR, (int)Color::Black);
   }
+
 
   static Color getFGColor() {
-    return (Color) preferences.getInt("FGColor", (int)Color::BrightGreen);
+    return (Color) preferences.getInt(PREF_FGCOLOR, (int)Color::BrightGreen);
   }
+
 
   static int getResolutionIndex() {
-    return preferences.getInt("Resolution", RESOLUTION_DEFAULT);
+    return preferences.getInt(PREF_RESOLUTION, RESOLUTION_DEFAULT);
   }
+
 
   static int getTempResolutionIndex() {
-    return preferences.getInt("TempResolution", -1);         // default -1 = no temp resolution
+    return preferences.getInt(PREF_TEMPRESOLUTION, -1);         // default -1 = no temp resolution
   }
+
 
   static int getFontIndex() {
-    return preferences.getInt("Font", 0);                   // default 0 = auto
+    return preferences.getInt(PREF_FONT, 0);                    // default 0 = auto
   }
+
 
   static int getColumnsIndex() {
-    return preferences.getInt("Columns", 0);                // default 0 = MAX
+    return preferences.getInt(PREF_COLUMNS, 0);                 // default 0 = MAX
   }
+
 
   static int getRowsIndex() {
-    return preferences.getInt("Rows", 0);                   // default 0 = MAX
+    return preferences.getInt(PREF_ROWS, 0);                    // default 0 = MAX
   }
+
 
   static int getBootInfo() {
-    return preferences.getInt("BootInfo", BOOTINFO_ENABLED);
+    return preferences.getInt(PREF_BOOTINFO, BOOTINFO_ENABLED);
   }
+
 
   static int getSerCtl() {
-    return preferences.getInt("SerCtl", SERCTL_DISABLED);
+    return preferences.getInt(PREF_SERCTL, SERCTL_DISABLED);
   }
 
+
   static char const * getSerParamStr() {
-    static char outstr[13];
-    snprintf(outstr, sizeof(outstr), "%s,%c%c%c", BAUDRATES_STR[getBaudRateIndex()],
-                                                  DATALENS_STR[getDataLenIndex()][0],
-                                                  PARITY_STR[getParityIndex()][0],
-                                                  STOPBITS_STR[getStopBitsIndex() - 1][0]);
+    static char outstr[32];
+    snprintf(outstr, sizeof(outstr), "%s,%c%c%c flow=%s", BAUDRATES_STR[getBaudRateIndex()],
+                                                          DATALENS_STR[getDataLenIndex()][0],
+                                                          PARITY_STR[getParityIndex()][0],
+                                                          STOPBITS_STR[getStopBitsIndex() - 1][0],
+                                                          FLOWCTRL_STR[(int)getFlowCtrl()]);
     return outstr;
   }
-  
+
+
   // if version in preferences doesn't match, reset preferences
   static void checkVersion() {
-    if (preferences.getInt("VerMaj", 0) != TERMVERSION_MAJ || preferences.getInt("VerMin", 0) != TERMVERSION_MIN) {
+    if (preferences.getInt(PREF_VERMAJ, 0) != TERMVERSION_MAJ || preferences.getInt(PREF_VERMIN, 0) != TERMVERSION_MIN) {
       preferences.clear();
-      preferences.putInt("VerMaj", TERMVERSION_MAJ);
-      preferences.putInt("VerMin", TERMVERSION_MIN);
+      preferences.putInt(PREF_VERMAJ, TERMVERSION_MAJ);
+      preferences.putInt(PREF_VERMIN, TERMVERSION_MIN);
     }
   }
+
 
   static void setupDisplay() {
     // setup display controller
@@ -439,7 +536,7 @@ struct ConfDialogApp : public uiApp {
     if (res == -1)
       res = getResolutionIndex();
     else
-      preferences.putInt("TempResolution", -1);
+      preferences.putInt(PREF_TEMPRESOLUTION, -1);
     switch (RESOLUTIONS_CONTROLLER[res]) {
       case ResolutionController::VGAController:
         DisplayController = new fabgl::VGAController;
@@ -476,6 +573,7 @@ struct ConfDialogApp : public uiApp {
     }
   }
 
+
   static void loadConfiguration() {
     Terminal.setTerminalType(getTermType());
     Terminal.keyboard()->setLayout(SupportedLayouts::layouts()[getKbdLayoutIndex()]);
@@ -485,7 +583,8 @@ struct ConfDialogApp : public uiApp {
     bool serctl = (getSerCtl() == SERCTL_ENABLED);
     auto rxPin = serctl ? UART_URX : UART_SRX;
     auto txPin = serctl ? UART_UTX : UART_STX;
-    Terminal.connectSerialPort(BAUDRATES_INT[getBaudRateIndex()], fabgl::UARTConf(getParityIndex(), getDataLenIndex(), getStopBitsIndex()), rxPin, txPin, getFlowCtrl());
+    Terminal.connectSerialPort(BAUDRATES_INT[getBaudRateIndex()], fabgl::UARTConf(getParityIndex(), getDataLenIndex(), getStopBitsIndex()), rxPin, txPin, getFlowCtrl(), false, RTS, CTS);
   }
+
 
 };

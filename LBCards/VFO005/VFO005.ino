@@ -5,13 +5,8 @@
   http://land-boards.com/blwiki/index.php?title=HW-9_VFO
 
   OLED is 128x32 I2C device
-  Si5351 is on a custom board
+  AD9833 from the usual offshorer sites
   Runs on Blue Pill Hub so no 5V to 3.3V level shifting is needed
-
-  Borrowed bits pieces from all over the place
-  Si6361 driver is from si5351_example
-  https://etherkit.github.io/si5351abb_landing_page.html
-  Copyright (C) 2015 - 2016 Jason Milldrum <milldrum@gmail.com>
 
 */
 

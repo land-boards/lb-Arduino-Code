@@ -1,9 +1,13 @@
- /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+/*
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -53,8 +57,22 @@ fabgl::Terminal                     Terminal;
 #define UART_SRX 34
 #define UART_STX 2
 
+// RTS/CTS hardware flow gpios
+#define RTS      13
+#define CTS      35
 
+/* prev conf
 #define RESET_PIN 12
+#define RESET_PIN_ACTIVE 1
+#define USERESETPIN 1
+//*/
+///*
+#define RESET_PIN 39
+#define RESET_PIN_ACTIVE 0
+#define USERESETPIN 0
+//*/
+
+
 
 
 #include "confdialog.h"
@@ -63,6 +81,10 @@ fabgl::Terminal                     Terminal;
 void setup()
 {
   //Serial.begin(115200); delay(500); Serial.write("\n\nReset\n\n"); // DEBUG ONLY
+
+  disableCore0WDT();
+  delay(100); // experienced crashes without this delay!
+  disableCore1WDT();
 
   // more stack is required for the UI (used inside Terminal.onVirtualKey)
   Terminal.keyboardReaderTaskStackSize = 3000;
@@ -73,9 +95,11 @@ void setup()
 
   ConfDialogApp::checkVersion();
 
+  #if USERESETPIN
   pinMode(RESET_PIN, INPUT);
-  if (digitalRead(RESET_PIN) == 1)
+  if (digitalRead(RESET_PIN) == RESET_PIN_ACTIVE)
     preferences.clear();
+  #endif
 
   // because mouse is optional, don't re-try if it is not found (to speed-up boot)
   fabgl::Mouse::quickCheckHardware();
@@ -110,7 +134,7 @@ void setup()
 
     Terminal.write("\r\nPress F12 to change terminal configuration and CTRL-ALT-F12 to reset settings\r\n\n");
   } else if (ConfDialogApp::getBootInfo() == BOOTINFO_TEMPDISABLED) {
-    preferences.putInt("BootInfo", BOOTINFO_ENABLED);
+    preferences.putInt(PREF_BOOTINFO, BOOTINFO_ENABLED);
   }
 
   // onVirtualKey is triggered whenever a key is pressed or released
@@ -146,9 +170,9 @@ void setup()
     for (int i = 0; i < RESOLUTIONS_COUNT; ++i)
       if (strcmp(RESOLUTIONS_CMDSTR[i], seq) == 0) {
         // found resolution string
-        preferences.putInt("TempResolution", i);
+        preferences.putInt(PREF_TEMPRESOLUTION, i);
         if (ConfDialogApp::getBootInfo() == BOOTINFO_ENABLED)
-          preferences.putInt("BootInfo", BOOTINFO_TEMPDISABLED);
+          preferences.putInt(PREF_BOOTINFO, BOOTINFO_TEMPDISABLED);
         ESP.restart();
       }
   };

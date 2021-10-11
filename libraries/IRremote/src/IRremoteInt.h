@@ -34,8 +34,13 @@
 
 #include <Arduino.h>
 
-#if ! defined(RAW_BUFFER_LENGTH)
+/*
+ * The length of the buffer where the IR timing data is stored before decoding
+ * 100 is sufficient for most standard protocols, but air conditioners often send a longer protocol data stream
+ */
+#if !defined(RAW_BUFFER_LENGTH)
 #define RAW_BUFFER_LENGTH  100  ///< Maximum length of raw duration buffer. Must be even. 100 supports up to 48 bit codings inclusive 1 start and 1 stop bit.
+//#define RAW_BUFFER_LENGTH  750  // Value for air condition remotes.
 #endif
 #if RAW_BUFFER_LENGTH % 2 == 1
 #error RAW_BUFFER_LENGTH must be even, since the array consists of space / mark pairs.
@@ -43,6 +48,9 @@
 
 #define MARK   1
 #define SPACE  0
+
+//#define DEBUG // Activate this for lots of lovely debug output from the IRremote core and all protocol decoders.
+//#define TRACE // Activate this for more debug output.
 
 /**
  * For better readability of code
@@ -60,7 +68,7 @@
 #define IR_REC_STATE_IDLE      0
 #define IR_REC_STATE_MARK      1
 #define IR_REC_STATE_SPACE     2
-#define IR_REC_STATE_STOP      3
+#define IR_REC_STATE_STOP      3 // set to IR_REC_STATE_IDLE only by resume()
 
 /**
  * This struct contains the data and control used for receiver static functions and the ISR (interrupt service routine)
@@ -77,7 +85,7 @@ struct irparams_struct {
     uint16_t TickCounterForISR;     ///< Counts 50uS ticks. The value is copied into the rawbuf array on every transition.
 
     bool OverflowFlag;              ///< Raw buffer OverflowFlag occurred
-#if RAW_BUFFER_LENGTH <= 255        // saves around 75 bytes program space and speeds up ISR
+#if RAW_BUFFER_LENGTH <= 254        // saves around 75 bytes program space and speeds up ISR
     uint8_t rawlen;                 ///< counter of entries in rawbuf
 #else
     unsigned int rawlen;            ///< counter of entries in rawbuf
@@ -85,8 +93,24 @@ struct irparams_struct {
     uint16_t rawbuf[RAW_BUFFER_LENGTH]; ///< raw data / tick counts per mark/space, first entry is the length of the gap between previous and current command
 };
 
-//#define DEBUG // Activate this for lots of lovely debug output from the IRremote core and all protocol decoders.
-//#define TRACE // Activate this for more debug output.
+/*
+ * Info directives
+ * Can be disabled to save program space
+ */
+#ifdef INFO
+#  define INFO_PRINT(...)    Serial.print(__VA_ARGS__)
+#  define INFO_PRINTLN(...)  Serial.println(__VA_ARGS__)
+#else
+/**
+ * If INFO, print the arguments, otherwise do nothing.
+ */
+#  define INFO_PRINT(...) void()
+/**
+ * If INFO, print the arguments as a line, otherwise do nothing.
+ */
+#  define INFO_PRINTLN(...) void()
+#endif
+
 /*
  * Debug directives
  */
@@ -164,7 +188,7 @@ struct IRData {
     uint16_t address;           ///< Decoded address
     uint16_t command;           ///< Decoded command
     uint16_t extra;             ///< Used by MagiQuest and for Kaseikyo unknown vendor ID.  Ticks used for decoding Distance protocol.
-    uint8_t numberOfBits; ///< Number of bits received for data (address + command + parity) - to determine protocol length if different length are possible.
+    uint16_t numberOfBits;      ///< Number of bits received for data (address + command + parity) - to determine protocol length if different length are possible.
     uint8_t flags;              ///< See IRDATA_FLAGS_* definitions above
     uint32_t decodedRawData;    ///< Up to 32 bit decoded raw data, used for sendRaw functions.
     irparams_struct *rawDataPtr; ///< Pointer of the raw timing data to be decoded. Mainly the data buffer filled by receiving ISR.
@@ -194,7 +218,7 @@ public:
      */
     void begin(uint8_t aReceivePin, bool aEnableLEDFeedback = false, uint8_t aFeedbackLEDPin = USE_DEFAULT_FEEDBACK_LED_PIN);
     void start(); // alias for enableIRIn
-    void start(uint16_t aMicrosecondsToAddToGapCounter);
+    void start(uint32_t aMicrosecondsToAddToGapCounter);
     bool available();
     IRData* read(); // returns decoded data
     // write is a method of class IRsend below
@@ -285,6 +309,10 @@ public:
 #endif
     bool decodeWhynter();
 
+    // for backward compatibility. Now in IRFeedbackLED.hpp
+    void blink13(bool aEnableLEDFeedback)
+            __attribute__ ((deprecated ("Please use setLEDFeedback() or enableLEDFeedback() / disableLEDFeedback()."))); // deprecated
+
     /*
      * Internal functions
      */
@@ -326,11 +354,10 @@ void printIRResultShort(Print *aSerial, IRData *aIRDataPtr, uint16_t aLeadingSpa
  ****************************************************/
 void setFeedbackLED(bool aSwitchLedOn);
 void setLEDFeedback(uint8_t aFeedbackLEDPin, bool aEnableLEDFeedback); // if aFeedbackLEDPin == 0, then take board BLINKLED_ON() and BLINKLED_OFF() functions
+void setLEDFeedback(bool aEnableLEDFeedback); // Direct replacement for blink13()
 void enableLEDFeedback();
 void disableLEDFeedback();
 
-void blink13(bool aEnableLEDFeedback)
-        __attribute__ ((deprecated ("Please use setLEDFeedback() or enableLEDFeedback() / disableLEDFeedback."))); // deprecated
 void setBlinkPin(uint8_t aFeedbackLEDPin) __attribute__ ((deprecated ("Please use setLEDFeedback()."))); // deprecated
 
 /**
@@ -399,7 +426,9 @@ public:
 
     IRsend();
     void begin(bool aEnableLEDFeedback, uint8_t aFeedbackLEDPin = USE_DEFAULT_FEEDBACK_LED_PIN)
+#if !defined (DOXYGEN)
             __attribute__ ((deprecated ("Please use begin(<sendPin>, <EnableLEDFeedback>, <LEDFeedbackPin>)")));
+#endif
 
     size_t write(IRData *aIRSendData, uint_fast8_t aNumberOfRepeats = NO_REPEATS);
 
@@ -427,12 +456,15 @@ public:
     void sendBoseWave(uint8_t aCommand, uint_fast8_t aNumberOfRepeats = NO_REPEATS);
     void sendDenon(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats, bool aSendSharp = false);
     void sendDenonRaw(uint16_t aRawData, uint_fast8_t aNumberOfRepeats = 0)
+#if !defined (DOXYGEN)
             __attribute__ ((deprecated ("Please use sendDenon(aAddress, aCommand, aNumberOfRepeats).")));
+#endif
     void sendJVC(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats);
 
-    void sendLGRepeat();
-    void sendLG(uint8_t aAddress, uint16_t aCommand, uint_fast8_t aNumberOfRepeats, bool aIsRepeat = false);
-    void sendLGRaw(uint32_t aRawData, uint_fast8_t aNumberOfRepeats = 0, bool aIsRepeat = false);
+    void sendLGRepeat(bool aUseLG2Protocol = false);
+    void sendLG(uint8_t aAddress, uint16_t aCommand, uint_fast8_t aNumberOfRepeats, bool aIsRepeat = false, bool aUseLG2Protocol =
+            false);
+    void sendLGRaw(uint32_t aRawData, uint_fast8_t aNumberOfRepeats = 0, bool aIsRepeat = false, bool aUseLG2Protocol = false);
 
     void sendNECRepeat();
     void sendNEC(uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats, bool aIsRepeat = false);
@@ -441,8 +473,12 @@ public:
     void sendOnkyo(uint16_t aAddress, uint16_t aCommand, uint_fast8_t aNumberOfRepeats, bool aIsRepeat = false);
     void sendApple(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats, bool aIsRepeat = false);
 
-    void sendPanasonic(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats); // LSB first
     void sendKaseikyo(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats, uint16_t aVendorCode); // LSB first
+    void sendPanasonic(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats); // LSB first
+    void sendKaseikyo_Denon(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats); // LSB first
+    void sendKaseikyo_Mitsubishi(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats); // LSB first
+    void sendKaseikyo_Sharp(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats); // LSB first
+    void sendKaseikyo_JVC(uint16_t aAddress, uint8_t aData, uint_fast8_t aNumberOfRepeats); // LSB first
 
     void sendRC5(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats, bool aEnableAutomaticToggle = true);
     void sendRC6(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats, bool aEnableAutomaticToggle = true);

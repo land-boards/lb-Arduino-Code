@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -246,7 +250,7 @@ void MC146818::enableTimers()
     if (divider == 2) {
       // we just support 32768Hz time base
       static const int RATE2US[16] = { 0, 3906, 7812, 122, 244, 488, 976, 1953, 3906, 7812, 15625, 31250, 62500, 125000, 250000, 500000 };
-      esp_timer_create_args_t args = { 0 };
+      esp_timer_create_args_t args = { };
       args.callback = periodIntTimerFunc;
       args.arg = this;
       args.dispatch_method = ESP_TIMER_TASK;
@@ -260,7 +264,7 @@ void MC146818::enableTimers()
 
   // Setup Alarm and End of Update timer
   if (!m_endUpdateIntTimerHandle) {
-    esp_timer_create_args_t args = { 0 };
+    esp_timer_create_args_t args = { };
     args.callback = endUpdateIntTimerFunc;
     args.arg = this;
     args.dispatch_method = ESP_TIMER_TASK;

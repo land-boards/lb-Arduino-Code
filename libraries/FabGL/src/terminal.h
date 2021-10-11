@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -702,6 +706,8 @@ namespace fabgl {
 enum class FlowControl {
   None,              /**< No flow control */
   Software,          /**< Software flow control. Use XON and XOFF control characters */
+  Hardware,          /**< Hardware flow control. Use RTS and CTS signals */
+  Hardsoft,          /**< Hardware/software flow control. Use XON/XOFF and RTS/CTS */
 };
 
 
@@ -867,7 +873,7 @@ struct Stream : public Print{
  *
  * Implements most of common ANSI, VT52, VT100, VT200, VT300, VT420 and VT500 escape codes, like non-CSI codes (RIS, IND, DECID, DECDHL, etc..),<br>
  * like CSI codes (private modes, CUP, TBC, etc..), like CSI-SGR codes (bold, italic, blinking, etc...) and like DCS codes (DECRQSS, etc..).<br>
- * Supports convertion from PS/2 keyboard virtual keys to ANSI or VT codes (keypad, cursor keys, function keys, etc..).<br>
+ * Supports conversion from PS/2 keyboard virtual keys to ANSI or VT codes (keypad, cursor keys, function keys, etc..).<br>
  *
  * Terminal can receive codes to display from Serial Port or it can be controlled directly from the application. In the same way
  * Terminal can send keyboard codes to a Serial Port or directly to the application.<br>
@@ -1014,15 +1020,17 @@ public:
    * @param config Defines word length, parity and stop bits. Example: SERIAL_8N1.
    * @param rxPin UART RX pin GPIO number.
    * @param txPin UART TX pin GPIO number.
-   * @param flowControl Flow control. When set to FlowControl::Software, XON and XOFF characters are automatically sent.
+   * @param flowControl Flow control.
    * @param inverted If true RX and TX signals are inverted.
+   * @param rtsPin RTS signal GPIO number (-1 = not used)
+   * @param ctsPin CTS signal GPIO number (-1 = not used)
    *
    * Example:
    *
    *     Terminal.begin(&DisplayController);
    *     Terminal.connectSerialPort(115200, SERIAL_8N1, 34, 2, FlowControl::Software);
    */
-  void connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int txPin, FlowControl flowControl, bool inverted = false);
+  void connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int txPin, FlowControl flowControl, bool inverted = false, int rtsPin = -1, int ctsPin = -1);
 
   /**
    * @brief Pools the serial port for incoming data.
@@ -1412,6 +1420,50 @@ public:
    */
   SoundGenerator * soundGenerator();
 
+  /**
+   * @brief Reports whether TX is active
+   *
+   * @return True if XOFF has been sent or RTS is not asserted
+   */
+  bool XOFFStatus()                    { return m_sentXOFF; }
+
+  /**
+   * @brief Reports current RTS signal status
+   *
+   * @return True if RTS is asserted (low voltage, terminal is ready to receive data)
+   */
+  bool RTSStatus()                     { return m_RTSStatus; }
+
+  /**
+   * @brief Sets RTS signal status
+   *
+   * RTS signal is handled automatically when flow control has been setup
+   *
+   * @param value True to assert RTS (low voltage)
+   */
+  void setRTSStatus(bool value);
+
+  /**
+   * @brief Reports current CTS signal status
+   *
+   * @return True if RTS is asserted (low voltage, host is ready to receive data)
+   */
+  bool CTSStatus()                     { return m_ctsPin != GPIO_UNUSED ? gpio_get_level(m_ctsPin) == 0 : false; }
+
+  /**
+   * @brief Allows/disallows host to send data
+   *
+   * @param enableRX If True host can send data (sent XON and/or RTS asserted)
+   */
+  void flowControl(bool enableRX);
+
+  /**
+   * @brief Checks whether host can receive data
+   *
+   * @return True if host can receive data. False if host sent XOFF or CTS is not asserted.
+   */
+  bool flowControl();
+
 
   //// Delegates ////
 
@@ -1700,8 +1752,14 @@ private:
   // a reset has been requested
   bool                      m_resetRequested;
 
-  volatile bool             m_autoXONOFF;
-  volatile bool             m_XOFF;       // true = XOFF sent
+  volatile FlowControl      m_flowControl;
+  volatile bool             m_sentXOFF;       // true if XOFF has been sent or RTS is disabled (high)
+  volatile bool             m_recvXOFF;       // true if XOFF has been received
+
+  // hardware flow pins
+  gpio_num_t                m_rtsPin;
+  gpio_num_t                m_ctsPin;
+  bool                      m_RTSStatus;      // true = asserted (low)
 
   // used to implement m_emuState.keyAutorepeat
   VirtualKey                m_lastPressedKey;

@@ -1,9 +1,13 @@
- /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+/*
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,7 +27,7 @@
 #pragma once
 
 
-enum { STYLE_NONE, STYLE_FRAME, STYLE_LABEL, STYLE_LABELHELP, STYLE_BUTTON, STYLE_COMBOBOX, STYLE_CHECKBOX };
+enum { STYLE_NONE, STYLE_FRAME, STYLE_LABEL, STYLE_LABELHELP, STYLE_BUTTON, STYLE_COMBOBOX, STYLE_CHECKBOX, STYLE_LABELBUTTON };
 
 
 #define BACKGROUND_COLOR RGB888(64, 64, 64)
@@ -46,6 +50,12 @@ struct DialogStyle : uiStyle {
         ((uiLabel*)object)->labelStyle().textFont                   = &fabgl::FONT_std_14;
         ((uiLabel*)object)->labelStyle().backgroundColor            = BACKGROUND_COLOR;
         ((uiLabel*)object)->labelStyle().textColor                  = RGB888(255, 255, 0);
+        break;
+      case STYLE_LABELBUTTON:
+        ((uiLabel*)object)->labelStyle().textFont                   = &fabgl::FONT_std_14;
+        ((uiLabel*)object)->labelStyle().backgroundColor            = RGB888(128, 128, 128);
+        ((uiLabel*)object)->labelStyle().textColor                  = RGB888(0, 0, 0);
+        ((uiLabel*)object)->labelStyle().textAlign                  = uiHAlign::Center;
         break;
       case STYLE_BUTTON:
         ((uiButton*)object)->windowStyle().borderColor              = RGB888(0, 0, 0);

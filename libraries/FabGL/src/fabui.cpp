@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -2515,7 +2519,8 @@ uiTextEdit::uiTextEdit(uiWindow * parent, char const * text, const Point & pos, 
     m_textSpace(0),
     m_viewX(0),
     m_cursorCol(0),
-    m_selCursorCol(0)
+    m_selCursorCol(0),
+    m_codepage(nullptr)
 {
   objectType().uiTextEdit = true;
 
@@ -2613,7 +2618,21 @@ void uiTextEdit::processEvent(uiEvent * event)
 }
 
 
-void uiTextEdit::handleKeyDown(uiKeyEventInfo key)
+int uiTextEdit::keyToASCII(uiKeyEventInfo const & key)
+{
+  // check codepage consistency
+  if (m_codepage == nullptr || m_codepage->codepage != m_textEditStyle.textFont->codepage)
+    m_codepage = CodePages::get(m_textEditStyle.textFont->codepage);
+
+  VirtualKeyItem item = { };
+  item.vk    = key.VK;
+  item.CTRL  = key.CTRL;
+  item.SHIFT = key.SHIFT;
+  return virtualKeyToASCII(item, m_codepage);
+}
+
+
+void uiTextEdit::handleKeyDown(uiKeyEventInfo const & key)
 {
   if (m_textEditProps.allowEdit) {
     switch (key.VK) {
@@ -2634,13 +2653,20 @@ void uiTextEdit::handleKeyDown(uiKeyEventInfo key)
         break;
 
       default:
+      {
         // normal keys
-        if (key.ASCII >= 0x20 && key.ASCII != 0x7F) {
+
+        // we don't use key.ASCII because it uses codepage stored in Keyboard object but
+        // each textedit may have a different font and codepage
+        auto ASCII = keyToASCII(key);
+
+        if (ASCII >= 0x20 && ASCII != 0x7F) {
           if (m_cursorCol != m_selCursorCol)
             removeSel();  // there is a selection, same behavior of VK_DELETE
-          insert(key.ASCII);
+          insert(ASCII);
         }
         break;
+      }
     }
   }
 
@@ -3013,7 +3039,20 @@ void uiLabel::paintLabel()
   canvas()->fillRectangle(r);
   canvas()->setGlyphOptions(GlyphOptions().FillBackground(false).DoubleWidth(0).Bold(false).Italic(false).Underline(false).Invert(0));
   canvas()->setPenColor(m_labelStyle.textColor);
-  int x = r.X1;
+
+  int x = r.X1; // default left align
+
+  switch (m_labelStyle.textAlign) {
+    case uiHAlign::Right:
+      x = r.X2 - canvas()->textExtent(m_labelStyle.textFont, m_text);
+      break;
+    case uiHAlign::Center:
+      x = r.X1 + (r.width() - canvas()->textExtent(m_labelStyle.textFont, m_text)) / 2;
+      break;
+    default:
+      break;
+  }
+
   int y = r.Y1 + (r.height() - m_labelStyle.textFont->height) / 2;
   canvas()->drawText(m_labelStyle.textFont, x, y, m_text);
 }

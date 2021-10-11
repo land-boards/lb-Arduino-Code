@@ -245,7 +245,7 @@ https://github.com/olikraus/u8g2 ChangeLog
   * Added Lucida X11 fonts (issue 271)
   * Added several fonts from dafont.com (issue 1093)
   * Added 3-wire HW SPI (issue 1041)
-2020-xx-xx	v2.28.x	olikraus@gmail.com
+2020-12-28	v2.28.10	olikraus@gmail.com
   * Added Euro Symbol to _te fonts (issue 1321) 
   * Added support for ST7528 (issue 986) 
   * Added support for ST7571 (issue 1298) 
@@ -256,4 +256,21 @@ https://github.com/olikraus/u8g2 ChangeLog
   * Added support for KS0713 controller (issue 1314)
   * Added support for ST7567_HEM6432 (issue 1159)
   * U8g2 16 Bit Mode enabled by default for ARM and ESP Systems (issue 1222)
+2021-09-03	v2.29.11	olikraus@gmail.com
+  * Update for getStrWidth/getUTF8Width: The new return value might be little bit larger (issue 1561)
+  * New draw procedure drawButtonUTF8 (issue 1577)
+  * Added vertical mirror option U8G2_MIRROR_VERTICAL for u8g2 (mattnutsch@gmail.com, issue 1474).
+  * Added support for UC1638 based 196x96 display (issue 371)
+  * Added support for HD44102 and T7932 displays (issue 1492)
+  * Added support for SSD1320 (issue 1351)
+  * Added support for S1D15721 (issue 1473)
+  * Added support for SSD1306 EA OLEDS102 (issue 1493)
+  * Added support for UC1601 128x64 (issue 1501)
+  * Font Wiki page splitted into four sub-pages to avoid the GitHub 'abuse' message.
+2021-09-07	v2.30.1	olikraus@gmail.com
+  * Bugfix drawButtonUTF8 (added C++ code, issue 1577)
+2021-09-19	v2.31.1	olikraus@gmail.com
+  * Added icons from https://app.streamlinehq.com/icons/pixel (issue 1589)
+2021-09-20	v2.31.2	olikraus@gmail.com
+  * Bugfix release for include error (issues 1592 and 1594)
   

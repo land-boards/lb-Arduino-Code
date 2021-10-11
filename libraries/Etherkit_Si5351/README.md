@@ -11,7 +11,7 @@ Thanks For Your Support!
 If you would like to support my library development efforts, I would ask that you please consider purchasing a Si5351A Breakout Board from my [online store at etherkit.com](https://www.etherkit.com) and/or sending a [PayPal tip](https://paypal.me/NT7S). Thank you!
 
 Library Installation
----------------------
+--------------------
 The best way to install the library is via the Arduino Library Manager, which is available if you are using Arduino IDE version 1.6.2 or greater. To install it this way, simply go to the menu Sketch > Include Library > Manage Libraries..., and then in the search box at the upper-right, type "Etherkit Si5351". Click on the entry in the list below, then click on the provided "Install" button. By installing the library this way, you will always have notifications of future library updates, and can easily switch between library versions.
 
 If you need to or would like to install the library in the old way, then you can download a copy of the library in a ZIP file. Download a ZIP file of the library from the GitHub repository by using the "Download ZIP" button at the right of the main repository page. Extract the ZIP file, then rename the unzipped folder as "Si5351". Finally, open the Arduino IDE, select menu Sketch > Import Library... > Add Library..., and select the renamed folder that you just downloaded. Restart the IDE and you should have access to the new library.

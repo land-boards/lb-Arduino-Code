@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -44,8 +48,14 @@
 /** Blink (cursor, text blink, ...) period in ms. */
 #define FABGLIB_DEFAULT_BLINK_PERIOD_MS 500
 
+
 /** Size of display controller primitives queue */
 #define FABGLIB_DEFAULT_DISPLAYCONTROLLER_QUEUE_SIZE 1024
+
+
+#define FABGLIB_TERMINAL_FLOWCONTROL_RXFIFO_MIN_THRESHOLD 20
+
+#define FABGLIB_TERMINAL_FLOWCONTROL_RXFIFO_MAX_THRESHOLD 300
 
 
 /** Size (in bytes) of primitives dynamic buffers. Used by primitives like drawPath and fillPath to contain path points. */

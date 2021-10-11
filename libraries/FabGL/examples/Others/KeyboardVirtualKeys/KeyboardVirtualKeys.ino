@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,7 +27,8 @@
 #include "fabgl.h"
 
 
-fabgl::VGATextController DisplayController;
+
+fabgl::VGA16Controller   DisplayController;
 fabgl::Terminal          Terminal;
 fabgl::PS2Controller     PS2Controller;
 
@@ -54,7 +59,8 @@ void printHelp()
 
   xprintf("Commands:\r\n");
   xprintf("  1 = US Layout       2 = UK Layout       3 = DE Layout\r\n");
-  xprintf("  4 = IT Layout       5 = ES Layout\r\n");
+  xprintf("  4 = IT Layout       5 = ES Layout       6 = FR Layout\r\n");
+  xprintf("  7 = BE Layout\r\n");
   xprintf("  r = Reset\r\n");
   xprintf("  q = Scancode set 1  w = Scancode set 2\r\n");
   xprintf("  l = Test LEDs\r\n");
@@ -106,13 +112,13 @@ void setup()
   delay(500);  // avoid garbage into the UART
   Serial.write("\r\n\nReset\r\n");
 
+  PS2Controller.begin(PS2Preset::KeyboardPort0);
+
   DisplayController.begin();
-  DisplayController.setResolution();
+  DisplayController.setResolution(VGA_640x480_60Hz);
 
   Terminal.begin(&DisplayController);
   Terminal.enableCursor(true);
-
-  PS2Controller.begin(PS2Preset::KeyboardPort0);
 
   //PS2Controller.keyboard()->setTypematicRateAndDelay(33, 500);
 
@@ -152,6 +158,14 @@ void loop()
         break;
       case '5':
         keyboard->setLayout(&fabgl::SpanishLayout);
+        printInfo();
+        break;
+      case '6':
+        keyboard->setLayout(&fabgl::FrenchLayout);
+        printInfo();
+        break;
+      case '7':
+        keyboard->setLayout(&fabgl::BelgianLayout);
         printInfo();
         break;
       case 'r':

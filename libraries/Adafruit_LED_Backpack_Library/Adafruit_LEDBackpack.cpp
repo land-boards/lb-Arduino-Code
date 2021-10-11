@@ -35,10 +35,8 @@
  *
  */
 
-#include <Wire.h>
-
-#include "Adafruit_GFX.h"
 #include "Adafruit_LEDBackpack.h"
+#include "Adafruit_GFX.h"
 
 #ifndef _BV
 #define _BV(bit) (1 << (bit)) ///< Bit-value if not defined by Arduino
@@ -99,7 +97,7 @@ static const uint16_t alphafonttable[] PROGMEM = {
     0b0001001011000000, // +
     0b0000100000000000, // ,
     0b0000000011000000, // -
-    0b0000000000000000, // .
+    0b0100000000000000, // .
     0b0000110000000000, // /
     0b0000110000111111, // 0
     0b0000000000000110, // 1
@@ -126,7 +124,7 @@ static const uint16_t alphafonttable[] PROGMEM = {
     0b0000000001110001, // F
     0b0000000010111101, // G
     0b0000000011110110, // H
-    0b0001001000000000, // I
+    0b0001001000001001, // I
     0b0000000000011110, // J
     0b0010010001110000, // K
     0b0000000000111000, // L
@@ -185,31 +183,30 @@ static const uint16_t alphafonttable[] PROGMEM = {
 };
 void Adafruit_LEDBackpack::setBrightness(uint8_t b) {
   if (b > 15)
-    b = 15;
-  Wire.beginTransmission(i2c_addr);
-  Wire.write(HT16K33_CMD_BRIGHTNESS | b);
-  Wire.endTransmission();
+    b = 15; // limit to max brightness
+  uint8_t buffer = HT16K33_CMD_BRIGHTNESS | b;
+  i2c_dev->write(&buffer, 1);
 }
 
 void Adafruit_LEDBackpack::blinkRate(uint8_t b) {
-  Wire.beginTransmission(i2c_addr);
   if (b > 3)
     b = 0; // turn off if not sure
-
-  Wire.write(HT16K33_BLINK_CMD | HT16K33_BLINK_DISPLAYON | (b << 1));
-  Wire.endTransmission();
+  uint8_t buffer = HT16K33_BLINK_CMD | HT16K33_BLINK_DISPLAYON | (b << 1);
+  i2c_dev->write(&buffer, 1);
 }
 
 Adafruit_LEDBackpack::Adafruit_LEDBackpack(void) {}
 
-void Adafruit_LEDBackpack::begin(uint8_t _addr) {
-  i2c_addr = _addr;
+bool Adafruit_LEDBackpack::begin(uint8_t _addr, TwoWire *theWire) {
+  if (i2c_dev)
+    delete i2c_dev;
+  i2c_dev = new Adafruit_I2CDevice(_addr, theWire);
+  if (!i2c_dev->begin())
+    return false;
 
-  Wire.begin();
-
-  Wire.beginTransmission(i2c_addr);
-  Wire.write(0x21); // turn on oscillator
-  Wire.endTransmission();
+  // turn on oscillator
+  uint8_t buffer[1] = {0x21};
+  i2c_dev->write(buffer, 1);
 
   // internal RAM powers up with garbage/random values.
   // ensure internal RAM is cleared before turning on display
@@ -221,17 +218,21 @@ void Adafruit_LEDBackpack::begin(uint8_t _addr) {
   blinkRate(HT16K33_BLINK_OFF);
 
   setBrightness(15); // max brightness
+
+  return true;
 }
 
 void Adafruit_LEDBackpack::writeDisplay(void) {
-  Wire.beginTransmission(i2c_addr);
-  Wire.write((uint8_t)0x00); // start at address $00
+  uint8_t buffer[17];
+
+  buffer[0] = 0x00; // start at address $00
 
   for (uint8_t i = 0; i < 8; i++) {
-    Wire.write(displaybuffer[i] & 0xFF);
-    Wire.write(displaybuffer[i] >> 8);
+    buffer[1 + 2 * i] = displaybuffer[i] & 0xFF;
+    buffer[2 + 2 * i] = displaybuffer[i] >> 8;
   }
-  Wire.endTransmission();
+
+  i2c_dev->write(buffer, 17);
 }
 
 void Adafruit_LEDBackpack::clear(void) {
@@ -571,13 +572,13 @@ void Adafruit_7segment::drawColon(bool state) {
 }
 
 void Adafruit_7segment::writeColon(void) {
-  Wire.beginTransmission(i2c_addr);
-  Wire.write((uint8_t)0x04); // start at address $02
+  uint8_t buffer[3];
 
-  Wire.write(displaybuffer[2] & 0xFF);
-  Wire.write(displaybuffer[2] >> 8);
+  buffer[0] = 0x04; // start at address $02
+  buffer[1] = displaybuffer[2] & 0xFF;
+  buffer[2] = displaybuffer[2] >> 8;
 
-  Wire.endTransmission();
+  i2c_dev->write(buffer, 3);
 }
 
 void Adafruit_7segment::writeDigitNum(uint8_t d, uint8_t num, bool dot) {

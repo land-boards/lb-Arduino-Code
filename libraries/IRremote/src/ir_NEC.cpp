@@ -52,7 +52,7 @@
 #define NEC_COMMAND_BITS        16 // Command and inverted command
 
 #define NEC_BITS                (NEC_ADDRESS_BITS + NEC_COMMAND_BITS)
-#define NEC_UNIT                560
+#define NEC_UNIT                560 // 21.28 periods of 38 kHz
 
 #define NEC_HEADER_MARK         (16 * NEC_UNIT) // 9000
 #define NEC_HEADER_SPACE        (8 * NEC_UNIT)  // 4500
@@ -75,7 +75,7 @@
  * Repeat commands should be sent in a 110 ms raster.
  */
 void IRsend::sendNECRepeat() {
-    enableIROut(38);
+    enableIROut(NEC_KHZ); // 38 kHz
     mark(NEC_HEADER_MARK);
     space(NEC_REPEAT_HEADER_SPACE);
     mark(NEC_BIT_MARK);
@@ -153,7 +153,7 @@ void IRsend::sendNECRaw(uint32_t aRawData, uint_fast8_t aNumberOfRepeats, bool a
         return;
     }
     // Set IR carrier frequency
-    enableIROut(38);
+    enableIROut(NEC_KHZ);
 
     // Header
     mark(NEC_HEADER_MARK);
@@ -354,7 +354,7 @@ bool IRrecv::decodeNECMSB(decode_results *aResults) {
  */
 void IRsend::sendNECMSB(uint32_t data, uint8_t nbits, bool repeat) {
     // Set IR carrier frequency
-    enableIROut(38);
+    enableIROut(NEC_KHZ);
 
     if (data == 0xFFFFFFFF || repeat) {
         sendNECRepeat();

@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1939,7 +1943,7 @@ FILE * BDOS::openFile(uint16_t FCBaddr, bool create, bool tempext, int errFunc, 
   FILE * f = nullptr;
 
   if (create) {
-    if (m_fileBrowser.exists(filename))
+    if (m_fileBrowser.exists(filename, false))
       *err = 2;
     else
       f = fopen(fullpath, "w+b");
@@ -2007,7 +2011,8 @@ void BDOS::BDOS_openFile()
     m_HAL->writeByte(FCBaddr + FCB_RC, fabgl::tmin<size_t>((size + 127) / 128, 128));
 
     // reset position to 0
-    m_HAL->writeByte(FCBaddr + FCB_EX, 0);
+    // note: EX (FCB_EX) is not reset, it should be done by the application
+    //       should it be done for S2 and CR also?
     m_HAL->writeByte(FCBaddr + FCB_S2, 0);
     m_HAL->writeByte(FCBaddr + FCB_CR, 0);
 
@@ -2416,7 +2421,7 @@ void BDOS::BDOS_setFileAttributes()
   getFilenameFromFCB(FCBaddr, filename);
   setBrowserAtDrive(drive);
 
-  if (m_fileBrowser.exists(filename)) {
+  if (m_fileBrowser.exists(filename, false)) {
 
     // sets last record byte count?
     if ((m_HAL->readByte(FCBaddr + FCB_F6) & 0x80) != 0 && m_HAL->readByte(FCBaddr + FCB_CR) > 0) {
@@ -2912,7 +2917,7 @@ void BDOS::BDOS_truncateFile()
   getFilenameFromFCB(FCBaddr, filename);
   setBrowserAtDrive(drive);
 
-  if (m_fileBrowser.exists(filename)) {
+  if (m_fileBrowser.exists(filename, false)) {
 
     // copy "absolute pos"+128 bytes
     // round to blocks (newlen should be already 128 bytes aligned)

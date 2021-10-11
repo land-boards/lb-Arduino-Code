@@ -43,9 +43,9 @@
 #ifndef IRremote_h
 #define IRremote_h
 
-#define VERSION_IRREMOTE "3.3.0"
+#define VERSION_IRREMOTE "3.4.0"
 #define VERSION_IRREMOTE_MAJOR 3
-#define VERSION_IRREMOTE_MINOR 3
+#define VERSION_IRREMOTE_MINOR 4
 
 // activate it for all cores that does not use the -flto flag, if you get false error messages regarding begin() during compilation.
 //#define SUPPRESS_ERROR_MESSAGE_FOR_BEGIN
@@ -57,11 +57,11 @@
 /****************************************************
  *                     PROTOCOLS
  ****************************************************/
-
 /*
  * Supported IR protocols
  * Each protocol you include costs memory and, during decode, costs time
- * Disable (deactivate the line by adding a trailing comment "//") all the protocols you do not need/want!
+ * Copy the lines with the protocols you need in your program before the  #include <IRremote.h> line
+ * See also SimpleReceiver example
  */
 #if (!(defined(DECODE_DENON) || defined(DECODE_JVC) || defined(DECODE_KASEIKYO) \
 || defined(DECODE_PANASONIC) || defined(DECODE_LG) || defined(DECODE_NEC) || defined(DECODE_SAMSUNG) \
@@ -91,16 +91,16 @@
 #  endif
 #endif
 
-#if !(~(~DECODE_NEC + 0) == 0 && ~(~DECODE_NEC + 1) == 1)
+#if defined(DECODE_NEC) && !(~(~DECODE_NEC + 0) == 0 && ~(~DECODE_NEC + 1) == 1)
 #warning "The macros DECODE_XXX no longer require a value. Decoding is now switched by defining / non defining the macro."
 #endif
 
 //#define DEBUG // Activate this for lots of lovely debug output from the IRremote core.
 
-
 /****************************************************
  *                    RECEIVING
  ****************************************************/
+
 /**
  * MARK_EXCESS_MICROS is subtracted from all marks and added to all spaces before decoding,
  * to compensate for the signal forming of different IR receiver modules
@@ -129,7 +129,7 @@
  */
 #if !defined(RECORD_GAP_MICROS)
 // To change this value, you simply can add a line #define "RECORD_GAP_MICROS <My_new_value>" in your ino file before the line "#include <IRremote.h>"
-#define RECORD_GAP_MICROS   5000 // FREDRICH28AC header space is 9700, NEC header space is 4500
+#define RECORD_GAP_MICROS   5000 // FREDRICH28AC / LG2 header space is 9700, NEC header space is 4500
 #endif
 /**
  * Threshold for warnings at printIRResult*() to report about changing the RECORD_GAP_MICROS value to a higher value.
@@ -170,23 +170,32 @@
 #endif
 
 /**
+ * Define to use or simulate open drain output mode at send pin.
+ * Attention, active state of open drain is LOW, so connect the send LED between positive supply and send pin!
+ */
+//#define USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN
+/**
  * This amount is subtracted from the on-time of the pulses generated for software PWM generation.
  * It should be the time used for digitalWrite(sendPin, LOW) and the call to delayMicros()
  * Measured value for Nano @16MHz is around 3000, for Bluepill @72MHz is around 700, for Zero 3600
  */
 #if !defined(PULSE_CORRECTION_NANOS)
+#  if defined(F_CPU)
 // To change this value, you simply can add a line #define "PULSE_CORRECTION_NANOS <My_new_value>" in your ino file before the line "#include <IRremote.h>"
 #define PULSE_CORRECTION_NANOS (48000000000L / F_CPU) // 3000 @16MHz, 666 @72MHz
+#  else
+#define PULSE_CORRECTION_NANOS 600
+#  endif
 #endif
 
 #include "IRremoteInt.h"
-#include "private/IRTimer.cpp.h"
-#include "IRFeedbackLED.cpp.h"
+#include "private/IRTimer.hpp"
+#include "IRFeedbackLED.hpp"
 /*
  * Include the sources here to enable compilation with macro values set by user program.
  */
-#include "IRReceive.cpp.h"
-#include "IRSend.cpp.h"
+#include "IRReceive.hpp"
+#include "IRSend.hpp"
 
 /**
  * Macros for legacy compatibility

@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,29 +41,10 @@
 #include "comdrivers/ps2device.h"
 #include "fabui.h"
 #include "kbdlayouts.h"
+#include "codepages.h"
 
 
 namespace fabgl {
-
-
-
-/**
- * @brief A struct which contains a virtual key, key state and associated scan code
- */
-struct VirtualKeyItem {
-  VirtualKey vk;            /**< Virtual key */
-  uint8_t    down;          /**< 0 = up, 1 = down */
-  uint8_t    scancode[8];   /**< Keyboard scancode. Ends with zero if length is <8, otherwise gets the entire length (like PAUSE, which is 8 bytes) */
-  uint8_t    ASCII;         /**< ASCII value (0 = if it isn't possible to translate from virtual key) */
-  uint8_t    CTRL     : 1;  /**< CTRL key state at the time of this virtual key event */
-  uint8_t    LALT     : 1;  /**< LEFT ALT key state at the time of this virtual key event */
-  uint8_t    RALT     : 1;  /**< RIGHT ALT key state at the time of this virtual key event */
-  uint8_t    SHIFT    : 1;  /**< SHIFT key state at the time of this virtual key event */
-  uint8_t    GUI      : 1;  /**< GUI key state at the time of this virtual key event */
-  uint8_t    CAPSLOCK : 1;  /**< CAPSLOCK key state at the time of this virtual key event */
-  uint8_t    NUMLOCK  : 1;  /**< NUMLOCK key state at the time of this virtual key event */
-};
-
 
 
 
@@ -72,7 +57,7 @@ struct VirtualKeyItem {
  * The PS2 controller uses ULP coprocessor and RTC slow memory to communicate with the PS2 device.<br>
  * <br>
  * It is possible to specify an international keyboard layout. The default is US-layout.<br>
- * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German), IT (Italian) and ES (Spanish). Other layout can be added
+ * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German), IT (Italian), ES (Spanish), FR (French) and BE (Belgian). Other layout can be added
  * inheriting from US or from any other layout.
  *
  * Applications do not need to create an instance of Keyboard because an instance named Keyboard is created automatically.
@@ -170,7 +155,7 @@ public:
    * @brief Sets keyboard layout.
    *
    * It is possible to specify an international keyboard layout. The default is US-layout.<br>
-   * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German) and IT (Italian). Other layout can be added
+   * There are following predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German), IT (Italian), ES (Spanish), FR (French) and BE (Belgian). Other layout can be added
    * inheriting from US or from any other layout.
    *
    * @param layout A pointer to the layout structure.
@@ -178,7 +163,7 @@ public:
    * Example:
    *
    *     // Set German layout
-   *     setLayout(&fabgl::GermanLayout);
+   *     Keyboard.setLayout(&fabgl::GermanLayout);
    */
   void setLayout(KeyboardLayout const * layout);
 
@@ -263,16 +248,31 @@ public:
    * @brief Converts virtual key to ASCII.
    *
    * This method converts the specified virtual key to ASCII, if possible.<br>
-   * For example VK_A is converted to 'A' (ASCII 0x41), CTRL  + VK_SPACE produces ASCII NUL (0x00), CTRL + letter produces
+   * <br>For example VK_A is converted to 'A' (ASCII 0x41), CTRL  + VK_SPACE produces ASCII NUL (0x00), CTRL + letter produces
    * ASCII control codes from SOH (0x01) to SUB (0x1A), CTRL + VK_BACKSLASH produces ASCII FS (0x1C), CTRL + VK_QUESTION produces
    * ASCII US (0x1F), CTRL + VK_LEFTBRACKET produces ASCII ESC (0x1B), CTRL + VK_RIGHTBRACKET produces ASCII GS (0x1D),
-   * CTRL + VK_TILDE produces ASCII RS (0x1E) and VK_SCROLLLOCK produces XON or XOFF.
+   * CTRL + VK_TILDE produces ASCII RS (0x1E) and VK_SCROLLLOCK produces XON or XOFF.<br>
+   * <br>This method uses current codepage set using Keyboard.setCodePage()<br>
    *
    * @param virtualKey The virtual key to convert.
    *
    * @return The ASCII code of virtual key or -1 if virtual key cannot be translated to ASCII.
    */
   int virtualKeyToASCII(VirtualKey virtualKey);
+
+  /**
+   * @brief Sets font codepage for virtual key to ASCII conversion
+   *
+   * Sets current codepage for virtualkey to ASCII conversions. This method is called automatically by Terminal and UI interface.
+   *
+   * @param codepage Codepage to use
+   *
+   * Example:
+   *
+   *     // Set codepage 437
+   *     Keyboard.setCodePage(CodePages::get(437));
+   */
+  void setCodePage(CodePage const * codepage)                      { m_codepage = codepage; }
 
   /**
    * @brief Gets the number of scancodes available in the queue.
@@ -433,6 +433,8 @@ private:
   bool                      m_numLockLED;
   bool                      m_capsLockLED;
   bool                      m_scrollLockLED;
+
+  CodePage const *          m_codepage;
 
 };
 

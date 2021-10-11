@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,6 +50,9 @@ namespace fabgl {
 
 #define MCP_SPI_FREQ  10000000   // it seems to work up to 23000000!! (but datasheet specifies 10000000)
 #define MCP_DMACHANNEL       2
+
+
+#define MCP_MAXDEVICES       2
 
 
 #define MCP_PORTA            0
@@ -168,7 +175,17 @@ public:
    */
   bool begin(int MISO = -1, int MOSI = -1, int CLK = -1, int CS = -1, int CSActiveState = -1, int host = HSPI_HOST);
 
+  /**
+   * @brief Deinitializes MCP23S17 driver
+   */
   void end();
+
+  /**
+   * @brief Determines MCP23S17 availability
+   *
+   * @return True if MCP23S17 is available and correctly initialized
+   */
+  bool available()     { return m_SPIDevHandle != nullptr; }
 
   /**
    * @brief Initializes additional MCP23S17 devices connected to the same SPI bus but with a different hardware address
@@ -531,6 +548,9 @@ private:
   spi_host_device_t   m_SPIHost;
 
   spi_device_handle_t m_SPIDevHandle;
+
+  // cached registers
+  uint8_t             m_IOCON[MCP_MAXDEVICES];
 };
 
 

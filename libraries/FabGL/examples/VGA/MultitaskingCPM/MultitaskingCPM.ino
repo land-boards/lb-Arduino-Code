@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,7 +22,6 @@
   You should have received a copy of the GNU General Public License
   along with FabGL.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 /*
  * Optional SD Card connections:
@@ -50,8 +53,8 @@
 
 // globals
 
-//fabgl::VGA16Controller   DisplayController;
-fabgl::VGATextController DisplayController;
+fabgl::VGA16Controller   DisplayController;
+//fabgl::VGATextController DisplayController;
 fabgl::PS2Controller     PS2Controller;
 
 Supervisor supervisor(&DisplayController);
@@ -114,7 +117,7 @@ void setup()
   FileBrowser fb;
 
   fb.setDirectory(basepath);
-  if (!fb.exists("driveA")) {
+  if (!fb.exists("driveA", false)) {
 
     fb.makeDirectory("driveA");
 
@@ -124,7 +127,7 @@ void setup()
       term->flush();
       // check directory
       fb.setDirectory(driveA_path.c_str());
-      if (!fb.exists(programs[i].path))
+      if (!fb.exists(programs[i].path, false))
         fb.makeDirectory(programs[i].path);
       fb.changeDirectory(programs[i].path);
       // copy file
@@ -140,7 +143,7 @@ void setup()
   }
 
   fb.setDirectory(basepath);
-  if (!fb.exists("driveB"))
+  if (!fb.exists("driveB", false))
     fb.makeDirectory("driveB");
 
   delete term;

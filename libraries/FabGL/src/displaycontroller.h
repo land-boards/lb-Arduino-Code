@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -715,6 +719,7 @@ public:
     virtual void setCursorPos(int row, int col) = 0;      // row and col starts from 0
     virtual void setCursorForeground(Color value) = 0;
     virtual void setCursorBackground(Color value) = 0;
+    virtual FontInfo const * getFont() = 0;
 };
 
 

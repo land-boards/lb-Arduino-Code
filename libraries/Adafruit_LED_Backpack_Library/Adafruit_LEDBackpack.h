@@ -28,7 +28,7 @@
 #include "WProgram.h"
 #endif
 
-#include <Wire.h>
+#include <Adafruit_I2CDevice.h>
 
 #include "Adafruit_GFX.h"
 
@@ -64,8 +64,11 @@ public:
     @brief  Start I2C and initialize display state (blink off, full
             brightness).
     @param  _addr  I2C address.
+    @param  theWire  TwoWire bus reference to use.
+    @return  true if successful, otherwise false
+
   */
-  void begin(uint8_t _addr = 0x70);
+  bool begin(uint8_t _addr = 0x70, TwoWire *theWire = &Wire);
 
   /*!
     @brief  Set display brightness.
@@ -97,7 +100,7 @@ public:
   uint16_t displaybuffer[8]; ///< Raw display data
 
 protected:
-  uint8_t i2c_addr; ///< Device I2C address
+  Adafruit_I2CDevice *i2c_dev = NULL; ///< Pointer to I2C bus interface
 };
 
 /*!
@@ -204,11 +207,7 @@ public:
   void drawPixel(int16_t x, int16_t y, uint16_t color);
 };
 
-#define DEC 10 ///< Print value in decimal format (base 10)
-#define HEX 16 ///< Print value in hexadecimal format (base 16)
-#define OCT 8  ///< Print value in octal format (base 8)
-#define BIN 2  ///< Print value in binary format (base 2)
-#define BYTE 0 ///< Issue 7-segment data as raw bits
+#define RAW_BITS 0 ///< Issue 7-segment data as raw bits
 
 /*!
     @brief  Class for 7-segment numeric displays.
@@ -230,16 +229,16 @@ public:
   /*!
     @brief  Print byte-size numeric value to 7-segment display.
     @param  c     Numeric value.
-    @param  base  Number base (default = BYTE = raw bits)
+    @param  base  Number base (default = RAW_BITS = raw bits)
   */
-  void print(char c, int base = BYTE);
+  void print(char c, int base = RAW_BITS);
 
   /*!
     @brief  Print unsigned byte-size numeric value to 7-segment display.
     @param  b     Numeric value.
-    @param  base  Number base (default = BYTE = raw bits)
+    @param  base  Number base (default = RAW_BITS = raw bits)
   */
-  void print(unsigned char b, int base = BYTE);
+  void print(unsigned char b, int base = RAW_BITS);
 
   /*!
     @brief  Print integer value to 7-segment display.
@@ -279,17 +278,17 @@ public:
   /*!
     @brief  Print byte-size numeric value w/newline to 7-segment display.
     @param  c     Numeric value.
-    @param  base  Number base (default = BYTE = raw bits)
+    @param  base  Number base (default = RAW_BITS = raw bits)
   */
-  void println(char c, int base = BYTE);
+  void println(char c, int base = RAW_BITS);
 
   /*!
     @brief  Print unsigned byte-size numeric value w/newline to 7-segment
             display.
     @param  b     Numeric value.
-    @param  base  Number base (default = BYTE = raw bits)
+    @param  base  Number base (default = RAW_BITS = raw bits)
   */
-  void println(unsigned char b, int base = BYTE);
+  void println(unsigned char b, int base = RAW_BITS);
 
   /*!
     @brief  Print integer value with newline to 7-segment display.

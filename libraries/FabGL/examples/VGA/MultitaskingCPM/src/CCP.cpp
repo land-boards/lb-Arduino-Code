@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1231,7 +1235,7 @@ bool CCP::cmd_KEYB(uint16_t paramsAddr)
   if (paramsAddr == 0 || m_HAL->strLen(paramsAddr) <= 1) {
     // no, fail
     consoleOut("Usage:\r\n");
-    consoleOutFmt("  KEYB US, UK, DE, IT, ES : Set keyboard layout. Example: KEYB DE\r\n");
+    consoleOutFmt("  KEYB US, UK, DE, IT, ES, FR, BE : Set keyboard layout. Example: KEYB DE\r\n");
     return true;
   }
 
@@ -1254,6 +1258,10 @@ bool CCP::cmd_KEYB(uint16_t paramsAddr)
     layout = &fabgl::ItalianLayout;
   else if (strcasecmp(param, "ES") == 0)
     layout = &fabgl::SpanishLayout;
+  else if (strcasecmp(param, "FR") == 0)
+    layout = &fabgl::FrenchLayout;
+  else if (strcasecmp(param, "BE") == 0)
+    layout = &fabgl::BelgianLayout;
   else {
     consoleOut("Invalid keyboard layout\r\n");
     return true;

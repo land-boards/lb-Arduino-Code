@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -305,21 +309,8 @@ public:
    */
   uint8_t createRawPixel(RGB222 rgb)             { return preparePixel(rgb); }
 
-  /**
-   * @brief Sets a raw pixel prepared using VGAController.createRawPixel.
-   *
-   * A raw pixel (or raw color) is a byte (uint8_t) that contains color information and synchronization signals.
-   *
-   * @param x Horizontal pixel position
-   * @param y Vertical pixel position
-   * @param rgb Raw pixel color
-   *
-   * Example:
-   *
-   *     // Set color of pixel at 100, 100
-   *     VGAController.setRawPixel(100, 100, VGAController.createRawPixel(RGB222(3, 0, 0));
-   */
-  void setRawPixel(int x, int y, uint8_t rgb)    { VGA_PIXEL(x, y) = rgb; }
+  uint8_t createBlankRawPixel()                  { return m_HVSync; }
+
 
 
 protected:

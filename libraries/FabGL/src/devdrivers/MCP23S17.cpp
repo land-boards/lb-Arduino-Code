@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,6 +24,7 @@
  */
 
 
+#include <string.h>
 
 #include "MCP23S17.h"
 
@@ -84,8 +89,12 @@ bool MCP23S17::begin(int MISO, int MOSI, int CLK, int CS, int CSActiveState, int
   if (r) {
     // disable sequential mode
     // select bank 0
-    writeReg(MCP_IOCON, MCP_IOCON_SEQOP);
+    m_IOCON[0] = MCP_IOCON_SEQOP;
+    writeReg(MCP_IOCON, m_IOCON[0]);
+    r = readReg(MCP_IOCON) == m_IOCON[0];
   }
+  if (!r)
+    end();
   return r;
 }
 
@@ -95,7 +104,8 @@ bool MCP23S17::begin(int MISO, int MOSI, int CLK, int CS, int CSActiveState, int
 // - enable hardware address
 void MCP23S17::initDevice(uint8_t hwAddr)
 {
-  writeReg(MCP_IOCON, MCP_IOCON_SEQOP | MCP_IOCON_HAEN);
+  if (hwAddr < MCP_MAXDEVICES)
+    writeReg(MCP_IOCON, MCP_IOCON_SEQOP | MCP_IOCON_HAEN);
 }
 
 
@@ -122,7 +132,10 @@ bool MCP23S17::SPIBegin(int CSActiveState)
     devconf.spics_io_num   = m_CS;
     devconf.flags          = (CSActiveState == 1 ? SPI_DEVICE_POSITIVE_CS : 0);
     devconf.queue_size     = 1;
-    return spi_bus_add_device(m_SPIHost, &devconf, &m_SPIDevHandle) == ESP_OK;
+    r = spi_bus_add_device(m_SPIHost, &devconf, &m_SPIDevHandle);
+    if (r != ESP_OK)
+      spi_bus_free(m_SPIHost);
+    return r == ESP_OK;
   }
   return false;
 }
@@ -149,7 +162,7 @@ void MCP23S17::writeReg(uint8_t addr, uint8_t value, uint8_t hwAddr)
   ta.rxlength   = 0;
   ta.rx_buffer  = nullptr;
   ta.tx_buffer  = txdata;
-  spi_device_polling_transmit(m_SPIDevHandle, &ta);
+  spi_device_transmit(m_SPIDevHandle, &ta);
 
   spi_device_release_bus(m_SPIDevHandle);
 }
@@ -168,7 +181,7 @@ uint8_t MCP23S17::readReg(uint8_t addr, uint8_t hwAddr)
   ta.rx_buffer  = rxdata;
   ta.tx_buffer  = txdata;
   uint8_t r = 0;
-  if (spi_device_polling_transmit(m_SPIDevHandle, &ta) == ESP_OK)
+  if (spi_device_transmit(m_SPIDevHandle, &ta) == ESP_OK)
     r = rxdata[2];
 
   spi_device_release_bus(m_SPIDevHandle);
@@ -188,7 +201,7 @@ void MCP23S17::writeReg16(uint8_t addr, uint16_t value, uint8_t hwAddr)
   ta.rxlength   = 0;
   ta.rx_buffer  = nullptr;
   ta.tx_buffer  = txdata;
-  spi_device_polling_transmit(m_SPIDevHandle, &ta);
+  spi_device_transmit(m_SPIDevHandle, &ta);
 
   spi_device_release_bus(m_SPIDevHandle);
 }
@@ -207,7 +220,7 @@ uint16_t MCP23S17::readReg16(uint8_t addr, uint8_t hwAddr)
   ta.rx_buffer  = rxdata;
   ta.tx_buffer  = txdata;
   uint16_t r = 0;
-  if (spi_device_polling_transmit(m_SPIDevHandle, &ta) == ESP_OK)
+  if (spi_device_transmit(m_SPIDevHandle, &ta) == ESP_OK)
     r = rxdata[2] | (rxdata[3] << 8);
 
   spi_device_release_bus(m_SPIDevHandle);
@@ -218,22 +231,19 @@ uint16_t MCP23S17::readReg16(uint8_t addr, uint8_t hwAddr)
 
 void MCP23S17::enableINTMirroring(bool value, uint8_t hwAddr)
 {
-  int iocon = readReg(MCP_IOCON, hwAddr);
-  writeReg(MCP_IOCON, value ? iocon | MCP_IOCON_MIRROR : iocon & ~MCP_IOCON_MIRROR, hwAddr);
+  writeReg(MCP_IOCON, value ? m_IOCON[hwAddr] | MCP_IOCON_MIRROR : m_IOCON[hwAddr] & ~MCP_IOCON_MIRROR, hwAddr);
 }
 
 
 void MCP23S17::enableINTOpenDrain(bool value, uint8_t hwAddr)
 {
-  int iocon = readReg(MCP_IOCON, hwAddr);
-  writeReg(MCP_IOCON, value ? iocon | MCP_IOCON_ODR : iocon & ~MCP_IOCON_ODR, hwAddr);
+  writeReg(MCP_IOCON, value ? m_IOCON[hwAddr] | MCP_IOCON_ODR : m_IOCON[hwAddr] & ~MCP_IOCON_ODR, hwAddr);
 }
 
 
 void MCP23S17::setINTActiveHigh(bool value, uint8_t hwAddr)
 {
-  int iocon = readReg(MCP_IOCON, hwAddr);
-  writeReg(MCP_IOCON, value ? iocon | MCP_IOCON_INTPOL : iocon & ~MCP_IOCON_INTPOL, hwAddr);
+  writeReg(MCP_IOCON, value ? m_IOCON[hwAddr] | MCP_IOCON_INTPOL : m_IOCON[hwAddr] & ~MCP_IOCON_INTPOL, hwAddr);
 }
 
 
@@ -287,7 +297,7 @@ void MCP23S17::enableInterrupt(int gpio, MCPIntTrigger trigger, bool defaultValu
 void MCP23S17::disableInterrupt(int gpio, uint8_t hwAddr)
 {
   uint8_t reg = MCP_GPIO2REG(MCP_GPINTEN, gpio);
-  writeReg(reg, readReg(reg, hwAddr) & !MCP_GPIO2MASK(gpio), hwAddr);
+  writeReg(reg, readReg(reg, hwAddr) & ~MCP_GPIO2MASK(gpio), hwAddr);
 }
 
 
@@ -295,12 +305,11 @@ void MCP23S17::writePort(int port, void const * buffer, size_t length, uint8_t h
 {
   // - disable sequential mode
   // - select bank 1 (to avoid switching between A and B registers)
-  uint8_t iocon = readReg(MCP_IOCON, hwAddr);
-  writeReg(MCP_IOCON, iocon | MCP_IOCON_SEQOP | MCP_IOCON_BANK);
+  writeReg(MCP_IOCON, m_IOCON[hwAddr] | MCP_IOCON_SEQOP | MCP_IOCON_BANK);
 
   spi_device_acquire_bus(m_SPIDevHandle, portMAX_DELAY);
 
-  spi_transaction_ext_t ta = { 0 };
+  spi_transaction_ext_t ta = { };
   ta.command_bits    = 8;
   ta.address_bits    = 8;
   ta.base.cmd        = 0b01000000 | (hwAddr << 1);  // write
@@ -315,7 +324,7 @@ void MCP23S17::writePort(int port, void const * buffer, size_t length, uint8_t h
   spi_device_release_bus(m_SPIDevHandle);
 
   // restore IOCON
-  writeReg(MCP_BNK1_IOCON, iocon);
+  writeReg(MCP_BNK1_IOCON, m_IOCON[hwAddr]);
 }
 
 
@@ -323,12 +332,11 @@ void MCP23S17::readPort(int port, void * buffer, size_t length, uint8_t hwAddr)
 {
   // - disable sequential mode
   // - select bank 1 (to avoid switching between A and B registers)
-  uint8_t iocon = readReg(MCP_IOCON, hwAddr);
-  writeReg(MCP_IOCON, iocon | MCP_IOCON_SEQOP | MCP_IOCON_BANK);
+  writeReg(MCP_IOCON, m_IOCON[hwAddr] | MCP_IOCON_SEQOP | MCP_IOCON_BANK);
 
   spi_device_acquire_bus(m_SPIDevHandle, portMAX_DELAY);
 
-  spi_transaction_ext_t ta = { 0 };
+  spi_transaction_ext_t ta = { };
   ta.command_bits    = 8;
   ta.address_bits    = 8;
   ta.base.cmd        = 0b01000001 | (hwAddr << 1);  // read
@@ -343,7 +351,7 @@ void MCP23S17::readPort(int port, void * buffer, size_t length, uint8_t hwAddr)
   spi_device_release_bus(m_SPIDevHandle);
 
   // restore IOCON
-  writeReg(MCP_BNK1_IOCON, iocon);
+  writeReg(MCP_BNK1_IOCON, m_IOCON[hwAddr]);
 }
 
 

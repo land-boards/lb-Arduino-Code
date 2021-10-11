@@ -174,7 +174,7 @@ void loop()
             Serial.print(MarkAndShortSpaceAverage);
             Serial.print(F("us   Delta (to NEC standard 560)="));
             Serial.print(MarkAndShortSpaceAverage - 560);
-            Serial.print(F("us\r\n Mark - Average -> MarkExcess="));
+            Serial.print(F("us\r\n Mark - Average -> MARK_EXCESS_MICROS="));
             Serial.print((int16_t) Mark.average - MarkAndShortSpaceAverage);
             Serial.print(F("us"));
             Serial.println();
@@ -190,14 +190,15 @@ void loop()
  * Just add to the appropriate timing structure.
  */
 #if defined(ESP8266)
-ICACHE_RAM_ATTR
+void ICACHE_RAM_ATTR measureTimingISR()
 #elif defined(ESP32)
-IRAM_ATTR
-#endif
-#if defined(EICRA) && defined(EIFR) && defined(EIMSK)
-ISR(INT1_vect)
+void IRAM_ATTR measureTimingISR()
 #else
+#  if defined(EICRA) && defined(EIFR) && defined(EIMSK)
+ISR(INT1_vect)
+#  else
 void measureTimingISR()
+#  endif
 #endif
 {
     uint32_t tMicros = micros();

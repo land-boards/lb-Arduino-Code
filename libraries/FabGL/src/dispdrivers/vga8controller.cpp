@@ -3,7 +3,11 @@
   Copyright (c) 2019-2021 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -395,6 +399,12 @@ void VGA8Controller::rawDrawBitmap_RGBA8888(int destX, int destY, Bitmap const *
                                  [&] (uint8_t * row, int x)                       { return VGA8_GETPIXELINROW(row, x); },                       // rawGetPixelInRow
                                  [&] (uint8_t * row, int x, RGBA8888 const & src) { VGA8_SETPIXELINROW(row, x, RGB8888toPaletteIndex(src)); }   // rawSetPixelInRow
                                 );
+}
+
+
+void VGA8Controller::directSetPixel(int x, int y, int value)
+{
+  VGA8_SETPIXEL(x, y, value);
 }
 
 

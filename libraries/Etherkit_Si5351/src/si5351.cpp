@@ -1,4 +1,5 @@
 /*
+ * https://github.com/etherkit/Si5351Arduino
  * si5351.cpp - Si5351 library for Arduino
  *
  * Copyright (C) 2015 - 2019 Jason Milldrum <milldrum@gmail.com>
@@ -27,7 +28,6 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "si5351.h"
-
 
 /********************/
 /* Public functions */
@@ -80,6 +80,10 @@ bool Si5351::init(uint8_t xtal_load_c, uint32_t xo_freq, int32_t corr)
 		} while (status_reg >> 7 == 1);
 
 		// Set crystal load capacitance
+		// Register 183 (0xB7)
+		// D7, D6 = 01 = 6 pF
+		// D7, D6 = 10 = 8 pF
+		// D7, D6 = 11 = 10 pF
 		si5351_write(SI5351_CRYSTAL_LOAD, (xtal_load_c & SI5351_CRYSTAL_LOAD_MASK) | 0b00010010);
 
 		// Set up the XO reference frequency
@@ -505,7 +509,7 @@ uint8_t Si5351::set_freq_manual(uint64_t freq, uint64_t pll_freq, enum si5351_cl
  */
 void Si5351::set_pll(uint64_t pll_freq, enum si5351_pll target_pll)
 {
-  struct Si5351RegSet pll_reg;
+	struct Si5351RegSet pll_reg;
 
 	if(target_pll == SI5351_PLLA)
 	{
@@ -518,7 +522,7 @@ void Si5351::set_pll(uint64_t pll_freq, enum si5351_pll target_pll)
 
   // Derive the register values to write
 
-  // Prepare an array for parameters to be written to
+  // Prepare an array for parameters to be written to the Si5351
   uint8_t *params = new uint8_t[20];
   uint8_t i = 0;
   uint8_t temp;

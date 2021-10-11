@@ -57,7 +57,7 @@
 
  4. Save your changes and close the files
 
- 5. Now open IRReceive.cpp.h and make the following change:
+ 5. Now open IRReceive.hpp and make the following change:
 
  A. In the function IRrecv::decode(), add:
  #ifdef DECODE_SHUZU
@@ -164,7 +164,7 @@
 //
 void IRsend::sendShuzu(uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfRepeats) {
     // Set IR carrier frequency
-    enableIROut(37); // 36.7kHz is the correct frequency
+    enableIROut(38);
 
     uint_fast8_t tNumberOfCommands = aNumberOfRepeats + 1;
     while (tNumberOfCommands > 0) {
@@ -235,7 +235,7 @@ bool IRrecv::decodeShuzu() {
     /*
      *  Check for repeat
      */
-    if (decodedIRData.rawDataPtr->rawbuf[0] < ((SHUZU_REPEAT_SPACE + (SHUZU_REPEAT_SPACE / 2)) / MICROS_PER_TICK)) {
+    if (decodedIRData.rawDataPtr->rawbuf[0] < ((SHUZU_REPEAT_SPACE + (SHUZU_REPEAT_SPACE / 4)) / MICROS_PER_TICK)) {
         decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT | IRDATA_FLAGS_IS_LSB_FIRST;
     }
     decodedIRData.command = tCommand;

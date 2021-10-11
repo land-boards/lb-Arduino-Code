@@ -1,5 +1,21 @@
 # Changelog
 The latest version may not be released!
+See also the commit log at github: https://github.com/Arduino-IRremote/Arduino-IRremote/commits/master
+
+## 3.4.1
+
+## 3.4.0
+- Added LG2 protocol.
+- Added ATtiny167 (Digispark Pro) support.
+- Renamed *.cpp.h to .hpp.
+- organized carrier frequencies.
+- Compiler switch USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN added.
+- Moved blink13() back to IRrecv class.
+- Added Kaseikyo convenience functions like sendKaseikyo_Denon().
+- Improved / adjusted LG protocol and added class Aircondition_LG based on real hardware supplied by makerspace 201 (https://wiki.hackerspaces.org/ZwoNullEins) from Cologne.
+- Improved universal decoder for pulse width or pulse distance protocols to support more than 32 bits.
+- Added mbed support.
+
 ## 3.3.0
 - Fix errors if LED_BUILTIN is not defined.
 - Fixed error for AVR timer1. Thanks to alexbarcelo.
