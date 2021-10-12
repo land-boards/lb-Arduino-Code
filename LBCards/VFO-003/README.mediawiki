@@ -13,12 +13,16 @@ Software controlled VFO
 * Detachable Rotary Encoder/OLED card
 ** SSD1306 OLED Display
 *** I2C Interface
-** Controls frequencies with rotary encoder
-** 1Hz, 10 Hz, 100 Hz, 1 KHz, 10 KHz, 100 KHz, 1 MHz, 10 MHz steps (software controllable)
+** Rotary encoder selected menu options
+** Select between 3 VFOs
+*** Adjust frequency
+*** Step sizes: 1Hz, 10 Hz, 100 Hz, 1 KHz, 10 KHz, 100 KHz, 1 MHz, 10 MHz steps (software controllable)
+*** Adjust frequency accuracy to 0.01 Hz precision 
+*** Turn VFO Off/On (Off = 3.3V)
+*** Save default values which are loaded at power up
 * Si5351A Oscillator
 ** 3 Outputs
 ** 27 MHz TCXO crystal
-*** Adjustable to 0.01 Hz precision 
 ** I2C Interface
 * 3.3V, 50 Ohm output
 * Power
