@@ -20,6 +20,7 @@ Software controlled VFO
 ** 27 MHz TCXO crystal
 *** Adjustable to 0.01 Hz precision 
 ** I2C Interface
+* 3.3V, 50 Ohm output
 * Power
 ** [[Mini360_Buck_Converter|MINI-360 DC/DC Buck regulator]]
 ** 7-24 VDC
