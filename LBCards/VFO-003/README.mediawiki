@@ -14,10 +14,11 @@ Software controlled VFO
 ** SSD1306 OLED Display
 *** I2C Interface
 ** Controls frequencies with rotary encoder
-** 100 Hz, 1 KHz, 10 KHz, 100 KHz, 1 MHz, 10 MHz steps (software controllable
+** 1Hz, 10 Hz, 100 Hz, 1 KHz, 10 KHz, 100 KHz, 1 MHz, 10 MHz steps (software controllable)
 * Si5351A Oscillator
 ** 3 Outputs
-** 25 or 27 MHz TCXO crystal
+** 27 MHz TCXO crystal
+*** Adjustable to 0.01 Hz precision 
 ** I2C Interface
 * Power
 ** [[Mini360_Buck_Converter|MINI-360 DC/DC Buck regulator]]
