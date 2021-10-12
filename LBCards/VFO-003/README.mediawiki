@@ -1,3 +1,25 @@
 [http://land-boards.com/blwiki/index.php?title=VFO-003 VFO-003 Wiki page]
 
 <img src="http://land-boards.com/blwiki/images/1/14/VFO-003-B.png"></img>
+
+== Features ==
+
+Software controlled VFO
+
+* Arduino Pro Mini Microprocessor
+** 8-bit ATMEGA328 CPU
+** 8 MHz
+** 3.3V I/O
+* Detachable Rotary Encoder/OLED card
+** SSD1306 OLED Display
+*** I2C Interface
+** Controls frequencies with rotary encoder
+** 100 Hz, 1 KHz, 10 KHz, 100 KHz, 1 MHz, 10 MHz steps (software controllable
+* Si5351A Oscillator
+** 3 Outputs
+** 25 or 27 MHz TCXO crystal
+** I2C Interface
+* Power
+** [[Mini360_Buck_Converter|MINI-360 DC/DC Buck regulator]]
+** 7-24 VDC
+* Fits in standard extruded enclosures
