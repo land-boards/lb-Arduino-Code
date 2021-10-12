@@ -6,7 +6,7 @@ enum MenuStateValues
   SET_FREQ,
   SELECT_VFO,
   VFO_ON_OFF,
-  OUTPUT_DRIVE_LEVEL,
+//  OUTPUT_DRIVE_LEVEL,
   SET_CAL_FACTOR,
   SAVE_INIT_VALS
 };
@@ -24,7 +24,7 @@ MenuStateValues menuState = SET_FREQ;
 void printCalFactor(void)
 {
   char buffer[14];
-  itoa(calFactor/100, buffer, 10);
+  itoa(calFactor, buffer, 10);
   printStringToOLED(buffer);
 }
 
@@ -39,13 +39,13 @@ void setCalFactor(void)
       return;
    else if (controlVal == ENC_UP)
     {
-      calFactor += stepSize;
+      calFactor += 1;
       si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
       printCalFactor();
     }
     else if (controlVal == ENC_DOWN)
     {
-      calFactor -= stepSize;
+      calFactor -= 1;
       si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
       printCalFactor();
     }
@@ -424,8 +424,8 @@ void displayTopMenuOption()
     printStringToOLED("Select VFO");
   else if (menuState == VFO_ON_OFF)
     printStringToOLED("VFO On/Off");
-  else if (menuState == OUTPUT_DRIVE_LEVEL)
-    printStringToOLED("Drive Level");
+//  else if (menuState == OUTPUT_DRIVE_LEVEL)
+//    printStringToOLED("Drive Level");
   else if (menuState == SET_CAL_FACTOR)
     printStringToOLED("Set Cal Value");
   else if (menuState == SAVE_INIT_VALS)
@@ -451,8 +451,8 @@ void vfoMenu(void)
         selectVFO();
       else if (menuState == VFO_ON_OFF)
         toggleVFOOnOff();
-      else if (menuState == OUTPUT_DRIVE_LEVEL)
-        setDriveLevel();
+//      else if (menuState == OUTPUT_DRIVE_LEVEL)
+//        setDriveLevel();
       else if (menuState == SET_CAL_FACTOR)
         setCalFactor();
       else if (menuState == SAVE_INIT_VALS)
@@ -467,9 +467,9 @@ void vfoMenu(void)
       else if (menuState == SELECT_VFO)
         menuState = VFO_ON_OFF;
       else if (menuState == VFO_ON_OFF)
-        menuState = OUTPUT_DRIVE_LEVEL;
-      else if (menuState == OUTPUT_DRIVE_LEVEL)
         menuState = SET_CAL_FACTOR;
+//      else if (menuState == OUTPUT_DRIVE_LEVEL)
+//        menuState = SET_CAL_FACTOR;
       else if (menuState == SET_CAL_FACTOR)
         menuState = SAVE_INIT_VALS;
     }
@@ -478,9 +478,9 @@ void vfoMenu(void)
       if (menuState == SAVE_INIT_VALS)
         menuState = SET_CAL_FACTOR;
       else if (menuState == SET_CAL_FACTOR)
-        menuState = OUTPUT_DRIVE_LEVEL;
-      else if (menuState == OUTPUT_DRIVE_LEVEL)
         menuState = VFO_ON_OFF;
+//      else if (menuState == OUTPUT_DRIVE_LEVEL)
+//        menuState = VFO_ON_OFF;
       else if (menuState == VFO_ON_OFF)
         menuState = SELECT_VFO;
       else if (menuState == SELECT_VFO)
