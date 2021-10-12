@@ -2,7 +2,7 @@
 
   I2C_VFO3.ino
 
-  http://land-boards.com/blwiki/index.php?title=HW-9_VFO
+http://land-boards.com/blwiki/index.php?title=VFO-003
 
   OLED is 128x32 I2C device
   Si5351 is on VFO-003 board
@@ -22,11 +22,9 @@
 #include "si5351.h"
 
 // EEPROM is used to store initial values
-// STM3232 parts have no internal EEPROM
 // ATMEGA parts have internal EEPROM
 // Set defines/undefs appropriately
 #define HAS_INTERNAL_EEPROM
-//#undef HAS_INTERNAL_EEPROM
 
 #define encoderSwitch  4
 
@@ -35,8 +33,6 @@
 #ifdef U8X8_HAVE_HW_I2C
 #include <Wire.h>
 #endif
-
-// enum si5351_drive {SI5351_DRIVE_2MA, SI5351_DRIVE_4MA, SI5351_DRIVE_6MA, SI5351_DRIVE_8MA};
 
 si5351_drive VFO_0_Drive;
 si5351_drive VFO_1_Drive;
@@ -105,7 +101,6 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 // End of constructor list
 
-
 void setup(void)
 {
   bool i2c_found;
@@ -114,7 +109,7 @@ void setup(void)
   
   u8g2.begin();
 
-  printStringToOLED("VFO-003x");
+  printStringToOLED("VFO-003");
   
   // Si8351 initialiation
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_6PF, 27000000, 0);
@@ -123,11 +118,11 @@ void setup(void)
      printStringToOLED("I2C Fail");
      while(1);
   }
-  printStringToOLED("S001");
+//  printStringToOLED("S001");
 
   // Set CLK0 to output 14 MHz
   si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
-  printStringToOLED("S002");
+//  printStringToOLED("S002");
 
   // Set CLK1 to output 12 MHz
   si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
