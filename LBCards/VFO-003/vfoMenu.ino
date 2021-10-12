@@ -437,6 +437,7 @@ void displayTopMenuOption()
 void vfoMenu(void)
 {
   uint8_t controlVal;
+//  si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
   while (1)
   {
     displayTopMenuOption();

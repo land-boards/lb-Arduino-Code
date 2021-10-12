@@ -136,6 +136,8 @@ void setup(void)
   // status flags correctly.
   si5351.update_status();  
 //  printStringToOLED("S005");
+
+  si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
  
   // Encoder initialization
   setupEncoder();

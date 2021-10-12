@@ -88,9 +88,9 @@ void setEEPROMDefaults(void)
 // If the magic number is not present, then store the default values to the EEPROM
 void checkEEPROM(void)
 {
-  magicNumber = 0xa5;
+  magicNumber = 0x5a;
   #ifdef HAS_INTERNAL_EEPROM
-    if (EEPROM.get(MAGICNUMBER_OFFSET,magicNumber) == 0xa5)
+    if (EEPROM.get(MAGICNUMBER_OFFSET,magicNumber) == 0x5a)
       loadEEPROM();
     else
     {
