@@ -138,7 +138,6 @@ void setup(void)
 //  printStringToOLED("S005");
  
   // Encoder initialization
-  pinMode(encoderSwitch, INPUT_PULLUP);
   setupEncoder();
 //  printStringToOLED("S006");
 
@@ -148,6 +147,7 @@ void loop(void)
 {
   while (1)
   {
-      vfoMenu();
+    vfoMenu();
+//    testRotarySwitch();
   }
 }

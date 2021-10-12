@@ -11,13 +11,13 @@ enum MenuStateValues
   SAVE_INIT_VALS
 };
 
-enum ControlsState
-{
-  NOTHING,
-  ENC_SW_PRESSED,
-  ENC_UP,
-  ENC_DOWN
-};
+//enum ControlsState
+//{
+//  NOTHING,
+//  ENC_SW_PRESSED,
+//  ENC_UP,
+//  ENC_DOWN
+//};
 
 MenuStateValues menuState = SET_FREQ;
 
@@ -432,16 +432,6 @@ void displayTopMenuOption()
     printStringToOLED("Save defaults");
 }
 
-//enum MenuStateValues
-//{
-//  SET_STEP_SIZE,
-//  SET_FREQ,
-//  SELECT_VFO,
-//  VFO_ON_OFF,
-//  SET_CAL_FACTOR,
-//  SAVE_INIT_VALS
-//};
-
 // Menu options
 // Menu is entered by pressing encoder button
 void vfoMenu(void)
@@ -498,36 +488,5 @@ void vfoMenu(void)
       else if (menuState == SET_FREQ)
         menuState = SET_STEP_SIZE;
     }
-  }
-}
-
-uint8_t checkControls()
-{
-  int encoderDelta = 0;
-  if (checkSwitch() == 1)
-    return ENC_SW_PRESSED;
-  pollEncoder();
-  encoderDelta = getEncoderDelta();
-  if (encoderDelta == 0)
-    return (NOTHING);
-  else if (encoderDelta == 1)
-    return (ENC_UP);
-  else if (encoderDelta == -1)
-    return (ENC_DOWN);
-  return (NOTHING);
-}
-
-// Wait around for an encoder change
-uint8_t waitForControlChange(void)
-{
-  uint8_t controlVal;
-  while (1)
-  {
-    do
-    {
-      controlVal = checkControls();
-    }
-    while (controlVal == NOTHING);
-    return (controlVal);
   }
 }
