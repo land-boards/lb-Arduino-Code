@@ -23,10 +23,12 @@ MenuStateValues menuState = SET_FREQ;
 void printCalFactor(void)
 {
   char buffer[14];
-  itoa(calFactor, buffer, 10);
+  itoa(calFactor/10, buffer, 10);
   printStringToOLED(buffer);
 }
 
+// Adjust calibration factor by 0.1 Hz
+// TXCO is pretty accurate and does not need a lot of adjustment
 void setCalFactor(void)
 {
   uint8_t controlVal;
@@ -38,13 +40,13 @@ void setCalFactor(void)
       return;
    else if (controlVal == ENC_UP)
     {
-      calFactor += 1;
+      calFactor += 10;
       si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
       printCalFactor();
     }
     else if (controlVal == ENC_DOWN)
     {
-      calFactor -= 1;
+      calFactor -= 10;
       si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
       printCalFactor();
     }
@@ -323,7 +325,7 @@ void displayTopMenuOption()
   else if (menuState == VFO_ON_OFF)
     printStringToOLED("VFO On/Off");
   else if (menuState == SET_CAL_FACTOR)
-    printStringToOLED("Set Cal Value");
+    printStringToOLED("Set Cal Value (0.1Hz)");
   else if (menuState == SAVE_INIT_VALS)
     printStringToOLED("Save defaults");
 }

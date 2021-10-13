@@ -1,6 +1,6 @@
 // Routines which deal with Configuration EEPROM
 
-#define MAGIC_NUM 0x55  // Change to different number re-write default table
+#define MAGIC_NUM 0x5a  // Change to different number re-write default table
 
 // Offsets into the EEPROM
 #define FREQ0_OFFSET 0          // VFO 0 frequency
