@@ -1,6 +1,11 @@
+// u8g2_prepare()
+// Setup the screen font, etc
+// List of fonts
+// https://github.com/olikraus/u8g2/wiki/fntlist8#u8g2-fonts-capital-a-height-38
 void u8g2_prepare(void)
 {
-  u8g2.setFont(u8g2_font_ncenB14_tr); // 14 Pixel tall font
+//  u8g2.setFont(u8g2_font_ncenB14_tr); // 14 Pixel tall font
+  u8g2.setFont(u8g2_font_t0_11b_tf); // 8 Pixel tall font
   u8g2.setFontRefHeightExtendedText();
   u8g2.setDrawColor(1);
   u8g2.setFontPosTop();
@@ -9,7 +14,8 @@ void u8g2_prepare(void)
 
 void displayFreqInKHzOnOLED(float freq)
 {
-  char buffer[17];
+  char inBuffer[10];
+  char outBuffer[15];
   uint8_t buffOff;
   u8g2.clearBuffer();
   u8g2_prepare();
@@ -18,19 +24,23 @@ void displayFreqInKHzOnOLED(float freq)
     // Adda a comma below the MHz digits
     // 0123456789012
     // 10000000
-    // 10,000.00 KHz
-    dtostrf(freq, 8, 0, buffer);
-    buffer[7] = buffer[5];
-    buffer[6] = '.';
-    buffer[5] = buffer[4];
-    buffer[4] = buffer[3];
-    buffer[3] = buffer[2];
-    buffer[2] = ',';
-    buffer[8] = ' ';
-    buffer[9] = 'K';
-    buffer[10] = 'H';
-    buffer[11] = 'z';
-    buffer[12] = 0;
+    // 10,000.000 KHz
+    dtostrf(freq, 8, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = '.';
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = inBuffer[4];
+    outBuffer[6] = ',';
+    outBuffer[7] = inBuffer[5];
+    outBuffer[8] = inBuffer[6];
+    outBuffer[9] = inBuffer[7];
+    outBuffer[10] = ' ';
+    outBuffer[11] = 'M';
+    outBuffer[12] = 'H';
+    outBuffer[13] = 'z';
+    outBuffer[14] = 0;
   }
   else if (freq >= 1000000)
   {
@@ -38,102 +48,116 @@ void displayFreqInKHzOnOLED(float freq)
     // 0123456789012
     // 1000000
     // 1,000.00 KHz
-    dtostrf(freq, 7, 0, buffer);
-    buffer[7] = buffer[5];
-    buffer[6] = buffer[4];
-    buffer[5] = '.';
-    buffer[4] = buffer[3];
-    buffer[3] = buffer[2];
-    buffer[2] = buffer[1];
-    buffer[1] = ',';
-    buffer[8] = ' ';
-    buffer[9] = 'K';
-    buffer[10] = 'H';
-    buffer[11] = 'z';
-    buffer[12] = 0;
+    dtostrf(freq, 7, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = '.';
+    outBuffer[2] = inBuffer[1];
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = ',';
+    outBuffer[6] = inBuffer[4];
+    outBuffer[7] = inBuffer[5];
+    outBuffer[8] = inBuffer[6];
+    outBuffer[9] = ' ';
+    outBuffer[10] = 'M';
+    outBuffer[11] = 'H';
+    outBuffer[12] = 'z';
+    outBuffer[13] = 0;
   }
   else if (freq >= 100000)
   {
     // 0123456789012
     // 100000
     // 100.000 KHz
-    dtostrf(freq, 6, 0, buffer);
-    buffer[6] = buffer[5];
-    buffer[5] = buffer[4];
-    buffer[4] = buffer[3];
-    buffer[3] = '.';
-    buffer[7] = ' ';
-    buffer[8] = 'K';
-    buffer[9] = 'H';
-    buffer[10] = 'z';
-    buffer[11] = 0;
+    dtostrf(freq, 6, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = inBuffer[2];
+    outBuffer[3] = '.';
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = inBuffer[4];
+    outBuffer[6] = inBuffer[5];
+    outBuffer[7] = ' ';
+    outBuffer[8] = 'K';
+    outBuffer[9] = 'H';
+    outBuffer[10] = 'z';
+    outBuffer[11] = 0;
   }
   else if (freq >= 10000)
   {
     // 0123456789012
     // 10000
     // 10.000 KHz
-    dtostrf(freq, 5, 0, buffer);
-    buffer[5] = buffer[4];
-    buffer[4] = buffer[3];
-    buffer[3] = buffer[2];
-    buffer[2] = '.';
-    buffer[6] = ' ';
-    buffer[7] = 'K';
-    buffer[8] = 'H';
-    buffer[9] = 'z';
-    buffer[10] = 0;
+    dtostrf(freq, 5, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = '.';
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = inBuffer[4];
+    outBuffer[6] = ' ';
+    outBuffer[7] = 'K';
+    outBuffer[8] = 'H';
+    outBuffer[9] = 'z';
+    outBuffer[10] = 0;
   }
   else if (freq >= 1000)
   {
     // 0123456789012
     // 1000
     // 1.000 KHz
-    dtostrf(freq, 4, 0, buffer);
-    buffer[4] = buffer[3];
-    buffer[3] = buffer[2];
-    buffer[2] = buffer[1];
-    buffer[1] = '.';
-    buffer[5] = ' ';
-    buffer[6] = 'K';
-    buffer[7] = 'H';
-    buffer[8] = 'z';
-    buffer[9] = 0;
+    dtostrf(freq, 4, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = ',';
+    outBuffer[2] = inBuffer[1];
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = ' ';
+    outBuffer[6] = 'K';
+    outBuffer[7] = 'H';
+    outBuffer[8] = 'z';
+    outBuffer[9] = 0;
   }
   else if (freq >= 100)
   {
     // 0123456789012
     // 100
     // 100 Hz
-    dtostrf(freq, 3, 0, buffer);
-    buffer[3] = ' ';
-    buffer[4] = 'H';
-    buffer[5] = 'z';
-    buffer[6] = 0;
+    dtostrf(freq, 3, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = inBuffer[2];
+    outBuffer[3] = ' ';
+    outBuffer[4] = 'H';
+    outBuffer[5] = 'z';
+    outBuffer[6] = 0;
   }
   else if (freq >= 10)
   {
     // 0123456789012
     // 10
     // 10 Hz
-    dtostrf(freq, 2, 0, buffer);
-    buffer[2] = ' ';
-    buffer[3] = 'H';
-    buffer[4] = 'z';
-    buffer[5] = 0;
+    dtostrf(freq, 2, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = ' ';
+    outBuffer[3] = 'H';
+    outBuffer[4] = 'z';
+    outBuffer[5] = 0;
   }
   else
   {
     // 0123456789012
     // 1
     // 1 Hz
-    dtostrf(freq, 1, 0, buffer);
-    buffer[1] = ' ';
-    buffer[2] = 'H';
-    buffer[3] = 'z';
-    buffer[4] = 0;
+    dtostrf(freq, 1, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = ' ';
+    outBuffer[2] = 'H';
+    outBuffer[3] = 'z';
+    outBuffer[3] = 0;
   }
-  u8g2.drawStr( 0, 0, buffer);
+  u8g2.drawStr( 0, 0, outBuffer);
   u8g2.sendBuffer();
 }
 

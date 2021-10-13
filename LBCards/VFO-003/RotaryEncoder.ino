@@ -1,7 +1,5 @@
 // Rotary encoder reading
-
-#define CLK 3
-#define DATA 2
+// There is a debouncing r/c and 74AC14 buffer on the totary encoder outputs and switch
 
 enum ControlsState
 {
@@ -14,8 +12,8 @@ enum ControlsState
 // setupEncoder()
 void setupEncoder()
 {
-  pinMode(CLK, INPUT);
-  pinMode(DATA, INPUT);
+  pinMode(ROTARY_CLK, INPUT);
+  pinMode(ROTARY_DATA, INPUT);
   pinMode(encoderSwitch, INPUT);
 }
 
@@ -79,8 +77,8 @@ int8_t read_rotary()
 uint8_t readRotarySwitch(void)
 {
   uint8_t swA, swB, swC;
-  swA = digitalRead(CLK);
-  swB = digitalRead(DATA);
+  swA = digitalRead(ROTARY_CLK);
+  swB = digitalRead(ROTARY_DATA);
   swC = (swA << 1) | swB;
   return (swC);
 }

@@ -2,17 +2,25 @@
 
   I2C_VFO3.ino
 
-http://land-boards.com/blwiki/index.php?title=VFO-003
+  Wiki page for VFO-003
+  http://land-boards.com/blwiki/index.php?title=VFO-003
 
-  OLED is 128x32 I2C device
-  Si5351 is on VFO-003 board
+  Borrowed bits & pieces from all over the place
+
+  Runs on a 3.3V Arduino Pro Mini
+  No 5V to 3.3V level shifting is needed for the I2C ports of the Si5351 and OLED
+  SArduino Pro Mini has internal EEPROM for parameter storage
   
-  Runs on a 3.3V Ardiono Pro Mini so no 5V to 3.3V level shifting is needed
-
-  Borrowed bits pieces from all over the place
-  Si6361 driver is from si5351_example
+  OLED is 128x32 I2C device
+  SSD1306 controller
+  OLED driver Wiki page
+  https://github.com/olikraus/u8g2/wiki
+  
+  Frequency synthesizer is Si5351
+  3 outputs
+  74AC14 Buffers to crive 50 Ohm outputs
+  Si5361 driver is from si5351_example at
   https://etherkit.github.io/si5351abb_landing_page.html
-  Copyright (C) 2015 - 2016 Jason Milldrum <milldrum@gmail.com>
   
 */
 
@@ -21,28 +29,37 @@ http://land-boards.com/blwiki/index.php?title=VFO-003
 #include <U8g2lib.h>
 #include "si5351.h"
 
-// EEPROM is used to store initial values
-// ATMEGA parts have internal EEPROM
-// Set defines/undefs appropriately
-#define HAS_INTERNAL_EEPROM
+// defines and enums - Set defines/undefs appropriately
+#define HAS_INTERNAL_EEPROM   // Arduini Pro Mini has internal EEPROM (STM32 does not)
 
+// Rotary encoder pins on the Arduino Pro Mini
+#define ROTARY_DATA 2
+#define ROTARY_CLK 3
 #define encoderSwitch  4
 
 #define U8X8_HAVE_HW_I2C
 
-#ifdef U8X8_HAVE_HW_I2C
-#include <Wire.h>
-#endif
-
-si5351_drive VFO_0_Drive;
-si5351_drive VFO_1_Drive;
-si5351_drive VFO_2_Drive;
+#define STEP_1_HZ     100ULL
+#define STEP_10_HZ    1000ULL
+#define STEP_100_HZ   10000ULL
+#define STEP_1_KHZ    100000ULL
+#define STEP_10_KHZ   1000000ULL
+#define STEP_100_KHZ  10000000ULL
+#define STEP_1_MHZ    100000000ULL
+#define STEP_10_MHZ   1000000000ULL
 
 enum VFO_ON_OFF
 {
   VFO_OFF,
   VFO_ON
 };
+
+// EEPROM is used to store initial values
+// ATMEGA parts have internal EEPROM
+
+// Gloibal variables
+
+uint32_t stepSize;
 
 unsigned long VFO_0_Freq;
 unsigned long VFO_1_Freq;
@@ -56,23 +73,13 @@ uint8_t currentVFONumber;
 uint8_t magicNumber;
 int32_t calFactor;
 
-#define STEP_1_HZ     100ULL
-#define STEP_10_HZ    1000ULL
-#define STEP_100_HZ   10000ULL
-#define STEP_1_KHZ    100000ULL
-#define STEP_10_KHZ   1000000ULL
-#define STEP_100_KHZ  10000000ULL
-#define STEP_1_MHZ    100000000ULL
-#define STEP_10_MHZ   1000000000ULL
-
-// Gloibal variables
-uint32_t stepSize;
+// Constructors
 
 Si5351 si5351;
   
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // Ebay OLED
 
-// Leave other SSD1306 constructors just in case
+// Leave other SSD1306 constructors just in case different display is used
 //U8G2_SSD1306_128X32_WINSTAR_F_HW_I2C u8g2(U8G2_R0,  U8X8_PIN_NONE);   // STM32
 //U8G2_SSD1306_128X32_WINSTAR_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
 //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // Adafruit ESP8266/32u4/ARM Boards + FeatherWing OLED
@@ -118,38 +125,33 @@ void setup(void)
      printStringToOLED("I2C Fail");
      while(1);
   }
-//  printStringToOLED("S001");
 
-  // Set CLK0 to output 14 MHz
+  // Set CLK0
   si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
-//  printStringToOLED("S002");
-
-  // Set CLK1 to output 12 MHz
+  
+  // Set CLK1
   si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
-//  printStringToOLED("S003");
 
-  // Set CLK2 to output 10 MHz
+  // Set CLK2
   si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
-//  printStringToOLED("S004");
 
   // Query a status update and wait a bit to let the Si5351 populate the
   // status flags correctly.
   si5351.update_status();  
-//  printStringToOLED("S005");
 
+  // Set the calibration factor
   si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
- 
-  // Encoder initialization
-  setupEncoder();
-//  printStringToOLED("S006");
 
+  // Set all of the drive strengths to 8 mA (max)
+  si5351.drive_strength(SI5351_CLK0,SI5351_DRIVE_8MA);
+  si5351.drive_strength(SI5351_CLK1,SI5351_DRIVE_8MA);
+  si5351.drive_strength(SI5351_CLK2,SI5351_DRIVE_8MA);
+ 
+  // Rotary encoder initialization
+  setupEncoder();
 }
 
 void loop(void)
 {
-  while (1)
-  {
     vfoMenu();
-//    testRotarySwitch();
-  }
 }

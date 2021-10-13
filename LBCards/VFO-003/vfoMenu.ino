@@ -6,7 +6,6 @@ enum MenuStateValues
   SET_FREQ,
   SELECT_VFO,
   VFO_ON_OFF,
-//  OUTPUT_DRIVE_LEVEL,
   SET_CAL_FACTOR,
   SAVE_INIT_VALS
 };
@@ -138,112 +137,11 @@ void setVFOFreq(void)
 void printVFONumber(void)
 {
   if (currentVFONumber == 0)
-    printStringToOLED("VFO Clk0");
+    printStringToOLED("VFO CLK0");
   else if (currentVFONumber == 1)
-    printStringToOLED("VFO Clk1");
+    printStringToOLED("VFO CLK1");
   else if (currentVFONumber == 2)
-    printStringToOLED("VFO Clk2");
-}
-
-//enum ControlsState
-//{
-//  NOTHING,
-//  ENC_SW_PRESSED,
-//  ENC_UP,
-//  ENC_DOWN
-//};
-
-// enum si5351_drive {SI5351_DRIVE_2MA, SI5351_DRIVE_4MA, SI5351_DRIVE_6MA, SI5351_DRIVE_8MA};
-//uint8_t VFO_0_Drive = SI5351_DRIVE_4MA;
-//uint8_t VFO_1_Drive = SI5351_DRIVE_4MA;
-//uint8_t VFO_2_Drive = SI5351_DRIVE_4MA;
-
-si5351_drive printDriveStrength(void)
-{
-  int driveLevel;
-  if (currentVFONumber == 0)
-    driveLevel = VFO_0_Drive;
-  else if (currentVFONumber == 1)
-    driveLevel = VFO_1_Drive;
-  else if (currentVFONumber == 2)
-    driveLevel = VFO_2_Drive;
-  if (driveLevel == SI5351_DRIVE_2MA)
-  {
-    printStringToOLED("2mA drive");
-    return (SI5351_DRIVE_2MA);
-  }
-  else if (driveLevel == SI5351_DRIVE_4MA)
-  {
-    printStringToOLED("4mA drive");
-    return (SI5351_DRIVE_4MA);
-  }
-  else if (driveLevel == SI5351_DRIVE_6MA)
-  {
-    printStringToOLED("6mA drive");
-    return (SI5351_DRIVE_6MA);
-  }
-  else if (driveLevel == SI5351_DRIVE_8MA)
-  {
-    printStringToOLED("8mA drive");
-    return (SI5351_DRIVE_8MA);
-  }
-}
-
-void setDriveLevel(void)
-{
-  uint8_t controlVal;
-  si5351_drive driveVal;
-  while (1)
-  {
-    driveVal = printDriveStrength();
-    controlVal = waitForControlChange();
-    if (controlVal == ENC_SW_PRESSED)
-    {
-      if (currentVFONumber == 0)
-        si5351.drive_strength(SI5351_CLK0, driveVal);
-      else if (currentVFONumber == 1)
-        si5351.drive_strength(SI5351_CLK1, driveVal);
-      else if (currentVFONumber == 2)
-        si5351.drive_strength(SI5351_CLK2, driveVal);
-      return;
-    }
-    else if (controlVal == ENC_UP)
-    {
-      if (driveVal == SI5351_DRIVE_2MA)
-      {
-        driveVal = SI5351_DRIVE_4MA;
-      }
-      else if (driveVal == SI5351_DRIVE_4MA)
-      {
-        driveVal = SI5351_DRIVE_6MA;
-      }
-      else if (driveVal == SI5351_DRIVE_6MA)
-      {
-        driveVal = SI5351_DRIVE_8MA;
-      }
-    }
-    else if (controlVal == ENC_DOWN)
-    {
-      if (driveVal == SI5351_DRIVE_8MA)
-      {
-        driveVal = SI5351_DRIVE_6MA;
-      }
-      else if (driveVal == SI5351_DRIVE_6MA)
-      {
-        driveVal = SI5351_DRIVE_4MA;
-      }
-      else if (driveVal == SI5351_DRIVE_4MA)
-      {
-        driveVal = SI5351_DRIVE_2MA;
-      }
-    }
-    if (currentVFONumber == 0)
-      VFO_0_Drive = driveVal;
-    else if (currentVFONumber == 1)
-      VFO_1_Drive = driveVal;
-    else if (currentVFONumber == 2)
-      VFO_2_Drive = driveVal;
-  }
+    printStringToOLED("VFO CLK2");
 }
 
 void selectVFO(void)
@@ -278,23 +176,23 @@ void printVFOOnOff(void)
   if (currentVFONumber == 0)
   {
     if (VFO_O_OnOff == VFO_ON)
-      printStringToOLED("VFO Clk0 On");
+      printStringToOLED("VFO CLK0 On");
     else
-      printStringToOLED("VFO Clk0 Off");
+      printStringToOLED("VFO CLK0 Off");
   }
   else if (currentVFONumber == 1)
   {
     if (VFO_1_OnOff == VFO_ON)
-      printStringToOLED("VFO Clk1 On");
+      printStringToOLED("VFO CLK1 On");
     else
-      printStringToOLED("VFO Clk1 Off");
+      printStringToOLED("VFO CLK1 Off");
   }
   else if (currentVFONumber == 2)
   {
     if (VFO_2_OnOff == VFO_ON)
-      printStringToOLED("VFO Clk2 On");
+      printStringToOLED("VFO CLK2 On");
     else
-      printStringToOLED("VFO Clk2 Off");
+      printStringToOLED("VFO CLK2 Off");
   }
 }
 
@@ -424,8 +322,6 @@ void displayTopMenuOption()
     printStringToOLED("Select VFO");
   else if (menuState == VFO_ON_OFF)
     printStringToOLED("VFO On/Off");
-//  else if (menuState == OUTPUT_DRIVE_LEVEL)
-//    printStringToOLED("Drive Level");
   else if (menuState == SET_CAL_FACTOR)
     printStringToOLED("Set Cal Value");
   else if (menuState == SAVE_INIT_VALS)
@@ -451,8 +347,6 @@ void vfoMenu(void)
         selectVFO();
       else if (menuState == VFO_ON_OFF)
         toggleVFOOnOff();
-//      else if (menuState == OUTPUT_DRIVE_LEVEL)
-//        setDriveLevel();
       else if (menuState == SET_CAL_FACTOR)
         setCalFactor();
       else if (menuState == SAVE_INIT_VALS)
@@ -468,8 +362,6 @@ void vfoMenu(void)
         menuState = VFO_ON_OFF;
       else if (menuState == VFO_ON_OFF)
         menuState = SET_CAL_FACTOR;
-//      else if (menuState == OUTPUT_DRIVE_LEVEL)
-//        menuState = SET_CAL_FACTOR;
       else if (menuState == SET_CAL_FACTOR)
         menuState = SAVE_INIT_VALS;
     }
@@ -479,8 +371,6 @@ void vfoMenu(void)
         menuState = SET_CAL_FACTOR;
       else if (menuState == SET_CAL_FACTOR)
         menuState = VFO_ON_OFF;
-//      else if (menuState == OUTPUT_DRIVE_LEVEL)
-//        menuState = VFO_ON_OFF;
       else if (menuState == VFO_ON_OFF)
         menuState = SELECT_VFO;
       else if (menuState == SELECT_VFO)
