@@ -1,4 +1,6 @@
 // Menu System for the VFO
+// Rotary encoder scrolls between options
+// Press encoder button to select
 
 enum MenuStateValues
 {
@@ -10,16 +12,66 @@ enum MenuStateValues
   SAVE_INIT_VALS
 };
 
-//enum ControlsState
-//{
-//  NOTHING,
-//  ENC_SW_PRESSED,
-//  ENC_UP,
-//  ENC_DOWN
-//};
-
+// Defaul start up menu
 MenuStateValues menuState = SET_FREQ;
 
+// Menu options
+// Menu is entered by pressing encoder button
+void vfoMenu(void)
+{
+  uint8_t controlVal;
+  while (1)
+  {
+    displayTopMenuOption();
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+    {
+      if (menuState == SET_STEP_SIZE)
+        setVFOStepSize();
+      else if (menuState == SET_FREQ)
+        setVFOFreq();
+      else if (menuState == SELECT_VFO)
+        selectVFO();
+      else if (menuState == VFO_ON_OFF)
+        toggleVFOOnOff();
+      else if (menuState == SET_CAL_FACTOR)
+        setCalFactor();
+      else if (menuState == SAVE_INIT_VALS)
+        saveInitValuesToEEPROM();
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (menuState == SET_STEP_SIZE)
+        menuState = SET_FREQ;
+      else if (menuState == SET_FREQ)
+        menuState = SELECT_VFO;
+      else if (menuState == SELECT_VFO)
+        menuState = VFO_ON_OFF;
+      else if (menuState == VFO_ON_OFF)
+        menuState = SET_CAL_FACTOR;
+      else if (menuState == SET_CAL_FACTOR)
+        menuState = SAVE_INIT_VALS;
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (menuState == SAVE_INIT_VALS)
+        menuState = SET_CAL_FACTOR;
+      else if (menuState == SET_CAL_FACTOR)
+        menuState = VFO_ON_OFF;
+      else if (menuState == VFO_ON_OFF)
+        menuState = SELECT_VFO;
+      else if (menuState == SELECT_VFO)
+        menuState = SET_FREQ;
+      else if (menuState == SET_FREQ)
+        menuState = SET_STEP_SIZE;
+    }
+  }
+}
+
+// printCalFactor
+// Calibration facts are in 0.1 Hz steps
+// Adjust frequency at 40.000,000 MHz (highest freq supported by this software)
+// Use 8 digit frequency counter to adjust
 void printCalFactor(void)
 {
   char buffer[14];
@@ -27,7 +79,8 @@ void printCalFactor(void)
   printStringToOLED(buffer);
 }
 
-// Adjust calibration factor by 0.1 Hz
+// setCalFactor
+// Adjust calibration factor by 0.1 Hz (more than precise enough but could be 0.01Hz if needed)
 // TXCO is pretty accurate and does not need a lot of adjustment
 void setCalFactor(void)
 {
@@ -53,6 +106,8 @@ void setCalFactor(void)
   }
 }
 
+
+// saveInitValuesToEEPROM
 void saveInitValuesToEEPROM(void)
 {
   #ifdef HAS_INTERNAL_EEPROM
@@ -62,7 +117,7 @@ void saveInitValuesToEEPROM(void)
   #endif
 }
 
-//
+// printVFOFreq
 void printVFOFreq(void)
 {
   if (currentVFONumber == 0)
@@ -73,7 +128,7 @@ void printVFOFreq(void)
     displayFreqInKHzOnOLED(float(VFO_2_Freq / 100ULL));
 }
 
-//
+// setVFOFreq
 void setVFOFreq(void)
 {
   uint8_t controlVal;
@@ -135,7 +190,7 @@ void setVFOFreq(void)
   }
 }
 
-//
+// printVFONumber
 void printVFONumber(void)
 {
   if (currentVFONumber == 0)
@@ -328,57 +383,4 @@ void displayTopMenuOption()
     printStringToOLED("Set Cal Value (0.1Hz)");
   else if (menuState == SAVE_INIT_VALS)
     printStringToOLED("Save defaults");
-}
-
-// Menu options
-// Menu is entered by pressing encoder button
-void vfoMenu(void)
-{
-  uint8_t controlVal;
-  while (1)
-  {
-    displayTopMenuOption();
-    controlVal = waitForControlChange();
-    if (controlVal == ENC_SW_PRESSED)
-    {
-      if (menuState == SET_STEP_SIZE)
-        setVFOStepSize();
-      else if (menuState == SET_FREQ)
-        setVFOFreq();
-      else if (menuState == SELECT_VFO)
-        selectVFO();
-      else if (menuState == VFO_ON_OFF)
-        toggleVFOOnOff();
-      else if (menuState == SET_CAL_FACTOR)
-        setCalFactor();
-      else if (menuState == SAVE_INIT_VALS)
-        saveInitValuesToEEPROM();
-    }
-    else if (controlVal == ENC_UP)
-    {
-      if (menuState == SET_STEP_SIZE)
-        menuState = SET_FREQ;
-      else if (menuState == SET_FREQ)
-        menuState = SELECT_VFO;
-      else if (menuState == SELECT_VFO)
-        menuState = VFO_ON_OFF;
-      else if (menuState == VFO_ON_OFF)
-        menuState = SET_CAL_FACTOR;
-      else if (menuState == SET_CAL_FACTOR)
-        menuState = SAVE_INIT_VALS;
-    }
-    else if (controlVal == ENC_DOWN)
-    {
-      if (menuState == SAVE_INIT_VALS)
-        menuState = SET_CAL_FACTOR;
-      else if (menuState == SET_CAL_FACTOR)
-        menuState = VFO_ON_OFF;
-      else if (menuState == VFO_ON_OFF)
-        menuState = SELECT_VFO;
-      else if (menuState == SELECT_VFO)
-        menuState = SET_FREQ;
-      else if (menuState == SET_FREQ)
-        menuState = SET_STEP_SIZE;
-    }
-  }
 }
