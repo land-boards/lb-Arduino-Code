@@ -26,8 +26,8 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <U8g2lib.h>
 #include "si5351.h"
+#include <U8g2lib.h>
 
 // defines and enums - Set defines/undefs appropriately
 #define HAS_INTERNAL_EEPROM   // Arduini Pro Mini has internal EEPROM (STM32 does not)
@@ -146,6 +146,13 @@ void setup(void)
   si5351.drive_strength(SI5351_CLK0,SI5351_DRIVE_8MA);
   si5351.drive_strength(SI5351_CLK1,SI5351_DRIVE_8MA);
   si5351.drive_strength(SI5351_CLK2,SI5351_DRIVE_8MA);
+
+  // Clocks need to be high when they are disabled
+  // Needed because of the 74AC14 drivers which invert the clocks
+  // Keeps card from driving DC output
+  si5351.set_clock_disable(SI5351_CLK0,SI5351_CLK_DISABLE_HIGH);
+  si5351.set_clock_disable(SI5351_CLK1,SI5351_CLK_DISABLE_HIGH);
+  si5351.set_clock_disable(SI5351_CLK2,SI5351_CLK_DISABLE_HIGH);
  
   // Rotary encoder initialization
   setupEncoder();
