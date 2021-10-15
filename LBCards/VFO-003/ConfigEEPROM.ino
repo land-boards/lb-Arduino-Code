@@ -1,3 +1,4 @@
+// ConfigEEPROM
 // Routines which deal with Configuration EEPROM
 
 #define MAGIC_NUM 0x5a  // Change to different number re-write default table
