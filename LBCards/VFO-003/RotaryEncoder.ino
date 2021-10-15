@@ -1,8 +1,12 @@
 // RotaryEncoder
-// Rotary encoder reading
-// There is a debouncing r/c and 74AC14 buffer on the totary encoder outputs and switch
+// Robust Rotary encoder reading
 // Rotary encoder scrolls between options
 // Press encoder button to select
+//
+// Polled rotary switch implementation based on
+// Copyright John Main - https://www.best-microcontroller-projects.com/rotary-encoder.html
+// Clean no-bounce rotary switch code
+// There is a debouncing r/c and 74AC14 buffer on the totary encoder outputs and switch but it is not necessary with this code
 
 enum ControlsState
 {
@@ -12,12 +16,65 @@ enum ControlsState
   ENC_DOWN
 };
 
+static int encoder0Pos = 0;
+static uint8_t prevNextCode = 0;
+static uint16_t store = 0;
+
 // setupEncoder()
 void setupEncoder()
 {
   pinMode(ROTARY_CLK, INPUT);
   pinMode(ROTARY_DATA, INPUT);
   pinMode(encoderSwitch, INPUT);
+}
+
+void pollEncoder()
+{
+  static int8_t val;
+  if ( val = read_rotary() )
+    encoder0Pos += val;
+}
+
+// A vald CW or  CCW move returns 1, invalid returns 0.
+int8_t read_rotary()
+{
+  static int8_t rot_enc_table[] = {0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0};
+
+  prevNextCode <<= 2;
+  if (digitalRead(ROTARY_DATA) == 1) prevNextCode |= 0x02;
+  if (digitalRead(ROTARY_CLK) == 1) prevNextCode |= 0x01;
+  prevNextCode &= 0x0f;
+
+  // If valid then store as 16 bit data.
+  if  (rot_enc_table[prevNextCode])
+  {
+    store <<= 4;
+    store |= prevNextCode;
+
+    if ((store & 0xff) == 0x2b)
+      return -1;
+    if ((store & 0xff) == 0x17)
+      return 1;
+  }
+  return 0;
+}
+
+int getEncoderDelta(void)
+{
+  if (encoder0Pos > 0)
+  {
+    encoder0Pos = 0;
+    return (1);
+  }
+  else if (encoder0Pos < 0)
+  {
+    encoder0Pos = 0;
+    return (-1);
+  }
+  else
+  {
+    return (0);
+  }
 }
 
 // waitForControlChange()
@@ -51,53 +108,15 @@ uint8_t checkControls()
   else if (encoderDelta <= -1)
     return (ENC_DOWN);
   return (NOTHING);
-}
-
-// read_rotary()
-// Read the rotary switch
-int8_t read_rotary()
-{
-  uint8_t swC;
-  swC = readRotarySwitch();
-  if (swC == 0)
-    return(0);
-  if (swC == 1)  // Down
-  {
-    while (readRotarySwitch() != 0)
-      delay(100);
-    return(-1);
   }
-  else if (swC == 2)  // Up
+  
+  uint8_t checkSwitch(void)
   {
-    while (readRotarySwitch() != 0)
-      delay(100);
-    return(1);
+    if (digitalRead(encoderSwitch) == 1)
+    {
+      while (digitalRead(encoderSwitch) == 1)
+        delay(100);    // Debounce
+      return (1);
+    }
+    return (0);
   }
-}
-
-// readRotarySwitch()
-// Pack the rotary switch lines into two bits
-uint8_t readRotarySwitch(void)
-{
-  uint8_t swA, swB, swC;
-  swA = digitalRead(ROTARY_CLK);
-  swB = digitalRead(ROTARY_DATA);
-  swC = (swA << 1) | swB;
-  return (swC);
-}
-
-// checkSwitch()
-// Check the rotary encoder switch
-// If rotary encoder is pressed, waits until switch is released before return
-// VFO-003 has switch pulled up but buffered by 74AC14 inverter so encoderSwitch goes high when pressed
-// If switch is pressed return 1
-uint8_t checkSwitch(void)
-{
-  if (digitalRead(encoderSwitch) == 1)
-  {
-    while (digitalRead(encoderSwitch) == 1)
-      delay(100);    // Debounce
-    return (1);
-  }
-  return (0);
-}
