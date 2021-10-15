@@ -68,6 +68,22 @@ void vfoMenu(void)
   }
 }
 
+void displayTopMenuOption()
+{
+  u8x8.clearDisplay();
+  if (menuState == SET_STEP_SIZE)
+    u8x8.drawString(0,0,"Set Step Size");
+  else if (menuState == SET_FREQ)
+    u8x8.drawString(0,0,"Set Freq");
+  else if (menuState == SELECT_VFO)
+    u8x8.drawString(0,0,"Select VFO");
+  else if (menuState == VFO_ON_OFF)
+    u8x8.drawString(0,0,"VFO On/Off");
+  else if (menuState == SET_CAL_FACTOR)
+    u8x8.drawString(0,0,"Set Cal (0.1Hz)");
+  else if (menuState == SAVE_INIT_VALS)
+    u8x8.drawString(0,0,"Save defaults");
+}
 // printCalFactor
 // Calibration facts are in 0.1 Hz steps
 // Adjust frequency at 40.000,000 MHz (highest freq supported by this software)
@@ -76,7 +92,8 @@ void printCalFactor(void)
 {
   char buffer[14];
   itoa(calFactor/10, buffer, 10);
-  printStringToOLED(buffer);
+  u8x8.clearDisplay();
+  u8x8.drawString(0,0,buffer);
 }
 
 // setCalFactor
@@ -112,9 +129,157 @@ void saveInitValuesToEEPROM(void)
 {
   #ifdef HAS_INTERNAL_EEPROM
     storeEEPROM();
-    printStringToOLED("Stored");
+    u8x8.clearDisplay();
+    u8x8.drawString(0,0,"Stored");
     delay(1000);
   #endif
+}
+
+void displayFreqInKHzOnOLED(float freq)
+{
+  char inBuffer[10];
+  char outBuffer[15];
+  uint8_t buffOff;
+  if (freq >= 10000000)
+  {
+    // Adda a comma below the MHz digits
+    // 0123456789012
+    // 10000000
+    // 10,000.000 KHz
+    dtostrf(freq, 8, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = '.';
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = inBuffer[4];
+    outBuffer[6] = ',';
+    outBuffer[7] = inBuffer[5];
+    outBuffer[8] = inBuffer[6];
+    outBuffer[9] = inBuffer[7];
+    outBuffer[10] = ' ';
+    outBuffer[11] = 'M';
+    outBuffer[12] = 'H';
+    outBuffer[13] = 'z';
+    outBuffer[14] = 0;
+  }
+  else if (freq >= 1000000)
+  {
+    // Adda a comma below the MHz digits
+    // 0123456789012
+    // 1000000
+    // 1,000.00 KHz
+    dtostrf(freq, 7, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = '.';
+    outBuffer[2] = inBuffer[1];
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = ',';
+    outBuffer[6] = inBuffer[4];
+    outBuffer[7] = inBuffer[5];
+    outBuffer[8] = inBuffer[6];
+    outBuffer[9] = ' ';
+    outBuffer[10] = 'M';
+    outBuffer[11] = 'H';
+    outBuffer[12] = 'z';
+    outBuffer[13] = 0;
+  }
+  else if (freq >= 100000)
+  {
+    // 0123456789012
+    // 100000
+    // 100.000 KHz
+    dtostrf(freq, 6, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = inBuffer[2];
+    outBuffer[3] = '.';
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = inBuffer[4];
+    outBuffer[6] = inBuffer[5];
+    outBuffer[7] = ' ';
+    outBuffer[8] = 'K';
+    outBuffer[9] = 'H';
+    outBuffer[10] = 'z';
+    outBuffer[11] = 0;
+  }
+  else if (freq >= 10000)
+  {
+    // 0123456789012
+    // 10000
+    // 10.000 KHz
+    dtostrf(freq, 5, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = '.';
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = inBuffer[4];
+    outBuffer[6] = ' ';
+    outBuffer[7] = 'K';
+    outBuffer[8] = 'H';
+    outBuffer[9] = 'z';
+    outBuffer[10] = 0;
+  }
+  else if (freq >= 1000)
+  {
+    // 0123456789012
+    // 1000
+    // 1.000 KHz
+    dtostrf(freq, 4, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = ',';
+    outBuffer[2] = inBuffer[1];
+    outBuffer[3] = inBuffer[2];
+    outBuffer[4] = inBuffer[3];
+    outBuffer[5] = ' ';
+    outBuffer[6] = 'K';
+    outBuffer[7] = 'H';
+    outBuffer[8] = 'z';
+    outBuffer[9] = 0;
+  }
+  else if (freq >= 100)
+  {
+    // 0123456789012
+    // 100
+    // 100 Hz
+    dtostrf(freq, 3, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = inBuffer[2];
+    outBuffer[3] = ' ';
+    outBuffer[4] = 'H';
+    outBuffer[5] = 'z';
+    outBuffer[6] = 0;
+  }
+  else if (freq >= 10)
+  {
+    // 0123456789012
+    // 10
+    // 10 Hz
+    dtostrf(freq, 2, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = inBuffer[1];
+    outBuffer[2] = ' ';
+    outBuffer[3] = 'H';
+    outBuffer[4] = 'z';
+    outBuffer[5] = 0;
+  }
+  else
+  {
+    // 0123456789012
+    // 1
+    // 1 Hz
+    dtostrf(freq, 1, 0, inBuffer);
+    outBuffer[0] = inBuffer[0];
+    outBuffer[1] = ' ';
+    outBuffer[2] = 'H';
+    outBuffer[3] = 'z';
+    outBuffer[3] = 0;
+  }
+  u8x8.clearDisplay();
+  u8x8.drawString(0,0, outBuffer);
 }
 
 // printVFOFreq
@@ -193,12 +358,13 @@ void setVFOFreq(void)
 // printVFONumber
 void printVFONumber(void)
 {
+  u8x8.clearDisplay();
   if (currentVFONumber == 0)
-    printStringToOLED("VFO CLK0");
+    u8x8.drawString(0,0,"VFO CLK0");
   else if (currentVFONumber == 1)
-    printStringToOLED("VFO CLK1");
+    u8x8.drawString(0,0,"VFO CLK1");
   else if (currentVFONumber == 2)
-    printStringToOLED("VFO CLK2");
+    u8x8.drawString(0,0,"VFO CLK2");
 }
 
 void selectVFO(void)
@@ -230,26 +396,27 @@ void selectVFO(void)
 
 void printVFOOnOff(void)
 {
+  u8x8.clearDisplay();
   if (currentVFONumber == 0)
   {
     if (VFO_O_OnOff == VFO_ON)
-      printStringToOLED("VFO CLK0 On");
+      u8x8.drawString(0,0,"VFO CLK0 On");
     else
-      printStringToOLED("VFO CLK0 Off");
+      u8x8.drawString(0,0,"VFO CLK0 Off");
   }
   else if (currentVFONumber == 1)
   {
     if (VFO_1_OnOff == VFO_ON)
-      printStringToOLED("VFO CLK1 On");
+      u8x8.drawString(0,0,"VFO CLK1 On");
     else
-      printStringToOLED("VFO CLK1 Off");
+      u8x8.drawString(0,0,"VFO CLK1 Off");
   }
   else if (currentVFONumber == 2)
   {
     if (VFO_2_OnOff == VFO_ON)
-      printStringToOLED("VFO CLK2 On");
+      u8x8.drawString(0,0,"VFO CLK2 On");
     else
-      printStringToOLED("VFO CLK2 Off");
+      u8x8.drawString(0,0,"VFO CLK2 Off");
   }
 }
 
@@ -302,22 +469,23 @@ void toggleVFOOnOff(void)
 
 void printStepSize(void)
 {
+  u8x8.clearDisplay();
   if (stepSize == STEP_1_HZ)
-    printStringToOLED("Step 1 Hz");
+    u8x8.drawString(0,0,"Step 1 Hz");
   else if (stepSize == STEP_10_HZ)
-    printStringToOLED("Step 10 Hz");
+    u8x8.drawString(0,0,"Step 10 Hz");
   else if (stepSize == STEP_100_HZ)
-    printStringToOLED("Step 100 Hz");
+    u8x8.drawString(0,0,"Step 100 Hz");
   else if (stepSize == STEP_1_KHZ)
-    printStringToOLED("Step 1 KHz");
+    u8x8.drawString(0,0,"Step 1 KHz");
   else if (stepSize == STEP_10_KHZ)
-    printStringToOLED("Step 10 KHz");
+    u8x8.drawString(0,0,"Step 10 KHz");
   else if (stepSize == STEP_100_KHZ)
-    printStringToOLED("Step 100 KHz");
+    u8x8.drawString(0,0,"Step 100 KHz");
   else if (stepSize == STEP_1_MHZ)
-    printStringToOLED("Step 1 MHz");
+    u8x8.drawString(0,0,"Step 1 MHz");
   else if (stepSize == STEP_10_MHZ)
-    printStringToOLED("Step 10 MHz");
+    u8x8.drawString(0,0,"Step 10 MHz");
   return;
 }
 
@@ -367,20 +535,4 @@ void setVFOStepSize(void)
     printStepSize();
   }
 
-}
-
-void displayTopMenuOption()
-{
-  if (menuState == SET_STEP_SIZE)
-    printStringToOLED("Set Step Size");
-  else if (menuState == SET_FREQ)
-    printStringToOLED("Set Freq");
-  else if (menuState == SELECT_VFO)
-    printStringToOLED("Select VFO");
-  else if (menuState == VFO_ON_OFF)
-    printStringToOLED("VFO On/Off");
-  else if (menuState == SET_CAL_FACTOR)
-    printStringToOLED("Set Cal Value (0.1Hz)");
-  else if (menuState == SAVE_INIT_VALS)
-    printStringToOLED("Save defaults");
 }
