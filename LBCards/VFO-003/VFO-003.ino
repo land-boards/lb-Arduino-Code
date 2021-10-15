@@ -3,24 +3,26 @@
   I2C_VFO3.ino
 
   Wiki page for VFO-003
-  http://land-boards.com/blwiki/index.php?title=VFO-003
+    http://land-boards.com/blwiki/index.php?title=VFO-003
 
   Borrowed bits & pieces from all over the place
 
   Runs on a 3.3V Arduino Pro Mini
   No 5V to 3.3V level shifting is needed for the I2C ports of the Si5351 and OLED
-  SArduino Pro Mini has internal EEPROM for parameter storage
+  Arduino Pro Mini has internal EEPROM for parameter storage
+  STM32 parts don't have EEPROM - there are tricks to use the Flash for parameter storage
   
   OLED is 128x32 I2C device
   SSD1306 controller
   OLED driver Wiki page
-  https://github.com/olikraus/u8g2/wiki
+    https://github.com/olikraus/u8g2/wiki
+    8x8 font has 16x4 characters
   
   Frequency synthesizer is Si5351
   3 outputs
-  74AC14 Buffers to crive 50 Ohm outputs
-  Si5361 driver is from si5351_example at
-  https://etherkit.github.io/si5351abb_landing_page.html
+  74AC14 Buffers to drive 3.3V, 50 Ohm outputs
+  Si5351 driver is from si5351_example
+    https://etherkit.github.io/si5351abb_landing_page.html
   
 */
 
@@ -81,6 +83,7 @@ U8X8_SSD1306_128X32_UNIVISION_HW_I2C u8x8(U8X8_PIN_NONE);
 
 // End of constructor list
 
+//setup run once
 void setup(void)
 {
   bool i2c_found;
@@ -88,16 +91,17 @@ void setup(void)
   checkEEPROM();
   
   u8x8.begin();
-
   u8x8.setFont(u8x8_font_victoriabold8_r);
+  u8x8.clearDisplay();
   u8x8.drawString(0,0,"VFO-003");
   
   // Si8351 initialiation
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_6PF, 27000000, 0);
   if (!i2c_found)
   {
-     u8x8.drawString(0,0,"I2C Fail");
-     while(1);
+    u8x8.clearDisplay();
+    u8x8.drawString(0,0,"I2C Fail");
+    while(1);
   }
 
   // Set CLK0
@@ -132,6 +136,7 @@ void setup(void)
   setupEncoder();
 }
 
+// loop - loops forever
 void loop(void)
 {
     vfoMenu();
