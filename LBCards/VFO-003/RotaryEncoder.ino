@@ -1,5 +1,7 @@
 // Rotary encoder reading
 // There is a debouncing r/c and 74AC14 buffer on the totary encoder outputs and switch
+// Rotary encoder scrolls between options
+// Press encoder button to select
 
 enum ControlsState
 {
@@ -73,7 +75,7 @@ int8_t read_rotary()
 }
 
 // readRotarySwitch()
-// Pack the ratary switch lines into two bits
+// Pack the rotary switch lines into two bits
 uint8_t readRotarySwitch(void)
 {
   uint8_t swA, swB, swC;
@@ -83,6 +85,7 @@ uint8_t readRotarySwitch(void)
   return (swC);
 }
 
+// checkSwitch()
 // Check the rotary encoder switch
 // If rotary encoder is pressed, waits until switch is released before return
 // VFO-003 has switch pulled up but buffered by 74AC14 inverter so encoderSwitch goes high when pressed
