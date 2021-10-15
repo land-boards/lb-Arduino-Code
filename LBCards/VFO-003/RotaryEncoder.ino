@@ -18,7 +18,7 @@ void setupEncoder()
 }
 
 // waitForControlChange()
-// Wait around for an encoder change
+// Wait around for an encoder change (knob turn or button)
 uint8_t waitForControlChange(void)
 {
   uint8_t controlVal;
@@ -34,6 +34,7 @@ uint8_t waitForControlChange(void)
 }
 
 // checkControls()
+// Translate values into enum
 uint8_t checkControls()
 {
   int8_t encoderDelta = 0;
@@ -56,24 +57,23 @@ int8_t read_rotary()
   uint8_t swC;
   swC = readRotarySwitch();
   if (swC == 0)
-  {
     return(0);
-  }
-  if (swC == 2)  // Up
+  if (swC == 1)  // Down
   {
-    while (readRotarySwitch() != 0);
-    delay(50);
-    return(1);
-  }
-  else if (swC == 1)  // Down
-  {
-    while (readRotarySwitch() != 0);
-    delay(50);
+    while (readRotarySwitch() != 0)
+      delay(100);
     return(-1);
+  }
+  else if (swC == 2)  // Up
+  {
+    while (readRotarySwitch() != 0)
+      delay(100);
+    return(1);
   }
 }
 
 // readRotarySwitch()
+// Pack the ratary switch lines into two bits
 uint8_t readRotarySwitch(void)
 {
   uint8_t swA, swB, swC;
@@ -85,13 +85,14 @@ uint8_t readRotarySwitch(void)
 
 // Check the rotary encoder switch
 // If rotary encoder is pressed, waits until switch is released before return
+// VFO-003 has switch pulled up but buffered by 74AC14 inverter so encoderSwitch goes high when pressed
 // If switch is pressed return 1
 uint8_t checkSwitch(void)
 {
   if (digitalRead(encoderSwitch) == 1)
   {
     while (digitalRead(encoderSwitch) == 1)
-      delay(50);    // Debounce
+      delay(100);    // Debounce
     return (1);
   }
   return (0);
