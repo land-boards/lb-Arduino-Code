@@ -21,7 +21,7 @@
   Frequency synthesizer is Si5351
   3 outputs
   74AC14 Buffers to drive 3.3V, 50 Ohm outputs
-  Si5351 driver is from si5351_example
+  Si5361 driver is from si5351_example
     https://etherkit.github.io/si5351abb_landing_page.html
   
 */
