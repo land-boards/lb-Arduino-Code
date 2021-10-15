@@ -1,4 +1,4 @@
-// Menu System for the VFO
+// Menu System for VFO-003
 // Rotary encoder scrolls between options
 // Press encoder button to select
 
@@ -12,7 +12,7 @@ enum MenuStateValues
   SAVE_INIT_VALS
 };
 
-// Defaul start up menu
+// Default start up menu
 MenuStateValues menuState = SET_FREQ;
 
 // Menu options
