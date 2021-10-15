@@ -1,3 +1,4 @@
+// RotaryEncoder
 // Rotary encoder reading
 // There is a debouncing r/c and 74AC14 buffer on the totary encoder outputs and switch
 // Rotary encoder scrolls between options
