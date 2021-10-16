@@ -5,6 +5,7 @@
 //
 // Polled rotary switch implementation based on
 // Copyright John Main - https://www.best-microcontroller-projects.com/rotary-encoder.html
+//  Look undder "Code For Improved Table Decode" near bottom of page
 // Clean no-bounce rotary switch code
 // There is a debouncing r/c and 74AC14 buffer on the totary encoder outputs and switch but it is not necessary with this code
 

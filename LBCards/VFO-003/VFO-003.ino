@@ -91,9 +91,12 @@ void setup(void)
   checkEEPROM();
   
   u8x8.begin();
-  u8x8.setFont(u8x8_font_victoriabold8_r);
+  u8x8.setBusClock(400000);   // I2C clock = 400 KHz
   u8x8.clearDisplay();
-  u8x8.drawString(0,0,"VFO-003");
+  u8x8.setFont(u8x8_font_victoriabold8_r);
+  u8x8.draw2x2String(0,0,"VFO-003");
+  initMenu();
+  delay(1000);
   
   // Si8351 initialiation
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_6PF, 27000000, 0);
