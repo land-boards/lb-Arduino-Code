@@ -1,3 +1,5 @@
+// Menu Operations
+
 // printCalFactor
 // Calibration facts are in 0.1 Hz steps
 // Adjust frequency at 40.000,000 MHz (highest freq supported by this software)
@@ -7,7 +9,8 @@ void printCalFactor(void)
   char buffer[14];
   itoa(calFactor/10, buffer, 10);
   u8x8.clearDisplay();
-  u8x8.draw2x2String(0,1,buffer);
+  u8x8.draw2x2String(0,0,"Cal val");
+  u8x8.draw2x2String(0,2,buffer);
 }
 
 // setCalFactor
