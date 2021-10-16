@@ -1,29 +1,25 @@
 // vfoMenu
 // Menu System for VFO-003
+// 
+// 128x32 OLED Screen is 16 col, 4 row
+// Print in 16x16 font for short menus
+// Print in 8x8 font for short menus and some options screens
+//
 // Rotary encoder scrolls between options
 // Press encoder button to select
 
-enum MenuStateValues
-{
-  SET_STEP_SIZE,
-  SET_FREQ,
-  SELECT_VFO,
-  VFO_ON_OFF,
-  SET_CAL_FACTOR,
-  SAVE_INIT_VALS
-};
-
 uint8_t topMenuCurrentLine, level2MenuCurrentLine;
 
+//  initMenu()
+//  Set to top lines of each menu at startup
 void initMenu(void)
 {
   topMenuCurrentLine = 0;
   level2MenuCurrentLine = 0; 
 }
 
-// Default start up menu
-MenuStateValues menuState = SET_FREQ;
-
+//  vfoMenu() -  Top level menu
+//  Control, Setup
 void vfoMenu(void)
 {
   ControlsState controlVal;
@@ -49,6 +45,20 @@ void vfoMenu(void)
   }
 }
 
+// displayTopMenuOption()
+void displayTopMenuOption(void)
+{
+   if (topMenuCurrentLine == 0)
+      u8x8.setInverseFont(1);
+   u8x8.draw2x2String(0,0,"Operate");
+   u8x8.setInverseFont(0);
+   if (topMenuCurrentLine == 1)
+      u8x8.setInverseFont(1);
+   u8x8.draw2x2String(0,2,"Setup");
+   u8x8.setInverseFont(0);
+}
+
+// displayControlMenu() - Controles screen
 // Freq, VFO Number, Step Size, Return
 void displayControlMenu(void)
 {
@@ -155,17 +165,4 @@ void setupMenu(void)
         return;
     }
   }
-}
-
-// displayTopMenuOption()
-void displayTopMenuOption(void)
-{
-   if (topMenuCurrentLine == 0)
-      u8x8.setInverseFont(1);
-   u8x8.draw2x2String(0,0,"Control");
-   u8x8.setInverseFont(0);
-   if (topMenuCurrentLine == 1)
-      u8x8.setInverseFont(1);
-   u8x8.draw2x2String(0,2,"Setup");
-   u8x8.setInverseFont(0);
 }

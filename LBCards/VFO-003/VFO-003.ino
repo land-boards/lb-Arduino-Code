@@ -93,7 +93,7 @@ void setup(void)
   u8x8.begin();
   u8x8.setBusClock(400000);   // I2C clock = 400 KHz
   u8x8.clearDisplay();
-  u8x8.setFont(u8x8_font_victoriabold8_r);
+  u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
   u8x8.draw2x2String(0,0,"VFO-003");
   initMenu();
   delay(1000);

@@ -1,4 +1,6 @@
 // Menu Operations
+//  Frequency
+//  Cal factor
 
 // printCalFactor
 // Calibration facts are in 0.1 Hz steps
@@ -195,7 +197,13 @@ void displayFreqInKHzOnOLED(float freq)
     outBuffer[3] = 0;
   }
   u8x8.clearDisplay();
-  u8x8.drawString(0,0, outBuffer);
+   if (currentVFONumber == 0)
+    u8x8.drawString(0,0,"Set CLK0");
+   else if (currentVFONumber == 1)
+    u8x8.drawString(0,0,"Set CLK1");
+   else if (currentVFONumber == 2)
+    u8x8.drawString(0,0,"Set CLK2");
+  u8x8.drawString(0,2, outBuffer);
 }
 
 // printVFOFreq
