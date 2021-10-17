@@ -395,23 +395,23 @@ void toggleVFOOnOff(void)
 void printStepSize(void)
 {
   u8x8.clearDisplay();
-  u8x8.drawString(0,0,"Step Size");
+  u8x8.draw2x2String(0,0,"Stp Size");
   if (stepSize == STEP_1_HZ)
-    u8x8.drawString(0,2,"1 Hz");
+    u8x8.draw2x2String(0,2,"1 Hz");
   else if (stepSize == STEP_10_HZ)
-    u8x8.drawString(0,2,"10 Hz");
+    u8x8.draw2x2String(0,2,"10 Hz");
   else if (stepSize == STEP_100_HZ)
-    u8x8.drawString(0,2,"100 Hz");
+    u8x8.draw2x2String(0,2,"100 Hz");
   else if (stepSize == STEP_1_KHZ)
-    u8x8.drawString(0,2,"1 KHz");
+    u8x8.draw2x2String(0,2,"1 KHz");
   else if (stepSize == STEP_10_KHZ)
-    u8x8.drawString(0,2,"10 KHz");
+    u8x8.draw2x2String(0,2,"10 KHz");
   else if (stepSize == STEP_100_KHZ)
-    u8x8.drawString(0,2,"100 KHz");
+    u8x8.draw2x2String(0,2,"100 KHz");
   else if (stepSize == STEP_1_MHZ)
-    u8x8.drawString(0,2,"1 MHz");
+    u8x8.draw2x2String(0,2,"1 MHz");
   else if (stepSize == STEP_10_MHZ)
-    u8x8.drawString(0,2,"10 MHz");
+    u8x8.draw2x2String(0,2,"10 MHz");
   return;
 }
 
