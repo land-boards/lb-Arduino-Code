@@ -64,28 +64,28 @@ enum VFO_1X_4X
 };
 
 // EEPROM is used to store initial values
-// ATMEGA parts have internal EEPROM
+// ATMEGA parts have internal EEPROM - STM32 parts don't have internal EEPROM
 
 // Gloibal variables
-
-uint32_t stepSize;
 
 unsigned long VFO_0_Freq;
 unsigned long VFO_1_Freq;
 unsigned long VFO_2_Freq;
 
+uint32_t stepSize;
+int32_t calFactor;
+
 uint8_t VFO_0_OnOff;
 uint8_t VFO_1_OnOff;
 uint8_t VFO_2_OnOff;
-
-uint8_t currentVFONumber;
 
 uint8_t VFO_0_1x4x;
 uint8_t VFO_1_1x4x;
 uint8_t VFO_2_1x4x;
 
+uint8_t currentVFONumber;
+
 uint8_t magicNumber;
-int32_t calFactor;
 
 // Constructors
 
