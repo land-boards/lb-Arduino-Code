@@ -235,9 +235,9 @@ void setVFOFreq(void)
           VFO_0_Freq = 4000000000ULL; // Limit top of range
         
         if (VFO_0_1x4x == VFO_1X)
-          si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
+          si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
         else
-          si5351.set_freq(VFO_0_Freq<<2, SI5351_CLK0);
+          si5351.set_freq((uint64_t)VFO_0_Freq<<2, SI5351_CLK0);
       }
       else if (currentVFONumber == 1)
       {
@@ -245,9 +245,9 @@ void setVFOFreq(void)
         if (VFO_1_Freq > 4000000000ULL)
           VFO_1_Freq = 4000000000ULL; // Limit top of range
         if (VFO_1_1x4x == VFO_1X)
-          si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
+          si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
         else
-          si5351.set_freq(VFO_1_Freq<<2, SI5351_CLK1);
+          si5351.set_freq((uint64_t)VFO_1_Freq<<2, SI5351_CLK1);
       }
       else if (currentVFONumber == 2)
       {
@@ -255,9 +255,9 @@ void setVFOFreq(void)
         if (VFO_2_Freq > 4000000000ULL)
           VFO_2_Freq = 4000000000ULL; // Limit top of range
         if (VFO_2_1x4x == VFO_1X)
-          si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
+          si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
         else
-          si5351.set_freq(VFO_2_Freq<<2, SI5351_CLK2);
+          si5351.set_freq((uint64_t)VFO_2_Freq<<2, SI5351_CLK2);
       }
     }
     else if (controlVal == ENC_DOWN)
@@ -268,9 +268,9 @@ void setVFOFreq(void)
         if ((VFO_0_Freq < 1000000ULL) || (VFO_0_Freq > 4000000000ULL))
           VFO_0_Freq = 1000000ULL;
         if (VFO_0_1x4x == VFO_1X)
-          si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
+          si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
         else
-          si5351.set_freq(VFO_0_Freq<<2, SI5351_CLK0);
+          si5351.set_freq((uint64_t)VFO_0_Freq<<2, SI5351_CLK0);
       }
       else if (currentVFONumber == 1)
       {
@@ -278,9 +278,9 @@ void setVFOFreq(void)
         if ((VFO_1_Freq < 1000000ULL) || (VFO_1_Freq > 4000000000ULL))
           VFO_1_Freq = 1000000ULL;
         if (VFO_1_1x4x == VFO_1X)
-          si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
+          si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
         else
-          si5351.set_freq(VFO_1_Freq<<2, SI5351_CLK1);
+          si5351.set_freq((uint64_t)VFO_1_Freq<<2, SI5351_CLK1);
       }
       else if (currentVFONumber == 2)
       {
@@ -288,9 +288,9 @@ void setVFOFreq(void)
         if ((VFO_2_Freq < 1000000ULL) || (VFO_2_Freq > 4000000000ULL))
           VFO_2_Freq = 1000000ULL;
         if (VFO_2_1x4x == VFO_1X)
-          si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
+          si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
         else
-          si5351.set_freq(VFO_2_Freq<<2, SI5351_CLK2);
+          si5351.set_freq((uint64_t)VFO_2_Freq<<2, SI5351_CLK2);
       }
     }
     printVFOFreq();
@@ -375,40 +375,40 @@ void setVFO1x4x(void)
     controlVal = waitForControlChange();
     if (controlVal == ENC_SW_PRESSED)
       return;
-    else if (controlVal == ENC_UP)
-    {
-      if (currentVFONumber == 0)
-      {
-        VFO_0_1x4x = VFO_4X;
-        si5351.set_freq(VFO_0_Freq<<2, SI5351_CLK0);
-      }
-      else if (currentVFONumber == 1)
-      {
-        VFO_1_1x4x = VFO_4X;
-        si5351.set_freq(VFO_1_Freq<<2, SI5351_CLK1);
-      }
-      else if (currentVFONumber == 2)
-      {
-        VFO_2_1x4x = VFO_4X;
-        si5351.set_freq(VFO_2_Freq<<2, SI5351_CLK2);
-      }
-    }
     else if (controlVal == ENC_DOWN)
     {
       if (currentVFONumber == 0)
       {
         VFO_0_1x4x = VFO_1X;
-        si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
+        si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
       }
       else if (currentVFONumber == 1)
       {
         VFO_1_1x4x = VFO_1X;
-        si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
+        si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
       }
       else if (currentVFONumber == 2)
       {
         VFO_2_1x4x = VFO_1X;
-        si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
+        si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
+      }
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (currentVFONumber == 0)
+      {
+        VFO_0_1x4x = VFO_4X;
+        si5351.set_freq((uint64_t)VFO_0_Freq<<2, SI5351_CLK0);
+      }
+      else if (currentVFONumber == 1)
+      {
+        VFO_1_1x4x = VFO_4X;
+        si5351.set_freq((uint64_t)VFO_1_Freq<<2, SI5351_CLK1);
+      }
+      else if (currentVFONumber == 2)
+      {
+        VFO_2_1x4x = VFO_4X;
+        si5351.set_freq((uint64_t)VFO_2_Freq<<2, SI5351_CLK2);
       }
     }
     printVFO1x4x();

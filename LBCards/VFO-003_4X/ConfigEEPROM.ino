@@ -1,7 +1,7 @@
 // ConfigEEPROM
 // Routines which deal with Configuration EEPROM
 
-#define MAGIC_NUM 0xaa          // Change to different number re-write default table
+#define MAGIC_NUM 0x5a          // Change to different number re-write default table
 
 // Offsets into the EEPROM
 #define FREQ0_OFFSET 0          // VFO 0 frequency
@@ -12,9 +12,9 @@
 #define VFO0ONOFF_OFFSET 20     // VFO 0 On/Off control
 #define VFO1ONOFF_OFFSET 24
 #define VFO2ONOFF_OFFSET 28
-#define VFO0ONOFF_1X4X 32       // 1x or 4x
-#define VFO1ONOFF_1X4X 36
-#define VFO2ONOFF_1X4X 40
+#define VFO0_1X4X_OFFSET 32       // 1x or 4x
+#define VFO1_1X4X_OFFSET 36
+#define VFO2_1X4X_OFFSET 40
 #define VFONUMBER_OFFSET 44     // Current VFO being set
 #define MAGICNUMBER_OFFSET 45   // Reload defaults flag
 
@@ -29,9 +29,9 @@ void loadEEPROM(void)
   VFO_0_OnOff = EEPROM.get(VFO0ONOFF_OFFSET,VFO_0_OnOff);
   VFO_1_OnOff = EEPROM.get(VFO1ONOFF_OFFSET,VFO_1_OnOff);
   VFO_2_OnOff = EEPROM.get(VFO2ONOFF_OFFSET,VFO_2_OnOff);
-  VFO_0_1x4x = EEPROM.get(VFO0ONOFF_1X4X,VFO_0_1x4x);
-  VFO_1_1x4x = EEPROM.get(VFO1ONOFF_1X4X,VFO_1_1x4x);
-  VFO_2_1x4x = EEPROM.get(VFO2ONOFF_1X4X,VFO_2_1x4x);
+  VFO_0_1x4x = EEPROM.get(VFO0_1X4X_OFFSET,VFO_0_1x4x);
+  VFO_1_1x4x = EEPROM.get(VFO1_1X4X_OFFSET,VFO_1_1x4x);
+  VFO_2_1x4x = EEPROM.get(VFO2_1X4X_OFFSET,VFO_2_1x4x);
   currentVFONumber = EEPROM.get(VFONUMBER_OFFSET,currentVFONumber);
 }
 
@@ -47,9 +47,9 @@ void storeEEPROM(void)
   EEPROM.put(VFO0ONOFF_OFFSET,VFO_0_OnOff);
   EEPROM.put(VFO1ONOFF_OFFSET,VFO_1_OnOff);
   EEPROM.put(VFO2ONOFF_OFFSET,VFO_2_OnOff);
-  EEPROM.put(VFO_0_1x4x,VFO_0_1x4x);
-  EEPROM.put(VFO_1_1x4x,VFO_1_1x4x);
-  EEPROM.put(VFO_2_1x4x,VFO_2_1x4x);
+  EEPROM.put(VFO0_1X4X_OFFSET,VFO_0_1x4x);
+  EEPROM.put(VFO1_1X4X_OFFSET,VFO_1_1x4x);
+  EEPROM.put(VFO2_1X4X_OFFSET,VFO_2_1x4x);
   EEPROM.put(VFONUMBER_OFFSET,currentVFONumber);
   EEPROM.put(MAGICNUMBER_OFFSET,magicNumber);
 }

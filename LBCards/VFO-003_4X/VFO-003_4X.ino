@@ -121,21 +121,21 @@ void setup(void)
 
   // Set CLK0
   if (VFO_0_1x4x == VFO_1X)
-    si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
+    si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
   else
-    si5351.set_freq(VFO_0_Freq*4, SI5351_CLK0);
+    si5351.set_freq((uint64_t)VFO_0_Freq*4, SI5351_CLK0);
   
   // Set CLK1
   if (VFO_1_1x4x == VFO_1X)
-    si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
+    si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
   else
-    si5351.set_freq(VFO_1_Freq*4, SI5351_CLK1);
+    si5351.set_freq((uint64_t)VFO_1_Freq*4, SI5351_CLK1);
 
   // Set CLK2
   if (VFO_2_1x4x == VFO_1X)
-    si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
+    si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
   else
-    si5351.set_freq(VFO_2_Freq*4, SI5351_CLK2);
+    si5351.set_freq((uint64_t)VFO_2_Freq*4, SI5351_CLK2);
 
   // Query a status update and wait a bit to let the Si5351 populate the
   // status flags correctly.
