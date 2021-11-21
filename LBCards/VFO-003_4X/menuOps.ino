@@ -1,6 +1,4 @@
-// Menu Operations
-//  Frequency
-//  Cal factor
+// Menu Functions
 
 // printCalFactor
 // Calibration facts are in 0.1 Hz steps
@@ -42,7 +40,7 @@ void setCalFactor(void)
   }
 }
 
-// saveInitValuesToEEPROM
+// Save Init Values To EEPROM
 void saveInitValuesToEEPROM(void)
 {
   #ifdef HAS_INTERNAL_EEPROM
@@ -269,21 +267,30 @@ void setVFOFreq(void)
         VFO_0_Freq -= stepSize; // count down by step size
         if ((VFO_0_Freq < 1000000ULL) || (VFO_0_Freq > 4000000000ULL))
           VFO_0_Freq = 1000000ULL;
-        si5351.set_freq(VFO_0_Freq*4.0, SI5351_CLK0);
+        if (VFO_0_1x4x == VFO_1X)
+          si5351.set_freq(VFO_0_Freq, SI5351_CLK0);
+        else
+          si5351.set_freq(VFO_0_Freq<<2, SI5351_CLK0);
       }
       else if (currentVFONumber == 1)
       {
         VFO_1_Freq -= stepSize; // count down by step size
         if ((VFO_1_Freq < 1000000ULL) || (VFO_1_Freq > 4000000000ULL))
           VFO_1_Freq = 1000000ULL;
-        si5351.set_freq(VFO_1_Freq*4.0, SI5351_CLK1);
+        if (VFO_1_1x4x == VFO_1X)
+          si5351.set_freq(VFO_1_Freq, SI5351_CLK1);
+        else
+          si5351.set_freq(VFO_1_Freq<<2, SI5351_CLK1);
       }
       else if (currentVFONumber == 2)
       {
         VFO_2_Freq -= stepSize; // count down by step size
         if ((VFO_2_Freq < 1000000ULL) || (VFO_2_Freq > 4000000000ULL))
           VFO_2_Freq = 1000000ULL;
-        si5351.set_freq(VFO_2_Freq*4.0, SI5351_CLK2);
+        if (VFO_2_1x4x == VFO_1X)
+          si5351.set_freq(VFO_2_Freq, SI5351_CLK2);
+        else
+          si5351.set_freq(VFO_2_Freq<<2, SI5351_CLK2);
       }
     }
     printVFOFreq();
@@ -376,7 +383,7 @@ void printVFO1x4x(void)
   }
 }
 
-// Set current VFO 1X or 4X
+// Set current VFO to 1X or 4X
 void setVFO1x4x(void)
 {
   uint8_t controlVal;
@@ -470,6 +477,7 @@ void toggleVFOOnOff(void)
   }
 }
 
+// Print VFO to On or Off
 void printVFOOnOff(void)
 {
   u8x8.clearDisplay();
@@ -496,6 +504,7 @@ void printVFOOnOff(void)
   }
 }
 
+// Print Step Size
 void printStepSize(void)
 {
   u8x8.clearDisplay();
@@ -519,6 +528,7 @@ void printStepSize(void)
   return;
 }
 
+// Set VFO Step Size
 void setVFOStepSize(void)
 {
   uint8_t controlVal;

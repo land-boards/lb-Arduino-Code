@@ -1,5 +1,5 @@
 // vfoMenu
-// Menu System for VFO-003
+// Menu System for VFO-003 card
 // 
 // 128x32 OLED Screen is 16 col, 4 row
 // Print in 16x16 font for short menus
@@ -69,7 +69,7 @@ void displayTopMenuOption(void)
    u8x8.setInverseFont(0);
 }
 
-// displayControlMenu() - Controles screen
+// Display Control Menu - Controls screen
 // Set Freq, Select Clk, Step Size, Return
 void displayControlMenu(void)
 {
@@ -92,7 +92,7 @@ void displayControlMenu(void)
   u8x8.setInverseFont(0);
 }
 
-// 
+// Display Clock Control Menu
 void displayClkCtrlMenu(void)
 {
   u8x8.clearDisplay();
@@ -107,6 +107,7 @@ void displayClkCtrlMenu(void)
 }
 
 //  Clock Control Menu
+// Set 1x_4x, return
 void clkCtrlMenu(void)
 {
   ControlsState controlVal;
@@ -135,6 +136,8 @@ void clkCtrlMenu(void)
   }
 }
 
+// Control Menu
+// Set VFO Freq, Select VFO, Set VFO Step Size, Return
 void controlMenu(void)
 {
   ControlsState controlVal;
@@ -189,6 +192,7 @@ void displaySetupMenu(void)
   u8x8.setInverseFont(0);
 }
 
+// Setup menu
 void setupMenu(void)
 {
   ControlsState controlVal;
