@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,17 @@
 
   You should have received a copy of the GNU General Public License
   along with FabGL.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+ /*
+
+  MCP23S17 pins:
+    MISO = 35   (2 on TTGO VGA32)
+    MOSI = 12
+    CLK  = 14
+    CS   = none (13 on FabGL development board, shared and inverted with MicroSD)
+    INT  = 36 (interrupt pin connected to INTA of MCP23S17)
  */
 
 
@@ -38,7 +49,7 @@ fabgl::VGA16Controller DisplayController;
 fabgl::PS2Controller   PS2Controller;
 
 
-
+#define MCP_INT 36
 
 
 struct TestApp : public uiApp {
@@ -58,9 +69,11 @@ struct TestApp : public uiApp {
   uiLabel *        wifiResultLabel;
   uiLabel *        extgpioLabel[16];
   uiButton *       extgpioPlay;
+  uiLabel *        extIntLabel;
 
   int              gpioIn, gpioOut;
   bool             gpioInPrevState;
+  int              intOffDelay;
 
   fabgl::MCP23S17  mcp;
 
@@ -73,13 +86,11 @@ struct TestApp : public uiApp {
   void init() {
 
     rootWindow()->frameStyle().backgroundColor = Color::Cyan;
-    frame = new uiFrame(rootWindow(), "Hardware test", UIWINDOW_PARENTCENTER, Size(600, 420));
+    frame = new uiFrame(rootWindow(), "Hardware test", UIWINDOW_PARENTCENTER, Size(555, 380));
 
     int y = 20;
 
     // colors
-    new uiLabel(frame, "COLORS TEST:", Point(10, y));
-    y += 20;
     static const char * COLORSL[8] = { "Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White" };
     static const char * COLORSH[8] = { "B. Black", "B. Red", "B. Green", "B. Yellow", "B. Blue", "B. Magenta", "B. Cyan", "B. White" };
     for (int i = 0; i < 8; ++i) {
@@ -96,14 +107,14 @@ struct TestApp : public uiApp {
 
     // keyboard test
     new uiLabel(frame, "KEYBOARD TEST:", Point(10, y));
-    new uiTextEdit(frame, "Please type something", Point(120, y - 3), Size(450, 20));
+    new uiTextEdit(frame, "Please type something", Point(110, y - 3), Size(435, 20));
 
     y += 40;
 
     // sound test
     soundGenerator = new SoundGenerator;
     new uiLabel(frame, "SOUND TEST:", Point(10, y));
-    soundButton = new uiButton(frame, "Start", Point(120, y - 3), Size(80, 20), uiButtonKind::Switch);
+    soundButton = new uiButton(frame, "Start", Point(110, y - 3), Size(80, 20), uiButtonKind::Switch);
     soundButton->onChange = [&]() {
       if (soundButton->down()) {
         soundButton->setText("Stop");
@@ -118,7 +129,7 @@ struct TestApp : public uiApp {
 
     // SD Card test
     new uiLabel(frame, "SDCARD TEST:", Point(10, y));
-    sdButton = new uiButton(frame, "Start", Point(120, y - 3), Size(80, 20));
+    sdButton = new uiButton(frame, "Start", Point(110, y - 3), Size(80, 20));
     sdButton->onClick = [&]() {
       testSD();
     };
@@ -131,8 +142,8 @@ struct TestApp : public uiApp {
     static const int GPIOS_OUT[] = { 0, 1, 2, 3, 12, 13, 14, 16, 17, 18 };
     new uiLabel(frame, "GPIO TEST:", Point(10, y));
 
-    new uiLabel(frame, "In", Point(120, y - 18));
-    gpioInComboBox = new uiComboBox(frame, Point(120, y - 3), Size(34, 22), 60);
+    new uiLabel(frame, "In", Point(110, y - 18));
+    gpioInComboBox = new uiComboBox(frame, Point(110, y - 3), Size(34, 22), 60);
     for (int i = 0; i < sizeof(GPIOS_IN) / sizeof(int); ++i)
       gpioInComboBox->items().appendFmt("%d", GPIOS_IN[i]);
     gpioInComboBox->onChange = [&]() {
@@ -142,8 +153,8 @@ struct TestApp : public uiApp {
     gpioIn = GPIOS_IN[10];
     pinMode(gpioIn, INPUT);
     gpioInComboBox->selectItem(10);
-    new uiLabel(frame, "State", Point(162, y - 18));
-    gpioInState = new uiButton(frame, "", Point(162, y - 3), Size(25, 22), uiButtonKind::Switch);
+    new uiLabel(frame, "State", Point(152, y - 18));
+    gpioInState = new uiButton(frame, "", Point(152, y - 3), Size(25, 22), uiButtonKind::Switch);
     gpioInPrevState = 0;
 
     new uiLabel(frame, "Out", Point(220, y - 18));
@@ -175,12 +186,12 @@ struct TestApp : public uiApp {
 
     if (initMCP()) {
       new uiLabel(frame, "EXT GPIO TEST:", Point(10, y));
-      new uiLabel(frame, "Outputs", Point(120, y - 13));
-      new uiLabel(frame, "Inputs", Point(365, y - 13));
+      new uiLabel(frame, "Outputs", Point(110, y - 13));
+      new uiLabel(frame, "Inputs", Point(355, y - 13));
+      constexpr int w = 20;
+      constexpr int h = 22;
       for (int i = 0; i < 16; ++i) {
-        constexpr int w = 20;
-        constexpr int h = 22;
-        extgpioLabel[i] = new uiLabel(frame, "", Point(120 + i * (w + 2), y + 3), Size(w, h));
+        extgpioLabel[i] = new uiLabel(frame, "", Point(110 + i * (w + 2), y + 3), Size(w, h));
         extgpioLabel[i]->labelStyle().textAlign = uiHAlign::Center;
         extgpioLabel[i]->setTextFmt("%c%d", i < 8 ? 'A' : 'B', i & 7);
         if (i >= MCP_B3) {
@@ -200,8 +211,15 @@ struct TestApp : public uiApp {
         }
       }
 
+      // MCP_INT pin
+      extIntLabel = new uiLabel(frame, "INT", Point(462, y + 3), Size(25, h));
+      extIntLabel->labelStyle().textAlign = uiHAlign::Center;
+      extIntLabel->labelStyle().backgroundColor = RGB888(64, 64, 0);
+      mcp.enableINTMirroring(true); // INTA = INTB
+      pinMode(MCP_INT, INPUT);
+
       // play button
-      extgpioPlay = new uiButton(frame, "Play", Point(490, y + 3), Size(42, 22));
+      extgpioPlay = new uiButton(frame, "Play", Point(500, y + 3), Size(42, 22));
       extgpioPlay->onClick = [&]() { playExtGPIOS(); };
 
       y += 50;
@@ -210,11 +228,11 @@ struct TestApp : public uiApp {
 
     // wifi
     new uiLabel(frame, "WIFI TEST:", Point(10, y));
-    wifiButton = new uiButton(frame, "Start", Point(120, y - 3), Size(80, 20));
+    wifiButton = new uiButton(frame, "Start", Point(110, y - 3), Size(80, 20));
     wifiButton->onClick = [&]() {
       testWifi();
     };
-    wifiResultLabel = new uiLabel(frame, "", Point(210, y));
+    wifiResultLabel = new uiLabel(frame, "", Point(200, y));
 
 
     // timer
@@ -255,11 +273,22 @@ struct TestApp : public uiApp {
       gpioInState->repaint();
     }
     // read external GPIOs
-    if (mcp.available() && mcp.getPortIntFlags(MCP_PORTB)) {
-      // read B3...B7 GPIOs
-      for (int i = MCP_B3; i <= MCP_B7; ++i) {
-        extgpioLabel[i]->labelStyle().backgroundColor = mcp.readGPIO(i) ? RGB888(255, 0, 0) : RGB888(64, 0, 0);
-        extgpioLabel[i]->repaint();
+    if (mcp.available()) {
+      // check MCP_INT has been triggered correctly
+      if (digitalRead(MCP_INT) == LOW) {
+        extIntLabel->labelStyle().backgroundColor = RGB888(255, 255, 0);
+        extIntLabel->repaint();
+        intOffDelay = 2;
+      } else if (--intOffDelay == 0) {
+        extIntLabel->labelStyle().backgroundColor = RGB888(64, 64, 0);
+        extIntLabel->repaint();
+      }
+      if (mcp.getPortIntFlags(MCP_PORTB)) {
+        // read B3...B7 GPIOs
+        for (int i = MCP_B3; i <= MCP_B7; ++i) {
+          extgpioLabel[i]->labelStyle().backgroundColor = mcp.readGPIO(i) ? RGB888(255, 0, 0) : RGB888(64, 0, 0);
+          extgpioLabel[i]->repaint();
+        }
       }
     }
   }
@@ -322,6 +351,7 @@ struct TestApp : public uiApp {
 
   void testSD() {
     // disable MCP (just because SD should be initialized before MCP)
+    bool mcpAvailable = mcp.available();
     mcp.end();
     // mount test
     FileBrowser fb;
@@ -330,6 +360,8 @@ struct TestApp : public uiApp {
     if (!r) {
       sdResultLabel->labelStyle().textColor = Color::BrightRed;
       sdResultLabel->setText("Mount Failed!");
+      if (mcpAvailable)
+        initMCP();
       return;
     }
     // write test
@@ -364,7 +396,8 @@ struct TestApp : public uiApp {
     }
     free(fname);
     fb.unmountSDCard();
-    initMCP();
+    if (mcpAvailable)
+      initMCP();
     if (!f || !ok) {
       sdResultLabel->labelStyle().textColor = Color::BrightRed;
       sdResultLabel->setText("Read Failed!");
@@ -408,7 +441,6 @@ struct TestApp : public uiApp {
 } app;
 
 
-
 void setup()
 {
   //Serial.begin(115200); delay(500); Serial.write("\n\n\n"); // DEBUG ONLY
@@ -417,7 +449,7 @@ void setup()
 
   DisplayController.queueSize = 350;  // trade UI speed using less RAM and allow both WiFi and SD Card FS
   DisplayController.begin();
-  DisplayController.setResolution(VESA_640x480_75Hz);
+  DisplayController.setResolution(VESA_640x480_75Hz, 570, 390);
 }
 
 

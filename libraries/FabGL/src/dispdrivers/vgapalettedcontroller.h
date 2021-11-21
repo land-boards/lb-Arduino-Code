@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ class VGAPalettedController : public VGABaseController {
 
 public:
 
-  VGAPalettedController(int linesCount, NativePixelFormat nativePixelFormat, int viewPortRatioDiv, int viewPortRatioMul, intr_handler_t isrHandler);
+  VGAPalettedController(int linesCount, int columnsQuantum, NativePixelFormat nativePixelFormat, int viewPortRatioDiv, int viewPortRatioMul, intr_handler_t isrHandler);
   ~VGAPalettedController();
 
   // unwanted methods
@@ -85,6 +85,8 @@ public:
   void setResolution(VGATimings const& timings, int viewPortWidth = -1, int viewPortHeight = -1, bool doubleBuffered = false);
 
   int getPaletteSize();
+
+  virtual int colorsCount()      { return getPaletteSize(); }
 
   /**
    * @brief Determines the maximum time allowed to process primitives
@@ -166,7 +168,8 @@ private:
   uint8_t                     m_packedRGB222_to_PaletteIndex[64];
 
   // configuration
-  int                         m_linesCount;
+  int                         m_linesCount;     // viewport height must be divisible by m_linesCount
+  int                         m_columnsQuantum; // viewport width must be divisble by m_columnsQuantum
   NativePixelFormat           m_nativePixelFormat;
   int                         m_viewPortRatioDiv;
   int                         m_viewPortRatioMul;

@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ public:
    * Example:
    *
    *     // Color item 0 is pure Red
-   *     displayController.setPaletteItem(0, RGB(255, 0, 0));
+   *     displayController.setPaletteItem(0, RGB888(255, 0, 0));
    */
   void setPaletteItem(int index, RGB888 const & color);
 

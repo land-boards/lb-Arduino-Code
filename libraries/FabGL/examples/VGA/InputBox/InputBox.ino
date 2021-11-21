@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 
 #include "fabgl.h"
 #include "inputbox.h"
+#include "fonts/font_sanserif_8x16.h"
 
 
 void setup()
@@ -40,16 +41,27 @@ void loop()
 {
   // initializes input box
   InputBox ib;
-  ib.begin();
+  ib.begin(VGA_640x480_60Hz, 640, 350);
+  ib.setBackgroundColor(RGB888(0, 0, 0));
+
+  ib.onPaint = [&](Canvas * canvas) {
+    canvas->selectFont(&fabgl::FONT_SANSERIF_8x16);
+    canvas->setPenColor(RGB888(255, 255, 0));
+    canvas->drawText(85, 5, "InputBox Demo - www.fabgl.com - by Fabrizio Di Vittorio");
+  };
+
+  // setup automatic OK after 10 seconds
+  ib.setAutoOK(10);
+
 
   ib.message("Welcome!", "Welcome to FabGL InputBox demo!");
 
 
   ////////////////////////////////////////////////////
   // Example of progress bar
-  InputResult r = ib.progressBox("Example of Progress Bar", "Abort", true, 200, [&](fabgl::ProgressApp * app) {
+  InputResult r = ib.progressBox("Example of Progress Bar", "Abort", true, 200, [&](fabgl::ProgressForm * form) {
     for (int i = 0; i <= 100; ++i) {
-      if (!app->update(i, "Index is %d/100", i))
+      if (!form->update(i, "Index is %d/100", i))
         break;
       delay(40);
     }
@@ -61,7 +73,7 @@ void loop()
 
   ////////////////////////////////////////////////////
   // Example of simple menu (items from separated strings)
-  int s = ib.menu("Example of simple Menu", "Click on one item", "Item number zero;Item number one;Item number two;Item number three");
+  int s = ib.menu("Simple Menu", "Click on one item", "Item number zero;Item number one;Item number two;Item number three");
   ib.messageFmt("", nullptr, "OK", "You have selected item %d", s);
 
 
@@ -78,10 +90,61 @@ void loop()
 
 
   ////////////////////////////////////////////////////
-  // Example of options selection box with OK button (items from separated strings) and autoOK of 5 seconds
-  s = ib.select("Download Boot Disk", "Select boot disk to download", "FreeDOS;Minix 2.0;MS-DOS 5", ';', "Cancel", "OK", 5);
-  ib.messageFmt("", nullptr, "OK", "You have selected item %d", s);
-
+  // Example of options selection box with OK button (items from separated strings)
+  list.clear();
+  list.append("Item 0");
+  list.append("Item 1");
+  list.append("Item 2");
+  for (bool loop = true; loop; ) {
+    ib.setupButton(0, "Add");
+    ib.setupButton(1, "Remove");
+    ib.setupButton(2, "Options", "Edit;Restore;Advanced", 50);
+    ib.setMinButtonsWidth(60);
+    auto r = ib.select("Items selection", "Select an item", &list, "Cancel", "OK");
+    switch (r) {
+      // OK button
+      case InputResult::Enter:
+        ib.messageFmt(nullptr, nullptr, "OK", "You have selected item %d", list.getFirstSelected());
+        loop = false;
+        break;
+      // add new item button
+      case InputResult::ButtonExt0:
+      {
+        char value[32] = "";
+        if (ib.textInput("New Item", "Please enter item value", value, 31) == InputResult::Enter) {
+          list.takeStrings();
+          list.append(value);
+        }
+        break;
+      }
+      // remove item button
+      case InputResult::ButtonExt1:
+        if (list.getFirstSelected() > -1 && ib.message("Please confirm", "Remove Item?", "No", "Yes") == InputResult::Enter)
+          list.remove(list.getFirstSelected());
+        break;
+      // button with subitems (Edit / Restore / Advanced)
+      case InputResult::ButtonExt2:
+        switch (ib.selectedSubItem()) {
+          // Edit sub-button
+          case 0:
+            ib.message(nullptr, "Edit - not implented!");
+            break;
+          // Restore
+          case 1:
+            ib.message(nullptr, "Restore - not implented!");
+            break;
+          // Advanced
+          case 2:
+            ib.message(nullptr, "Advanced - not implented!");
+            break;
+        }
+        break;
+      // cancel
+      default:
+        loop = false;
+        break;
+    }
+  }
 
   ////////////////////////////////////////////////////
   // Example of options selection box with OK button (items from StringList)
@@ -103,13 +166,39 @@ void loop()
 
 
   ////////////////////////////////////////////////////
+  // File Browser
+  char const * path = nullptr;
+  if (FileBrowser::mountSDCard(false, "/SD"))
+    path = "/SD";
+  else if (FileBrowser::mountSPIFFS(true, "/Flash"))
+    path = "/Flash";
+  if (path) {
+    ib.folderBrowser("Folder Browser", path);
+  }
+
+
+  ////////////////////////////////////////////////////
+  // File Select
+  if (path) {
+    char filename[16] = "";
+    char directory[32];
+    strcpy(directory, path);
+    if (ib.fileSelector("File Select", "Filename: ", directory, sizeof(directory) - 1, filename, sizeof(filename) - 1) == InputResult::Enter) {
+      ib.messageFmt("", nullptr, "OK", "Folder = %s, File = %s", directory, filename);
+    }
+    FileBrowser::unmountSDCard();
+    FileBrowser::unmountSPIFFS();
+  }
+
+
+  ////////////////////////////////////////////////////
   // Example WiFi connection wizard
   if (ib.message("WiFi Configuration", "Configure WiFi?", "No", "Yes") == InputResult::Enter) {
 
     // yes, scan for networks showing a progress dialog box
     int networksCount = 0;
-    ib.progressBox("", nullptr, false, 200, [&](fabgl::ProgressApp * app) {
-      app->update(0, "Scanning WiFi networks...");
+    ib.progressBox("", nullptr, false, 200, [&](fabgl::ProgressForm * form) {
+      form->update(0, "Scanning WiFi networks...");
       networksCount = WiFi.scanNetworks();
     });
 
@@ -133,10 +222,10 @@ void loop()
           char SSID[50];
           strcpy(SSID, WiFi.SSID(s).c_str());
           bool connected = false;
-          ib.progressBox("", nullptr, true, 200, [&](fabgl::ProgressApp * app) {
+          ib.progressBox("", nullptr, true, 200, [&](fabgl::ProgressForm * form) {
             WiFi.begin(SSID, psw);
             for (int i = 0; i < 32 && WiFi.status() != WL_CONNECTED; ++i) {
-              if (!app->update(i * 100 / 32, "Connecting to %s...", SSID))
+              if (!form->update(i * 100 / 32, "Connecting to %s...", SSID))
                 break;
               delay(500);
               if (i == 16)
@@ -156,6 +245,8 @@ void loop()
     }
     WiFi.scanDelete();
   }
+
+  ib.message("Restart", "Ok, press OK to restart!");
 
 
   // finalizes input box

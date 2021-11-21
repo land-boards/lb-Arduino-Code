@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -79,13 +79,11 @@ namespace fabgl {
 
 i8042::i8042()
 {
-  m_mutex = xSemaphoreCreateMutex();
 }
 
 
 i8042::~i8042()
 {
-  vSemaphoreDelete(m_mutex);
 }
 
 
@@ -95,10 +93,19 @@ void i8042::init()
   Mouse::quickCheckHardware();
 
   // keyboard configured on port 0, and optionally mouse on port 1
-  m_PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1, KbdMode::NoVirtualKeys);
+  if (!PS2Controller::initialized())
+    m_PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1, KbdMode::NoVirtualKeys);
+  else
+    m_PS2Controller.keyboard()->enableVirtualKeys(false, false);
   m_keyboard = m_PS2Controller.keyboard();
   m_mouse    = m_PS2Controller.mouse();
 
+  reset();
+}
+
+
+void i8042::reset()
+{
   m_STATUS      = STATUS_SYSFLAG | STATUS_INH;
   m_DBBOUT      = 0;
   m_DBBIN       = 0;
@@ -110,12 +117,13 @@ void i8042::init()
 
   m_mouseIntTrigs = 0;
   m_keybIntTrigs  = 0;
+
+  m_sysReqTriggered = false;
 }
 
 
 uint8_t i8042::read(int address)
 {
-  AutoSemaphore autoSemaphore(m_mutex);
   switch (address) {
 
     // 0 = read 8042 output register (DBBOUT) and set OBF = 0 and AOBF = 0
@@ -140,8 +148,6 @@ uint8_t i8042::read(int address)
 
 void i8042::write(int address, uint8_t value)
 {
-  AutoSemaphore autoSemaphore(m_mutex);
-
   switch (address) {
 
     // 0 = write 8042 input register (DBBIN), set STATUS_CMD = 0 and STATUS_IBF = 1
@@ -166,13 +172,13 @@ void i8042::write(int address, uint8_t value)
 
 void i8042::tick()
 {
-  AutoSemaphore autoSemaphore(m_mutex);
-
   // something to receive from keyboard?
-  if ((m_STATUS & STATUS_OBF) == 0 && m_keyboard->scancodeAvailable()) {
+  if ((m_STATUS & STATUS_OBF) == 0 && m_keyboard->scancodeAvailable() && (m_commandByte & CMDBYTE_DISABLE_KEYBOARD) == 0) {
     if (m_commandByte & CMDBYTE_STD_SCAN_CONVERSION) {
       // transform "set 2" scancodes to "set 1"
-      uint8_t scode = Keyboard::convScancodeSet2To1(m_keyboard->getNextScancode());  // "set 1" code (0xf0 doesn't change!)
+      int scode2 = m_keyboard->getNextScancode();
+      checkSysReq(scode2);
+      uint8_t scode = Keyboard::convScancodeSet2To1(scode2);  // "set 1" code (0xf0 doesn't change!)
       m_DBBOUT = (m_DBBOUT == 0xf0 ? (0x80 | scode) : scode);
       if (scode != 0xf0) {
         m_STATUS |= STATUS_OBF;
@@ -181,14 +187,16 @@ void i8042::tick()
       }
     } else {
       // no transform
-      m_DBBOUT = m_keyboard->getNextScancode();
+      int scode2 = m_keyboard->getNextScancode();
+      checkSysReq(scode2);
+      m_DBBOUT = scode2;
       m_STATUS |= STATUS_OBF;
       ++m_keybIntTrigs;
     }
   }
 
   // something to receive from mouse?
-  if ((m_STATUS & STATUS_OBF) == 0 && (m_mousePacketIdx > -1 || m_mouse->packetAvailable())) {
+  if ((m_STATUS & STATUS_OBF) == 0 && (m_mousePacketIdx > -1 || m_mouse->packetAvailable()) && (m_commandByte & CMDBYTE_DISABLE_MOUSE) == 0) {
     if (m_mousePacketIdx == -1)
       m_mouse->getNextPacket(&m_mousePacket);
     m_DBBOUT = m_mousePacket.data[++m_mousePacketIdx];
@@ -287,7 +295,7 @@ void i8042::execCommand()
       break;
 
     case CTRLCMD_SYSTEM_RESET:
-      esp_restart();
+      m_reset(m_context);
       break;
 
     default:
@@ -299,7 +307,6 @@ void i8042::execCommand()
 
 void i8042::enableMouse(bool value)
 {
-  AutoSemaphore autoSemaphore(m_mutex);
   updateCommandByte(value ? (m_commandByte & ~CMDBYTE_DISABLE_MOUSE) : (m_commandByte | CMDBYTE_DISABLE_MOUSE));
 }
 
@@ -341,6 +348,18 @@ bool i8042::trigMouseInterrupt()
 }
 
 
+// check if SysReq (ALT + PRINT SCREEN) has been released
+void i8042::checkSysReq(int scode2)
+{
+  if (m_DBBOUT == 0xf0) {
+    if (scode2 == 0x84) { // SysReq released?
+      m_sysReqTriggered = true;
+    } else if (m_sysReqTriggered && scode2 == 0x11) { // ALT released?
+      m_sysReqTriggered = false;
+      m_sysReq(m_context);
+    }
+  }
+}
 
 
 

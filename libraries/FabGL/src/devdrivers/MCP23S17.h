@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -194,6 +194,8 @@ public:
    *
    * @param hwAddr Hardware address of additional device
    *
+   * @return True if MCP23S17 is available and correctly initialized
+   *
    * Example:
    *
    *     MCP23S17 io;
@@ -203,7 +205,7 @@ public:
    *     io.configureGPIO(MCP_A0, MCPDir::Output, false, 0);  // set A0 of device 0 as output
    *     io.configureGPIO(MCP_A0, MCPDir::Input, false, 1);   // set A0 of device 1 as input
    */
-  void initDevice(uint8_t hwAddr);
+  bool initDevice(uint8_t hwAddr);
 
 
   //// registers read/write ////
@@ -284,6 +286,15 @@ public:
    */
   void setINTActiveHigh(bool value, uint8_t hwAddr = 0);
 
+  /**
+   * @brief Gets the polarity of the INT pins
+   *
+   * @param hwAddr Optional hardware device address
+   *
+   * @return true if INT is high on interrupt
+   */
+  bool getINTActiveHigh(uint8_t hwAddr = 0)                              { return readReg(MCP_IOCON, hwAddr) & MCP_IOCON_INTPOL; }
+
 
   //// port setup, read, write (8 bit granularity) ////
 
@@ -334,6 +345,16 @@ public:
    *     io.enablePortPullUp(MCP_PORTA, 0b10000000);
    */
   void enablePortPullUp(int port, uint8_t value, uint8_t hwAddr = 0)     { writeReg(MCP_GPPU + port, value, hwAddr); }
+
+  /**
+   * @brief Gets port pull-ups
+   *
+   * @param port Port to set pull-ups (MCP_PORTA or MCP_PORTB)
+   * @param hwAddr Optional hardware device address
+   *
+   * @return Pull-ups mask (1 = pull-up enabled)
+   */
+  uint8_t getPortPullUp(int port, uint8_t hwAddr = 0)                    { return readReg(MCP_GPPU + port, hwAddr); }
 
   /**
    * @brief Sets status of output pins of specified port

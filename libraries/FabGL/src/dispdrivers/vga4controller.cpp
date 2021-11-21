@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -81,6 +81,8 @@ static inline __attribute__((always_inline)) void VGA4_SETPIXEL(int x, int y, in
 #define VGA4_INVERT_PIXEL(x, y)             VGA4_INVERTPIXELINROW((uint8_t*)VGA4Controller::s_viewPort[(y)], (x))
 
 
+#define VGA4_COLUMNSQUANTUM 16
+
 
 
 /*************************************************************************************/
@@ -92,7 +94,7 @@ VGA4Controller * VGA4Controller::s_instance = nullptr;
 
 
 VGA4Controller::VGA4Controller()
-  : VGAPalettedController(VGA4_LinesCount, NativePixelFormat::PALETTE4, 4, 1, ISRHandler)
+  : VGAPalettedController(VGA4_LinesCount, VGA4_COLUMNSQUANTUM, NativePixelFormat::PALETTE4, 4, 1, ISRHandler)
 {
   s_instance = this;
   m_packedPaletteIndexQuad_to_signals = (uint32_t *) heap_caps_malloc(256 * sizeof(uint32_t), MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);

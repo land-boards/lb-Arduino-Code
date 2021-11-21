@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,9 @@
 
 
 #include <string.h>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "MCP23S17.h"
 
@@ -85,14 +88,7 @@ bool MCP23S17::begin(int MISO, int MOSI, int CLK, int CS, int CSActiveState, int
   m_CS      = int2gpio(CS);
   m_SPIHost = (spi_host_device_t) host;
 
-  bool r = SPIBegin(CSActiveState);
-  if (r) {
-    // disable sequential mode
-    // select bank 0
-    m_IOCON[0] = MCP_IOCON_SEQOP;
-    writeReg(MCP_IOCON, m_IOCON[0]);
-    r = readReg(MCP_IOCON) == m_IOCON[0];
-  }
+  bool r = SPIBegin(CSActiveState) && initDevice(0);
   if (!r)
     end();
   return r;
@@ -102,10 +98,15 @@ bool MCP23S17::begin(int MISO, int MOSI, int CLK, int CS, int CSActiveState, int
 // - disable sequential mode
 // - select bank 0
 // - enable hardware address
-void MCP23S17::initDevice(uint8_t hwAddr)
+bool MCP23S17::initDevice(uint8_t hwAddr)
 {
-  if (hwAddr < MCP_MAXDEVICES)
-    writeReg(MCP_IOCON, MCP_IOCON_SEQOP | MCP_IOCON_HAEN);
+  bool r = false;
+  if (hwAddr < MCP_MAXDEVICES) {
+    m_IOCON[hwAddr] = MCP_IOCON_SEQOP | MCP_IOCON_HAEN;
+    writeReg(MCP_IOCON, m_IOCON[hwAddr], hwAddr);
+    r = readReg(MCP_IOCON, hwAddr) == m_IOCON[hwAddr];
+  }
+  return r;
 }
 
 
@@ -133,7 +134,7 @@ bool MCP23S17::SPIBegin(int CSActiveState)
     devconf.flags          = (CSActiveState == 1 ? SPI_DEVICE_POSITIVE_CS : 0);
     devconf.queue_size     = 1;
     r = spi_bus_add_device(m_SPIHost, &devconf, &m_SPIDevHandle);
-    if (r != ESP_OK)
+    if (r != ESP_OK && !FileBrowser::mountedSDCard())
       spi_bus_free(m_SPIHost);
     return r == ESP_OK;
   }
@@ -146,7 +147,8 @@ void MCP23S17::SPIEnd()
   if (m_SPIDevHandle) {
     spi_bus_remove_device(m_SPIDevHandle);
     m_SPIDevHandle = nullptr;
-    spi_bus_free(m_SPIHost);  // this will not free bus if there is a device still connected (ie sdcard)
+    if (!FileBrowser::mountedSDCard())
+      spi_bus_free(m_SPIHost);
   }
 }
 

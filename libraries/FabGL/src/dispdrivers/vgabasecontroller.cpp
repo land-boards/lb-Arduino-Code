@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -231,7 +231,7 @@ bool VGABaseController::setDMABuffersCount(int buffersCount)
 
 
 // modeline syntax:
-//   "label" clock_mhz hdisp hsyncstart hsyncend htotal vdisp vsyncstart vsyncend vtotal (+HSync | -HSync) (+VSync | -VSync) [DoubleScan | QuadScan] [FrontPorchBegins | SyncBegins | BackPorchBegins | VisibleBegins] [MultiScanBlank]
+//   "label" clock_mhz hdisp hsyncstart hsyncend htotal vdisp vsyncstart vsyncend vtotal [(+HSync | -HSync) (+VSync | -VSync)] [DoubleScan | QuadScan] [FrontPorchBegins | SyncBegins | BackPorchBegins | VisibleBegins] [MultiScanBlank]
 bool VGABaseController::convertModelineToTimings(char const * modeline, VGATimings * timings)
 {
   float freq;
@@ -256,9 +256,9 @@ bool VGABaseController::convertModelineToTimings(char const * modeline, VGATimin
     timings->VSyncLogic     = '-';
     timings->scanCount      = 1;
     timings->multiScanBlack = 0;
-    timings->HStartingBlock = VGAScanStart::FrontPorch;
+    timings->HStartingBlock = VGAScanStart::VisibleArea;
 
-    // get (+HSync | -HSync) (+VSync | -VSync)
+    // get [(+HSync | -HSync) (+VSync | -VSync)]
     char const * pc = modeline + pos;
     for (; *pc; ++pc) {
       if (*pc == '+' || *pc == '-') {
@@ -270,7 +270,8 @@ bool VGABaseController::convertModelineToTimings(char const * modeline, VGATimin
             ++pc;
           break;
         }
-      }
+      } else if (*pc != ' ')
+        break;
     }
 
     // get [DoubleScan | QuadScan] [FrontPorchBegins | SyncBegins | BackPorchBegins | VisibleBegins] [MultiScanBlank]

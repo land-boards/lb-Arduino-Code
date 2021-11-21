@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1244,6 +1244,8 @@ void Machine::VIA2PortIn(void * context, VIA6522 * via, VIA6522Port port)
       via->setPB(m->m_colStatus);
       if (m->m_JOY[JoyRight])
         via->setBitPB(7, 0);
+      else
+        via->openBitPB(7);
       break;
 
     case VIA6522Port::PA:

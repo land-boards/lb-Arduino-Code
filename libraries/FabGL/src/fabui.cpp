@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,12 +43,16 @@
 #pragma GCC optimize ("O2")
 
 
+
+#define DUMPEVENTS 0
+
+
 namespace fabgl {
 
 
 
 // debug only!
-/*
+#if DUMPEVENTS
 void dumpEvent(uiEvent * event)
 {
   static int idx = 0;
@@ -56,62 +60,93 @@ void dumpEvent(uiEvent * event)
                                   "UIEVT_DEACTIVATE", "UIEVT_MOUSEMOVE", "UIEVT_MOUSEWHEEL", "UIEVT_MOUSEBUTTONDOWN",
                                   "UIEVT_MOUSEBUTTONUP", "UIEVT_SETPOS", "UIEVT_SETSIZE", "UIEVT_RESHAPEWINDOW",
                                   "UIEVT_MOUSEENTER", "UIEVT_MOUSELEAVE", "UIEVT_MAXIMIZE", "UIEVT_MINIMIZE", "UIEVT_RESTORE",
-                                  "UIEVT_SHOW", "UIEVT_HIDE", "UIEVT_SETFOCUS", "UIEVT_KILLFOCUS", "UIEVT_KEYDOWN", "UIEVT_KEYUP",
-                                  "UIEVT_TIMER", "UIEVT_DBLCLICK", "UIEVT_DBLCLICK", "UIEVT_EXITMODAL", "UIEVT_DESTROY", "UIEVT_CLOSE",
+                                  "UIEVT_SHOW", "UIEVT_HIDE", "UIEVT_SETFOCUS", "UIEVT_KILLFOCUS", "UIEVT_KEYDOWN", "UIEVT_KEYUP", "UIEVT_KEYTYPE",
+                                  "UIEVT_TIMER", "UIEVT_CLICK", "UIEVT_DBLCLICK", "UIEVT_EXITMODAL", "UIEVT_DESTROY", "UIEVT_CLOSE",
                                   "UIEVT_QUIT", "UIEVT_CREATE", "UIEVT_CHILDSETFOCUS", "UIEVT_CHILDKILLFOCUS"
                                 };
-  Serial.printf("#%d ", idx++);
-  Serial.write(TOSTR[event->id]);
-  if (event->dest && event->dest->objectType().uiFrame)
-    Serial.printf(" dst=\"%s\"(%p) ", ((uiFrame*)(event->dest))->title(), event->dest);
+  printf("#%d ", idx++);
+  printf(TOSTR[event->id]);
+  if (event->dest && event->dest->objectType().uiFrame && ((uiFrame*)(event->dest))->title())
+    printf(" dst=\"%s\"(%p) ", ((uiFrame*)(event->dest))->title(), event->dest);
   else
-    Serial.printf(" dst=%p ", event->dest);
+    printf(" dst=%p ", event->dest);
+  if (event->dest) {
+    auto ot = event->dest->objectType();
+    printf("[");
+    if (ot.uiApp) printf("uiApp ");
+    if (ot.uiEvtHandler) printf("uiEvtHandler ");
+    if (ot.uiWindow) printf("uiWindow ");
+    if (ot.uiFrame) printf("uiFrame ");
+    if (ot.uiControl) printf("uiControl ");
+    if (ot.uiScrollableControl) printf("uiScrollableControl ");
+    if (ot.uiButton) printf("uiButton ");
+    if (ot.uiTextEdit) printf("uiTextEdit ");
+    if (ot.uiLabel) printf("uiLabel ");
+    if (ot.uiImage) printf("uiImage ");
+    if (ot.uiPanel) printf("uiPanel ");
+    if (ot.uiPaintBox) printf("uiPaintBox ");
+    if (ot.uiCustomListBox) printf("uiCustomListBox ");
+    if (ot.uiListBox) printf("uiListBox ");
+    if (ot.uiFileBrowser) printf("uiFileBrowser ");
+    if (ot.uiComboBox) printf("uiComboBox ");
+    if (ot.uiCheckBox) printf("uiCheckBox ");
+    if (ot.uiSlider) printf("uiSlider ");
+    if (ot.uiColorListBox) printf("uiColorListBox ");
+    if (ot.uiCustomComboBox) printf("uiCustomComboBox ");
+    if (ot.uiColorBox) printf("uiColorBox ");
+    if (ot.uiColorComboBox) printf("uiColorComboBox ");
+    if (ot.uiProgressBar) printf("uiProgressBar ");
+    if (ot.uiSplitButton) printf("uiSplitButton ");
+    if (ot.uiSimpleMenu) printf("uiSimpleMenu ");
+    printf("] ");
+  }
   switch (event->id) {
     case UIEVT_DEBUGMSG:
-      Serial.write(event->params.debugMsg);
+      printf(event->params.debugMsg);
       break;
     case UIEVT_MOUSEMOVE:
-      Serial.printf("X=%d Y=%d", event->params.mouse.status.X, event->params.mouse.status.Y);
+      printf("X=%d Y=%d", event->params.mouse.status.X, event->params.mouse.status.Y);
       break;
     case UIEVT_MOUSEWHEEL:
-      Serial.printf("delta=%d", event->params.mouse.status.wheelDelta);
+      printf("delta=%d", event->params.mouse.status.wheelDelta);
       break;
     case UIEVT_MOUSEBUTTONDOWN:
     case UIEVT_MOUSEBUTTONUP:
     case UIEVT_DBLCLICK:
-      Serial.printf("btn=%d", event->params.mouse.changedButton);
+      printf("btn=%d", event->params.mouse.changedButton);
       break;
     case UIEVT_PAINT:
     case UIEVT_GENPAINTEVENTS:
     case UIEVT_RESHAPEWINDOW:
-      Serial.printf("rect=%d,%d,%d,%d", event->params.rect.X1, event->params.rect.Y1, event->params.rect.X2, event->params.rect.Y2);
+      printf("rect=%d,%d,%d,%d", event->params.rect.X1, event->params.rect.Y1, event->params.rect.X2, event->params.rect.Y2);
       break;
     case UIEVT_SETPOS:
-      Serial.printf("pos=%d,%d", event->params.pos.X, event->params.pos.Y);
+      printf("pos=%d,%d", event->params.pos.X, event->params.pos.Y);
       break;
     case UIEVT_SETSIZE:
-      Serial.printf("size=%d,%d", event->params.size.width, event->params.size.height);
+      printf("size=%d,%d", event->params.size.width, event->params.size.height);
       break;
     case UIEVT_KEYDOWN:
     case UIEVT_KEYUP:
+    case UIEVT_KEYTYPE:
       #ifdef FABGLIB_HAS_VirtualKeyO_STRING
-      Serial.printf("VK=%s ", Keyboard::virtualKeyToString(event->params.key.VK));
-      if (event->params.key.LALT) Serial.write(" +LALT");
-      if (event->params.key.RALT) Serial.write(" +RALT");
-      if (event->params.key.CTRL) Serial.write(" +CTRL");
-      if (event->params.key.SHIFT) Serial.write(" +SHIFT");
-      if (event->params.key.GUI) Serial.write(" +GUI");
+      printf("VK=%s ", Keyboard::virtualKeyToString(event->params.key.VK));
+      if (event->params.key.LALT) printf(" +LALT");
+      if (event->params.key.RALT) printf(" +RALT");
+      if (event->params.key.CTRL) printf(" +CTRL");
+      if (event->params.key.SHIFT) printf(" +SHIFT");
+      if (event->params.key.GUI) printf(" +GUI");
       #endif
       break;
     case UIEVT_TIMER:
-      Serial.printf("handle=%p", event->params.timerHandle);
+      printf("handle=%p", event->params.timerHandle);
       break;
     default:
       break;
   }
-  Serial.write("\n");
+  printf("\n");
 }
-*/
+#endif
 
 
 
@@ -177,10 +212,12 @@ uiApp::uiApp()
     m_rootWindow(nullptr),
     m_activeWindow(nullptr),
     m_focusedWindow(nullptr),
+    m_lastFocusedWindow(nullptr),
     m_capturedMouseWindow(nullptr),
     m_freeMouseWindow(nullptr),
     m_modalWindow(nullptr),
     m_combineMouseMoveEvents(false),
+    m_keyDownHandler(nullptr),
     m_caretWindow(nullptr),
     m_caretTimer(nullptr),
     m_caretInvertState(-1),
@@ -200,6 +237,7 @@ uiApp::~uiApp()
 int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboard, Mouse * mouse)
 {
   m_displayController = displayController;
+  m_displayColors     = displayController->colorsCount();
 
   m_canvas = new Canvas(m_displayController);
 
@@ -258,10 +296,12 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
     uiEvent event;
     if (getEvent(&event, -1)) {
 
-      // debug
-      //dumpEvent(&event);
-
       preprocessEvent(&event);
+
+      #if DUMPEVENTS
+      printf("run(): ");
+      dumpEvent(&event);
+      #endif
 
       if (event.dest)
         event.dest->processEvent(&event);
@@ -306,20 +346,34 @@ void uiApp::asyncRunTask(void * arg)
 {
   auto app = (uiApp*)arg;
   app->run(app->m_displayController, app->m_keyboard, app->m_mouse);
+  if (app->m_asyncRunWait)
+    xSemaphoreGive(app->m_asyncRunWait);
   vTaskDelete(NULL);
 }
 
 
-void uiApp::runAsync(BitmappedDisplayController * displayController, int taskStack, Keyboard * keyboard, Mouse * mouse)
+uiApp & uiApp::runAsync(BitmappedDisplayController * displayController, int taskStack, Keyboard * keyboard, Mouse * mouse)
 {
   m_displayController = displayController;
   m_keyboard          = keyboard;
   m_mouse             = mouse;
+  m_asyncRunWait      = nullptr;
 
   if (CoreUsage::busiestCore() == -1)
     xTaskCreate(&asyncRunTask, "", taskStack, this, 5, nullptr);
   else
     xTaskCreatePinnedToCore(&asyncRunTask, "", taskStack, this, 5, nullptr, CoreUsage::quietCore());
+
+  return *this;
+}
+
+
+void uiApp::joinAsyncRun()
+{
+  m_asyncRunWait = xSemaphoreCreateBinary();
+  xSemaphoreTake(m_asyncRunWait, portMAX_DELAY);
+  vSemaphoreDelete(m_asyncRunWait);
+  m_asyncRunWait = nullptr;
 }
 
 
@@ -329,6 +383,11 @@ void uiApp::processEvents()
   while (getEvent(&event, 0)) {
 
     preprocessEvent(&event);
+
+    #if DUMPEVENTS
+    printf("processEvents(): ");
+    dumpEvent(&event);
+    #endif
 
     if (event.dest)
       event.dest->processEvent(&event);
@@ -388,7 +447,12 @@ void uiApp::preprocessEvent(uiEvent * event)
 // decide if an event with destination to non-modal windows can pass when a modal window is active
 void uiApp::filterModalEvent(uiEvent * event)
 {
-  if (event->dest != nullptr && event->dest->objectType().uiWindow && event->dest != m_modalWindow && !m_modalWindow->isChild((uiWindow*)event->dest)) {
+  if (event->dest != nullptr &&
+      event->dest->objectType().uiWindow &&
+      event->dest != m_modalWindow &&
+      event->dest != m_activeWindow &&
+      event->dest != m_focusedWindow &&
+      !m_modalWindow->isChild((uiWindow*)event->dest)) {
     switch (event->id) {
       case UIEVT_MOUSEMOVE:
       case UIEVT_MOUSEWHEEL:
@@ -444,6 +508,7 @@ void uiApp::preprocessMouseEvent(uiEvent * event)
         postEvent(&evt);
         m_freeMouseWindow = oldFreeMouseWindow = nullptr;
       }
+      captureMouse(nullptr);
     }
   } else {
     m_freeMouseWindow = screenToWindow(winMousePos);  // translates winMousePos
@@ -492,6 +557,14 @@ void uiApp::preprocessKeyboardEvent(uiEvent * event)
     uiEvent evt = *event;
     evt.dest = m_activeWindow;
     insertEvent(&evt);
+  }
+  // eventually produce UIEVT_KEYTYPE if keydown and keyup delivered to the same window
+  if (event->id == UIEVT_KEYDOWN)
+    m_keyDownHandler = event->dest;
+  else if (event->id == UIEVT_KEYUP && m_keyDownHandler == event->dest) {
+    uiEvent evt = uiEvent(event->dest, UIEVT_KEYTYPE);
+    evt.params.key = event->params.key;
+    postEvent(&evt);
   }
 }
 
@@ -639,14 +712,19 @@ uiWindow * uiApp::setFocusedWindow(uiWindow * value)
   if (m_focusedWindow != value) {
 
     if (prev) {
+
+      // assign m_lastFocusedWindow here because it is necessary it is not null
+      // that is the case when a change of active window occurs, or "value" pointed window is not focusable
+      m_lastFocusedWindow = prev;
+
       uiEvent evt = uiEvent(prev, UIEVT_KILLFOCUS);
-      evt.params.focusInfo.oldFocused = prev;
+      evt.params.focusInfo.oldFocused = m_lastFocusedWindow;
       evt.params.focusInfo.newFocused = value;
       postEvent(&evt);
       if (prev->parent()) {
         // send UIEVT_CHILDKILLFOCUS to its parent
         evt = uiEvent(prev->parent(), UIEVT_CHILDKILLFOCUS);
-        evt.params.focusInfo.oldFocused = prev;
+        evt.params.focusInfo.oldFocused = m_lastFocusedWindow;
         evt.params.focusInfo.newFocused = value;
         postEvent(&evt);
       }
@@ -659,13 +737,13 @@ uiWindow * uiApp::setFocusedWindow(uiWindow * value)
 
     if (m_focusedWindow) {
       uiEvent evt = uiEvent(m_focusedWindow, UIEVT_SETFOCUS);
-      evt.params.focusInfo.oldFocused = prev;
+      evt.params.focusInfo.oldFocused = m_lastFocusedWindow;
       evt.params.focusInfo.newFocused = m_focusedWindow;
       postEvent(&evt);
       if (m_focusedWindow->parent()) {
         // send UIEVT_CHILDSETFOCUS to its parent
         evt = uiEvent(m_focusedWindow->parent(), UIEVT_CHILDSETFOCUS);
-        evt.params.focusInfo.oldFocused = prev;
+        evt.params.focusInfo.oldFocused = m_lastFocusedWindow;
         evt.params.focusInfo.newFocused = m_focusedWindow;
         postEvent(&evt);
       }
@@ -681,23 +759,27 @@ uiWindow * uiApp::setFocusedWindow(uiWindow * value)
 // delta = -1, go previous focused index
 uiWindow * uiApp::moveFocus(int delta)
 {
-  uiWindow * parent = m_focusedWindow ? m_focusedWindow->parentFrame() : m_activeWindow;
-  int startingIndex = m_focusedWindow ? m_focusedWindow->focusIndex() + delta : 0;
-  int newIndex = startingIndex;
-  do {
-    int maxIndex = -1;
-    uiWindow * newFocusedCtrl = parent->findChildWithFocusIndex(newIndex, &maxIndex);
-    if (maxIndex == -1)
-      return m_focusedWindow; // no change
-    if (newFocusedCtrl) {
-      setFocusedWindow(newFocusedCtrl);
-      return newFocusedCtrl;
-    }
-    if (delta > 0)
-      newIndex = (newIndex >= maxIndex ? 0 : newIndex + delta);
-    else
-      newIndex = (newIndex <= 0 ? maxIndex : newIndex + delta);
-  } while (newIndex != startingIndex);
+  if (delta) {
+    uiWindow * parent = m_focusedWindow ? m_focusedWindow->parentFrame() : m_activeWindow;
+    int startingIndex = m_focusedWindow ? m_focusedWindow->focusIndex() + delta : 0;
+    delta /= abs(delta); // from here delta must be in -1...+1 range
+    int newIndex = startingIndex;
+    do {
+      int maxIndex = -1;
+      uiWindow * newFocusedCtrl = parent->findChildWithFocusIndex(newIndex, &maxIndex);
+      if (maxIndex == -1) {
+        return m_focusedWindow; // no change
+      }
+      if (newFocusedCtrl) {
+        setFocusedWindow(newFocusedCtrl);
+        return newFocusedCtrl;
+      }
+      if (delta > 0)
+        newIndex = (newIndex >= maxIndex ? 0 : newIndex + delta);
+      else
+        newIndex = (newIndex <= 0 ? maxIndex : newIndex + delta);
+    } while (newIndex != startingIndex);
+  }
   return m_focusedWindow; // no change
 }
 
@@ -780,7 +862,15 @@ bool uiApp::processModalWindowEvents(ModalWindowState * state, int timeout)
       // becomes modal when first message arrives
       m_modalWindow = state->window;
     }
-    if (event.id == UIEVT_EXITMODAL) {
+
+    preprocessEvent(&event);
+
+    #if DUMPEVENTS
+    printf("processModalWindowEvents(): ");
+    dumpEvent(&event);
+    #endif
+
+    if (event.id == UIEVT_EXITMODAL && event.dest == state->window) {
       // clean exit using exitModal() method
       state->modalResult = event.params.modalResult;
       return false;
@@ -788,8 +878,6 @@ bool uiApp::processModalWindowEvents(ModalWindowState * state, int timeout)
       // exit using Close button (default return value remains -1)
       return false;
     }
-
-    preprocessEvent(&event);
 
     if (event.dest)
       event.dest->processEvent(&event);
@@ -821,16 +909,16 @@ int uiApp::showModalWindow(uiWindow * window)
 }
 
 
-void uiApp::maximizeWindow(uiWindow * window, bool value)
+void uiApp::maximizeFrame(uiFrame * frame, bool value)
 {
-  uiEvent evt = uiEvent(window, value ? UIEVT_MAXIMIZE : UIEVT_RESTORE);
+  uiEvent evt = uiEvent(frame, value ? UIEVT_MAXIMIZE : UIEVT_RESTORE);
   postEvent(&evt);
 }
 
 
-void uiApp::minimizeWindow(uiWindow * window, bool value)
+void uiApp::minimizeFrame(uiFrame * frame, bool value)
 {
-  uiEvent evt = uiEvent(window, value ? UIEVT_MINIMIZE : UIEVT_RESTORE);
+  uiEvent evt = uiEvent(frame, value ? UIEVT_MINIMIZE : UIEVT_RESTORE);
   postEvent(&evt);
 }
 
@@ -1115,7 +1203,7 @@ uiMessageBoxResult uiApp::inputBox(char const * title, char const * text, char *
   mainFrame->frameProps().resizeable        = false;
   mainFrame->frameProps().hasMaximizeButton = false;
   mainFrame->frameProps().hasMinimizeButton = false;
-  mainFrame->onKeyUp = [&](uiKeyEventInfo key) {
+  mainFrame->onKeyUp = [&](uiKeyEventInfo const & key) {
     if (key.VK == VK_RETURN || key.VK == VK_KP_ENTER)
       mainFrame->exitModal(1);
     else if (key.VK == VK_ESCAPE)
@@ -1178,20 +1266,96 @@ uiMessageBoxResult uiApp::inputBox(char const * title, char const * text, char *
 }
 
 
+uiMessageBoxResult uiApp::fileDialog(char const * title, char * inOutDirectory, int maxDirNameSize, char * inOutFilename, int maxFileNameSize, char const * buttonOKText, char const * buttonCancelText, int frameWidth, int frameHeight)
+{
+  auto mainFrame = new uiFrame(m_rootWindow, title, UIWINDOW_PARENTCENTER, Size(frameWidth, frameHeight), false);
+  mainFrame->frameProps().resizeable        = false;
+  mainFrame->frameProps().hasMaximizeButton = false;
+  mainFrame->frameProps().hasMinimizeButton = false;
+  mainFrame->onKeyUp = [&](uiKeyEventInfo const & key) {
+    if (key.VK == VK_RETURN || key.VK == VK_KP_ENTER)
+      mainFrame->exitModal(1);
+    else if (key.VK == VK_ESCAPE)
+      mainFrame->exitModal(0);
+  };
+
+  int y = 25;
+  constexpr int x = 8;
+  constexpr int hh = 20;
+  constexpr int dy = hh + 8;
+  constexpr int lbloy = 3;
+
+  constexpr int fnBorder = 20;
+  new uiLabel(mainFrame, "Filename", Point(x + fnBorder, y + lbloy));
+  auto filenameEdit = new uiTextEdit(mainFrame, inOutFilename, Point(x + 50 + fnBorder, y), Size(frameWidth - x - 58 - fnBorder * 2, hh));
+
+  y += dy;
+
+  auto browser = new uiFileBrowser(mainFrame, Point(x, y), Size(frameWidth - x * 2, frameHeight - y - 35));
+  browser->setDirectory(inOutDirectory);
+  browser->onChange = [&]() {
+    if (!browser->isDirectory()) {
+      filenameEdit->setText(browser->filename());
+      filenameEdit->repaint();
+    }
+  };
+  browser->onDblClick = [&]() {
+    if (!browser->isDirectory())
+      mainFrame->exitModal(1);
+  };
+
+  y += browser->clientSize().height + (dy - hh);
+
+  auto buttonCancelLen = m_canvas->textExtent(uiButtonStyle().textFont, buttonCancelText) + 10;
+  auto buttonOKLen     = m_canvas->textExtent(uiButtonStyle().textFont, buttonOKText) + 10;
+
+  auto buttonCancel = new uiButton(mainFrame, buttonCancelText, Point(frameWidth - buttonCancelLen - buttonOKLen - 20, y), Size(buttonCancelLen, hh));
+  auto buttonOK     = new uiButton(mainFrame, buttonOKText, Point(frameWidth - buttonOKLen - 8, y), Size(buttonOKLen, hh));
+
+  buttonCancel->onClick = [&]() { mainFrame->exitModal(0); };
+  buttonOK->onClick     = [&]() { mainFrame->exitModal(1); };
+
+  // focus on edit
+  mainFrame->onShow = [&]() {
+    setFocusedWindow(filenameEdit);
+  };
+
+  int modalResult = showModalWindow(mainFrame);
+  destroyWindow(mainFrame);
+
+  switch (modalResult) {
+    case 1:
+    {
+      int len = imin(maxDirNameSize, strlen(browser->directory()));
+      memcpy(inOutDirectory, browser->directory(), len);
+      inOutDirectory[len] = 0;
+
+      len = imin(maxFileNameSize, strlen(filenameEdit->text()));
+      memcpy(inOutFilename, filenameEdit->text(), len);
+      inOutFilename[len] = 0;
+
+      return uiMessageBoxResult::ButtonOK;
+    }
+    default:
+      return uiMessageBoxResult::Cancel;
+  }
+}
+
+
 void uiApp::enableKeyboardAndMouseEvents(bool value)
 {
   if (value) {
     if (m_keyboard)
       m_keyboard->setUIApp(this);
     if (m_mouse && m_mouse->isMouseAvailable()) {
-      m_mouse->setUIApp(this);
+      m_mouse->setupAbsolutePositioner(m_canvas->getWidth(), m_canvas->getHeight(), false, m_displayController, this);
       m_displayController->setMouseCursor(m_rootWindow->windowStyle().defaultCursor);
     }
   } else {
     if (m_keyboard)
       m_keyboard->setUIApp(nullptr);
     if (m_mouse && m_mouse->isMouseAvailable()) {
-      m_mouse->setUIApp(nullptr);
+      m_mouse->terminateAbsolutePositioner();
       m_displayController->setMouseCursor(nullptr);
     }
   }
@@ -1212,23 +1376,21 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
     m_parent(parent),
     m_pos(pos),
     m_size(size),
-    m_mouseDownPos(Point(-1, -1)),
     m_isMouseOver(false),
+    m_styleClassID(styleClassID),
     m_next(nullptr),
     m_prev(nullptr),
     m_firstChild(nullptr),
     m_lastChild(nullptr),
-    m_styleClassID(styleClassID),
     m_parentProcessKbdEvents(false)
 {
   objectType().uiWindow = true;
 
   m_state.visible   = false;
-  m_state.maximized = false;
-  m_state.minimized = false;
   m_state.active    = false;
 
   if (app()) {
+    m_windowStyle.adaptToDisplayColors(app()->displayColors());
     m_canvas = app()->canvas();
     if (app()->style() && styleClassID)
       app()->style()->setStyle(this, styleClassID);
@@ -1482,9 +1644,6 @@ void uiWindow::processEvent(uiEvent * event)
 
     case UIEVT_MOUSEBUTTONDOWN:
       if (event->params.mouse.changedButton == 1) {
-        m_mouseDownPos    = Point(event->params.mouse.status.X, event->params.mouse.status.Y);
-        m_posAtMouseDown  = m_pos;
-        m_sizeAtMouseDown = m_size;
         // activate window? setActiveWindow() will activate the right window (maybe a parent)
         if (!m_state.active)
           app()->setActiveWindow(this);
@@ -1498,7 +1657,6 @@ void uiWindow::processEvent(uiEvent * event)
     case UIEVT_MOUSEBUTTONUP:
       // end capture mouse if left button is up
       if (event->params.mouse.changedButton == 1) {
-        app()->captureMouse(nullptr);
         // generate UIEVT_CLICK. The check is required to avoid onclick event when mouse is captured and moved out of button area
         if (rect(uiOrigin::Window).contains(event->params.mouse.status.X, event->params.mouse.status.Y)) {
           uiEvent evt = *event;
@@ -1508,42 +1666,12 @@ void uiWindow::processEvent(uiEvent * event)
       }
       break;
 
-    case UIEVT_CLICK:
-      onClick();
-      break;
-
-    case UIEVT_DBLCLICK:
-      onDblClick();
-      break;
-
     case UIEVT_SHOW:
       repaint();
       break;
 
     case UIEVT_HIDE:
       repaint();
-      break;
-
-    case UIEVT_MAXIMIZE:
-      if (!m_state.minimized)
-        m_savedScreenRect = rect(uiOrigin::Parent);
-      m_state.maximized = true;
-      m_state.minimized = false;
-      app()->reshapeWindow(this, m_parent->clientRect(uiOrigin::Window));
-      break;
-
-    case UIEVT_MINIMIZE:
-      if (!m_state.maximized)
-        m_savedScreenRect = rect(uiOrigin::Parent);
-      m_state.maximized = false;
-      m_state.minimized = true;
-      app()->resizeWindow(this, minWindowSize());
-      break;
-
-    case UIEVT_RESTORE:
-      m_state.maximized = false;
-      m_state.minimized = false;
-      app()->reshapeWindow(this, m_savedScreenRect);
       break;
 
     case UIEVT_RESHAPEWINDOW:
@@ -1594,7 +1722,7 @@ void uiWindow::paintWindow()
   // border
   int bSize = hasFocus() ? m_windowStyle.focusedBorderSize : m_windowStyle.borderSize;
   if (bSize > 0) {
-    canvas()->setPenColor(hasFocus() ? m_windowStyle.focusedBorderColor : (state().active ? m_windowStyle.activeBorderColor : m_windowStyle.borderColor));
+    canvas()->setPenColor(hasFocus() ? m_windowStyle.focusedBorderColor : (state().active || windowProps().activeLook ? m_windowStyle.activeBorderColor : m_windowStyle.borderColor));
     for (int i = 0; i < bSize; ++i)
       canvas()->drawRectangle(i, i, m_size.width - 1 - i, m_size.height - 1 - i);
   }
@@ -1699,18 +1827,8 @@ void uiWindow::reshape(Rect const & r)
           newChildRect.Y2 += dy;
       }
       if (newChildRect != childRect) {
-        //app()->reshapeWindow(child, newChildRect);
-        child->m_pos.X = newChildRect.X1;
-        child->m_pos.Y = newChildRect.Y1;
-        child->m_size.width  = newChildRect.width();
-        child->m_size.height = newChildRect.height();
-        // generate set position event
-        uiEvent evt = uiEvent(child, UIEVT_SETPOS);
-        evt.params.pos = child->pos();
-        app()->postEvent(&evt);
-        // generate set size event
-        evt = uiEvent(child, UIEVT_SETSIZE);
-        evt.params.size = child->size();
+        uiEvent evt = uiEvent(child, UIEVT_RESHAPEWINDOW);
+        evt.params.rect = newChildRect;
         app()->postEvent(&evt);
       }
     }
@@ -1725,6 +1843,12 @@ void uiWindow::exitModal(int modalResult)
   uiEvent evt = uiEvent(this, UIEVT_EXITMODAL);
   evt.params.modalResult = modalResult;
   app()->postEvent(&evt);
+}
+
+
+bool uiWindow::isActiveWindow()
+{
+  return app()->activeWindow() == this;
 }
 
 
@@ -1786,11 +1910,19 @@ uiFrame::uiFrame(uiWindow * parent, char const * title, const Point & pos, const
     m_mouseDownFrameItem(uiFrameItem::None),
     m_mouseMoveFrameItem(uiFrameItem::None),
     m_lastReshapingBox(Rect(0, 0, 0, 0)),
-    m_nextFreeFocusIndex(0)
+    m_nextFreeFocusIndex(0),
+    m_mouseDownPos(Point(-1, -1))
 {
   objectType().uiFrame = true;
-  if (app() && app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+
+  m_frameState.maximized = false;
+  m_frameState.minimized = false;
+
+  if (app()) {
+    m_frameStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
   setTitle(title);
 }
 
@@ -1803,9 +1935,15 @@ uiFrame::~uiFrame()
 
 void uiFrame::setTitle(char const * value)
 {
-  m_titleLength = strlen(value);
-  m_title = (char*) realloc(m_title, m_titleLength + 1);
-  strcpy(m_title, value);
+  if (value) {
+    m_titleLength = strlen(value);
+    m_title = (char*) realloc(m_title, m_titleLength + 1);
+    strcpy(m_title, value);
+  } else {
+    free(m_title);
+    m_title = nullptr;
+    m_titleLength = 0;
+  }
 }
 
 
@@ -1854,7 +1992,7 @@ Rect uiFrame::clientRect(uiOrigin origin)
 Size uiFrame::minWindowSize()
 {
   Size r = Size(0, 0);
-  if (m_frameProps.resizeable && !state().minimized && m_titleLength == 0) {
+  if (m_frameProps.resizeable && !m_frameState.minimized && m_titleLength == 0) {
     r.width  += CORNERSENSE * 2;
     r.height += CORNERSENSE * 2;
   }
@@ -1894,20 +2032,20 @@ void uiFrame::paintFrame()
   if (m_titleLength > 0) {
     int barHeight = titleBarHeight();
     // title bar background
-    RGB888 titleBarBrushColor = state().active ? m_frameStyle.activeTitleBackgroundColor : m_frameStyle.titleBackgroundColor;
+    RGB888 titleBarBrushColor = state().active || windowProps().activeLook ? m_frameStyle.activeTitleBackgroundColor : m_frameStyle.titleBackgroundColor;
     canvas()->setBrushColor(titleBarBrushColor);
     canvas()->fillRectangle(titleBarRect());
     // close, maximize and minimze buttons
     int btnX = paintButtons(bkgRect);
     // title
-    canvas()->setPenColor(state().active ? m_frameStyle.activeTitleColor : m_frameStyle.titleColor);
+    canvas()->setPenColor(state().active || windowProps().activeLook ? m_frameStyle.activeTitleColor : m_frameStyle.titleColor);
     canvas()->setGlyphOptions(GlyphOptions().FillBackground(false).DoubleWidth(0).Bold(false).Italic(false).Underline(false).Invert(0));
     canvas()->drawTextWithEllipsis(m_frameStyle.titleFont, 1 + bkgRect.X1, 1 + bkgRect.Y1, m_title, btnX);
     // adjust background rect
     bkgRect.Y1 += barHeight;
   }
   // background
-  if (m_frameProps.fillBackground && !state().minimized && bkgRect.width() > 0 && bkgRect.height() > 0) {
+  if (m_frameProps.fillBackground && !m_frameState.minimized && bkgRect.width() > 0 && bkgRect.height() > 0) {
     canvas()->setBrushColor(m_frameStyle.backgroundColor);
     canvas()->fillRectangle(bkgRect);
   }
@@ -1927,7 +2065,7 @@ int uiFrame::paintButtons(Rect const & bkgRect)
       canvas()->fillRectangle(r);
       canvas()->setPenColor(m_frameStyle.mouseOverButtonColor);
     } else
-      canvas()->setPenColor(state().active ? m_frameStyle.activeButtonColor : m_frameStyle.buttonColor);
+      canvas()->setPenColor(state().active || windowProps().activeLook ? m_frameStyle.activeButtonColor : m_frameStyle.buttonColor);
     r = r.shrink(4);
     canvas()->drawLine(r.X1, r.Y1, r.X2, r.Y2);
     canvas()->drawLine(r.X2, r.Y1, r.X1, r.Y2);
@@ -1941,9 +2079,9 @@ int uiFrame::paintButtons(Rect const & bkgRect)
       canvas()->fillRectangle(r);
       canvas()->setPenColor(m_frameStyle.mouseOverButtonColor);
     } else
-      canvas()->setPenColor(state().active ? m_frameStyle.activeButtonColor : m_frameStyle.buttonColor);
+      canvas()->setPenColor(state().active || windowProps().activeLook ? m_frameStyle.activeButtonColor : m_frameStyle.buttonColor);
     r = r.shrink(4);
-    if (state().maximized || state().minimized) {
+    if (m_frameState.maximized || m_frameState.minimized) {
       // draw restore (from maximize or minimize) button
       r = r.shrink(1).translate(-1, +1);
       canvas()->drawRectangle(r);
@@ -1956,7 +2094,7 @@ int uiFrame::paintButtons(Rect const & bkgRect)
     } else
       canvas()->drawRectangle(r);
   }
-  if (m_frameProps.hasMinimizeButton && !state().minimized) {
+  if (m_frameProps.hasMinimizeButton && !m_frameState.minimized) {
     // minimize button
     Rect r = getBtnRect(2);
     buttonsX = r.X1;
@@ -1965,7 +2103,7 @@ int uiFrame::paintButtons(Rect const & bkgRect)
       canvas()->fillRectangle(r);
       canvas()->setPenColor(m_frameStyle.mouseOverButtonColor);
     } else
-      canvas()->setPenColor(state().active ? m_frameStyle.activeButtonColor : m_frameStyle.buttonColor);
+      canvas()->setPenColor(state().active || windowProps().activeLook  ? m_frameStyle.activeButtonColor : m_frameStyle.buttonColor);
     r = r.shrink(4);
     int h = (r.Y2 - r.Y1 + 1) / 2;
     canvas()->drawLine(r.X1, r.Y1 + h, r.X2, r.Y1 + h);
@@ -1988,7 +2126,9 @@ void uiFrame::processEvent(uiEvent * event)
 
     case UIEVT_MOUSEBUTTONDOWN:
       if (event->params.mouse.changedButton == 1) {
+        m_mouseDownPos       = Point(event->params.mouse.status.X, event->params.mouse.status.Y);
         m_mouseDownFrameItem = getFrameItemAt(event->params.mouse.status.X, event->params.mouse.status.Y);
+        m_sizeAtMouseDown    = size();
         app()->combineMouseMoveEvents(true);
       }
       break;
@@ -2040,6 +2180,28 @@ void uiFrame::processEvent(uiEvent * event)
       onHide();
       break;
 
+    case UIEVT_MAXIMIZE:
+      if (!m_frameState.minimized)
+        m_savedScreenRect = rect(uiOrigin::Parent);
+      m_frameState.maximized = true;
+      m_frameState.minimized = false;
+      app()->reshapeWindow(this, parent()->clientRect(uiOrigin::Window));
+      break;
+
+    case UIEVT_MINIMIZE:
+      if (!m_frameState.maximized)
+        m_savedScreenRect = rect(uiOrigin::Parent);
+      m_frameState.maximized = false;
+      m_frameState.minimized = true;
+      app()->resizeWindow(this, minWindowSize());
+      break;
+
+    case UIEVT_RESTORE:
+      m_frameState.maximized = false;
+      m_frameState.minimized = false;
+      app()->reshapeWindow(this, m_savedScreenRect);
+      break;
+
     case UIEVT_SETSIZE:
       onResize();
       break;
@@ -2080,11 +2242,11 @@ uiFrameItem uiFrame::getFrameItemAt(int x, int y)
     if (m_frameProps.hasMaximizeButton && getBtnRect(1).contains(p))
       return uiFrameItem::MaximizeButton; // on maximize button area
 
-    if (m_frameProps.hasMinimizeButton && !state().minimized && getBtnRect(2).contains(p))
+    if (m_frameProps.hasMinimizeButton && !m_frameState.minimized && getBtnRect(2).contains(p))
       return uiFrameItem::MinimizeButton; // on minimize button area
   }
 
-  if (m_frameProps.resizeable && !state().maximized && !state().minimized) {
+  if (m_frameProps.resizeable && !m_frameState.maximized && !m_frameState.minimized) {
 
     int w = size().width;
     int h = size().height;
@@ -2124,7 +2286,7 @@ uiFrameItem uiFrame::getFrameItemAt(int x, int y)
   }
 
   // on title bar, moving area
-  if (m_titleLength > 0 && m_frameProps.moveable && !state().maximized && titleBarRect().contains(p))
+  if (m_titleLength > 0 && m_frameProps.moveable && !m_frameState.maximized && titleBarRect().contains(p))
     return uiFrameItem::MoveArea;
 
   return uiFrameItem::None;
@@ -2133,8 +2295,8 @@ uiFrameItem uiFrame::getFrameItemAt(int x, int y)
 
 void uiFrame::movingCapturedMouse(int mouseX, int mouseY, bool mouseIsDown)
 {
-  int dx = mouseX - mouseDownPos().X;
-  int dy = mouseY - mouseDownPos().Y;
+  int dx = mouseX - m_mouseDownPos.X;
+  int dy = mouseY - m_mouseDownPos.Y;
 
   Size minSize = minWindowSize();
 
@@ -2147,7 +2309,7 @@ void uiFrame::movingCapturedMouse(int mouseX, int mouseY, bool mouseIsDown)
       break;
 
     case uiFrameItem::CenterRightResize:
-      newRect = newRect.resize(imax(sizeAtMouseDown().width + dx, minSize.width), newRect.height());
+      newRect = newRect.resize(imax(m_sizeAtMouseDown.width + dx, minSize.width), newRect.height());
       break;
 
     case uiFrameItem::CenterLeftResize:
@@ -2179,7 +2341,7 @@ void uiFrame::movingCapturedMouse(int mouseX, int mouseY, bool mouseIsDown)
     case uiFrameItem::TopRightResize:
       {
         Rect r = newRect;
-        r.X2 = pos().X + sizeAtMouseDown().width + dx;
+        r.X2 = pos().X + m_sizeAtMouseDown.width + dx;
         newRect.X2 = r.X2 + imax(0, minSize.width - r.size().width);
         r.Y1 = pos().Y + dy;
         newRect.Y1 = r.Y1 - imax(0, minSize.height - r.size().height);
@@ -2191,17 +2353,17 @@ void uiFrame::movingCapturedMouse(int mouseX, int mouseY, bool mouseIsDown)
         Rect r = newRect;
         r.X1 = pos().X + dx;
         newRect.X1 = r.X1 - imax(0, minSize.width - r.size().width);
-        r.Y2 = pos().Y + sizeAtMouseDown().height + dy;
+        r.Y2 = pos().Y + m_sizeAtMouseDown.height + dy;
         newRect.Y2 = r.Y2 + imax(0, minSize.height - r.size().height);
         break;
       }
 
     case uiFrameItem::BottomCenterResize:
-      newRect = newRect.resize(newRect.width(), imax(sizeAtMouseDown().height + dy, minSize.height));
+      newRect = newRect.resize(newRect.width(), imax(m_sizeAtMouseDown.height + dy, minSize.height));
       break;
 
     case uiFrameItem::BottomRightResize:
-      newRect = newRect.resize(imax(sizeAtMouseDown().width + dx, minSize.width), imax(sizeAtMouseDown().height + dy, minSize.height));
+      newRect = newRect.resize(imax(m_sizeAtMouseDown.width + dx, minSize.width), imax(m_sizeAtMouseDown.height + dy, minSize.height));
       break;
 
     default:
@@ -2209,7 +2371,7 @@ void uiFrame::movingCapturedMouse(int mouseX, int mouseY, bool mouseIsDown)
   }
 
   // reshape to newRect or draw the reshaping box)
-  if (mouseIsDown == false || app()->appProps().realtimeReshaping) {
+  if (mouseIsDown == false || (app()->appProps().realtimeReshaping && m_mouseDownFrameItem != uiFrameItem::MoveArea) || (app()->appProps().realtimeMoving && m_mouseDownFrameItem == uiFrameItem::MoveArea)) {
     m_lastReshapingBox = Rect();
     app()->reshapeWindow(this, newRect);
   } else
@@ -2302,18 +2464,18 @@ void uiFrame::movingFreeMouse(int mouseX, int mouseY)
 void uiFrame::handleButtonsClick(int x, int y, bool doubleClick)
 {
   if (m_titleLength > 0) {
-    if (m_frameProps.hasCloseButton && getBtnRect(0).contains(x, y) && getBtnRect(0).contains(mouseDownPos())) {
+    if (m_frameProps.hasCloseButton && getBtnRect(0).contains(x, y) && getBtnRect(0).contains(m_mouseDownPos)) {
       // generate UIEVT_CLOSE event
       uiEvent evt = uiEvent(this, UIEVT_CLOSE);
       app()->postEvent(&evt);
-    } else if (m_frameProps.hasMaximizeButton && ((getBtnRect(1).contains(x, y) && getBtnRect(1).contains(mouseDownPos())) ||
+    } else if (m_frameProps.hasMaximizeButton && ((getBtnRect(1).contains(x, y) && getBtnRect(1).contains(m_mouseDownPos)) ||
                                                   (doubleClick && titleBarRect().contains(x, y)))) {
       // maximimize or restore on:
       //   - click on maximize/restore button
       //   - double click on the title bar
-      app()->maximizeWindow(this, !state().maximized && !state().minimized);  // used also for "restore" from minimized
-    } else if (m_frameProps.hasMinimizeButton && !state().minimized && getBtnRect(2).contains(x, y) && getBtnRect(2).contains(mouseDownPos())) {
-      app()->minimizeWindow(this, !state().minimized);
+      app()->maximizeFrame(this, !m_frameState.maximized && !m_frameState.minimized);  // used also for "restore" from minimized
+    } else if (m_frameProps.hasMinimizeButton && !m_frameState.minimized && getBtnRect(2).contains(x, y) && getBtnRect(2).contains(m_mouseDownPos)) {
+      app()->minimizeFrame(this, !m_frameState.minimized);
     } else
       return;
     // this avoids the button remains selected (background colored) when window change size
@@ -2377,10 +2539,12 @@ uiButton::uiButton(uiWindow * parent, char const * text, const Point & pos, cons
   windowStyle().borderSize         = 1;
   windowStyle().focusedBorderSize  = 2;
   windowStyle().borderColor        = RGB888(64, 64, 64);
-  windowStyle().focusedBorderColor = RGB888(0, 0, 255);
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_buttonStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 
   setText(text);
 }
@@ -2435,7 +2599,12 @@ void uiButton::paintContent(Rect const & rect)
     y += (imax(textHeight, bitmapHeight) - textHeight) / 2;
   }
   canvas()->setGlyphOptions(GlyphOptions().FillBackground(false).DoubleWidth(0).Bold(false).Italic(false).Underline(false).Invert(0));
-  canvas()->setPenColor(m_buttonStyle.textColor);
+  if (isMouseOver())
+    canvas()->setPenColor(m_buttonStyle.mouseOverTextColor);
+  else if (m_down)
+    canvas()->setPenColor(m_buttonStyle.downTextColor);
+  else
+    canvas()->setPenColor(m_buttonStyle.textColor);
   canvas()->drawText(m_buttonStyle.textFont, x, y, m_text);
 }
 
@@ -2453,6 +2622,7 @@ void uiButton::processEvent(uiEvent * event)
 
     case UIEVT_CLICK:
       trigger();
+      onClick();
       break;
 
     case UIEVT_MOUSEENTER:
@@ -2462,6 +2632,11 @@ void uiButton::processEvent(uiEvent * event)
     case UIEVT_MOUSEBUTTONDOWN:
       if (event->params.mouse.changedButton == 1)
         repaint();
+      onMouseDown(event->params.mouse);
+      break;
+
+    case UIEVT_MOUSEBUTTONUP:
+      onMouseUp(event->params.mouse);
       break;
 
     case UIEVT_MOUSELEAVE:
@@ -2530,8 +2705,11 @@ uiTextEdit::uiTextEdit(uiWindow * parent, char const * text, const Point & pos, 
   windowStyle().borderColor   = RGB888(64, 64, 64);
   windowStyle().borderSize    = 1;
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_textEditStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 
   setText(text);
 }
@@ -2545,9 +2723,30 @@ uiTextEdit::~uiTextEdit()
 
 void uiTextEdit::setText(char const * value)
 {
-  m_textLength = strlen(value);
-  checkAllocatedSpace(m_textLength);
-  strcpy(m_text, value);
+  if (value) {
+    m_textLength = strlen(value);
+    checkAllocatedSpace(m_textLength);
+    strcpy(m_text, value);
+  } else {
+    m_text = strdup("");
+    m_textLength = 0;
+  }
+}
+
+
+void uiTextEdit::setTextFmt(const char *format, ...)
+{
+  va_list ap;
+  va_start(ap, format);
+  int size = vsnprintf(nullptr, 0, format, ap) + 1;
+  if (size > 0) {
+    va_end(ap);
+    va_start(ap, format);
+    checkAllocatedSpace(size + 1);
+    vsnprintf(m_text, size, format, ap);
+    m_textLength = strlen(m_text);
+  }
+  va_end(ap);
 }
 
 
@@ -2606,6 +2805,10 @@ void uiTextEdit::processEvent(uiEvent * event)
 
     case UIEVT_KEYDOWN:
       handleKeyDown(event->params.key);
+      break;
+
+    case UIEVT_KEYTYPE:
+      onKeyType(event->params.key);
       break;
 
     case UIEVT_DBLCLICK:
@@ -2983,8 +3186,11 @@ uiLabel::uiLabel(uiWindow * parent, char const * text, const Point & pos, const 
   windowProps().focusable = false;
   windowStyle().borderSize = 0;
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_labelStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 
   m_autoSize = (size.width == 0 && size.height == 0);
 
@@ -3015,9 +3221,9 @@ void uiLabel::setTextFmt(const char *format, ...)
   if (size > 0) {
     va_end(ap);
     va_start(ap, format);
-    char buf[size + 1];
-    vsnprintf(buf, size, format, ap);
-    setText(buf);
+    m_text = (char*) realloc(m_text, size + 1);
+    vsnprintf(m_text, size, format, ap);
+    update();
   }
   va_end(ap);
 }
@@ -3069,6 +3275,10 @@ void uiLabel::processEvent(uiEvent * event)
       paintLabel();
       break;
 
+    case UIEVT_CLICK:
+      onClick();
+      break;
+
     default:
       break;
   }
@@ -3095,8 +3305,11 @@ uiImage::uiImage(uiWindow * parent, Bitmap const * bitmap, const Point & pos, co
   windowProps().focusable = false;
   windowStyle().borderSize = 0;
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_imageStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 
   m_autoSize = (size.width == 0 && size.height == 0);
 
@@ -3166,8 +3379,11 @@ uiPanel::uiPanel(uiWindow * parent, const Point & pos, const Size & size, bool v
   windowStyle().borderSize = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_panelStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 }
 
 
@@ -3220,8 +3436,11 @@ uiPaintBox::uiPaintBox(uiWindow * parent, const Point & pos, const Size & size, 
   windowStyle().borderSize  = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_paintBoxStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 }
 
 
@@ -3339,12 +3558,16 @@ uiScrollableControl::uiScrollableControl(uiWindow * parent, const Point & pos, c
     m_VScrollBarVisible(0),
     m_VScrollBarRange(0),
     m_mouseOverItem(uiScrollBarItem::None),
-    m_scrollTimer(nullptr)
+    m_scrollTimer(nullptr),
+    m_mouseDownPos(Point(-1, -1))
 {
   objectType().uiScrollableControl = true;
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_scrollableControlStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 }
 
 
@@ -3413,6 +3636,7 @@ void uiScrollableControl::processEvent(uiEvent * event)
 
     case UIEVT_MOUSEBUTTONDOWN:
       if (event->params.mouse.changedButton == 1) {
+        m_mouseDownPos                = Point(event->params.mouse.status.X, event->params.mouse.status.Y);
         m_mouseDownHScrollBarPosition = m_HScrollBarPosition;
         m_mouseDownVScrollBarPosition = m_VScrollBarPosition;
         if (m_mouseOverItem == uiScrollBarItem::LeftButton || m_mouseOverItem == uiScrollBarItem::RightButton ||
@@ -3519,12 +3743,12 @@ void uiScrollableControl::handleCapturedMouseMove(int mouseX, int mouseY)
 {
   if (m_mouseOverItem == uiScrollBarItem::HBar) {
     // dragging horizontal bar
-    int offset = mouseX - mouseDownPos().X;
+    int offset = mouseX - m_mouseDownPos.X;
     int newPos = m_mouseDownHScrollBarPosition + offset * m_HScrollBarRange / m_HBarArea;
     setScrollBar(uiOrientation::Horizontal, newPos, m_HScrollBarVisible, m_HScrollBarRange);
   } else if (m_mouseOverItem == uiScrollBarItem::VBar) {
     // dragging vertical bar
-    int offset = mouseY - mouseDownPos().Y;
+    int offset = mouseY - m_mouseDownPos.Y;
     int newPos = m_mouseDownVScrollBarPosition + offset * m_VScrollBarRange / m_VBarArea;
     setScrollBar(uiOrientation::Vertical, newPos, m_VScrollBarVisible, m_VScrollBarRange);
   }
@@ -3687,8 +3911,11 @@ uiCustomListBox::uiCustomListBox(uiWindow * parent, const Point & pos, const Siz
   windowStyle().borderSize  = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_listBoxStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 }
 
 
@@ -3726,6 +3953,10 @@ void uiCustomListBox::processEvent(uiEvent * event)
       onKeyUp(event->params.key);
       break;
 
+    case UIEVT_KEYTYPE:
+      onKeyType(event->params.key);
+      break;
+
     case UIEVT_KILLFOCUS:
       onKillFocus();
       break;
@@ -3733,6 +3964,14 @@ void uiCustomListBox::processEvent(uiEvent * event)
     case UIEVT_SHOW:
       makeItemVisible(firstSelectedItem());
       break;
+
+    case UIEVT_CLICK:
+      onClick();
+      break;
+
+    case UIEVT_DBLCLICK:
+      onDblClick();
+      break;      
 
     default:
       break;
@@ -4151,7 +4390,9 @@ void uiFileBrowser::processEvent(uiEvent * event)
 
 uiCustomComboBox::uiCustomComboBox(uiWindow * parent, const Point & pos, const Size & size, int listHeight, bool visible, uint32_t styleClassID)
   : uiControl(parent, pos, size, visible, 0),
-    m_listHeight(listHeight)
+    m_listHeight(listHeight),
+    m_loseFocusBy(0),
+    m_listBoxParent(nullptr)
 {
   objectType().uiCustomComboBox = true;
 
@@ -4159,8 +4400,16 @@ uiCustomComboBox::uiCustomComboBox(uiWindow * parent, const Point & pos, const S
 
   windowStyle().borderSize = 0;
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_comboBoxStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+
+    m_listBoxParent = new uiWindow(app()->rootWindow(), Point(0, 0), Size(0, 0), false, 0);
+    m_listBoxParent->windowStyle().borderSize        = 0;
+    m_listBoxParent->windowStyle().focusedBorderSize = 0;
+  }
+
 }
 
 
@@ -4194,10 +4443,17 @@ void uiCustomComboBox::processEvent(uiEvent * event)
         updateEditControl();
         onChange();
       };
-      listbox()->onKeyUp = [&](uiKeyEventInfo key) {
-        if (key.VK == VK_RETURN) {
+      listbox()->onKeyType = [&](uiKeyEventInfo const & key) {
+        if (key.VK == VK_TAB || key.VK == VK_RETURN) {
           closeListBox();
-          app()->setFocusedWindow(this);
+          if (key.VK == VK_TAB)
+            m_loseFocusBy = key.SHIFT ? -1 : 2;
+        } else {
+          uiEvent evt = uiEvent(parentFrame(), UIEVT_KEYDOWN);
+          evt.params.key = key;
+          app()->postEvent(&evt);
+          evt.id = UIEVT_KEYUP;
+          app()->postEvent(&evt);
         }
       };
       editcontrol()->setParentProcessKbdEvents(true); // we want keyboard events also here
@@ -4205,7 +4461,7 @@ void uiCustomComboBox::processEvent(uiEvent * event)
 
     case UIEVT_PAINT:
       beginPaint(event, uiControl::clientRect(uiOrigin::Window));
-      paintComboBox();
+      paintButton();
       break;
 
     case UIEVT_MOUSEBUTTONDOWN:
@@ -4222,20 +4478,19 @@ void uiCustomComboBox::processEvent(uiEvent * event)
       break;
 
     case UIEVT_SETFOCUS:
-      if (event->params.focusInfo.oldFocused != listbox() && event->params.focusInfo.oldFocused != editcontrol()) {
-        if (m_comboBoxProps.openOnFocus) {
-          openListBox();
-        } else {
+      if (m_loseFocusBy) {
+        app()->moveFocus(m_loseFocusBy);
+        m_loseFocusBy = 0;
+      } else {
+        if (event->params.focusInfo.oldFocused != listbox() && event->params.focusInfo.oldFocused != editcontrol()) {
+          if (m_comboBoxProps.openOnFocus) {
+            openListBox();
+          } else if (!isListBoxOpen()) {
+            app()->setFocusedWindow(editcontrol());
+          }
+        } else if (event->params.focusInfo.oldFocused == listbox()) {
           app()->setFocusedWindow(editcontrol());
         }
-      } else if (event->params.focusInfo.oldFocused == listbox()) {
-        app()->setFocusedWindow(editcontrol());
-      }
-      break;
-
-    case UIEVT_KILLFOCUS:
-      if (event->params.focusInfo.newFocused != listbox()) {
-        closeListBox();
       }
       break;
 
@@ -4249,6 +4504,10 @@ void uiCustomComboBox::processEvent(uiEvent * event)
         switchListBox();
       break;
 
+    case UIEVT_DESTROY:
+      app()->destroyWindow(m_listBoxParent);
+      break;
+
     default:
       break;
   }
@@ -4257,25 +4516,41 @@ void uiCustomComboBox::processEvent(uiEvent * event)
 
 void uiCustomComboBox::openListBox()
 {
-  Rect r = rect(uiOrigin::Parent);
-  r.Y1 = r.Y2 + 1;
-  r.Y2 = r.Y1 + m_listHeight;
-  listbox()->bringOnTop();
-  app()->reshapeWindow(listbox(), r);
-  app()->showWindow(listbox(), true);
+  Rect r = rect(uiOrigin::Screen);
+  if (r.Y2 + m_listHeight + 1 >= app()->rootWindow()->size().height) {
+    // open upwards
+    r.Y2 = r.Y1 - 1;
+    r.Y1 = r.Y2 - m_listHeight;
+  } else {
+    // open downwards
+    r.Y1 = r.Y2 + 1;
+    r.Y2 = r.Y1 + m_listHeight;
+  }
+  app()->reshapeWindow(m_listBoxParent, r);
+
+  m_listBoxParent->bringOnTop();
+  app()->showWindow(m_listBoxParent, true);
+  app()->setActiveWindow(m_listBoxParent);
+  app()->reshapeWindow(listbox(), r.translate(-r.X1, -r.Y1));
   app()->setFocusedWindow(listbox());
+  parentFrame()->windowProps().activeLook = true;
 }
 
 
 void uiCustomComboBox::closeListBox()
 {
-  app()->showWindow(listbox(), false);
+  app()->showWindow(m_listBoxParent, false);
+  if (app()->focusedWindow() == nullptr || app()->focusedWindow() == listbox()) {
+    app()->setActiveWindow(parent());
+    app()->setFocusedWindow(this);
+  }
+  parentFrame()->windowProps().activeLook = false;
 }
 
 
 void uiCustomComboBox::switchListBox()
 {
-  if (listbox()->state().visible) {
+  if (isListBoxOpen()) {
     closeListBox();
     app()->setFocusedWindow(editcontrol());
   } else {
@@ -4306,7 +4581,7 @@ Rect uiCustomComboBox::getButtonRect()
 }
 
 
-void uiCustomComboBox::paintComboBox()
+void uiCustomComboBox::paintButton()
 {
   Rect btnRect = getButtonRect();
 
@@ -4347,7 +4622,7 @@ uiComboBox::uiComboBox(uiWindow * parent, const Point & pos, const Size & size, 
   m_textEdit->textEditProps().hasCaret  = false;
   m_textEdit->textEditProps().allowEdit = false;
 
-  m_listBox = new uiListBox(parent, Point(0, 0), Size(0, 0), false, 0);
+  m_listBox = new uiListBox(getListBoxParent(), Point(0, 0), Size(0, 0), true, 0);
 
   if (app()->style() && styleClassID)
     app()->style()->setStyle(this, styleClassID);
@@ -4385,7 +4660,7 @@ uiColorComboBox::uiColorComboBox(uiWindow * parent, const Point & pos, const Siz
   objectType().uiColorComboBox = true;
 
   m_colorBox     = new uiColorBox(this, Point(windowStyle().borderSize, windowStyle().borderSize), getEditControlSize(), Color::BrightWhite, true, 0);
-  m_colorListBox = new uiColorListBox(parent, Point(0, 0), Size(0, 0), false, 0);
+  m_colorListBox = new uiColorListBox(getListBoxParent(), Point(0, 0), Size(0, 0), true, 0);
 
   if (app()->style() && styleClassID)
     app()->style()->setStyle(this, styleClassID);
@@ -4404,7 +4679,7 @@ void uiColorComboBox::updateEditControl()
 }
 
 
-// uiComboBox
+// uiColorComboBox
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -4426,10 +4701,12 @@ uiCheckBox::uiCheckBox(uiWindow * parent, const Point & pos, const Size & size, 
   windowStyle().borderSize         = 1;
   windowStyle().focusedBorderSize  = 2;
   windowStyle().borderColor        = RGB888(64, 64, 64);
-  windowStyle().focusedBorderColor = RGB888(0, 0, 255);
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_checkBoxStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 }
 
 
@@ -4452,12 +4729,12 @@ void uiCheckBox::paintCheckBox()
     Rect r = rect(uiOrigin::Window).shrink(5);
     switch (m_kind) {
       case uiCheckBoxKind::CheckBox:
-        canvas()->setPenColor(m_checkBoxStyle.foregroundColor);
+        canvas()->setPenColor(isMouseOver() ? m_checkBoxStyle.mouseOverForegroundColor : m_checkBoxStyle.foregroundColor);
         canvas()->drawLine(r.X1, r.Y2 - r.height() / 3, r.X1 + r.width() / 3, r.Y2);
         canvas()->drawLine(r.X1 + r.width() / 3, r.Y2, r.X2, r.Y1);
         break;
       case uiCheckBoxKind::RadioButton:
-        canvas()->setBrushColor(m_checkBoxStyle.foregroundColor);
+        canvas()->setBrushColor(isMouseOver() ? m_checkBoxStyle.mouseOverForegroundColor : m_checkBoxStyle.foregroundColor);
         canvas()->fillEllipse(r.X1 + r.width() / 2 - 1, r.Y1 + r.height() / 2 - 1, r.width(), r.height());
         break;
     }
@@ -4478,6 +4755,7 @@ void uiCheckBox::processEvent(uiEvent * event)
 
     case UIEVT_CLICK:
       trigger();
+      onClick();
       break;
 
     case UIEVT_MOUSEENTER:
@@ -4571,12 +4849,14 @@ uiSlider::uiSlider(uiWindow * parent, const Point & pos, const Size & size, uiOr
 
   windowStyle().borderSize         = 1;
   windowStyle().borderColor        = RGB888(255, 255, 255);
-  windowStyle().focusedBorderColor = RGB888(0, 0, 255);
 
   windowProps().focusable = true;
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_sliderStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 }
 
 
@@ -4648,8 +4928,10 @@ void uiSlider::paintSlider()
     }
   }
   // grip
-  canvas()->setBrushColor(m_sliderStyle.gripColor);
+  canvas()->setBrushColor(isMouseOver() ? m_sliderStyle.mouseOverGripColor : m_sliderStyle.gripColor);
   canvas()->fillRectangle(gripRect);
+  canvas()->setPenColor(m_sliderStyle.gripColor);
+  canvas()->drawRectangle(gripRect);
 }
 
 
@@ -4713,6 +4995,14 @@ void uiSlider::processEvent(uiEvent * event)
 
     case UIEVT_KEYDOWN:
       handleKeyDown(event->params.key);
+      break;
+
+    case UIEVT_MOUSEENTER:
+      repaint();  // to update background color
+      break;
+
+    case UIEVT_MOUSELEAVE:
+      repaint();  // to update background
       break;
 
     default:
@@ -4784,8 +5074,11 @@ uiProgressBar::uiProgressBar(uiWindow * parent, const Point & pos, const Size & 
   windowStyle().borderSize = 1;
   windowStyle().borderColor = RGB888(64, 64, 64);
 
-  if (app()->style() && styleClassID)
-    app()->style()->setStyle(this, styleClassID);
+  if (app()) {
+    m_progressBarStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
 
   m_percentage = 0;
 }
@@ -4850,6 +5143,164 @@ void uiProgressBar::setPercentage(int value)
 
 
 // uiProgressBar
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiSimpleMenu
+
+
+uiSimpleMenu::uiSimpleMenu(uiWindow * parent, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
+  : uiCustomListBox(parent, pos, size, visible, 0)
+{
+  objectType().uiSimpleMenu = true;
+
+  listBoxProps().allowMultiSelect  = false;
+  listBoxProps().selectOnMouseOver = true;
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+}
+
+
+void uiSimpleMenu::processEvent(uiEvent * event)
+{
+  uiCustomListBox::processEvent(event);
+
+  switch (event->id) {
+
+    case UIEVT_MOUSEBUTTONUP:
+      if (event->params.mouse.changedButton == 1) {
+        int idx = getItemAtMousePos(event->params.mouse.status.X, event->params.mouse.status.Y);
+        if (idx >= 0)
+          onSelect(idx);
+      }
+      break;
+
+    case UIEVT_KEYUP:
+      if (event->params.key.VK == VK_RETURN || event->params.key.VK == VK_KP_ENTER || event->params.key.VK == VK_SPACE) {
+        int idx = firstSelectedItem();
+        if (idx >= 0)
+          onSelect(idx);
+      } else if (event->params.key.VK == VK_ESCAPE) {
+        onSelect(-1);
+      }
+      break;
+
+    default:
+      break;
+
+  }
+}
+
+
+void uiSimpleMenu::items_draw(int index, const Rect & itemRect)
+{
+  int x = itemRect.X1 + 1;
+  int y = itemRect.Y1 + (itemRect.height() - listBoxStyle().textFont->height) / 2;
+  canvas()->drawText(listBoxStyle().textFont, x, y, m_items.get(index));
+}
+
+
+// uiSimpleMenu
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiSplitButton
+
+
+uiSplitButton::uiSplitButton(uiWindow * parent, char const * text, const Point & pos, const Size & size, int listHeight, char const * itemsText, char separator, bool visible, uint32_t styleClassID)
+  : uiCustomComboBox(parent, pos, size, listHeight, visible, 0),
+    m_button(nullptr),
+    m_menu(nullptr),
+    m_selectedItem(-1)
+{
+  objectType().uiSplitButton = true;
+
+  comboBoxProps().openOnFocus = false;
+
+  m_button  = new uiButton(this, text, Point(windowStyle().borderSize, windowStyle().borderSize), getEditControlSize(), uiButtonKind::Button, true, 0);
+  m_button->onMouseDown = [&](uiMouseEventInfo const & ev) {
+    if (!isListBoxOpen())
+      openListBox();
+  };
+
+  m_menu = new uiSimpleMenu(getListBoxParent(), Point(0, 0), Size(0, 0), true, 0);
+  m_menu->items().appendSepList(itemsText, separator);
+  m_menu->onSelect = [&](int idx) {
+    closeListBox();
+    app()->setFocusedWindow(this);
+    m_selectedItem = idx;
+  };
+
+  if (app()->style() && styleClassID)
+    app()->style()->setStyle(this, styleClassID);
+}
+
+
+uiSplitButton::~uiSplitButton()
+{
+}
+
+
+void uiSplitButton::processEvent(uiEvent * event)
+{
+  uiCustomComboBox::processEvent(event);
+
+  switch (event->id) {
+
+    case UIEVT_SETFOCUS:
+      if (m_selectedItem > -1) {
+        onSelect(m_selectedItem);
+        m_selectedItem = -1;
+      }
+      break;
+
+    default:
+      break;
+  };
+}
+
+
+void uiSplitButton::openListBox()
+{
+  m_menu->deselectAll();
+  uiCustomComboBox::openListBox();
+}
+
+
+void uiSplitButton::updateEditControl()
+{
+}
+
+
+void uiSplitButton::paintButton()
+{
+  Rect btnRect = getButtonRect();
+
+  // button background
+  canvas()->setBrushColor(comboBoxStyle().buttonBackgroundColor);
+  canvas()->fillRectangle(btnRect);
+
+  // button glyph
+  Rect arrowRect = btnRect.hShrink(btnRect.width() / 4).vShrink(btnRect.height() / 4);
+  if ((arrowRect.X1 + arrowRect.X2) & 1)
+    --arrowRect.X1;
+  bool up = isListBoxOpen();
+  Point points[3] = { { arrowRect.X1, up ? arrowRect.Y2 : arrowRect.Y1 },
+                      { arrowRect.X2, up ? arrowRect.Y2 : arrowRect.Y1 },
+                      { (arrowRect.X1 + arrowRect.X2) / 2, up ? arrowRect.Y1 : arrowRect.Y2 } };
+  canvas()->setBrushColor(comboBoxStyle().buttonColor);
+  canvas()->setPenColor(comboBoxStyle().buttonColor);
+  canvas()->fillPath(points, 3);
+  canvas()->drawPath(points, 3);
+}
+
+
+// uiSplitButton
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

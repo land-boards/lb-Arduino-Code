@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "emudevs/PIT8253.h"
 #include "emudevs/i8042.h"
 #include "emudevs/MC146818.h"
+#include "devdrivers/MCP23S17.h"
 
 #include "bios.h"
 
@@ -41,11 +42,6 @@
 #define RAM_SIZE             1048576    // must correspond to bios MEMSIZE
 #define VIDEOMEMSIZE         65536
 
-// PIT (timers) frequency in Hertz
-#define PIT_TICK_FREQ        1193182
-
-// number of times PIT is updated every second
-#define PIT_UPDATES_PER_SEC  500
 
 
 using fabgl::GraphicsAdapter;
@@ -53,6 +49,16 @@ using fabgl::PIC8259;
 using fabgl::PIT8253;
 using fabgl::i8042;
 using fabgl::MC146818;
+using fabgl::MCP23S17;
+
+
+#ifdef FABGL_EMULATED
+typedef void (*StepCallback)(void *);
+#endif
+
+
+typedef void (*SysReqCallback)();
+
 
 
 class Machine {
@@ -61,18 +67,45 @@ public:
   Machine();
   ~Machine();
 
-  void setDriveA(char const * filename) { m_diskImageFile[1] = filename; }
-  void setDriveC(char const * filename) { m_diskImageFile[0] = filename; }
+  void setBaseDirectory(char const * value)    { m_baseDir = value; }
+
+  void setDriveImage(int drive, char const * filename, int cylinders = 0, int heads = 0, int sectors = 0);
+
+  void setBootDrive(int drive)                 { m_bootDrive = drive; }
+
+  void setSysReqCallback(SysReqCallback value) { m_sysReqCallback = value; }
 
   void run();
 
-  uint32_t ticksCounter()    { return m_ticksCounter; }
+  void trigReset()                     { m_reset = true; }
 
-  i8042 * getI8042()         { return &m_i8042; }
+  uint32_t ticksCounter()              { return m_ticksCounter; }
 
-  MC146818 * getMC146818()   { return &m_MC146818; }
+  i8042 * getI8042()                   { return &m_i8042; }
 
-  uint8_t * memory()         { return s_memory; }
+  MC146818 * getMC146818()             { return &m_MC146818; }
+
+  uint8_t * memory()                   { return s_memory; }
+
+  uint8_t * videoMemory()              { return s_videoMemory; }
+
+  uint8_t * frameBuffer()              { return m_frameBuffer; }
+
+  GraphicsAdapter * graphicsAdapter()  { return &m_graphicsAdapter; }
+
+  FILE * disk(int index)               { return m_disk[index]; }
+  char const * diskFilename(int index) { return m_diskFilename[index]; }
+  uint64_t diskSize(int index)         { return m_diskSize[index]; }
+  uint16_t diskCylinders(int index)    { return m_diskCylinders[index]; }
+  uint8_t diskHeads(int index)         { return m_diskHeads[index]; }
+  uint8_t diskSectors(int index)       { return m_diskSectors[index]; }
+
+  void dumpMemory(char const * filename);
+  void dumpInfo(char const * filename);
+
+  #ifdef FABGL_EMULATED
+  void setStepCallback(StepCallback value)  { m_stepCallback = value; }
+  #endif
 
 private:
 
@@ -80,6 +113,7 @@ private:
   static void runTask(void * pvParameters);
 
   void init();
+  void reset();
 
   void tick();
 
@@ -100,26 +134,42 @@ private:
   static bool interrupt(void * context, int num);
 
   static void PITChangeOut(void * context, int timerIndex);
-  static void PITTick(void * context, int timerIndex);
 
   static bool MC146818Interrupt(void * context);
 
   static bool keyboardInterrupt(void * context);
   static bool mouseInterrupt(void * context);
+  static bool resetMachine(void * context);
+  static bool sysReq(void * context);
 
   void speakerSetFreq();
   void speakerEnableDisable();
 
+  void autoDetectDriveGeometry(int drive);
+
+
+  #ifdef FABGL_EMULATED
+  StepCallback             m_stepCallback;
+  #endif
+
+  bool                     m_reset;
 
   GraphicsAdapter          m_graphicsAdapter;
 
   BIOS                     m_BIOS;
 
-  FILE *                   m_disk[2];
-  char const *             m_diskImageFile[2];
+  // 0, 1 = floppy
+  // >= 2 = hard disk
+  char *                   m_diskFilename[DISKCOUNT];
+  FILE *                   m_disk[DISKCOUNT];
+  uint64_t                 m_diskSize[DISKCOUNT];
+  uint16_t                 m_diskCylinders[DISKCOUNT];
+  uint8_t                  m_diskHeads[DISKCOUNT];
+  uint8_t                  m_diskSectors[DISKCOUNT];
 
   static uint8_t *         s_memory;
   static uint8_t *         s_videoMemory;
+  uint8_t *                m_frameBuffer;
 
   // 8259 Programmable Interrupt Controllers
   PIC8259                  m_PIC8259A;  // master
@@ -165,6 +215,16 @@ private:
 
   // CMOS & RTC
   MC146818                 m_MC146818;
+
+  // extended I/O (MCP23S17)
+  MCP23S17                 m_MCP23S17;
+  uint8_t                  m_MCP23S17Sel;
+
+  uint8_t                  m_bootDrive;
+
+  SysReqCallback           m_sysReqCallback;
+
+  char const *             m_baseDir;
 
 };
 

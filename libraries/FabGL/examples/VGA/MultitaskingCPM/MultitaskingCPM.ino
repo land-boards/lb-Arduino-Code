@@ -7,7 +7,7 @@
 * Please contact fdivitto2013@gmail.com if you need a commercial license.
 
 
-* This library and related software is available under GPL v3. Feel free to use FabGL in free software and hardware:
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,14 +47,14 @@
 #define FORMAT_ON_FAIL     true
 #define SPIFFS_MOUNT_PATH  "/flash"
 #define SDCARD_MOUNT_PATH  "/SD"
-#define MAXFILES           6     // SDCARD: each file takes about 4K of RAM!
+#define MAXFILES           6     // SDCARD: each file takes about 4K of RAM! On ESP32 2.0.0 this may fail without PSRAM, so set to "4"
 
 
 
 // globals
 
-fabgl::VGA16Controller   DisplayController;
-//fabgl::VGATextController DisplayController;
+//fabgl::VGA16Controller   DisplayController; // unsupported on ESP32 core 2.0.0!!
+fabgl::VGATextController DisplayController;
 fabgl::PS2Controller     PS2Controller;
 
 Supervisor supervisor(&DisplayController);
