@@ -9,29 +9,34 @@
   Borrowed bits & pieces from all over the place
 
   Runs on a 3.3V Arduino Pro Mini
-  No 5V to 3.3V level shifting is needed for the I2C ports of the Si5351 and OLED
+  No 5V to 3.3V level shifting is needed for the I2C interfaces of the Si5351 and OLED
   Arduino Pro Mini has internal EEPROM for parameter storage
-  Using Arduino instead of Blue Pill since STM32 parts don't have EEPROM - there are tricks to use the Flash for parameter storage
+  Using Arduino instead of STM32 cards since STM32 parts don't have EEPROM - there are tricks to use the Flash for parameter storage
   
   OLED is 128x32 I2C device
   SSD1306 I2C controller
   OLED I2C driver Wiki page
     https://github.com/olikraus/u8g2/wiki
-    8x8 font has 16x4 characters
+    8x8 font has 16x4 characters in 128x32 display
   
-  Frequency synthesizer is Si5351
+  Frequency synthesizer is Si5351A
   3 outputs
-  74AC14 Buffers on VFO-003 to drive 3.3V, 50 Ohm outputs
+  74AC14 Buffers on VFO-003 drive 3.3V, 50 Ohm outputs
+  Frequencies are in 1/100th of a Hz
+  32-bit frequency values are 2^32/100 = 42.95 MHz max
+  Convert 32-bit values using cast (uint64_t) to set higher frequencies
   Si5361 driver is from si5351_example
     https://etherkit.github.io/si5351abb_landing_page.html
   
 */
 
+// Includes
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "si5351.h"
 #include <U8g2lib.h>
 
+// Defines
 // defines and enums - Set defines/undefs appropriately
 #define HAS_INTERNAL_EEPROM   // Arduini Pro Mini has internal EEPROM (STM32 does not)
 
@@ -51,6 +56,7 @@
 #define STEP_1_MHZ    100000000ULL
 #define STEP_10_MHZ   1000000000ULL
 
+// enums
 enum VFO_ON_OFF
 {
   VFO_OFF,
@@ -66,8 +72,7 @@ enum VFO_1X_4X
 // EEPROM is used to store initial values
 // ATMEGA parts have internal EEPROM - STM32 parts don't have internal EEPROM
 
-// Gloibal variables
-
+// Global variables
 unsigned long VFO_0_Freq;
 unsigned long VFO_1_Freq;
 unsigned long VFO_2_Freq;
@@ -88,14 +93,10 @@ uint8_t currentVFONumber;
 uint8_t magicNumber;
 
 // Constructors
-
 Si5351 si5351;
-  
-U8X8_SSD1306_128X32_UNIVISION_HW_I2C u8x8(U8X8_PIN_NONE);
+  U8X8_SSD1306_128X32_UNIVISION_HW_I2C u8x8(U8X8_PIN_NONE);
 
-// End of constructor list
-
-//setup run once
+//setup run once at reset/power-up
 void setup(void)
 {
   bool i2c_found;
