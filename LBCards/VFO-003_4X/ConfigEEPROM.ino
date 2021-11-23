@@ -3,7 +3,7 @@
 
 #define MAGIC_NUM 0x5a          // Change to different number re-write default table
 
-// Offsets into the EEPROM
+// Variable offsets in the EEPROM
 #define FREQ0_OFFSET 0          // VFO 0 frequency
 #define FREQ1_OFFSET 4
 #define FREQ2_OFFSET 8
