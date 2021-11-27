@@ -1,58 +1,88 @@
 // Menu Functions
 
-// printCalFactor
-// Calibration facts are in 0.1 Hz steps
-// Adjust frequency at 40.000,000 MHz (highest freq supported by this software)
-// Use 8 digit frequency counter to adjust
-void printCalFactor(void)
-{
-  char buffer[14];
-  itoa(calFactor/10, buffer, 10);
-  u8x8.clearDisplay();
-  u8x8.draw2x2String(0,0,"Cal val");
-  u8x8.draw2x2String(0,2,buffer);
-}
-
-// setCalFactor
-// Adjust calibration factor by 0.1 Hz (more than precise enough but could be 0.01Hz if needed)
-// TXCO is pretty accurate and does not need a lot of adjustment
-void setCalFactor(void)
+// Set VFO Frequency
+void setVFOFreq(void)
 {
   uint8_t controlVal;
-  printCalFactor();
+  printVFOFreq();
   while (1)
   {
     controlVal = waitForControlChange();
     if (controlVal == ENC_SW_PRESSED)
       return;
-   else if (controlVal == ENC_UP)
+    else if (controlVal == ENC_UP)
     {
-      calFactor += 10;
-      si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
-      printCalFactor();
+      if (currentVFONumber == 0)
+      {
+        VFO_0_Freq += stepSize; // count up by step size
+        if (VFO_0_Freq > 4000000000ULL)
+          VFO_0_Freq = 4000000000ULL; // Limit top of range
+
+        if (VFO_0_1x4x == VFO_1X)
+          si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
+        else
+          si5351.set_freq((uint64_t)VFO_0_Freq << 2, SI5351_CLK0);
+      }
+      else if (currentVFONumber == 1)
+      {
+        VFO_1_Freq += stepSize; // count up by step size
+        if (VFO_1_Freq > 4000000000ULL)
+          VFO_1_Freq = 4000000000ULL; // Limit top of range
+        if (VFO_1_1x4x == VFO_1X)
+          si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
+        else
+          si5351.set_freq((uint64_t)VFO_1_Freq << 2, SI5351_CLK1);
+      }
+      else if (currentVFONumber == 2)
+      {
+        VFO_2_Freq += stepSize; // count up by step size
+        if (VFO_2_Freq > 4000000000ULL)
+          VFO_2_Freq = 4000000000ULL; // Limit top of range
+        if (VFO_2_1x4x == VFO_1X)
+          si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
+        else
+          si5351.set_freq((uint64_t)VFO_2_Freq << 2, SI5351_CLK2);
+      }
     }
     else if (controlVal == ENC_DOWN)
     {
-      calFactor -= 10;
-      si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
-      printCalFactor();
+      if (currentVFONumber == 0)
+      {
+        VFO_0_Freq -= stepSize; // count down by step size
+        if ((VFO_0_Freq < 1000000ULL) || (VFO_0_Freq > 4000000000ULL))
+          VFO_0_Freq = 1000000ULL;
+        if (VFO_0_1x4x == VFO_1X)
+          si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
+        else
+          si5351.set_freq((uint64_t)VFO_0_Freq << 2, SI5351_CLK0);
+      }
+      else if (currentVFONumber == 1)
+      {
+        VFO_1_Freq -= stepSize; // count down by step size
+        if ((VFO_1_Freq < 1000000ULL) || (VFO_1_Freq > 4000000000ULL))
+          VFO_1_Freq = 1000000ULL;
+        if (VFO_1_1x4x == VFO_1X)
+          si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
+        else
+          si5351.set_freq((uint64_t)VFO_1_Freq << 2, SI5351_CLK1);
+      }
+      else if (currentVFONumber == 2)
+      {
+        VFO_2_Freq -= stepSize; // count down by step size
+        if ((VFO_2_Freq < 1000000ULL) || (VFO_2_Freq > 4000000000ULL))
+          VFO_2_Freq = 1000000ULL;
+        if (VFO_2_1x4x == VFO_1X)
+          si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
+        else
+          si5351.set_freq((uint64_t)VFO_2_Freq << 2, SI5351_CLK2);
+      }
     }
+    printVFOFreq();
   }
 }
 
-// Save Init Values To EEPROM
-void saveInitValuesToEEPROM(void)
-{
-  #ifdef HAS_INTERNAL_EEPROM
-    storeEEPROM();
-    u8x8.clearDisplay();
-    u8x8.draw2x2String(0,1,"Stored");
-    delay(1000);
-  #endif
-}
-
 // Display Frequency on OLED
-void displayFreqInKHzOnOLED(float freq)
+void displayFreqOnOLED(float freq)
 {
   char inBuffer[10];
   char outBuffer[15];
@@ -196,31 +226,31 @@ void displayFreqInKHzOnOLED(float freq)
     outBuffer[3] = 0;
   }
   u8x8.clearDisplay();
-   if (currentVFONumber == 0)
-    u8x8.draw2x2String(0,0,"Set CLK0");
-   else if (currentVFONumber == 1)
-    u8x8.draw2x2String(0,0,"Set CLK1");
-   else if (currentVFONumber == 2)
-    u8x8.draw2x2String(0,0,"Set CLK2");
-  u8x8.drawString(0,3, outBuffer);
+  if (currentVFONumber == 0)
+    u8x8.draw2x2String(0, 0, "Set CLK0");
+  else if (currentVFONumber == 1)
+    u8x8.draw2x2String(0, 0, "Set CLK1");
+  else if (currentVFONumber == 2)
+    u8x8.draw2x2String(0, 0, "Set CLK2");
+  u8x8.drawString(0, 3, outBuffer);
 }
 
 // Print VFO Frequency
 void printVFOFreq(void)
 {
   if (currentVFONumber == 0)
-    displayFreqInKHzOnOLED(float(VFO_0_Freq / 100ULL));
+    displayFreqOnOLED(float(VFO_0_Freq / 100ULL));
   else if (currentVFONumber == 1)
-    displayFreqInKHzOnOLED(float(VFO_1_Freq / 100ULL));
+    displayFreqOnOLED(float(VFO_1_Freq / 100ULL));
   else if (currentVFONumber == 2)
-    displayFreqInKHzOnOLED(float(VFO_2_Freq / 100ULL));
+    displayFreqOnOLED(float(VFO_2_Freq / 100ULL));
 }
 
-// Set VFO Frequency
-void setVFOFreq(void)
+// Set VFO Step Size
+void setVFOStepSize(void)
 {
   uint8_t controlVal;
-  printVFOFreq();
+  printStepSize();
   while (1)
   {
     controlVal = waitForControlChange();
@@ -228,87 +258,107 @@ void setVFOFreq(void)
       return;
     else if (controlVal == ENC_UP)
     {
-      if (currentVFONumber == 0)
-      {
-        VFO_0_Freq += stepSize; // count up by step size
-        if (VFO_0_Freq > 4000000000ULL)
-          VFO_0_Freq = 4000000000ULL; // Limit top of range
-        
-        if (VFO_0_1x4x == VFO_1X)
-          si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
-        else
-          si5351.set_freq((uint64_t)VFO_0_Freq<<2, SI5351_CLK0);
-      }
-      else if (currentVFONumber == 1)
-      {
-        VFO_1_Freq += stepSize; // count up by step size
-        if (VFO_1_Freq > 4000000000ULL)
-          VFO_1_Freq = 4000000000ULL; // Limit top of range
-        if (VFO_1_1x4x == VFO_1X)
-          si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
-        else
-          si5351.set_freq((uint64_t)VFO_1_Freq<<2, SI5351_CLK1);
-      }
-      else if (currentVFONumber == 2)
-      {
-        VFO_2_Freq += stepSize; // count up by step size
-        if (VFO_2_Freq > 4000000000ULL)
-          VFO_2_Freq = 4000000000ULL; // Limit top of range
-        if (VFO_2_1x4x == VFO_1X)
-          si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
-        else
-          si5351.set_freq((uint64_t)VFO_2_Freq<<2, SI5351_CLK2);
-      }
+      if (stepSize == STEP_1_HZ)
+        stepSize = STEP_5_HZ;
+      else if (stepSize == STEP_5_HZ)
+        stepSize = STEP_10_HZ;
+      else if (stepSize == STEP_10_HZ)
+        stepSize = STEP_50_HZ;
+      else if (stepSize == STEP_50_HZ)
+        stepSize = STEP_100_HZ;
+      else if (stepSize == STEP_100_HZ)
+        stepSize = STEP_500_HZ;
+      else if (stepSize == STEP_500_HZ)
+        stepSize = STEP_1_KHZ;
+      else if (stepSize == STEP_1_KHZ)
+        stepSize = STEP_5_KHZ;
+      else if (stepSize == STEP_5_KHZ)
+        stepSize = STEP_10_KHZ;
+      else if (stepSize == STEP_10_KHZ)
+        stepSize = STEP_50_KHZ;
+      else if (stepSize == STEP_50_KHZ)
+        stepSize = STEP_100_KHZ;
+      else if (stepSize == STEP_100_KHZ)
+        stepSize = STEP_500_KHZ;
+      else if (stepSize == STEP_500_KHZ)
+        stepSize = STEP_1_MHZ;
+      else if (stepSize == STEP_1_MHZ)
+        stepSize = STEP_5_MHZ;
+      else if (stepSize == STEP_5_MHZ)
+        stepSize = STEP_10_MHZ;
     }
     else if (controlVal == ENC_DOWN)
     {
-      if (currentVFONumber == 0)
-      {
-        VFO_0_Freq -= stepSize; // count down by step size
-        if ((VFO_0_Freq < 1000000ULL) || (VFO_0_Freq > 4000000000ULL))
-          VFO_0_Freq = 1000000ULL;
-        if (VFO_0_1x4x == VFO_1X)
-          si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
-        else
-          si5351.set_freq((uint64_t)VFO_0_Freq<<2, SI5351_CLK0);
-      }
-      else if (currentVFONumber == 1)
-      {
-        VFO_1_Freq -= stepSize; // count down by step size
-        if ((VFO_1_Freq < 1000000ULL) || (VFO_1_Freq > 4000000000ULL))
-          VFO_1_Freq = 1000000ULL;
-        if (VFO_1_1x4x == VFO_1X)
-          si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
-        else
-          si5351.set_freq((uint64_t)VFO_1_Freq<<2, SI5351_CLK1);
-      }
-      else if (currentVFONumber == 2)
-      {
-        VFO_2_Freq -= stepSize; // count down by step size
-        if ((VFO_2_Freq < 1000000ULL) || (VFO_2_Freq > 4000000000ULL))
-          VFO_2_Freq = 1000000ULL;
-        if (VFO_2_1x4x == VFO_1X)
-          si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
-        else
-          si5351.set_freq((uint64_t)VFO_2_Freq<<2, SI5351_CLK2);
-      }
+      if (stepSize == STEP_5_HZ)
+        stepSize = STEP_1_HZ;
+      else if (stepSize == STEP_10_HZ)
+        stepSize = STEP_5_HZ;
+      else if (stepSize == STEP_50_HZ)
+        stepSize = STEP_10_HZ;
+      else if (stepSize == STEP_100_HZ)
+        stepSize = STEP_50_HZ;
+      else if (stepSize == STEP_500_HZ)
+        stepSize = STEP_100_HZ;
+      else if (stepSize == STEP_1_KHZ)
+        stepSize = STEP_500_HZ;
+      else if (stepSize == STEP_5_KHZ)
+        stepSize = STEP_1_KHZ;
+      else if (stepSize == STEP_10_KHZ)
+        stepSize = STEP_5_KHZ;
+      else if (stepSize == STEP_50_KHZ)
+        stepSize = STEP_10_KHZ;
+      else if (stepSize == STEP_100_KHZ)
+        stepSize = STEP_50_KHZ;
+      else if (stepSize == STEP_500_KHZ)
+        stepSize = STEP_100_KHZ;
+      else if (stepSize == STEP_1_MHZ)
+        stepSize = STEP_500_KHZ;
+      else if (stepSize == STEP_5_MHZ)
+        stepSize = STEP_1_MHZ;
+      else if (stepSize == STEP_10_MHZ)
+        stepSize = STEP_5_MHZ;
     }
-    printVFOFreq();
+    printStepSize();
   }
-}
-
-// Print current VFO Number select
-void printVFONumber(void)
+}// Print Step Size
+void printStepSize(void)
 {
   u8x8.clearDisplay();
-  u8x8.draw2x2String(0,0,"CLK SEL");
-  if (currentVFONumber == 0)
-    u8x8.draw2x2String(0,2,"CLK0");
-  else if (currentVFONumber == 1)
-    u8x8.draw2x2String(0,2,"CLK1");
-  else if (currentVFONumber == 2)
-    u8x8.draw2x2String(0,2,"CLK2");
+  u8x8.draw2x2String(0, 0, "Stp Size");
+  if (stepSize == STEP_1_HZ)
+    u8x8.draw2x2String(0, 2, "1 Hz");
+  else if (stepSize == STEP_5_HZ)
+    u8x8.draw2x2String(0, 2, "5 Hz");
+  else if (stepSize == STEP_10_HZ)
+    u8x8.draw2x2String(0, 2, "10 Hz");
+  else if (stepSize == STEP_50_HZ)
+    u8x8.draw2x2String(0, 2, "50 Hz");
+  else if (stepSize == STEP_100_HZ)
+    u8x8.draw2x2String(0, 2, "100 Hz");
+  else if (stepSize == STEP_500_HZ)
+    u8x8.draw2x2String(0, 2, "500 Hz");
+  else if (stepSize == STEP_1_KHZ)
+    u8x8.draw2x2String(0, 2, "1 KHz");
+  else if (stepSize == STEP_5_KHZ)
+    u8x8.draw2x2String(0, 2, "5 KHz");
+  else if (stepSize == STEP_10_KHZ)
+    u8x8.draw2x2String(0, 2, "10 KHz");
+  else if (stepSize == STEP_50_KHZ)
+    u8x8.draw2x2String(0, 2, "50 KHz");
+  else if (stepSize == STEP_100_KHZ)
+    u8x8.draw2x2String(0, 2, "100 KHz");
+  else if (stepSize == STEP_500_KHZ)
+    u8x8.draw2x2String(0, 2, "500 KHz");
+  else if (stepSize == STEP_1_MHZ)
+    u8x8.draw2x2String(0, 2, "1 MHz");
+  else if (stepSize == STEP_5_MHZ)
+    u8x8.draw2x2String(0, 2, "5 MHz");
+  else if (stepSize == STEP_10_MHZ)
+    u8x8.draw2x2String(0, 2, "10 MHz");
+  return;
 }
+
+
 
 // Seloect the current VFO
 void selectVFO(void)
@@ -338,81 +388,17 @@ void selectVFO(void)
   }
 }
 
-// Print 1X or 4X
-void printVFO1x4x(void)
+// Print current VFO Number select
+void printVFONumber(void)
 {
   u8x8.clearDisplay();
+  u8x8.draw2x2String(0, 0, "CLK SEL");
   if (currentVFONumber == 0)
-  {
-    if (VFO_0_1x4x == VFO_1X)
-      u8x8.draw2x2String(0,1,"CLK0 1X");
-    else
-      u8x8.draw2x2String(0,1,"CLK0 4X");
-  }
+    u8x8.draw2x2String(0, 2, "CLK0");
   else if (currentVFONumber == 1)
-  {
-    if (VFO_1_1x4x == VFO_1X)
-      u8x8.draw2x2String(0,1,"CLK1 1X");
-    else
-      u8x8.draw2x2String(0,1,"CLK1 4X");
-  }
+    u8x8.draw2x2String(0, 2, "CLK1");
   else if (currentVFONumber == 2)
-  {
-    if (VFO_2_1x4x == VFO_1X)
-      u8x8.draw2x2String(0,1,"CLK2 1X");
-    else
-      u8x8.draw2x2String(0,1,"CLK2 4X");
-  }
-}
-
-// Set current VFO to 1X or 4X
-void setVFO1x4x(void)
-{
-  uint8_t controlVal;
-  printVFO1x4x();
-  while (1)
-  {
-    controlVal = waitForControlChange();
-    if (controlVal == ENC_SW_PRESSED)
-      return;
-    else if (controlVal == ENC_DOWN)
-    {
-      if (currentVFONumber == 0)
-      {
-        VFO_0_1x4x = VFO_1X;
-        si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
-      }
-      else if (currentVFONumber == 1)
-      {
-        VFO_1_1x4x = VFO_1X;
-        si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
-      }
-      else if (currentVFONumber == 2)
-      {
-        VFO_2_1x4x = VFO_1X;
-        si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
-      }
-    }
-    else if (controlVal == ENC_UP)
-    {
-      if (currentVFONumber == 0)
-      {
-        VFO_0_1x4x = VFO_4X;
-        si5351.set_freq((uint64_t)VFO_0_Freq<<2, SI5351_CLK0);
-      }
-      else if (currentVFONumber == 1)
-      {
-        VFO_1_1x4x = VFO_4X;
-        si5351.set_freq((uint64_t)VFO_1_Freq<<2, SI5351_CLK1);
-      }
-      else if (currentVFONumber == 2)
-      {
-        VFO_2_1x4x = VFO_4X;
-        si5351.set_freq((uint64_t)VFO_2_Freq<<2, SI5351_CLK2);
-      }
-    }
-    printVFO1x4x();
-  }
+    u8x8.draw2x2String(0, 2, "CLK2");
 }
 
 // Toggle off/on current VFO
@@ -472,55 +458,113 @@ void printVFOOnOff(void)
   if (currentVFONumber == 0)
   {
     if (VFO_0_OnOff == VFO_ON)
-      u8x8.draw2x2String(0,1,"CLK0 On");
+      u8x8.draw2x2String(0, 1, "CLK0 On");
     else
-      u8x8.draw2x2String(0,1,"CLK0 Off");
+      u8x8.draw2x2String(0, 1, "CLK0 Off");
   }
   else if (currentVFONumber == 1)
   {
     if (VFO_1_OnOff == VFO_ON)
-      u8x8.draw2x2String(0,1,"CLK1 On");
+      u8x8.draw2x2String(0, 1, "CLK1 On");
     else
-      u8x8.draw2x2String(0,1,"CLK1 Off");
+      u8x8.draw2x2String(0, 1, "CLK1 Off");
   }
   else if (currentVFONumber == 2)
   {
     if (VFO_2_OnOff == VFO_ON)
-      u8x8.draw2x2String(0,1,"CLK2 On");
+      u8x8.draw2x2String(0, 1, "CLK2 On");
     else
-      u8x8.draw2x2String(0,1,"CLK2 Off");
+      u8x8.draw2x2String(0, 1, "CLK2 Off");
   }
 }
 
-// Print Step Size
-void printStepSize(void)
+
+
+
+// Print 1X or 4X
+void printVFO1x4x(void)
 {
   u8x8.clearDisplay();
-  u8x8.draw2x2String(0,0,"Stp Size");
-  if (stepSize == STEP_1_HZ)
-    u8x8.draw2x2String(0,2,"1 Hz");
-  else if (stepSize == STEP_10_HZ)
-    u8x8.draw2x2String(0,2,"10 Hz");
-  else if (stepSize == STEP_100_HZ)
-    u8x8.draw2x2String(0,2,"100 Hz");
-  else if (stepSize == STEP_1_KHZ)
-    u8x8.draw2x2String(0,2,"1 KHz");
-  else if (stepSize == STEP_10_KHZ)
-    u8x8.draw2x2String(0,2,"10 KHz");
-  else if (stepSize == STEP_100_KHZ)
-    u8x8.draw2x2String(0,2,"100 KHz");
-  else if (stepSize == STEP_1_MHZ)
-    u8x8.draw2x2String(0,2,"1 MHz");
-  else if (stepSize == STEP_10_MHZ)
-    u8x8.draw2x2String(0,2,"10 MHz");
-  return;
+  if (currentVFONumber == 0)
+  {
+    if (VFO_0_1x4x == VFO_1X)
+      u8x8.draw2x2String(0, 1, "CLK0 1X");
+    else
+      u8x8.draw2x2String(0, 1, "CLK0 4X");
+  }
+  else if (currentVFONumber == 1)
+  {
+    if (VFO_1_1x4x == VFO_1X)
+      u8x8.draw2x2String(0, 1, "CLK1 1X");
+    else
+      u8x8.draw2x2String(0, 1, "CLK1 4X");
+  }
+  else if (currentVFONumber == 2)
+  {
+    if (VFO_2_1x4x == VFO_1X)
+      u8x8.draw2x2String(0, 1, "CLK2 1X");
+    else
+      u8x8.draw2x2String(0, 1, "CLK2 4X");
+  }
 }
 
-// Set VFO Step Size
-void setVFOStepSize(void)
+// Set current VFO to 1X or 4X
+void setVFO1x4x(void)
 {
   uint8_t controlVal;
-  printStepSize();
+  printVFO1x4x();
+  while (1)
+  {
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+      return;
+    else if (controlVal == ENC_DOWN)
+    {
+      if (currentVFONumber == 0)
+      {
+        VFO_0_1x4x = VFO_1X;
+        si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
+      }
+      else if (currentVFONumber == 1)
+      {
+        VFO_1_1x4x = VFO_1X;
+        si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
+      }
+      else if (currentVFONumber == 2)
+      {
+        VFO_2_1x4x = VFO_1X;
+        si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
+      }
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (currentVFONumber == 0)
+      {
+        VFO_0_1x4x = VFO_4X;
+        si5351.set_freq((uint64_t)VFO_0_Freq << 2, SI5351_CLK0);
+      }
+      else if (currentVFONumber == 1)
+      {
+        VFO_1_1x4x = VFO_4X;
+        si5351.set_freq((uint64_t)VFO_1_Freq << 2, SI5351_CLK1);
+      }
+      else if (currentVFONumber == 2)
+      {
+        VFO_2_1x4x = VFO_4X;
+        si5351.set_freq((uint64_t)VFO_2_Freq << 2, SI5351_CLK2);
+      }
+    }
+    printVFO1x4x();
+  }
+}
+
+// setCalFactor
+// Adjust calibration factor by 0.1 Hz (more than precise enough but could be 0.01Hz if needed)
+// TXCO is pretty accurate and does not need a lot of adjustment
+void setCalFactor(void)
+{
+  uint8_t controlVal;
+  printCalFactor();
   while (1)
   {
     controlVal = waitForControlChange();
@@ -528,38 +572,39 @@ void setVFOStepSize(void)
       return;
     else if (controlVal == ENC_UP)
     {
-      if (stepSize == STEP_1_HZ)
-        stepSize = STEP_10_HZ;
-      else if (stepSize == STEP_10_HZ)
-        stepSize = STEP_100_HZ;
-      else if (stepSize == STEP_100_HZ)
-        stepSize = STEP_1_KHZ;
-      else if (stepSize == STEP_1_KHZ)
-        stepSize = STEP_10_KHZ;
-      else if (stepSize == STEP_10_KHZ)
-        stepSize = STEP_100_KHZ;
-      else if (stepSize == STEP_100_KHZ)
-        stepSize = STEP_1_MHZ;
-      else if (stepSize == STEP_1_MHZ)
-        stepSize = STEP_10_MHZ;
+      calFactor += 10;
+      si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
+      printCalFactor();
     }
     else if (controlVal == ENC_DOWN)
     {
-      if (stepSize == STEP_10_HZ)
-        stepSize = STEP_1_HZ;
-      else if (stepSize == STEP_100_HZ)
-        stepSize = STEP_10_HZ;
-      else if (stepSize == STEP_1_KHZ)
-        stepSize = STEP_100_HZ;
-      else if (stepSize == STEP_10_KHZ)
-        stepSize = STEP_1_KHZ;
-      else if (stepSize == STEP_100_KHZ)
-        stepSize = STEP_10_KHZ;
-      else if (stepSize == STEP_1_MHZ)
-        stepSize = STEP_100_KHZ;
-      else if (stepSize == STEP_10_MHZ)
-        stepSize = STEP_1_MHZ;
+      calFactor -= 10;
+      si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
+      printCalFactor();
     }
-    printStepSize();
   }
+}
+
+// printCalFactor
+// Calibration facts are in 0.1 Hz steps
+// Adjust frequency at 40.000,000 MHz (highest freq supported by this software)
+// Use 8 digit frequency counter to adjust
+void printCalFactor(void)
+{
+  char buffer[14];
+  itoa(calFactor / 10, buffer, 10);
+  u8x8.clearDisplay();
+  u8x8.draw2x2String(0, 0, "Cal val");
+  u8x8.draw2x2String(0, 2, buffer);
+}
+
+// Save Init Values To EEPROM
+void saveInitValuesToEEPROM(void)
+{
+#ifdef HAS_INTERNAL_EEPROM
+  storeEEPROM();
+  u8x8.clearDisplay();
+  u8x8.draw2x2String(0, 1, "Stored");
+  delay(1000);
+#endif
 }

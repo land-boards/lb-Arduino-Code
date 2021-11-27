@@ -1,7 +1,7 @@
 // RotaryEncoder
 // Robust Rotary encoder reading
 // Rotary encoder scrolls between options
-// Press encoder button to select
+// Press encoder button to select option
 //
 // Polled rotary switch implementation based on
 // Copyright John Main - https://www.best-microcontroller-projects.com/rotary-encoder.html
@@ -29,14 +29,34 @@ void setupEncoder()
   pinMode(encoderSwitch, INPUT);
 }
 
-void pollEncoder()
+// waitForControlChange()
+// Wait around for an encoder change (knob turn or button)
+uint8_t waitForControlChange(void)
 {
-  static int8_t val;
-  if ( val = read_rotary() )
-    encoder0Pos += val;
+  uint8_t controlVal = NOTHING;
+  while (controlVal == NOTHING)
+    controlVal = checkControls();
+  return (controlVal);
 }
 
-// A vald CW or  CCW move returns 1, invalid returns 0.
+// checkControls()
+// Translate values into enum
+uint8_t checkControls()
+{
+  int8_t encoderDelta = 0;
+  if (checkSwitch() == 1)
+    return ENC_SW_PRESSED;
+  encoderDelta += read_rotary();
+  if (encoderDelta == 0)
+    return (NOTHING);
+  else if (encoderDelta >= 1)
+    return (ENC_UP);
+  else if (encoderDelta <= -1)
+    return (ENC_DOWN);
+  return (NOTHING);
+}
+
+// A vald CW or  CCW move returns 1 or -1, invalid returns 0.
 int8_t read_rotary()
 {
   static int8_t rot_enc_table[] = {0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0};
@@ -60,64 +80,14 @@ int8_t read_rotary()
   return 0;
 }
 
-int getEncoderDelta(void)
+// Check the switch
+uint8_t checkSwitch(void)
 {
-  if (encoder0Pos > 0)
+  if (digitalRead(encoderSwitch) == 1)
   {
-    encoder0Pos = 0;
+    while (digitalRead(encoderSwitch) == 1)
+      delay(100);    // Debounce
     return (1);
   }
-  else if (encoder0Pos < 0)
-  {
-    encoder0Pos = 0;
-    return (-1);
-  }
-  else
-  {
-    return (0);
-  }
+  return (0);
 }
-
-// waitForControlChange()
-// Wait around for an encoder change (knob turn or button)
-uint8_t waitForControlChange(void)
-{
-  uint8_t controlVal;
-  while (1)
-  {
-    do
-    {
-      controlVal = checkControls();
-    }
-    while (controlVal == NOTHING);
-    return (controlVal);
-  }
-}
-
-// checkControls()
-// Translate values into enum
-uint8_t checkControls()
-{
-  int8_t encoderDelta = 0;
-  if (checkSwitch() == 1)
-    return ENC_SW_PRESSED;
-  encoderDelta += read_rotary();
-  if (encoderDelta == 0)
-    return (NOTHING);
-  else if (encoderDelta >= 1)
-    return (ENC_UP);
-  else if (encoderDelta <= -1)
-    return (ENC_DOWN);
-  return (NOTHING);
-  }
-  
-  uint8_t checkSwitch(void)
-  {
-    if (digitalRead(encoderSwitch) == 1)
-    {
-      while (digitalRead(encoderSwitch) == 1)
-        delay(100);    // Debounce
-      return (1);
-    }
-    return (0);
-  }

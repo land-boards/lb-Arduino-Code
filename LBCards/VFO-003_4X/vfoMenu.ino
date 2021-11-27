@@ -1,12 +1,27 @@
-// vfoMenu
-// Menu System for VFO-003 card
+// VFO Top Level Menu Options - Menu System for VFO-003 card
 // 
 // 128x32 OLED Screen is 16 col, 4 row
-// Print in 16x16 font for short menus
-// Print in 8x8 font for short menus and some options screens
+// Print in 8x8 font
 //
-// Rotary encoder scrolls between options
+// Rotary encoder moves between options
 // Press encoder button to select
+
+/* Menu Structure - Function Names
+    Top Level - vfoTopLevelMenuOps() / displayTopMenuOps()
+        Operate - operateMenuOps() / displayOperateMenuOps()
+            Set Freq - setVFOFreq() / displayFreqOnOLED() / printVFOFreq()
+            Step Size - setVFOStepSize() / printStepSize()
+            Return
+         Clk Config - clkConfigMenuOps() / displayClkConfigMenuOps()
+            Select Clk - selectVFO() / printVFONumber()
+            VFO Off/On - toggleVFOOnOff() / printVFOOnOff()
+            Clk Mult 1x/4x - setVFO1x4x() / printVFO1x4x()
+            Return
+         Setup - setupMenuOps() / displaySetupMenuOps()
+            Calibrate - setCalFactor() / printCalFactor()
+            Save Defaults - saveInitValuesToEEPROM()
+            Return
+*/
 
 uint8_t topMenuCurrentLine, level2MenuCurrentLine;
 
@@ -18,42 +33,38 @@ void initMenu(void)
   level2MenuCurrentLine = 0; 
 }
 
-//  vfoMenu() -  Top level menu
-//  Control, Setup
-void vfoMenu(void)
+//  Top level menu
+//  Ooperate, Clk Config, Setup
+void vfoTopLevelMenuOps(void)
 {
   ControlsState controlVal;
   u8x8.clearDisplay();
-  displayTopMenuOption();
+  displayTopMenuOps();
   controlVal = waitForControlChange();
   if (controlVal == ENC_UP)
   {
-    if (topMenuCurrentLine == 0)
-      topMenuCurrentLine = 1;
-    else if (topMenuCurrentLine == 1)
-      topMenuCurrentLine = 2;
+    if (topMenuCurrentLine < 2)
+      topMenuCurrentLine += 1;
   }
   else if (controlVal == ENC_DOWN)
   {
-    if (topMenuCurrentLine == 1)
-      topMenuCurrentLine = 0;
-    else if (topMenuCurrentLine == 2)
-      topMenuCurrentLine = 1;
+    if (topMenuCurrentLine > 0)
+      topMenuCurrentLine -= 1;
   }
   else if (controlVal == ENC_SW_PRESSED)
   {
     if (topMenuCurrentLine == 0)
-      controlMenu();
+      operateMenuOps();
     else if (topMenuCurrentLine == 1)
-      clkCtrlMenu();
+      clkConfigMenuOps();
     else if (topMenuCurrentLine == 2)
-      setupMenu();
+      setupMenuOps();
   }
 }
 
-// displayTopMenuOption()
+// Display Top Menu
 // Operate, Clk Config, Setup
-void displayTopMenuOption(void)
+void displayTopMenuOps(void)
 {
    if (topMenuCurrentLine == 0)
       u8x8.setInverseFont(1);
@@ -69,86 +80,19 @@ void displayTopMenuOption(void)
    u8x8.setInverseFont(0);
 }
 
-// Display Control Menu - Controls screen
-// Set Freq, Select Clk, Step Size, Return
-void displayControlMenu(void)
-{
-  u8x8.clearDisplay();
-  if (level2MenuCurrentLine == 0)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,0,"Set Freq");
-  u8x8.setInverseFont(0);
-  if (level2MenuCurrentLine == 1)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,1,"Select Clk");
-  u8x8.setInverseFont(0);
-  if (level2MenuCurrentLine == 2)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,2,"Step Size");
-  u8x8.setInverseFont(0);
-  if (level2MenuCurrentLine == 3)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,3,"Return");
-  u8x8.setInverseFont(0);
-}
-
-// Display Clock Control Menu
-void displayClkCtrlMenu(void)
-{
-  u8x8.clearDisplay();
-  if (level2MenuCurrentLine == 0)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,0,"Clk Mult 1x/4x");
-  u8x8.setInverseFont(0);
-  if (level2MenuCurrentLine == 1)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,1,"Return");
-  u8x8.setInverseFont(0);
-}
-
-//  Clock Control Menu
-// Set 1x_4x, return
-void clkCtrlMenu(void)
-{
-  ControlsState controlVal;
-  level2MenuCurrentLine = 0;
-  while(1)
-  {
-    displayClkCtrlMenu();
-    controlVal = waitForControlChange();
-    if (controlVal == ENC_UP)
-    {
-      if (level2MenuCurrentLine < 3)
-        level2MenuCurrentLine += 1;
-    }
-    else if (controlVal == ENC_DOWN)
-    {
-      if (level2MenuCurrentLine > 0)
-        level2MenuCurrentLine -= 1;
-    }
-    else if (controlVal == ENC_SW_PRESSED)
-    {
-      if (level2MenuCurrentLine == 0)
-        setVFO1x4x();
-      else if (level2MenuCurrentLine == 1)
-        return;
-    }
-  }
-}
-
-// Control Menu
+// Clock Config Menu
 // Set VFO Freq, Select VFO, Set VFO Step Size, Return
-void controlMenu(void)
+void operateMenuOps(void)
 {
   ControlsState controlVal;
   level2MenuCurrentLine = 0;
   while(1)
   {
-    displayControlMenu();
+    displayOperateMenuOps();
     controlVal = waitForControlChange();
     if (controlVal == ENC_UP)
     {
-      if (level2MenuCurrentLine < 3)
+      if (level2MenuCurrentLine < 2)
         level2MenuCurrentLine += 1;
     }
     else if (controlVal == ENC_DOWN)
@@ -161,45 +105,41 @@ void controlMenu(void)
       if (level2MenuCurrentLine == 0)
         setVFOFreq();
       else if (level2MenuCurrentLine == 1)
-        selectVFO();
-      else if (level2MenuCurrentLine == 2)
         setVFOStepSize();
-      else if (level2MenuCurrentLine == 3)
+      else if (level2MenuCurrentLine == 2)
         return;
     }
   }
 }
 
-// VFO Off/On, Calibrate, Save Defaults, Return
-void displaySetupMenu(void)
+// Display Ooperate  Menu - Controls screen
+// Set Freq, Step Size, Return
+void displayOperateMenuOps(void)
 {
- u8x8.clearDisplay();
+  u8x8.clearDisplay();
   if (level2MenuCurrentLine == 0)
       u8x8.setInverseFont(1);
-  u8x8.drawString(0,0,"VFO Off/On");
+  u8x8.drawString(0,0,"Set Freq");
   u8x8.setInverseFont(0);
   if (level2MenuCurrentLine == 1)
       u8x8.setInverseFont(1);
-  u8x8.drawString(0,1,"Calibrate");
+  u8x8.drawString(0,1,"Step Size");
   u8x8.setInverseFont(0);
   if (level2MenuCurrentLine == 2)
       u8x8.setInverseFont(1);
-  u8x8.drawString(0,2,"Save Defaults");
-  u8x8.setInverseFont(0);
-  if (level2MenuCurrentLine == 3)
-      u8x8.setInverseFont(1);
-  u8x8.drawString(0,3,"Return");
+  u8x8.drawString(0,2,"Return");
   u8x8.setInverseFont(0);
 }
 
-// Setup menu
-void setupMenu(void)
+//  Clock Config Menu
+// Select Clk, VFO Off/ON, Clk Mult 1x_4x, Return
+void clkConfigMenuOps(void)
 {
   ControlsState controlVal;
   level2MenuCurrentLine = 0;
   while(1)
   {
-    displaySetupMenu();
+    displayClkConfigMenuOps();
     controlVal = waitForControlChange();
     if (controlVal == ENC_UP)
     {
@@ -214,13 +154,85 @@ void setupMenu(void)
     else if (controlVal == ENC_SW_PRESSED)
     {
       if (level2MenuCurrentLine == 0)
-        toggleVFOOnOff();
+        selectVFO();
       else if (level2MenuCurrentLine == 1)
-        setCalFactor();
+        toggleVFOOnOff();
       else if (level2MenuCurrentLine == 2)
-        saveInitValuesToEEPROM();
+        setVFO1x4x();
       else if (level2MenuCurrentLine == 3)
         return;
     }
   }
+}
+
+// Display Clock Config Menu
+void displayClkConfigMenuOps(void)
+{
+  u8x8.clearDisplay();
+  if (level2MenuCurrentLine == 0)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,0,"Select Clk");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 1)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,1,"VFO Off/On");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 2)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,2,"Clk Mult 1x/4x");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 3)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,3,"Return");
+  u8x8.setInverseFont(0);
+}
+
+// Setup menu Ooperatioons
+void setupMenuOps(void)
+{
+  ControlsState controlVal;
+  level2MenuCurrentLine = 0;
+  while(1)
+  {
+    displaySetupMenuOps();
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_UP)
+    {
+      if (level2MenuCurrentLine < 2)
+        level2MenuCurrentLine += 1;
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (level2MenuCurrentLine > 0)
+        level2MenuCurrentLine -= 1;
+    }
+    else if (controlVal == ENC_SW_PRESSED)
+    {
+      if (level2MenuCurrentLine == 0)
+        setCalFactor();
+      else if (level2MenuCurrentLine == 1)
+        saveInitValuesToEEPROM();
+      else if (level2MenuCurrentLine == 2)
+        return;
+    }
+  }
+}
+
+// Display Setup Menu Operations
+// Calibrate, Save Defaults, Return
+void displaySetupMenuOps(void)
+{
+ u8x8.clearDisplay();
+  if (level2MenuCurrentLine == 0)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,0,"Calibrate");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 1)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,1,"Save Defaults");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 2)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,2,"Return");
+  u8x8.setInverseFont(0);
 }
