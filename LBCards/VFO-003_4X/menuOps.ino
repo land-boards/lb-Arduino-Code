@@ -320,7 +320,9 @@ void setVFOStepSize(void)
     }
     printStepSize();
   }
-}// Print Step Size
+}
+
+// Print Step Size
 void printStepSize(void)
 {
   u8x8.clearDisplay();
@@ -357,8 +359,6 @@ void printStepSize(void)
     u8x8.draw2x2String(0, 2, "10 MHz");
   return;
 }
-
-
 
 // Seloect the current VFO
 void selectVFO(void)
