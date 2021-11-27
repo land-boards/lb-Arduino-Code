@@ -1,7 +1,7 @@
 // ConfigEEPROM
 // Routines which deal with Configuration EEPROM
 
-#define MAGIC_NUM 0x55          // Change to different number re-write default table
+#define MAGIC_NUM 0xaa          // Change to different number re-write default table
 
 // Variable offsets in the EEPROM
 #define FREQ0_OFFSET 0          // VFO 0 frequency (32-bits)
@@ -16,7 +16,8 @@
 #define VFO1_1X4X_OFFSET 24
 #define VFO2_1X4X_OFFSET 25
 #define VFONUMBER_OFFSET 26     // Current VFO number being set (0-2)
-#define MAGICNUMBER_OFFSET 27   // Reload defaults flag
+#define BAND_OFFSET 27          // Band number
+#define MAGICNUMBER_OFFSET 28   // Reload defaults flag
 
 // Load the configuration from the EEPROM
 void loadEEPROM(void)
@@ -32,6 +33,7 @@ void loadEEPROM(void)
   VFO_0_1x4x = EEPROM.get(VFO0_1X4X_OFFSET, VFO_0_1x4x);
   VFO_1_1x4x = EEPROM.get(VFO1_1X4X_OFFSET, VFO_1_1x4x);
   VFO_2_1x4x = EEPROM.get(VFO2_1X4X_OFFSET, VFO_2_1x4x);
+  bandNumber = EEPROM.get(BAND_OFFSET,bandNumber);
   currentVFONumber = EEPROM.get(VFONUMBER_OFFSET, currentVFONumber);
 }
 
@@ -51,6 +53,7 @@ void storeEEPROM(void)
   EEPROM.put(VFO1_1X4X_OFFSET, VFO_1_1x4x);
   EEPROM.put(VFO2_1X4X_OFFSET, VFO_2_1x4x);
   EEPROM.put(VFONUMBER_OFFSET, currentVFONumber);
+  EEPROM.put(BAND_OFFSET,bandNumber);
   EEPROM.put(MAGICNUMBER_OFFSET, magicNumber);
 }
 
@@ -58,17 +61,18 @@ void storeEEPROM(void)
 // Loaded only the first time the program is run on a "virgin" Arduino Pro Mini
 void setEEPROMDefaults(void)
 {
-  VFO_0_Freq = 1400000000ULL;
+  VFO_0_Freq = 1415000000ULL;
   VFO_1_Freq = 1200000000ULL;
   VFO_2_Freq = 1000000000ULL;
   stepSize = STEP_1_MHZ;
   calFactor = 0;
   VFO_0_OnOff = VFO_ON;
-  VFO_1_OnOff = VFO_ON;
-  VFO_2_OnOff = VFO_ON;
+  VFO_1_OnOff = VFO_OFF;
+  VFO_2_OnOff = VFO_OFF;
   VFO_0_1x4x = VFO_1X;
   VFO_1_1x4x = VFO_1X;
   VFO_2_1x4x = VFO_1X;
+  bandNumber = BAND_20M_SSB;
   currentVFONumber = 0;
 }
 

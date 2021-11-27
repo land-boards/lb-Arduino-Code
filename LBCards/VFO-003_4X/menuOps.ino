@@ -360,6 +360,111 @@ void printStepSize(void)
   return;
 }
 
+// Set the Band
+// Fast way to get to the start of a band
+void setBandVal(void)
+{
+  uint8_t controlVal;
+  printBand();
+  while (1)
+  {
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+    {
+      setCurrentFreq();
+      return;
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (bandNumber < BAND_10M_SSB)
+        bandNumber += 1;
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (bandNumber > BAND_80M_CW)
+        bandNumber -= 1;
+    }
+    printBand();
+  }
+}
+
+// Print the Band
+void printBand(void)
+{
+  u8x8.clearDisplay();
+  u8x8.draw2x2String(0, 0, "CLK SEL");
+  if (bandNumber == BAND_80M_CW)
+    u8x8.draw2x2String(0, 2, "80M CW");
+  else if (bandNumber == BAND_80M_SSB)
+    u8x8.draw2x2String(0, 2, "80M SSB");
+  else if (bandNumber == BAND_40M_CW)
+    u8x8.draw2x2String(0, 2, "40M CW");
+  else if (bandNumber == BAND_40M_SSB)
+    u8x8.draw2x2String(0, 2, "40M SSB");
+  else if (bandNumber == BAND_20M_CW)
+    u8x8.draw2x2String(0, 2, "20M CW");
+  else if (bandNumber == BAND_20M_SSB)
+    u8x8.draw2x2String(0, 2, "20M SSB");
+  else if (bandNumber == BAND_15M_CW)
+    u8x8.draw2x2String(0, 2, "15M CW");
+  else if (bandNumber == BAND_15M_SSB)
+    u8x8.draw2x2String(0, 2, "15M SSB");
+  else if (bandNumber == BAND_10M_CW)
+    u8x8.draw2x2String(0, 2, "10M CW");
+  else if (bandNumber == BAND_10M_SSB)
+    u8x8.draw2x2String(0, 2, "10M SSB");
+}
+
+// Set the currently sellected frequency
+void setCurrentFreq(void)
+{
+  uint64_t freqVal;
+  if (bandNumber == BAND_80M_CW)
+    freqVal = 350000000ULL;
+  else if (bandNumber == BAND_80M_SSB)
+    freqVal = 360000000ULL;
+  else if (bandNumber == BAND_40M_CW)
+    freqVal = 700000000ULL;
+  else if (bandNumber == BAND_40M_SSB)
+    freqVal = 712500000ULL;
+  else if (bandNumber == BAND_20M_CW)
+    freqVal = 1400000000ULL;
+  else if (bandNumber == BAND_20M_SSB)
+    freqVal = 1415000000ULL;
+  else if (bandNumber == BAND_15M_CW)
+    freqVal = 2100000000ULL;
+  else if (bandNumber == BAND_15M_SSB)
+    freqVal = 2120000000ULL;
+  else if (bandNumber == BAND_10M_CW)
+    freqVal = 2800000000ULL;
+  else if (bandNumber == BAND_10M_SSB)
+    freqVal = 2830000000ULL;
+  if (currentVFONumber == 0)
+  {
+    VFO_0_Freq = freqVal;
+    if (VFO_0_1x4x == VFO_1X)
+      si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
+    else
+      si5351.set_freq((uint64_t)VFO_0_Freq << 2, SI5351_CLK0);
+  }
+  else if (currentVFONumber == 1)
+  {
+    VFO_1_Freq = freqVal;
+    if (VFO_1_1x4x == VFO_1X)
+      si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
+    else
+      si5351.set_freq((uint64_t)VFO_1_Freq << 2, SI5351_CLK1);
+  }
+  else if (currentVFONumber == 2)
+  {
+    VFO_2_Freq = freqVal;
+    if (VFO_2_1x4x == VFO_1X)
+      si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
+    else
+      si5351.set_freq((uint64_t)VFO_2_Freq << 2, SI5351_CLK2);
+  }
+}
+
 // Seloect the current VFO
 void selectVFO(void)
 {
@@ -477,9 +582,6 @@ void printVFOOnOff(void)
       u8x8.draw2x2String(0, 1, "CLK2 Off");
   }
 }
-
-
-
 
 // Print 1X or 4X
 void printVFO1x4x(void)

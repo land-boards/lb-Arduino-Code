@@ -11,6 +11,7 @@
         Operate - operateMenuOps() / displayOperateMenuOps()
             Set Freq - setVFOFreq() / displayFreqOnOLED() / printVFOFreq()
             Step Size - setVFOStepSize() / printStepSize()
+            Band - setBand() / printBand()
             Return
          Clk Config - clkConfigMenuOps() / displayClkConfigMenuOps()
             Select Clk - selectVFO() / printVFONumber()
@@ -92,7 +93,7 @@ void operateMenuOps(void)
     controlVal = waitForControlChange();
     if (controlVal == ENC_UP)
     {
-      if (level2MenuCurrentLine < 2)
+      if (level2MenuCurrentLine < 3)
         level2MenuCurrentLine += 1;
     }
     else if (controlVal == ENC_DOWN)
@@ -107,6 +108,8 @@ void operateMenuOps(void)
       else if (level2MenuCurrentLine == 1)
         setVFOStepSize();
       else if (level2MenuCurrentLine == 2)
+        setBandVal();
+      else if (level2MenuCurrentLine == 3)
         return;
     }
   }
@@ -118,16 +121,20 @@ void displayOperateMenuOps(void)
 {
   u8x8.clearDisplay();
   if (level2MenuCurrentLine == 0)
-      u8x8.setInverseFont(1);
+    u8x8.setInverseFont(1);
   u8x8.drawString(0,0,"Set Freq");
   u8x8.setInverseFont(0);
   if (level2MenuCurrentLine == 1)
-      u8x8.setInverseFont(1);
+    u8x8.setInverseFont(1);
   u8x8.drawString(0,1,"Step Size");
   u8x8.setInverseFont(0);
   if (level2MenuCurrentLine == 2)
+    u8x8.setInverseFont(1);
+  u8x8.drawString(0,2,"Set Band");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 3)
       u8x8.setInverseFont(1);
-  u8x8.drawString(0,2,"Return");
+  u8x8.drawString(0,3,"Return");
   u8x8.setInverseFont(0);
 }
 

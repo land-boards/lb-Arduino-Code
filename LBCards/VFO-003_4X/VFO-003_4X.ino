@@ -77,6 +77,20 @@ enum VFO_1X_4X
   VFO_4X
 };
 
+enum BAND_SEL_VAL
+{
+  BAND_80M_CW,
+  BAND_80M_SSB,
+  BAND_40M_CW,
+  BAND_40M_SSB,
+  BAND_20M_CW,
+  BAND_20M_SSB,
+  BAND_15M_CW,
+  BAND_15M_SSB,
+  BAND_10M_CW,
+  BAND_10M_SSB
+};
+
 // EEPROM is used to store initial values
 // ATMEGA parts have internal EEPROM - STM32 parts don't have internal EEPROM
 
@@ -97,6 +111,7 @@ uint8_t VFO_1_1x4x;
 uint8_t VFO_2_1x4x;
 
 uint8_t currentVFONumber;
+uint8_t bandNumber;
 
 uint8_t magicNumber;
 
