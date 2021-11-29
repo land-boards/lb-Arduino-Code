@@ -227,11 +227,11 @@ void displayFreqOnOLED(float freq)
   }
   u8x8.clearDisplay();
   if (currentVFONumber == 0)
-    u8x8.draw2x2String(0, 0, "Set CLK0");
+    u8x8.draw2x2String(0, 0, "CLK0");
   else if (currentVFONumber == 1)
-    u8x8.draw2x2String(0, 0, "Set CLK1");
+    u8x8.draw2x2String(0, 0, "CLK1");
   else if (currentVFONumber == 2)
-    u8x8.draw2x2String(0, 0, "Set CLK2");
+    u8x8.draw2x2String(0, 0, "CLK2");
   u8x8.drawString(0, 3, outBuffer);
 }
 
@@ -384,15 +384,18 @@ void setBandVal(void)
       if (bandNumber > BAND_80M_CW)
         bandNumber -= 1;
     }
+    setBandSwitch();
     printBand();
   }
 }
 
-// Print the Band
+// Print the Band Number
+// 10/15/20/40/80M bands
+// CW or SSB
 void printBand(void)
 {
   u8x8.clearDisplay();
-  u8x8.draw2x2String(0, 0, "CLK SEL");
+  u8x8.draw2x2String(0, 0, "BAND SEL");
   if (bandNumber == BAND_80M_CW)
     u8x8.draw2x2String(0, 2, "80M CW");
   else if (bandNumber == BAND_80M_SSB)
@@ -416,29 +419,60 @@ void printBand(void)
 }
 
 // Set the currently sellected frequency
+// Set step size to 100 Hz for CW and 1 KHz for SSN
 void setCurrentFreq(void)
 {
-  uint64_t freqVal;
+  uint64_t freqVal;     // Start of band
   if (bandNumber == BAND_80M_CW)
+  {
     freqVal = 350000000ULL;
+    stepSize = STEP_100_HZ;
+  }
   else if (bandNumber == BAND_80M_SSB)
+  {
     freqVal = 360000000ULL;
+    stepSize = STEP_1_KHZ;
+  }
   else if (bandNumber == BAND_40M_CW)
+  {
     freqVal = 700000000ULL;
+    stepSize = STEP_100_HZ;
+  }
   else if (bandNumber == BAND_40M_SSB)
+  {
     freqVal = 712500000ULL;
+    stepSize = STEP_1_KHZ;
+  }
   else if (bandNumber == BAND_20M_CW)
+  {
     freqVal = 1400000000ULL;
+    stepSize = STEP_100_HZ;
+  }
   else if (bandNumber == BAND_20M_SSB)
+  {
     freqVal = 1415000000ULL;
+    stepSize = STEP_1_KHZ;
+  }
   else if (bandNumber == BAND_15M_CW)
+  {
     freqVal = 2100000000ULL;
+    stepSize = STEP_100_HZ;
+  }
   else if (bandNumber == BAND_15M_SSB)
+  {
     freqVal = 2120000000ULL;
+    stepSize = STEP_1_KHZ;
+  }
   else if (bandNumber == BAND_10M_CW)
+  {
     freqVal = 2800000000ULL;
+    stepSize = STEP_100_HZ;
+  }
   else if (bandNumber == BAND_10M_SSB)
+  {
     freqVal = 2830000000ULL;
+    stepSize = STEP_1_KHZ;
+  }
   if (currentVFONumber == 0)
   {
     VFO_0_Freq = freqVal;
@@ -465,7 +499,7 @@ void setCurrentFreq(void)
   }
 }
 
-// Seloect the current VFO
+// Seloect the current VFO 0-2
 void selectVFO(void)
 {
   uint8_t controlVal;
@@ -709,4 +743,139 @@ void saveInitValuesToEEPROM(void)
   u8x8.draw2x2String(0, 1, "Stored");
   delay(1000);
 #endif
+}
+
+// Memory Operations
+void storeMemoryOps(void)
+{
+  uint8_t controlVal;
+  uint8_t currentMemory = 0;
+  printMemoryNumber(currentMemory);
+  while (1)
+  {
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+    {
+      if (currentMemory < 8)
+        storeMemory(currentMemory);
+      return;
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (currentMemory < 8)
+        currentMemory += 1;
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (currentMemory > 0)
+        currentMemory -= 1;
+    }
+    printMemoryNumber(currentMemory);
+  }
+}
+
+// Load Memory Operations
+void loadMemoryOps(void)
+{
+  uint8_t controlVal;
+  uint8_t currentMemory = 0;
+  printMemoryNumber(currentMemory);
+  while (1)
+  {
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+    {
+      if (currentMemory < 8)
+        loadMemory(currentMemory);
+      return;
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (currentMemory < 8)
+        currentMemory += 1;
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (currentMemory > 0)
+        currentMemory -= 1;
+    }
+    printMemoryNumber(currentMemory);
+  }
+}
+
+// Print the memory number
+void printMemoryNumber(uint8_t memNum)
+{
+  u8x8.clearDisplay();
+  if (memNum == 0)
+    u8x8.draw2x2String(0, 0, "Mem 0");
+  else if (memNum == 1)
+    u8x8.draw2x2String(0, 0, "Mem 1");
+  else if (memNum == 2)
+    u8x8.draw2x2String(0, 0, "Mem 2");
+  else if (memNum == 3)
+    u8x8.draw2x2String(0, 0, "Mem 3");
+  else if (memNum == 4)
+    u8x8.draw2x2String(0, 0, "Mem 4");
+  else if (memNum == 5)
+    u8x8.draw2x2String(0, 0, "Mem 5");
+  else if (memNum == 6)
+    u8x8.draw2x2String(0, 0, "Mem 6");
+  else if (memNum == 7)
+    u8x8.draw2x2String(0, 0, "Mem 7");
+  else if (memNum == 8)
+    u8x8.draw2x2String(0, 0, "Exit");
+}
+
+// Set Display On/Off
+// Off = less RF noise from the OLED Display
+void displayCtrlOps(void)
+{
+  uint8_t controlVal;
+  uint8_t off0On1Exit2=0;
+  printDisplayCtrl(off0On1Exit2);
+  while (1)
+  {
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_SW_PRESSED)
+    {
+      if (off0On1Exit2 == 0)
+        u8x8.setPowerSave(0);
+      else if (off0On1Exit2 == 1)
+        u8x8.setPowerSave(1);
+      if (off0On1Exit2 == 2)
+      {
+        u8x8.setPowerSave(0);
+        return;
+      }
+    }
+    else if (controlVal == ENC_UP)
+    {
+      if (off0On1Exit2 < 2)
+        off0On1Exit2 += 1;
+      if (off0On1Exit2 != 1)
+        u8x8.setPowerSave(0);
+      else
+        u8x8.setPowerSave(1);
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (off0On1Exit2 > 0)
+        off0On1Exit2 -= 1;
+    }
+    printDisplayCtrl(off0On1Exit2);
+  }
+}
+
+// Print Display control options
+void printDisplayCtrl(uint8_t off0On1)
+{
+  u8x8.clearDisplay();
+  u8x8.draw2x2String(0, 0, "Disp Ctl");
+  if (off0On1 == 0)
+     u8x8.draw2x2String(0, 2, "On");
+  else if (off0On1 == 1)
+     u8x8.draw2x2String(0, 2, "Off");
+  else if (off0On1 == 2)
+     u8x8.draw2x2String(0, 2, "Exit");
 }

@@ -19,6 +19,7 @@
   OLED I2C driver Wiki page
     https://github.com/olikraus/u8g2/wiki
     8x8 font has 16x4 characters in 128x32 display
+      16 chars/line x 4 lines
 
   Frequency synthesizer is Si5351A
   3 outputs
@@ -26,7 +27,9 @@
   Frequencies are in 1/100th of a Hz
   32-bit frequency values are 2^32/100 = 42.95 MHz max
   Convert 32-bit values using cast (uint64_t) to set higher frequencies
-  Si5361 driver is from si5351_example
+  1x or 4x selectable
+  QRP Labe Receiver module LO uses 4x clock
+  Si5351 driver is from si5351_example
     https://etherkit.github.io/si5351abb_landing_page.html
 
 */
@@ -77,7 +80,9 @@ enum VFO_1X_4X
   VFO_4X
 };
 
-enum BAND_SEL_VAL
+// Band selection enums
+// Works with Switched Relay card
+enum BAND_SEL_VALS
 {
   BAND_80M_CW,
   BAND_80M_SSB,
@@ -95,6 +100,7 @@ enum BAND_SEL_VAL
 // ATMEGA parts have internal EEPROM - STM32 parts don't have internal EEPROM
 
 // Global variables
+// Loaded from EEPROM at power up
 unsigned long VFO_0_Freq;
 unsigned long VFO_1_Freq;
 unsigned long VFO_2_Freq;
@@ -123,16 +129,17 @@ U8X8_SSD1306_128X32_UNIVISION_HW_I2C u8x8(U8X8_PIN_NONE);
 void setup(void)
 {
   bool i2c_found;
+  // Initialize the VFO-003 hardware
+  loadInitEEPROM();           // Load EEPROM
+  initBandSwitch();           // Band Switch initialization
+  initMenu();                 // Menu initialization
+  setupEncoder();             // Rotary encoder initialization
+  u8x8.begin();               // OLED initialization
+  u8x8.setBusClock(100000);   // I2C clock = 100 KHz
 
-  checkEEPROM();
-
-  u8x8.begin();
-  u8x8.setBusClock(400000);   // I2C clock = 400 KHz
   u8x8.clearDisplay();
   u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
   u8x8.draw2x2String(0, 0, "VFO4X");
-  initMenu();
-  delay(1000);
 
   // Si8351 initialiation
   i2c_found = si5351.init(SI5351_CRYSTAL_LOAD_6PF, 27000000, 0);
@@ -142,46 +149,8 @@ void setup(void)
     u8x8.drawString(0, 0, "I2C Fail");
     while (1);
   }
-
-  // Set CLK0
-  if (VFO_0_1x4x == VFO_1X)
-    si5351.set_freq((uint64_t)VFO_0_Freq, SI5351_CLK0);
-  else
-    si5351.set_freq((uint64_t)VFO_0_Freq * 4, SI5351_CLK0);
-
-  // Set CLK1
-  if (VFO_1_1x4x == VFO_1X)
-    si5351.set_freq((uint64_t)VFO_1_Freq, SI5351_CLK1);
-  else
-    si5351.set_freq((uint64_t)VFO_1_Freq * 4, SI5351_CLK1);
-
-  // Set CLK2
-  if (VFO_2_1x4x == VFO_1X)
-    si5351.set_freq((uint64_t)VFO_2_Freq, SI5351_CLK2);
-  else
-    si5351.set_freq((uint64_t)VFO_2_Freq * 4, SI5351_CLK2);
-
-  // Query a status update and wait a bit to let the Si5351 populate the
-  // status flags correctly.
-  si5351.update_status();
-
-  // Set the calibration factor
-  si5351.set_correction(calFactor, SI5351_PLL_INPUT_XO);
-
-  // Set all of the drive strengths to 8 mA (max)
-  si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);
-  si5351.drive_strength(SI5351_CLK1, SI5351_DRIVE_8MA);
-  si5351.drive_strength(SI5351_CLK2, SI5351_DRIVE_8MA);
-
-  // Clocks need to be high when they are disabled
-  // Needed because of the 74AC14 drivers which invert the clocks
-  // Keeps card from driving DC output
-  si5351.set_clock_disable(SI5351_CLK0, SI5351_CLK_DISABLE_HIGH);
-  si5351.set_clock_disable(SI5351_CLK1, SI5351_CLK_DISABLE_HIGH);
-  si5351.set_clock_disable(SI5351_CLK2, SI5351_CLK_DISABLE_HIGH);
-
-  // Rotary encoder initialization
-  setupEncoder();
+  delay(1000);
+  setupVFO();
 }
 
 // loop - loops forever

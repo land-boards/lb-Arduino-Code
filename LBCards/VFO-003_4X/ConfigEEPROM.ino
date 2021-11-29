@@ -78,7 +78,7 @@ void setEEPROMDefaults(void)
 
 // If the magic number is present, then load the default values from thr EEPROM
 // If the magic number is not present, then store the default values to the EEPROM
-void checkEEPROM(void)
+void loadInitEEPROM(void)
 {
   magicNumber = MAGIC_NUM;
 #ifdef HAS_INTERNAL_EEPROM
@@ -90,4 +90,39 @@ void checkEEPROM(void)
     storeEEPROM();
   }
 #endif
+}
+
+void loadMemory(uint8_t memNum)
+{
+  VFO_0_Freq =        EEPROM.get(32 + ((memNum << 5) + FREQ0_OFFSET),     VFO_0_Freq);
+  VFO_1_Freq =        EEPROM.get(32 + ((memNum << 5) + FREQ1_OFFSET),     VFO_1_Freq);
+  VFO_2_Freq =        EEPROM.get(32 + ((memNum << 5) + FREQ2_OFFSET),     VFO_2_Freq);
+  stepSize =          EEPROM.get(32 + ((memNum << 5) + STEPSIZE_OFFSET),  stepSize);
+  calFactor =         EEPROM.get(32 + ((memNum << 5) + CALVAL_OFFSET),    calFactor);
+  VFO_0_OnOff =       EEPROM.get(32 + ((memNum << 5) + VFO0ONOFF_OFFSET), VFO_0_OnOff);
+  VFO_1_OnOff =       EEPROM.get(32 + ((memNum << 5) + VFO1ONOFF_OFFSET), VFO_1_OnOff);
+  VFO_2_OnOff =       EEPROM.get(32 + ((memNum << 5) + VFO2ONOFF_OFFSET), VFO_2_OnOff);
+  VFO_0_1x4x =        EEPROM.get(32 + ((memNum << 5) + VFO0_1X4X_OFFSET), VFO_0_1x4x);
+  VFO_1_1x4x =        EEPROM.get(32 + ((memNum << 5) + VFO1_1X4X_OFFSET), VFO_1_1x4x);
+  VFO_2_1x4x =        EEPROM.get(32 + ((memNum << 5) + VFO2_1X4X_OFFSET), VFO_2_1x4x);
+  currentVFONumber =  EEPROM.get(32 + ((memNum << 5) + VFONUMBER_OFFSET), currentVFONumber);
+  bandNumber =        EEPROM.get(32 + ((memNum << 5) + BAND_OFFSET),      bandNumber);
+  setupVFO();
+}
+
+void storeMemory(uint8_t memNum)
+{
+  EEPROM.put(32 + ((memNum << 5) + FREQ0_OFFSET),     VFO_0_Freq);
+  EEPROM.put(32 + ((memNum << 5) + FREQ1_OFFSET),     VFO_1_Freq);
+  EEPROM.put(32 + ((memNum << 5) + FREQ2_OFFSET),     VFO_2_Freq);
+  EEPROM.put(32 + ((memNum << 5) + STEPSIZE_OFFSET),  stepSize);
+  EEPROM.put(32 + ((memNum << 5) + CALVAL_OFFSET),    calFactor);
+  EEPROM.put(32 + ((memNum << 5) + VFO0ONOFF_OFFSET), VFO_0_OnOff);
+  EEPROM.put(32 + ((memNum << 5) + VFO1ONOFF_OFFSET), VFO_1_OnOff);
+  EEPROM.put(32 + ((memNum << 5) + VFO2ONOFF_OFFSET), VFO_2_OnOff);
+  EEPROM.put(32 + ((memNum << 5) + VFO0_1X4X_OFFSET), VFO_0_1x4x);
+  EEPROM.put(32 + ((memNum << 5) + VFO1_1X4X_OFFSET), VFO_1_1x4x);
+  EEPROM.put(32 + ((memNum << 5) + VFO2_1X4X_OFFSET), VFO_2_1x4x);
+  EEPROM.put(32 + ((memNum << 5) + VFONUMBER_OFFSET), currentVFONumber);
+  EEPROM.put(32 + ((memNum << 5) + BAND_OFFSET),      bandNumber);
 }

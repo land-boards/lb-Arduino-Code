@@ -33,9 +33,13 @@ void setupEncoder()
 // Wait around for an encoder change (knob turn or button)
 uint8_t waitForControlChange(void)
 {
-  uint8_t controlVal = NOTHING;
-  while (controlVal == NOTHING)
+  uint8_t controlVal;
+  do
+  {
+    delay(10);
     controlVal = checkControls();
+  }
+  while(controlVal == NOTHING);
   return (controlVal);
 }
 

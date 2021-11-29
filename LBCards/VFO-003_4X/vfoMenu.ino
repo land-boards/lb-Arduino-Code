@@ -11,7 +11,7 @@
         Operate - operateMenuOps() / displayOperateMenuOps()
             Set Freq - setVFOFreq() / displayFreqOnOLED() / printVFOFreq()
             Step Size - setVFOStepSize() / printStepSize()
-            Band - setBand() / printBand()
+            Band - setBandVal() / printBand()
             Return
          Clk Config - clkConfigMenuOps() / displayClkConfigMenuOps()
             Select Clk - selectVFO() / printVFONumber()
@@ -44,7 +44,7 @@ void vfoTopLevelMenuOps(void)
   controlVal = waitForControlChange();
   if (controlVal == ENC_UP)
   {
-    if (topMenuCurrentLine < 2)
+    if (topMenuCurrentLine < 3)
       topMenuCurrentLine += 1;
   }
   else if (controlVal == ENC_DOWN)
@@ -60,6 +60,8 @@ void vfoTopLevelMenuOps(void)
       clkConfigMenuOps();
     else if (topMenuCurrentLine == 2)
       setupMenuOps();
+    else if (topMenuCurrentLine == 3)
+      memoryOps();
   }
 }
 
@@ -78,6 +80,10 @@ void displayTopMenuOps(void)
    if (topMenuCurrentLine == 2)
       u8x8.setInverseFont(1);
    u8x8.drawString(0,2,"Setup");
+   u8x8.setInverseFont(0);
+   if (topMenuCurrentLine == 3)
+      u8x8.setInverseFont(1);
+   u8x8.drawString(0,3,"Memories");
    u8x8.setInverseFont(0);
 }
 
@@ -205,7 +211,7 @@ void setupMenuOps(void)
     controlVal = waitForControlChange();
     if (controlVal == ENC_UP)
     {
-      if (level2MenuCurrentLine < 2)
+      if (level2MenuCurrentLine < 3)
         level2MenuCurrentLine += 1;
     }
     else if (controlVal == ENC_DOWN)
@@ -220,6 +226,8 @@ void setupMenuOps(void)
       else if (level2MenuCurrentLine == 1)
         saveInitValuesToEEPROM();
       else if (level2MenuCurrentLine == 2)
+        displayCtrlOps();
+      else if (level2MenuCurrentLine == 3)
         return;
     }
   }
@@ -237,6 +245,63 @@ void displaySetupMenuOps(void)
   if (level2MenuCurrentLine == 1)
       u8x8.setInverseFont(1);
   u8x8.drawString(0,1,"Save Defaults");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 2)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,2,"Display On/Off");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 3)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,3,"Return");
+  u8x8.setInverseFont(0);
+}
+
+// Memory Options
+// There are 8 memories
+// Memories can read read/written
+void memoryOps(void)
+{
+  uint8_t controlVal;
+  printMemoryOps();
+  level2MenuCurrentLine = 0;
+  while(1)
+  {
+    printMemoryOps();
+    controlVal = waitForControlChange();
+    if (controlVal == ENC_UP)
+    {
+      if (level2MenuCurrentLine < 2)
+        level2MenuCurrentLine += 1;
+    }
+    else if (controlVal == ENC_DOWN)
+    {
+      if (level2MenuCurrentLine > 0)
+        level2MenuCurrentLine -= 1;
+    }
+    else if (controlVal == ENC_SW_PRESSED)
+    {
+      if (level2MenuCurrentLine == 0)
+        loadMemoryOps();
+      else if (level2MenuCurrentLine == 1)
+        storeMemoryOps();
+      else if (level2MenuCurrentLine == 2)
+        return;
+    }
+    printMemoryOps();
+  }
+}
+
+// Print the memory options
+void printMemoryOps(void)
+{
+  u8x8.clearDisplay();
+  if (level2MenuCurrentLine == 0)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,0,"Load Memory");
+  u8x8.setInverseFont(0);
+  if (level2MenuCurrentLine == 1)
+      u8x8.setInverseFont(1);
+  u8x8.drawString(0,1,"Store Memory");
   u8x8.setInverseFont(0);
   if (level2MenuCurrentLine == 2)
       u8x8.setInverseFont(1);
