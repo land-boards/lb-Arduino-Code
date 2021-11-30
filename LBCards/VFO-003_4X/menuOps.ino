@@ -862,6 +862,10 @@ void displayCtrlOps(void)
     {
       if (off0On1Exit2 > 0)
         off0On1Exit2 -= 1;
+      if (off0On1Exit2 != 1)
+        u8x8.setPowerSave(0);
+      else
+        u8x8.setPowerSave(1);
     }
     printDisplayCtrl(off0On1Exit2);
   }

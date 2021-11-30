@@ -135,7 +135,7 @@ void setup(void)
   initMenu();                 // Menu initialization
   setupEncoder();             // Rotary encoder initialization
   u8x8.begin();               // OLED initialization
-  u8x8.setBusClock(100000);   // I2C clock = 100 KHz
+  u8x8.setBusClock(400000);   // I2C clock = 100 KHz
 
   u8x8.clearDisplay();
   u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
