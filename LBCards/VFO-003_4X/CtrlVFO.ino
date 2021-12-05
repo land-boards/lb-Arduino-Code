@@ -1,5 +1,6 @@
 // VFO Control
 
+// Setup the VFO
 void setupVFO(void)
 {
   // Set CLK0

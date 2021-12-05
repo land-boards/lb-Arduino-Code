@@ -36,7 +36,7 @@ uint8_t waitForControlChange(void)
   uint8_t controlVal;
   do
   {
-    delay(10);
+    // delay(10);
     controlVal = checkControls();
   }
   while(controlVal == NOTHING);
