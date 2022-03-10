@@ -321,6 +321,21 @@ uint8_t testProto16(void)
   }
 
   //////////////////////////////////////////////////////////////////////////////////////
+  // writePortBitError
+  //////////////////////////////////////////////////////////////////////////////////////
+
+  uint8_t writePortBitError(uint8_t bitInError, uint8_t hiLo)
+  {
+    Serial.print(F("Error on port "));
+    Serial.print(bitInError);
+    if (hiLo == 0)
+      Serial.println(F(" Expected Low"));
+    else
+      Serial.println(F(" Expected High"));
+    return TEST_FAILED;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////
   // uint8_t testDigio32Card() - Test the DIGIO32 card.
   // Cable from UUT connector to the DIGIO32 card in the Test Station.
   // The Test Station and the UUT both are DIGIO32 cards.
@@ -332,29 +347,27 @@ uint8_t testProto16(void)
   {
     uint8_t port;
     uint8_t testResults = TEST_PASSED;	// Assume pass until proven otherwise
+    
+    // Set DIGIO32 lines inside the Test Station to be inputs with pull-ups
     BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
-    for (port = 0; port < 32; port++)   	// Set DIGIO32 lines inside the Test Station to be inputs with pull-ups
+    for (port = 0; port < 32; port++)
       Dio32.pinMode(port, INPUT_PULLUP);
+    // Set all UUT channels to outputs
     BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-    for (port = 0; port < 32; port++)		// Set all UUT channels to outputs
+    for (port = 0; port < 32; port++)
       Dio32.pinMode(port, OUTPUT);
-    // Set bits being checked to Low
-    // Verify that a Low is read back
+    // Set bits being checked to Low, verify that a Low is read back
     for (port = 0; port < 32; port++)
     {
-      BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);		// Write out from UUT card
+      BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);      // Write out from UUT card
       Dio32.digitalWrite(port, LOW);
       BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Read in from Test Station
       if (Dio32.digitalRead(port) != LOW)
       {
-        Serial.print(F("Error on port "));
-        Serial.print(port);
-        Serial.println(F(" Expected Low"));
-        testResults = TEST_FAILED;
+        testResults = writePortBitError(port,0);
       }
     }
-    // Set bits being checked to High
-    // Verify that a High is read back
+    // Set bits being checked to High, verify that a High is read back
     for (port = 0; port < 32; port++)
     {
       BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);		// Write out from UUT card
@@ -362,14 +375,51 @@ uint8_t testProto16(void)
       BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Read in from Test Station
       if (Dio32.digitalRead(port) != HIGH)
       {
-
-        Serial.print(F("Error on port "));
-        Serial.print(port);
-        Serial.println(F(" Expected High"));
-        testResults = TEST_FAILED;
+        testResults = writePortBitError(port,1);
       }
     }
     BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);			// Leave the UUT as inputs when done
+    for (port = 0; port < 32; port++)
+      Dio32.pinMode(port, INPUT);
+    return testResults;
+    
+    // Reverse direction
+    // UUT is input, Test Station is output
+    BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+    for (port = 0; port < 32; port++)   // Set all UUT channels to inputs
+      Dio32.pinMode(port, INPUT_PULLUP);
+    // Set DIGIO32 lines inside the Test Station to be outputs
+    BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+    for (port = 0; port < 32; port++)
+      Dio32.pinMode(port, OUTPUT);
+    // Set bits being checked to Low
+    // Verify that a Low is read back
+    for (port = 0; port < 32; port++)
+    {
+      BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);    // Write out from Test Station
+      Dio32.digitalWrite(port, LOW);
+      BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);  // Read in from UUT card
+      if (Dio32.digitalRead(port) != LOW)
+      {
+        testResults = writePortBitError(port,0);
+      }
+    }
+    // Set bits being checked to High
+    // Verify that a High is read back
+    for (port = 0; port < 32; port++)
+    {
+      // Write out from Test Station
+      BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+      Dio32.digitalWrite(port, HIGH);
+      // Read in from UUT card
+      BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+      if (Dio32.digitalRead(port) != HIGH)
+      {
+        testResults = writePortBitError(port,1);
+      }
+    }
+    // Leave the Test Station as inputs when done
+    BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     for (port = 0; port < 32; port++)
       Dio32.pinMode(port, INPUT);
     return testResults;

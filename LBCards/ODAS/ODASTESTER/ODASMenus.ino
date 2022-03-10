@@ -15,18 +15,22 @@ void topLevelMenu(void)
     incomingByte = Serial.read();
     switch (incomingByte)
     {
+      // Card test menu
       case 'C':
       case 'c':
         cardTestMenu();
         break;
+      // Direct access meny
       case 'D':
       case 'd':
         directAccessMenu();
         break;
+      // EEPROM menu
       case 'E':
       case 'e':
         eepromAccessMenu();
         break;
+      // Direct access menus
       case 'I':
       case 'i':
         directAccessInternalDIGIO32Menu();

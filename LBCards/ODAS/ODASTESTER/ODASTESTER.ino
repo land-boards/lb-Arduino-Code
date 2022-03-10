@@ -93,16 +93,22 @@ LandBoards_I2CRPT08 UUTI2CMux8;
 
 void setup()
 {
+  // Set USB-Serial port to 9600 baud
   Serial.begin(9600);
+  
+  // Initialize the internal DIGIO32-I2C card
   BluePillI2CMux.begin(1);
   BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Dio32.begin(0);
   BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 
+  // Global vars
   failCount = 0;
   passCount = 0;
   single0loop1 = 0;
   boardType = NEW_CARD;
+  
+  // If the UUT EEPROM was already set yp, use the information to setup card
   if (detectBoardInEeprom() == 1)
   {
     selectBoardType();
