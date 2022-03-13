@@ -59,7 +59,7 @@ void cardTestMenu(void)
   uint8_t testType = NO_TEST;
   passCount = 0;
   failCount = 0;
-  Serial.println(F("L/S=Loop/Single, T=Test, B=Bounce LEDs, I=Int'l Tests, X=eXit sub-menu"));
+  Serial.println(F("L=Loop/S=Single, T=Test, B=Bounce LEDs, I=Int'l Tests, X=eXit sub-menu"));
   while (1)
   {
     testType = NO_TEST;
@@ -72,18 +72,21 @@ void cardTestMenu(void)
         case 'T':
         case 't':
           {
+            Serial.println(F("Testing UUT"));
             testType = LOOPBACK_TEST;
             break;
           }
         case 'I':
         case 'i':
           {
+            Serial.println(F("Access Interbal DIGIO32-I2C"));
             testType = INTERNAL_TEST;
             break;
           }
         case 'B':
         case 'b':
           {
+            Serial.println(F("Bounce a bit across outputs"));
             testType = BOUNCE_LEDS;
             break;
           }
@@ -91,7 +94,7 @@ void cardTestMenu(void)
         case 'l':
           {
             single0loop1 = 1;
-            Serial.println("Set flag to loop tests");
+            Serial.println(F("Set flag to loop tests"));
             break;
           }
         case 'S':
@@ -109,11 +112,11 @@ void cardTestMenu(void)
             break;
           }
         case '?':
-          Serial.println(F("\nL/S=Loop Tests or Run Single Test (control)"));
-          Serial.println(F("T=Test card with external loopback cable/hardware"));
-          Serial.println(F("B=Bounce a single bit across the LEDs"));
-          Serial.println(F("I=Internal Card Tests test (no loopback)"));
-          Serial.println(F("X=eXit sub-menu (back to top menu)"));
+          Serial.println(F("\nL/S = Loop Tests or Run Single Test (control)"));
+          Serial.println(F("T = Test card with external loopback cable/hardware"));
+          Serial.println(F("B = Bounce a single bit across the LEDs"));
+          Serial.println(F("I = Internal Card Accesses (no loopback)"));
+          Serial.println(F("X = eXit sub-menu (back to top menu)"));
           break;
         default:
           {
@@ -179,7 +182,7 @@ void directAccessMenu(void)
   uint8_t readValue;
   flushSerial();
   Serial.println("Direct Access UUT Hardware");
-  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   Serial.println(F("H=Write High, L=Write Low, R=Read a bit, X=eXit"));
   while (1)
   {
@@ -228,7 +231,7 @@ void directAccessMenu(void)
         case 'X':   // Exit
         case 'x':
           {
-            BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+            ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
             Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
             return;
             break;
@@ -264,8 +267,8 @@ void directAccessInternalDIGIO32Menu(void)
   uint8_t bitToWrite;
   uint8_t readValue;
   flushSerial();
-  Serial.println("Direct Access Test Station DIGIO32 Hardware");
-  BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  Serial.println(F("Direct Access Test Station DIGIO32 Hardware"));
+  ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Serial.println(F("H=Write High, L=Write Low, R=Read a bit, X=eXit"));
   while (1)
   {
@@ -314,7 +317,7 @@ void directAccessInternalDIGIO32Menu(void)
         case 'X':   // Exit
         case 'x':
           {
-            BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+            ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
             Serial.println("\nC=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32");
             return;
             break;

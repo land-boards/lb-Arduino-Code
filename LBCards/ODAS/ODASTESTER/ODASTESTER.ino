@@ -68,7 +68,7 @@ typedef enum {
   TEST_STN_INT_MUX_CH = 3,
 } muxChannel_t;
 
-LandBoards_I2CRPT01 BluePillI2CMux;
+LandBoards_I2CRPT01 ODASTSTR_I2CMux;
 LandBoards_Digio128V2 Dio128;    // Call the class constructor for the DigIO32_I2C card
 LandBoards_Digio128_64 Dio128_64;    // Call the class constructor for the DigIO-128 card
 LandBoards_DIGIO32I2C Dio32;
@@ -97,10 +97,10 @@ void setup()
   Serial.begin(9600);
   
   // Initialize the internal DIGIO32-I2C card
-  BluePillI2CMux.begin(1);
-  BluePillI2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  ODASTSTR_I2CMux.begin(1);
+  ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Dio32.begin(0);
-  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 
   // Global vars
   failCount = 0;

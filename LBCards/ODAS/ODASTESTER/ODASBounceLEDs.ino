@@ -4,7 +4,7 @@
 
 uint8_t bounceLedsCard(void)
 {
-  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
@@ -29,7 +29,6 @@ uint8_t bounceLedsCard(void)
       break;
     case OPTOOUT8I2C_CARD:
       bounceOptoOut8();
-      Serial.println(F("Not supported at present"));
       return 0;
       break;
     case DIGIO32I2C_CARD:
@@ -81,11 +80,47 @@ uint8_t bounceLedsCard(void)
 
 //////////////////////////////////////////////////////////////////////////////////////
 // void bounceOptoOut8(void)
+// There are three lines per Channel that need to be connected:
+// Ground (Gx), Power (Vx), Open Collector Output (Sx)
+// If the LED is not being driven, the Open Collector output will be pulled up
+// Wire Grounds to Digio32 channels 0-7
+// Wire Powers to Digio32 channels 8-15
+// Wire Signals to Digio32 channels 16-23
 //////////////////////////////////////////////////////////////////////////////////////
 
 void bounceOptoOut8(void)
 {
-
+    uint8_t port;
+    uint8_t testResults = TEST_PASSED;
+    ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+    for (port = 0; port < 8; port++)     // Set all of the OptoOut lines High (LEDs off)
+    {
+      singleMCP23008.pinMode(port, OUTPUT);
+      singleMCP23008.digitalWrite(port, HIGH);
+    }
+    ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH); // Leave LED off when done
+    for (port = 0; port < 8; port++)    // Goes to Ground pins of the OptoOut card
+    {
+      Dio32.pinMode(port, OUTPUT);
+      Dio32.digitalWrite(port, LOW);
+    }
+    for (port = 8; port < 16; port++)     // Goes to Power pins of the OptoOut card connector
+    {
+      Dio32.pinMode(port, OUTPUT);
+      Dio32.digitalWrite(port, HIGH);
+    }  
+    for (port = 16; port < 24; port++)     // Set internal DIGIO32 lines on the Test Station to inputs
+    {
+      Dio32.pinMode(port, INPUT);
+    }
+    delay(10);
+    ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+    for (port = 0; port < 8; port++)     // Goes to Ground pins of the OptoOut card
+    {
+      singleMCP23008.digitalWrite(port, LOW); // Turn on the LEDs one at a time
+      delay(10);
+      singleMCP23008.digitalWrite(port, HIGH); // Turn off the LEDs one at a time
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@
 
 uint8_t internalLBTestCard(void)
 {
-  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)
   {
     // Cards with single MCP23008 parts
@@ -50,7 +50,7 @@ uint8_t internalLBTestCard(void)
       return 1;
       break;
   }
-  BluePillI2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   return 1; // fail
 }
 
