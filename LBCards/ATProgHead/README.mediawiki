@@ -1,6 +1,6 @@
 == Land Boards ATProgHead Arduino Code Files ==
 
-<img src="http://land-boards.com/blwiki/images/5/56/ATProgHead-X2-CCA-640-001.JPG" alt="ATProgHead card Image"></img>
+<img src="http://land-boards.com/blwiki/images/c/c7/ATProgHead-X2-CCA-640-001.jpg" alt="ATProgHead card Image"></img>
 
 * These are the [http://land-boards.com/blwiki/index.php?title=ATProgHead Land Boards ATProgHead Card] Arduino code.
 * There is also other people's code here.
