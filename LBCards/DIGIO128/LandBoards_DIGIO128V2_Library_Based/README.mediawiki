@@ -1,8 +1,8 @@
 <a href="https://www.tindie.com/products/land_boards/64128-channel-digital-io-card-digio-128/" >
 <img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
-</img></a> == land-boards DigIO-128 Card Example Arduino Source Code Files 
+</img></a>
 
-== DIGIO-128 ==
+== land-boards DigIO-128 Card Example Arduino Source Code Files ==
 
 <img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
 
