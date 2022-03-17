@@ -2,9 +2,9 @@
 <img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
 </img></a> 
 
-== land-boards DigIO32-I2C Card Source Code Files ==
-
 <img src="http://land-boards.com/blwiki/images/5/53/DIGIO32-I2C-P232-720px.jpg" alt="DIGIO32-I2C Card image"></img>
+
+== land-boards DigIO32-I2C Card Source Code Files ==
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card] Source code files.
 * Here is the [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_DIGIO32_I2C Land Board DIGIO32-I2C Library] code
