@@ -1,0 +1,7 @@
+<a href="https://www.tindie.com/products/land_boards/esp32-vga-keyboard-mouse-card-v2-pcb-only/" >
+<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
+</img></a> 
+
+<img src="http://land-boards.com/blwiki/images/7/72/P968-cropped-720pxV.jpg" alt="BLACK-PILL-HUB Card photo"></img>
+
+[http://land-boards.com/blwiki/index.php?title=ESP32-VGA WIKI PAGE]
