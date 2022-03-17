@@ -1,3 +1,7 @@
+<a href="https://www.tindie.com/products/land_boards/8-channel-i2c-repeatermultiplexer-i2c-rpt-08/" >
+<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
+</img></a> 
+
 == land-boards DigIO-128 Library Files ==
 
 These files are not dependent on the Adafruit library
