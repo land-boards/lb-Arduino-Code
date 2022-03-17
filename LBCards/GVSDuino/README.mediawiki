@@ -2,9 +2,9 @@
 <img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
 </img></a> 
 
-== GVSDuino Software ==
-
 <img src="http://land-boards.com/blwiki/images/a/af/GVSDuino-X5-5936-640px.jpg" alt="GVSDuino Card Image"></img>
+
+== GVSDuino Software ==
 
 === Description ===
 * The GVSDuino is an Arduino Leonardo compatible board.
