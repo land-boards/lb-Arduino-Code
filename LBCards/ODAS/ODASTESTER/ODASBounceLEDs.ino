@@ -24,7 +24,7 @@ uint8_t bounceLedsCard(void)
       return 1;
       break;
     case OPTOIN8I2C_CARD:
-      Serial.println(F("Can't bounce LEDs on an input only card"));
+      bounceOptoIn8();
       return 0;
       break;
     case OPTOOUT8I2C_CARD:
@@ -67,6 +67,12 @@ uint8_t bounceLedsCard(void)
       bounceLedsI2CRPT08();
       return 1;
       break;
+    case OPTOFST_SML_NON_INVERTING_CARD:
+    case OPTOFST_SML_INVERTING_CARD:
+      Serial.println(F("Bounce OPTOFAST"));
+      bounceOPTOFAST_CARD(0);
+      return 1;
+      break;
     default:
       Serial.println(F("Not supported at present - default case"));
       break;
@@ -76,6 +82,63 @@ uint8_t bounceLedsCard(void)
     Serial.read();
     return 0;
   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// bounceOPTOFAST_CARD
+//////////////////////////////////////////////////////////////////////////////////////
+
+void bounceOPTOFAST_CARD(uint8_t inv)
+{
+  uint8_t port;
+  ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+  delay(10);
+  for (port = 8; port < 12; port++)   // Set all inputs to Pullup
+    Dio32.pinMode(port, INPUT_PULLUP);
+  delay(10);
+  for (port = 0; port < 4; port++)   // Set outputs
+  {
+    Dio32.pinMode(port, OUTPUT);
+    Dio32.digitalWrite(port, LOW);
+  }
+  delay(10);
+  for (port = 0; port < 4; port++)   // Set all inputs to Pullup
+  {
+    Dio32.digitalWrite(port, HIGH);
+    delay(10);
+    Dio32.digitalWrite(port, LOW);
+    delay(10);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+// void bounceOptoIn8(void)
+  // Cable from UUT connector to the DIGIO32 card in the Test Station.
+  // The Test Station has an internal DIGIO32 card.
+  // The DIGIO32 internal to the Test Station is set to all outputs.
+  // Put out 8 bit test vector on DIGIO32 pins
+  //    D0 is LED1+
+  //    D8 is LED1-
+  // To turn on LED1, set D0 High and D8 Low
+  // Looks at the returned values on the OptoIn8-I2C
+  // The OptoIn8-I2C cards that is the UUT is set up to all inputs.
+//////////////////////////////////////////////////////////////////////////////////////
+
+void bounceOptoIn8(void)
+{
+  uint8_t port;
+    ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+    for (port = 0; port < 16; port++)     // Set DIGIO32 lines 0-15 inside the Test Station to outputs
+    { // Need 16 Output lines to control the input LEDs
+      Dio32.pinMode(port, OUTPUT);    // Set to outputs
+      Dio32.digitalWrite(port, LOW);    // Start setting all LED+ and LED- outputs to LOW
+    }
+    for (port = 0; port < 8; port++)    // Writing a High to the Digio32 D0-D7 should turn on LEDs
+    { // Turning on LEDs should result in a low on the OptoIn8 card
+      Dio32.digitalWrite(port, HIGH);   // Turn on the LED
+      delay(2);             // Optos take time, but 2 mS is way, way too long
+      Dio32.digitalWrite(port, LOW);   // Turn on the LED
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -171,8 +234,6 @@ void bounceLedsDigio32(void)
     }
   }
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////
 // void bounceLedsSwLedX8(void)

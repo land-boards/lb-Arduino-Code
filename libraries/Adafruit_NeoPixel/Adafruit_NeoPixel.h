@@ -54,6 +54,13 @@
 #include <Arduino.h>
 #endif
 
+#if defined(ARDUINO_ARCH_RP2040)
+#include <stdlib.h>
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
+#include "rp2040_pio.h"
+#endif
+
 // The order of primary colors in the NeoPixel data stream can vary among
 // device types, manufacturers and even different revisions of the same
 // item.  The third parameter to the Adafruit_NeoPixel constructor encodes
@@ -360,6 +367,16 @@ public:
   */
   static uint32_t gamma32(uint32_t x);
 
+  void rainbow(uint16_t first_hue = 0, int8_t reps = 1,
+               uint8_t saturation = 255, uint8_t brightness = 255,
+               bool gammify = true);
+
+private:
+#if defined(ARDUINO_ARCH_RP2040)
+  void  rp2040Init(uint8_t pin, bool is800KHz);
+  void  rp2040Show(uint8_t pin, uint8_t *pixels, uint32_t numBytes, bool is800KHz);
+#endif
+
 protected:
 #ifdef NEO_KHZ400 // If 400 KHz NeoPixel support enabled...
   bool is800KHz; ///< true if 800 KHz pixels
@@ -382,6 +399,11 @@ protected:
 #if defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_ARCH_ARDUINO_CORE_STM32)
   GPIO_TypeDef *gpioPort; ///< Output GPIO PORT
   uint32_t gpioPin;       ///< Output GPIO PIN
+#endif
+#if defined(ARDUINO_ARCH_RP2040)
+  PIO pio = pio0;
+  int sm = 0;
+  bool init = true;
 #endif
 };
 

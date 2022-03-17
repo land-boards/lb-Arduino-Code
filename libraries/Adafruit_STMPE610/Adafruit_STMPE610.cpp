@@ -215,7 +215,7 @@ void Adafruit_STMPE610::readData(uint16_t *x, uint16_t *y, uint8_t *z) {
  *  @return The touch point using TS_Point
  */
 TS_Point Adafruit_STMPE610::getPoint() {
-  uint16_t x, y;
+  uint16_t x = 0, y = 0;
   uint8_t z;
 
   /* Making sure that we are reading all data before leaving */

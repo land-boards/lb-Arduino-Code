@@ -40,6 +40,7 @@ struct eep_vals
 void eepromRead(void)
 {
   char readBuff[97];
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   eeprom.begin();
   //  Serial.println(F("Reading EEPROM"));
   delay(10);
@@ -47,15 +48,15 @@ void eepromRead(void)
   eeprom.readBlock((const uint16_t) 0, (unsigned char*) readBuff, (const uint16_t) 96);
   readBuff[96] = 0;
 
-  Serial.print(F("Family="));
+  Serial.print(F("Family  = "));
   for (int loopv = 0; loopv < 4; loopv++)
     Serial.print(readBuff[loopv]);
   Serial.println("");
-  Serial.print(F("Company="));
+  Serial.print(F("Company = "));
   for (int loopv = 32; loopv < 48; loopv++)
     Serial.print(readBuff[loopv]);
   Serial.println("");
-  Serial.print(F("Product="));
+  Serial.print(F("Product = "));
   int loopv = 64;
   do
   {
@@ -72,12 +73,13 @@ void eepromRead(void)
 
 void eepromWrite(void)
 {
+  char readBuff[97];
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   if (boardType > NOEEPROMAFTER)
   {
     Serial.println("No EEPROM on this board");
     return;
   }
-  char readBuff[97];
   readBuff[96] = 0;
   Serial.println(F("Writing EEPROM"));
   eeprom.begin();
@@ -180,6 +182,7 @@ uint8_t detectBoardInEeprom(void)
 {
   char testStr[66];
   char readBuff[97];
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   eeprom.begin();
   Serial.print(F("Checking EEPROM for board type..."));
   delay(10);
@@ -314,12 +317,6 @@ void selectBoardType(void)
           boardType = DIGIO128_CARD;
           break;
         }
-      case 'A':
-      case 'a':
-        {
-          boardType = DIGIO128_64_CARD;
-          break;
-        }
       case '3':
         {
           boardType = OPTOIN8I2C_CARD;
@@ -353,6 +350,12 @@ void selectBoardType(void)
       case '9':
         {
           boardType = NEW_CARD;
+          break;
+        }
+      case 'A':
+      case 'a':
+        {
+          boardType = DIGIO128_64_CARD;
           break;
         }
       case 'X':

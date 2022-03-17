@@ -130,6 +130,7 @@ uint8_t testOptoFastSmallNonInverting(void)
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
     Dio32.digitalWrite(port, LOW);
+    delay(10);
     if (Dio32.digitalRead(port + 8) != LOW)
     {
       Serial.print(F("Error on port "));
@@ -137,7 +138,9 @@ uint8_t testOptoFastSmallNonInverting(void)
       Serial.println(F(" Expected Low"));
       testResults = TEST_FAILED;
     }
+    delay(10);
     Dio32.digitalWrite(port, HIGH);
+    delay(10);
     if (Dio32.digitalRead(port + 8) != HIGH)
     {
       Serial.print(F("Error on port "));
@@ -497,24 +500,33 @@ uint8_t testProto16(void)
     uint8_t port;
     uint8_t testResults = TEST_PASSED;
     //  Serial.println(F("Testing OptoIn8-I2C card"));
+    delay(2);              // Optos take time, but 2 mS is way, way too long
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
+    delay(2);              // Optos take time, but 2 mS is way, way too long
     for (port = 0; port < 16; port++)   	// Set DIGIO32 lines inside the Test Station to outputs
     { // Need 16 Output lines to control the output LEDs
       Dio32.pinMode(port, OUTPUT);		// Set to outputs
+      delay(2);              // Optos take time, but 2 mS is way, way too long
       Dio32.digitalWrite(port, LOW);		// Start setting all LED+ and LED- outputs to LOW
+      delay(2);              // Optos take time, but 2 mS is way, way too long
     }
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
     for (port = 0; port < 8; port++)   	// Set all UUT inputs to Pull-ups (should already be set)
+    {
       singleMCP23008.pinMode(port, INPUT_PULLUP);
+      delay(2);              // Optos take time, but 2 mS is way, way too long
+    }
     for (port = 0; port < 8; port++)		// Since the LEDs are not being driven, all of the OptoIn
     { // optocoupler outputs should be off (pulled up High)
       readVal = singleMCP23008.digitalRead(port);
+      delay(2);              // Optos take time, but 2 mS is way, way too long
       if (readVal != HIGH)
       {
         testResults = TEST_FAILED;
         Serial.print(F("OptoIn8-I2C failed - Expected LOW on bit "));
         Serial.println(port);
       }
+      delay(2);              // Optos take time, but 2 mS is way, way too long
     }
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Loop sets it back to Test Station before the end
     for (port = 0; port < 8; port++)		// Writing a High to the Digio32 D0-D7 should turn on LEDs
@@ -522,6 +534,7 @@ uint8_t testProto16(void)
       Dio32.digitalWrite(port, HIGH);		// Turn on the LED
       delay(2);							// Optos take time, but 2 mS is way, way too long
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+      delay(2);              // Optos take time, but 2 mS is way, way too long
       readVal = singleMCP23008.digitalRead(port);
       if (readVal != LOW)
       {
@@ -529,11 +542,16 @@ uint8_t testProto16(void)
         Serial.print(F("OptoIn8-I2C failed - Expected HIGH on bit "));
         Serial.println(port);
       }
+      delay(2);              // Optos take time, but 2 mS is way, way too long
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Leave LED off when done
+      delay(2);              // Optos take time, but 2 mS is way, way too long
       Dio32.digitalWrite(port, LOW);
     }
     for (port = 0; port < 32; port++)   	// Set internal DIGIO32 lines on the Test Station to inputs
+    {
       Dio32.pinMode(port, INPUT);
+      delay(2);              // Optos take time, but 2 mS is way, way too long
+    }
     return (testResults);
   }
 

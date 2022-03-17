@@ -72,7 +72,8 @@ void cardTestMenu(void)
         case 'T':
         case 't':
           {
-            Serial.println(F("Testing UUT"));
+            Serial.print(F("Testing UUT = "));
+            printBoardType();
             testType = LOOPBACK_TEST;
             break;
           }
@@ -167,6 +168,76 @@ void cardTestMenu(void)
       flushSerial();
       testType = NO_TEST;
     }
+  }
+}
+
+void printBoardType(void)
+{
+  switch (boardType)
+  {
+    case NONE:
+      Serial.println("");
+        break;
+    case DIGIO16I2C_CARD:
+      Serial.println("DIGIO160I2C");
+      break;
+    case DIGIO128_CARD:
+      Serial.println("DIGIO-128");
+      break;
+    case DIGIO128_64_CARD:
+      Serial.println("DIGIO-128/64");
+      break;
+    case OPTOIN8I2C_CARD:
+      Serial.println("OPTOIN8-I2C");
+      break;
+    case OPTOOUT8I2C_CARD:
+      Serial.println("OPTOOUT8-I2C");
+      break;
+    case DIGIO32I2C_CARD:
+      Serial.println("DIGIO32-I2C");
+      break;
+    case PROTO16I2C_CARD:
+      Serial.println("PROTO16-I2C");
+      break;
+    case ODASPSOC5_CARD:
+      Serial.println("ODAS-PSOC5");
+      break;
+    case ODASRELAY16_CARD:
+      Serial.println("ODASRELAY16");
+      break;
+    case NEW_CARD:
+      Serial.println("New card");
+      break;
+    case NOEEPROMAFTER:
+      Serial.println("No EEPROM");
+      break;
+    case I2CIO8_CARD:
+      Serial.println("I2CIO8");
+      break;
+    case I2CIO8X_CARD:
+      Serial.println("I2CIO8X");
+      break;
+    case OPTOFST_SML_NON_INVERTING_CARD:
+      Serial.println("Opto Non-inv");
+      break;
+    case OPTOFST_SML_INVERTING_CARD:
+      Serial.println("Opto Inc");
+      break;
+    case OPTOFSTBI_CARD:
+      Serial.println("OPTO-FAST-BI");
+      break;
+    case I2CRPT01_CARD:
+      Serial.println("I2CRPT-01");
+      break;
+    case I2CRPT08_CARD:
+      Serial.println("I2CRPT-08");
+      break;
+    case SWLEDX8_I2C_CARD:
+      Serial.println("SWLEDX8_I2C");
+      break;
+    case UNKNOWN_BOARD:
+      Serial.println("Unknown board");
+      break;
   }
 }
 

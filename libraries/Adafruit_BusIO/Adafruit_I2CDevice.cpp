@@ -36,6 +36,23 @@ bool Adafruit_I2CDevice::begin(bool addr_detect) {
 }
 
 /*!
+ *    @brief  De-initialize device, turn off the Wire interface
+ */
+void Adafruit_I2CDevice::end(void) {
+  // Not all port implement Wire::end(), such as
+  // - ESP8266
+  // - AVR core without WIRE_HAS_END
+  // - ESP32: end() is implemented since 2.0.1 which is latest at the moment.
+  // Temporarily disable for now to give time for user to update.
+#if !(defined(ESP8266) ||                                                      \
+      (defined(ARDUINO_ARCH_AVR) && !defined(WIRE_HAS_END)) ||                 \
+      defined(ARDUINO_ARCH_ESP32))
+  _wire->end();
+  _begun = false;
+#endif
+}
+
+/*!
  *    @brief  Scans I2C for the address - note will give a false-positive
  *    if there's no pullups on I2C
  *    @return True if I2C initialized and a device with the addr found
