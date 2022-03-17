@@ -4,4 +4,4 @@
 
 <img src="http://land-boards.com/blwiki/images/7/72/P968-cropped-720pxV.jpg" alt="BLACK-PILL-HUB Card photo"></img>
 
-[http://land-boards.com/blwiki/index.php?title=ESP32-VGA WIKI PAGE]
+[http://land-boards.com/blwiki/index.php?title=ESP32-VGA Wiki page]
