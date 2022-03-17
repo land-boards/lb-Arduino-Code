@@ -1,6 +1,10 @@
-== land-boards Arduino Code ==
+<a href="https://www.tindie.com/stores/land_boards/" >
+<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
+</img></a> 
 
-<img src="http://land-boards.com/blwiki/images/a/af/GVSDuino-X5-5936-640px.jpg" alt="GVSDuino card"></img>
+<img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
+
+== land-boards Arduino Code ==
 
 * These are our [http://arduino.cc Arduino] Source Code/Library files.
 * [http://land-boards.com/blwiki/index.php?title=Arduino_Code Wiki pages for the cards which use this code]
