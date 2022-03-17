@@ -1,6 +1,11 @@
-== land-boards DigIO-128 Card Files ==
+<a href="https://www.tindie.com/products/land_boards/8-channel-i2c-repeatermultiplexer-i2c-rpt-08/" >
+<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
+</img></a> 
 
 <img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
+
+== land-boards DigIO-128 Card Files ==
+
 * [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128 Library for the DIGIO-128 card]
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card related] files.
 
