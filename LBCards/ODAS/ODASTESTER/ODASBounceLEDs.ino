@@ -8,7 +8,7 @@ uint8_t bounceLedsCard(void)
   switch (boardType)
   {
     case DIGIO16I2C_CARD:
-      bounceLedsSingles23017_CARD();
+      bounceLedsSingle23017_CARD();
       return 1;
       break;
     case DIGIO128_CARD:
@@ -36,11 +36,11 @@ uint8_t bounceLedsCard(void)
       return 1;
       break;
     case PROTO16I2C_CARD:
-      bounceLedsSingles23017_CARD();
+      bounceLedsSingle23017_CARD();
       return 1;
       break;
     case ODASRELAY16_CARD:
-      bounceLedsSingles23017_CARD();
+      bounceLedsSingle23017_CARD();
       return 1;
       break;
     case ODASPSOC5_CARD:
@@ -187,17 +187,21 @@ void bounceOptoOut8(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// void bounceLedsSingles23017_CARD(void)
+// void bounceLedsSingle23017_CARD(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
-void bounceLedsSingles23017_CARD(void)
+void bounceLedsSingle23017_CARD(void)
 {
-  Serial.println(F("Bouncing LEDs - any key to stop"));
+  Serial.println(F("Bouncing LEDs Single MCP23017 - any key to stop"));
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   while (1)
   {
     for (uint8_t port = 0; port < 16; port++)
     {
       singleMCP23017.pinMode(port, OUTPUT);
+    }
+    for (uint8_t port = 0; port < 16; port++)
+    {
       singleMCP23017.digitalWrite(port, HIGH);
       delay(250);
       singleMCP23017.digitalWrite(port, LOW);
@@ -205,6 +209,8 @@ void bounceLedsSingles23017_CARD(void)
     if (Serial.available() > 0)
     {
       Serial.read();
+      for (uint8_t port = 0; port < 16; port++)
+        singleMCP23017.pinMode(port, INPUT);
       return;
     }
   }

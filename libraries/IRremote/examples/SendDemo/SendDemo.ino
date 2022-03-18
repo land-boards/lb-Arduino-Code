@@ -8,7 +8,7 @@
  ************************************************************************************
  * MIT License
  *
- * Copyright (c) 2020-2021 Armin Joachimsmeyer
+ * Copyright (c) 2020-2022 Armin Joachimsmeyer
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,30 +40,40 @@
 //#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 240 bytes program space if IrSender.write is used
 //#define SEND_PWM_BY_TIMER
 //#define USE_NO_SEND_PWM
+//#define NO_LED_FEEDBACK_CODE // saves 566 bytes program space
 
-#include <IRremote.h>
+#include <IRremote.hpp>
 
 #define DELAY_AFTER_SEND 2000
 #define DELAY_AFTER_LOOP 5000
 
 void setup() {
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
+
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
 
-    IrSender.begin(IR_SEND_PIN, ENABLE_LED_FEEDBACK); // Specify send pin and enable feedback LED at default feedback LED pin
-
-    Serial.print(F("Ready to send IR signals at pin "));
-#if defined(ARDUINO_ARCH_STM32) || defined(ESP8266)
-    Serial.println(IR_SEND_PIN_STRING);
+#if defined(IR_SEND_PIN)
+    IrSender.begin(); // Start with IR_SEND_PIN as send pin and enable feedback LED at default feedback LED pin
 #else
-    Serial.println(IR_SEND_PIN);
+    IrSender.begin(3, ENABLE_LED_FEEDBACK); // Specify send pin and enable feedback LED at default feedback LED pin
 #endif
 
-#if !defined(SEND_PWM_BY_TIMER) && !defined(USE_NO_SEND_PWM) && !defined(ESP32) // for esp32 we use PWM generation by ledcWrite() for each pin
+    Serial.print(F("Ready to send IR signals at pin "));
+#if defined(IR_SEND_PIN)
+#  if defined(IR_SEND_PIN_STRING)
+    Serial.println(IR_SEND_PIN_STRING);
+#  else
+    Serial.println(IR_SEND_PIN);
+#  endif
+#else
+    Serial.println('3');
+#endif
+
+#if !defined(SEND_PWM_BY_TIMER)
     /*
      * Print internal signal generation info
      */
@@ -245,6 +255,7 @@ void loop() {
     IRSendData.protocol = SAMSUNG;
     Serial.print(F("Send "));
     Serial.println(getProtocolString(IRSendData.protocol));
+    Serial.flush();
     IrSender.write(&IRSendData, sRepeats);
     delay(DELAY_AFTER_SEND);
 
@@ -280,10 +291,12 @@ void loop() {
     /*
      * Force buffer overflow
      */
-    Serial.println(F("Force buffer overflow by sending 100 marks and spaces"));
-    for (unsigned int i = 0; i < RAW_BUFFER_LENGTH; ++i) {
-        IrSender.mark(400);
-        IrSender.space(400);
+    Serial.println(F("Force buffer overflow by sending 280 marks and spaces"));
+    for (unsigned int i = 0; i < 140; ++i) {
+        // 400 + 400 should be received as 8/8 and sometimes as 9/7 or 7/9 if compensation by MARK_EXCESS_MICROS is optimal.
+        // 210 + 540 = 750 should be received as 5/10 or 4/11 if compensation by MARK_EXCESS_MICROS is optimal.
+        IrSender.mark(210); // 8 pulses at 38 kHz
+        IrSender.space(540); // to fill up to 750 us
     }
     delay(DELAY_AFTER_SEND);
 
@@ -301,3 +314,4 @@ void loop() {
 
     delay(DELAY_AFTER_LOOP); // additional delay at the end of each loop
 }
+

@@ -9,7 +9,7 @@
  ************************************************************************************
  * MIT License
  *
- * Copyright (c) 2020-2021 Armin Joachimsmeyer
+ * Copyright (c) 2020-2022 Armin Joachimsmeyer
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,13 +36,16 @@
 /*
  * Specify which protocol(s) should be used for decoding.
  * If no protocol is defined, all protocols are active.
- * This must be done before the #include <IRremote.h>
+ * This must be done before the #include <IRremote.hpp>
  */
 //#define DECODE_LG
 //#define DECODE_NEC
-// etc. see IRremote.h
+// etc. see IRremote.hpp
 //
-//#define DISABLE_LED_FEEDBACK_FOR_RECEIVE // saves 108 bytes program space
+
+//#define RAW_BUFFER_LENGTH  750  // 750 is the value for air condition remotes.
+
+//#define NO_LED_FEEDBACK_CODE // saves 92 bytes program space
 #if FLASHEND <= 0x1FFF  // For 8k flash or less, like ATtiny85. Exclude exotic protocols.
 #define EXCLUDE_EXOTIC_PROTOCOLS
 #  if !defined(DIGISTUMPCORE) // ATTinyCore is bigger than Digispark core
@@ -51,7 +54,7 @@
 #endif
 //#define EXCLUDE_UNIVERSAL_PROTOCOLS // Saves up to 1000 bytes program space.
 //#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 650 bytes program space if all other protocols are active
-//#define IR_MEASURE_TIMING
+//#define _IR_MEASURE_TIMING
 
 // MARK_EXCESS_MICROS is subtracted from all marks and added to all spaces before decoding,
 // to compensate for the signal forming of different IR receiver modules.
@@ -59,13 +62,13 @@
 
 //#define RECORD_GAP_MICROS 12000 // Activate it for some LG air conditioner protocols
 
-//#define
+//#define DEBUG // Activate this for lots of lovely debug output from the decoders.
+#define INFO // To see valuable informations from universal decoder for pulse width or pulse distance protocols
 /*
  * First define macros for input and output pin etc.
  */
 #include "PinDefinitionsAndMore.h"
-
-#include <IRremote.h>
+#include <IRremote.hpp>
 
 #if defined(APPLICATION_PIN)
 #define DEBUG_BUTTON_PIN    APPLICATION_PIN // if low, print timing for each received data set
@@ -79,15 +82,15 @@
 #endif
 
 void setup() {
-#if defined(IR_MEASURE_TIMING) && defined(IR_TIMING_TEST_PIN)
-    pinMode(IR_TIMING_TEST_PIN, OUTPUT);
+#if defined(_IR_MEASURE_TIMING) && defined(_IR_TIMING_TEST_PIN)
+    pinMode(_IR_TIMING_TEST_PIN, OUTPUT);
 #endif
 #if FLASHEND >= 0x3FFF  // For 16k flash or more, like ATtiny1604. Code does not fit in program space of ATtiny85 etc.
     pinMode(DEBUG_BUTTON_PIN, INPUT_PULLUP);
 #endif
 
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
 // Just to know which program is running on my Arduino
@@ -97,12 +100,12 @@ void setup() {
 // to the user what's going on.
     Serial.println(F("Enabling IRin..."));
 
-    /*
-     * Start the receiver, enable feedback LED and (if not 3. parameter specified) take LED feedback pin from the internal boards definition
-     */
+    // Start the receiver and if not 3. parameter specified, take LED_BUILTIN pin from the internal boards definition as default feedback LED
     IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
 
-    Serial.print(F("Ready to receive IR signals at pin "));
+    Serial.print(F("Ready to receive IR signals of protocols: "));
+    printActiveIRProtocols(&Serial);
+    Serial.print(F("at pin "));
 #if defined(ARDUINO_ARCH_STM32) || defined(ESP8266)
     Serial.println(IR_RECEIVE_PIN_STRING);
 #else
@@ -136,18 +139,22 @@ void loop() {
 #if FLASHEND >= 0x3FFF  // For 16k flash or more, like ATtiny1604
         if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_WAS_OVERFLOW) {
             Serial.println(F("Overflow detected"));
-            Serial.println(F("Try to increase the \"RAW_BUFFER_LENGTH\" value in IRremoteInt.h to 750."));
+            Serial.println(F("Try to increase the \"RAW_BUFFER_LENGTH\" value of " STR(RAW_BUFFER_LENGTH) " in " __FILE__));
             // see also https://github.com/Arduino-IRremote/Arduino-IRremote#modifying-compile-options-with-sloeber-ide
-#  if !defined(ESP32) && !defined(ESP8266) && !defined(NRF5)
+#  if !defined(ESP8266) && !defined(NRF5)
             /*
              * do double beep
              */
-            IrReceiver.stop();
+#    if !defined(ESP32)
+            IrReceiver.stop(); // ESP32 uses another timer for tone()
+#    endif
             tone(TONE_PIN, 1100, 10);
             delay(50);
             tone(TONE_PIN, 1100, 10);
             delay(50);
+#    if !defined(ESP32)
             IrReceiver.start(100000); // to compensate for 100 ms stop of receiver. This enables a correct gap measurement.
+#    endif
 #  endif
 
         } else {
@@ -160,17 +167,22 @@ void loop() {
             }
         }
 
-#  if !defined(ESP32) && !defined(ESP8266) && !defined(NRF5)
+        // tone on esp8266 works once, then it disables the successful IrReceiver.start() / timerConfigForReceive().
+#  if !defined(ESP8266) && !defined(NRF5)
         if (IrReceiver.decodedIRData.protocol != UNKNOWN) {
             /*
              * If a valid protocol was received, play tone, wait and restore IR timer.
              * Otherwise do not play a tone to get exact gap time between transmissions.
              * This will give the next CheckForRecordGapsMicros() call a chance to eventually propose a change of the current RECORD_GAP_MICROS value.
              */
-            IrReceiver.stop();
-            tone(TONE_PIN, 2200, 10);
+#    if !defined(ESP32)
+            IrReceiver.stop(); // ESP32 uses another timer for tone()
+#    endif
+            tone(TONE_PIN, 2200, 8);
+#    if !defined(ESP32)
             delay(8);
             IrReceiver.start(8000); // to compensate for 8 ms stop of receiver. This enables a correct gap measurement.
+#    endif
         }
 #  endif
 #else
@@ -194,5 +206,14 @@ void loop() {
                 // do something else
             }
         }
-    }
+    } // if (IrReceiver.decode())
+
+    /*
+     * Your code here
+     * For all users of the FastLed library, use this code for strip.show() to improve receiving performance (which is still not 100%):
+     * if (IrReceiver.isIdle()) {
+     *     strip.show();
+     * }
+     */
+
 }

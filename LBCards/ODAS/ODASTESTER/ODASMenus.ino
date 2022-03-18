@@ -59,7 +59,7 @@ void cardTestMenu(void)
   uint8_t testType = NO_TEST;
   passCount = 0;
   failCount = 0;
-  Serial.println(F("L=Loop/S=Single, T=Test, B=Bounce LEDs, I=Int'l Tests, X=eXit sub-menu"));
+  Serial.println(F("L=Loop/S=Single, T=Test, B=Bounce LEDs, I=UUT Int'l Tests, X=eXit sub-menu"));
   while (1)
   {
     testType = NO_TEST;
@@ -80,7 +80,7 @@ void cardTestMenu(void)
         case 'I':
         case 'i':
           {
-            Serial.println(F("Access Interbal DIGIO32-I2C"));
+            Serial.println(F("UUT Internal card tests"));
             testType = INTERNAL_TEST;
             break;
           }
@@ -121,7 +121,7 @@ void cardTestMenu(void)
           break;
         default:
           {
-            Serial.println(F("\nL/S=Loop/Single, T=Test, B=Bounce LEDs, I=Int'l Tests, X=eXit sub-menu"));
+            Serial.println(F("\nL/S=Loop/Single, T=Test, B=Bounce LEDs, I=UUT Int'l Test, X=eXit sub-menu"));
             break;
           }
       }

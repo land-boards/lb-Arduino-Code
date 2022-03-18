@@ -1,8 +1,7 @@
 /*
- * IRExtensionClass.h
+ * IRremoteExtensionClass.h
  *
  * Example for a class which itself uses the IRrecv class from IRremote
- * A production version should split this file into a .h and a .cpp file
  *
  *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
@@ -30,14 +29,16 @@
  *
  ************************************************************************************
  */
+#include <Arduino.h>
 
-#include <IRremoteInt.h>
+#define USE_IRREMOTE_HPP_AS_PLAIN_INCLUDE
+#include <IRremote.hpp>
 
 class IRExtensionClass
 {
 public:
     IRrecv * MyIrReceiver;
-    IRExtensionClass(IRrecv * aIrReceiver)  {MyIrReceiver = aIrReceiver;};
-    void resume() {Serial.println(F("Call resume()")); MyIrReceiver->resume();};
+    IRExtensionClass(IRrecv * aIrReceiver);
+    void resume();
 };
 

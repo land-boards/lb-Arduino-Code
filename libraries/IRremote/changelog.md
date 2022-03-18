@@ -2,7 +2,38 @@
 The latest version may not be released!
 See also the commit log at github: https://github.com/Arduino-IRremote/Arduino-IRremote/commits/master
 
-## 3.4.1
+## 3.6.1
+- Switched Bose internal protocol timing for 0 and 1 -> old 1 timing is now 0 and vice versa.
+
+## 3.6.0
+- Separated enable flag of send and receive feedback LED. Inspired by PR#970 from luvaihassanali.
+- RP2040 support added.
+- Refactored IRTimer.hpp.
+- Refactored IR_SEND_PIN and IrSender.sendPin handling.
+- Renamed IR_SEND_DUTY_CYCLE to IR_SEND_DUTY_CYCLE_PERCENT.
+- Fixed bugs for SEND_PWM_BY_TIMER active.
+
+## 3.5.2
+- Improved support for Teensy boards by Paul Stoffregen.
+
+## 3.5.1
+- Renamed INFO_PRINT to IR_INFO_PRINT as well as for DEBUG and TRACE.
+- Fixed error with DEBUG in TinyIRReceiver.hpp.
+- Support for ATmega88 see issue #923. Thanks to Dolmant.
+- NO_LED_FEEDBACK_CODE replaces and extends DISABLE_LED_FEEDBACK_FOR_RECEIVE.
+- Removed NO_LEGACY_COMPATIBILITY macro, it was useless now.
+- Fix ESP32 send bug see issue #927.
+
+## 3.5.0
+- Improved ir_DistanceProtocol.
+- Tone for ESP32.
+- last phase renamed *.cpp.h to .hpp.
+- No deprecation print for ATtinies.
+- Renamed ac_LG.cpp to ac_LG.hpp.
+- Maintained MagiQuest by E. Stuart Hicks.
+- Improved print Pronto by Asuki Kono.
+- Added printActiveIRProtocols() function.
+- Used IR_SEND_PIN to reduce code size and improved send timing for AVR.
 
 ## 3.4.0
 - Added LG2 protocol.

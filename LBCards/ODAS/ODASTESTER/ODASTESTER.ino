@@ -64,8 +64,9 @@ uint32_t passCount;
 uint8_t single0loop1;
 
 typedef enum {
-  UUT_CARD_MUX_CH = 0,
-  TEST_STN_INT_MUX_CH = 3,
+  UUT_CARD_MUX_CH = 0x04,
+  TEST_STN_INT_MUX_CH = 0x07,
+  NO_MUX_CH = 0x00,
 } muxChannel_t;
 
 LandBoards_I2CRPT01 ODASTSTR_I2CMux;
@@ -100,7 +101,7 @@ void setup()
   ODASTSTR_I2CMux.begin(1);
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Dio32.begin(0);
-  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(NO_MUX_CH);
 
   // Global vars
   failCount = 0;
@@ -114,22 +115,23 @@ void setup()
     selectBoardType();
     eepromWrite();
   }
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)    // Instantiate the classes here for the boards
   {
+    case PROTO16I2C_CARD:
+    case ODASRELAY16_CARD:
+    case SWLEDX8_I2C_CARD:
+      singleMCP23017.begin(0);
+      break;
+    case OPTOIN8I2C_CARD:
+    case OPTOOUT8I2C_CARD:
+      singleMCP23008.begin();               // use default address 0
+      break;
     case DIGIO128_CARD:
       Dio128.begin();
       break;
     case DIGIO128_64_CARD:
       Dio128_64.begin();
-      break;
-    case PROTO16I2C_CARD:
-      singleMCP23017.begin(0);      // use default address
-      break;
-    case ODASRELAY16_CARD:
-      singleMCP23017.begin(0);      // use default address
-      break;
-    case SWLEDX8_I2C_CARD:
-      singleMCP23017.begin(0);
       break;
     case DIGIO32I2C_CARD:
       Dio32.begin(0);
@@ -139,12 +141,6 @@ void setup()
       break;
     case I2CIO8X_CARD:
       i2cio8xCard.begin();
-      break;
-    case OPTOIN8I2C_CARD:
-      singleMCP23008.begin();               // use default address 0
-      break;
-    case OPTOOUT8I2C_CARD:
-      singleMCP23008.begin();               // use default address 0
       break;
     case I2CRPT01_CARD:
       UUTI2CMux.begin(0);                   // testing external I2C-RPT-01 card

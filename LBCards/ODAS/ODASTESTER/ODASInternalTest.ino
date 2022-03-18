@@ -97,7 +97,7 @@ uint8_t intLBTstSingleMCP23008(void)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card
+// uint8_t intLBTstSingleMCP23017(void) - Test the PROTO16-I2C card interrnals
 //////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t intLBTstSingleMCP23017(void)
@@ -105,38 +105,43 @@ uint8_t intLBTstSingleMCP23017(void)
   uint8_t failed = 0;
   uint16_t loopVal;
   uint16_t readBackVal;
-  //  Serial.println(F("Testing single MCP23017 card"));
+  Serial.println(F("Testing UUT single MCP23017 card"));
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (loopVal = 0; loopVal < 16; loopVal++)
     singleMCP23017.pinMode(loopVal, OUTPUT);
   for (loopVal = 1; loopVal != 0; loopVal <<= 1)
   {
-    singleMCP23017.writeGPIOAB(loopVal);
-    readBackVal = singleMCP23017.readGPIOAB();
+    singleMCP23017.writeOLATAB(loopVal);
+    //delay(10);
+    readBackVal = singleMCP23017.readOLATAB();
+    //delay(10);
     if (readBackVal != loopVal)
     {
-      Serial.print(F("intLBTstSingleMCP23017: Readback="));
-      Serial.println(readBackVal,HEX);
-      Serial.print(F("intLBTstSingleMCP23017: loopVal="));
+      Serial.print(F("intLBTstSingleMCP23017: loopVal  = "));
       Serial.println(loopVal,HEX);
+      Serial.print(F("intLBTstSingleMCP23017: Readback = "));
+      Serial.println(readBackVal,HEX);
       failed = 1;
     }
   }
-  delay(10);
+  //delay(10);
   for (loopVal = 1; loopVal != 0; loopVal <<= 1)
   {
-    singleMCP23017.writeGPIOAB(!loopVal);
-    readBackVal = !singleMCP23017.readGPIOAB();
+    singleMCP23017.writeOLATAB(~loopVal);
+    //delay(10);
+    readBackVal = ~singleMCP23017.readOLATAB();
+    //delay(10);
     if (readBackVal != loopVal)
     {
-      Serial.print(F("intLBTstSingleMCP23017: Readback="));
-      Serial.println(~readBackVal,HEX);
-      Serial.print(F("intLBTstSingleMCP23017: loopVal="));
+      Serial.print(F("intLBTstSingleMCP23017: loopVal  = "));
       Serial.println(~loopVal,HEX);
+      Serial.print(F("intLBTstSingleMCP23017: Readback = "));
+      Serial.println(~readBackVal,HEX);
       failed = 1;
     }
   }
   for (loopVal = 0; loopVal < 16; loopVal++)
-    singleMCP23017.pinMode(loopVal, INPUT);
+    singleMCP23017.pinMode(loopVal, INPUT_PULLUP);
   delay(10);
   return (failed);
 }

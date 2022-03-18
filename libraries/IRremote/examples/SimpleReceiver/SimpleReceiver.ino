@@ -3,12 +3,31 @@
  *
  * Demonstrates receiving NEC IR codes with IRrecv
  *
- *  Copyright (C) 2020-2021  Armin Joachimsmeyer
- *  armin.joachimsmeyer@gmail.com
- *
  *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
- *  MIT License
+ ************************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2020-2022 Armin Joachimsmeyer
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ ************************************************************************************
  */
 
 /*
@@ -34,6 +53,9 @@
 //#define DECODE_DISTANCE     // universal decoder for pulse width or pulse distance protocols
 //#define DECODE_HASH         // special decoder for all protocols
 
+//#define DEBUG // Activate this for lots of lovely debug output from the decoders.
+//#define INFO                // To see valuable informations from universal decoder for pulse width or pulse distance protocols
+
 #include <Arduino.h>
 
 /*
@@ -41,19 +63,19 @@
  */
 #include "PinDefinitionsAndMore.h"
 
-#include <IRremote.h>
+#include <IRremote.hpp>
 
 void setup() {
     Serial.begin(115200);
     // Just to know which program is running on my Arduino
     Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
 
-    /*
-     * Start the receiver, enable feedback LED and take LED feedback pin from the internal boards definition
-     */
-    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK, USE_DEFAULT_FEEDBACK_LED_PIN);
+    // Start the receiver and if not 3. parameter specified, take LED_BUILTIN pin from the internal boards definition as default feedback LED
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
 
-    Serial.print(F("Ready to receive IR signals at pin "));
+    Serial.print(F("Ready to receive IR signals of protocols: "));
+    printActiveIRProtocols(&Serial);
+    Serial.print(F("at pin "));
     Serial.println(IR_RECEIVE_PIN);
 }
 

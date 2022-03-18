@@ -9,7 +9,7 @@
  ************************************************************************************
  * MIT License
  *
- * Copyright (c) 2020-2021 Armin Joachimsmeyer
+ * Copyright (c) 2020-2022 Armin Joachimsmeyer
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,12 +47,15 @@
  */
 #include "PinDefinitionsAndMore.h"
 
-#include <IRremote.h>
-#include "ac_LG.h"
+#include <IRremote.hpp>
 
 #if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny87__) || defined(__AVR_ATtiny167__)
 #include "ATtinySerialOut.hpp" // Available as Arduino library "ATtinySerialOut"
 #endif
+
+#define INFO // Deactivate this to save program space and suppress info output from the LG-AC driver.
+//#define DEBUG // Activate this for more output from the LG-AC driver.
+#include "ac_LG.hpp"
 
 // On the Zero and others we switch explicitly to SerialUSB
 #if defined(ARDUINO_ARCH_SAMD)
@@ -68,7 +71,7 @@ void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_USB) || defined(SERIAL_PORT_USBVIRTUAL)  || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
 delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
 // Just to know which program is running on my Arduino
@@ -77,13 +80,17 @@ delay(4000); // To be able to connect Serial monitor after reset or power up and
     /*
      * The IR library setup. That's all!
      */
-    IrSender.begin(IR_SEND_PIN, ENABLE_LED_FEEDBACK); // Specify send pin and enable feedback LED at default feedback LED pin
+#if defined(IR_SEND_PIN)
+    IrSender.begin(); // Start with IR_SEND_PIN as send pin and enable feedback LED at default feedback LED pin
+#else
+    IrSender.begin(3, ENABLE_LED_FEEDBACK); // Specify send pin and enable feedback LED at default feedback LED pin
+#endif
 
     Serial.print(F("Ready to send IR signals at pin "));
     Serial.println(IR_SEND_PIN);
     Serial.println();
     MyLG_Aircondition.setType(LG_IS_WALL_TYPE);
-    MyLG_Aircondition.printMenu();
+    MyLG_Aircondition.printMenu(&Serial);
 
     delay(1000);
 
@@ -141,7 +148,7 @@ void loop() {
         }
 
         if (sShowmenuConter == 0) {
-            MyLG_Aircondition.printMenu();
+            MyLG_Aircondition.printMenu(&Serial);
             sShowmenuConter = NUMBER_OF_COMMANDS_BETWEEN_PRINT_OF_MENU;
         } else {
             sShowmenuConter--;
