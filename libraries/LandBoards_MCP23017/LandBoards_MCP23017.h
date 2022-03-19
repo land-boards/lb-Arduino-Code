@@ -65,6 +65,7 @@ class LandBoards_MCP23017
 	void writeGPIOAB(uint16_t);		// Write to a 16-bit chip
 	uint16_t readGPIOAB();			// Read from a 16-bit chip
 	uint16_t readOLATAB();			// Read from a 16-bit chip
+	uint8_t checkI2CAddr(void);				// Check card present 
   private:
 	uint8_t boardBaseAddr;
 	uint8_t readRegister(uint8_t addr);

@@ -20,23 +20,38 @@ uint8_t internalLBTestCard(void)
     case OPTOOUT8I2C_CARD:
     case I2CIO8_CARD:
     case I2CIO8X_CARD:
+      if (singleMCP23008.checkI2CAddr() != 0)
+      {
+        Serial.println(F("ERROR - UUT Card not detected"));
+        return (0);
+      }
+      Serial.println(F("Testing UUT single MCP23008 card"));
       return (intLBTstSingleMCP23008());
       break;
     // Cards with single MCP23017 parts
     case DIGIO16I2C_CARD:
     case PROTO16I2C_CARD:
     case ODASRELAY16_CARD:
+      if (singleMCP23017.checkI2CAddr() != 0)
+      {
+        Serial.println(F("ERROR - UUT Card not detected"));
+        return (1);
+      }
+      Serial.println(F("Testing UUT single MCP23017 card"));
       return (intLBTstSingleMCP23017());
       break;
     // Cards with two MCP23017 parts
     case DIGIO32I2C_CARD:
+      Serial.println(F("Testing UUT DIGIO32 - I2C card"));
       return (internaltestDigio32Card());
       break;
     // Cards with 8 MCP23017 parts
     case DIGIO128_CARD:
+      Serial.println(F("Testing UUT DIGIO - 128 card"));
       return (internalLBTestDIGIO128_CARD());
       break;
     case DIGIO128_64_CARD:
+      Serial.println(F("Testing UUT DIGIO - 64 card"));
       return (internalextLBTestDIGIO128_64_CARD());
       break;
     case ODASPSOC5_CARD:
@@ -65,7 +80,7 @@ uint8_t intLBTstSingleMCP23008(void)
   int testResults = 1;
   uint8_t readVal;
   uint8_t loopVal;
-  //  Serial.println(F("Internal tests OptoIn8-I2C card"));
+  //  Serial.println(F("Internal tests OptoIn8 - I2C card"));
   for (loopVal = 0; loopVal < 8; loopVal++)
     singleMCP23008.pinMode(loopVal, INPUT);
   for (loopVal = 1; loopVal != 0; loopVal <<= 1)
@@ -74,7 +89,7 @@ uint8_t intLBTstSingleMCP23008(void)
     readVal = singleMCP23008.readOLAT();
     if (readVal != loopVal)
     {
-      Serial.print(F("Readback="));
+      Serial.print(F("Readback = "));
       Serial.println(readVal, HEX);
       testResults = 0;
     }
@@ -85,7 +100,7 @@ uint8_t intLBTstSingleMCP23008(void)
     readVal = ~singleMCP23008.readOLAT();
     if (readVal != loopVal)
     {
-      Serial.print(F("Readback="));
+      Serial.print(F("Readback = "));
       Serial.println(~readVal, HEX);
       testResults = 0;
     }
@@ -105,7 +120,7 @@ uint8_t intLBTstSingleMCP23017(void)
   uint8_t failed = 0;
   uint16_t loopVal;
   uint16_t readBackVal;
-  Serial.println(F("Testing UUT single MCP23017 card"));
+  //  Serial.println(F("Testing UUT single MCP23017 card"));
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   for (loopVal = 0; loopVal < 16; loopVal++)
     singleMCP23017.pinMode(loopVal, OUTPUT);
@@ -118,9 +133,9 @@ uint8_t intLBTstSingleMCP23017(void)
     if (readBackVal != loopVal)
     {
       Serial.print(F("intLBTstSingleMCP23017: loopVal  = "));
-      Serial.println(loopVal,HEX);
+      Serial.println(loopVal, HEX);
       Serial.print(F("intLBTstSingleMCP23017: Readback = "));
-      Serial.println(readBackVal,HEX);
+      Serial.println(readBackVal, HEX);
       failed = 1;
     }
   }
@@ -134,9 +149,9 @@ uint8_t intLBTstSingleMCP23017(void)
     if (readBackVal != loopVal)
     {
       Serial.print(F("intLBTstSingleMCP23017: loopVal  = "));
-      Serial.println(~loopVal,HEX);
+      Serial.println(~loopVal, HEX);
       Serial.print(F("intLBTstSingleMCP23017: Readback = "));
-      Serial.println(~readBackVal,HEX);
+      Serial.println(~readBackVal, HEX);
       failed = 1;
     }
   }

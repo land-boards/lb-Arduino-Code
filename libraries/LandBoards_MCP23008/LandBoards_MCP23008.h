@@ -53,6 +53,7 @@ class LandBoards_MCP23008
 	void writeOLAT(uint8_t);
 	uint8_t readOLAT(void);
 	uint8_t readGPIO(void);
+	uint8_t checkI2CAddr(void);				// Check card present 
   private:
 	uint8_t i2caddr;
 	void write8(uint8_t addr, uint8_t data);

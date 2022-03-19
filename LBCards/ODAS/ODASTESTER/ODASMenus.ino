@@ -177,7 +177,7 @@ void printBoardType(void)
   {
     case NONE:
       Serial.println("");
-        break;
+      break;
     case DIGIO16I2C_CARD:
       Serial.println("DIGIO160I2C");
       break;

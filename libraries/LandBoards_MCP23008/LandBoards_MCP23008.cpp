@@ -197,3 +197,18 @@ void LandBoards_MCP23008::write8(uint8_t regAddr, uint8_t value)
 	Wire.write((uint8_t)value);
 	Wire.endTransmission();
 }
+
+////////////////////////////////////////////////////////////////////////////
+// void LandBoards_MCP23008::checkI2CAddr() - Check that a device is present
+// Returns	0:success
+// 			1:data too long to fit in transmit buffer
+//			2:received NACK on transmit of address
+//			3:received NACK on transmit of data
+//			4:other error
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t LandBoards_MCP23008::checkI2CAddr(void)
+{
+	Wire.beginTransmission(i2caddr);
+	return(Wire.endTransmission());
+}
