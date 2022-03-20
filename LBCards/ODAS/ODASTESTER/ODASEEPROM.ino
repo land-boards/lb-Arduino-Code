@@ -174,8 +174,84 @@ void eepromWrite(void)
   Serial.println("");
 }
 
+////////////////////////////////////////////////////////////////////////////
+// uint8_t checkI2CAddr(uint8_t addr) - Check that an I2C device is present
+// Returns
+//      0 : success
+//      1 : data too long to fit in transmit buffer
+//      2 : received NACK on transmit of address
+//      3 : received NACK on transmit of data
+//      4 : other error
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t checkI2CAddr(uint8_t addr)
+{
+  Wire.beginTransmission(addr);
+  return (Wire.endTransmission());
+}
+
+////////////////////////////////////////////////////////////////////////////
+//  uint8_t checkIfMCP23017(uint8_t addr)
+//    The GPU Pullup A register (internal register address 0x0c) is present
+//    in a MCP23017 but not in a MCP23008.
+//  Returns
+//    0 : Not an MCP23017
+//    1 : Likely an MCP23017
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t checkIfMCP23017(uint8_t addr)
+{
+  // Write 0x55 to MCP23017_GPPUA (0x0c)
+  Wire.beginTransmission(addr);
+  Wire.write(0x0c);
+  Wire.write(0x55);
+  Wire.endTransmission(1);
+  // Read back
+  Wire.beginTransmission(addr);
+  Wire.write(0x0c);
+  Wire.endTransmission();
+  Wire.requestFrom(addr,  1);
+  if (Wire.read() == 0x55)
+  {
+    Serial.println(F("Detected MCP23017"));
+    return 1;
+  }
+  else
+  {
+    Serial.println(F("Detected MCP23008"));
+    return 0;
+  }
+}
+
 //////////////////////////////////////////////////////////
-// void detectBoardInEeprom(void)
+// uint8_t count0x20_I2CDevices(void)
+// Returns the number of I2C devices in 0x20-0x27 range
+//////////////////////////////////////////////////////////
+
+uint8_t count0x20_I2CDevices(void)
+{
+  uint8_t i2cDevCount = 0;
+  uint8_t devAddr;
+  for (devAddr = 0x20; devAddr < 0x28; devAddr++)
+  {
+    if (checkI2CAddr(devAddr) == 0)
+    {
+      i2cDevCount++;
+    }
+  }
+  Serial.print(F("Count of I2C devices in range 0x20-0x27 on UUT = "));
+  Serial.println(i2cDevCount, DEC);
+  return (i2cDevCount);
+}
+
+//////////////////////////////////////////////////////////
+// uint8_t detectBoardInEeprom(void)
+// If the board has an EEPROM that is already programmed,
+//  set boardType variable to match
+// Returns
+//  0 : Board has an already programmed EEPROM
+//  1 : Board has an unprogrammed EEPROM
+//  2 : Board does not have an EEPROM
 //////////////////////////////////////////////////////////
 
 uint8_t detectBoardInEeprom(void)
@@ -183,6 +259,14 @@ uint8_t detectBoardInEeprom(void)
   char testStr[66];
   char readBuff[97];
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+  Serial.print(F("Checking if EEPROM is present on UUT..."));
+  if (checkI2CAddr(0x50) != 0)
+  {
+    Serial.println(F("EEPROM is not present on UUT"));
+    return 2;
+  }
+  else
+    Serial.println(F("EEPROM is present on UUT"));
   eeprom.begin();
   Serial.print(F("Checking EEPROM for board type..."));
   delay(10);
@@ -197,11 +281,11 @@ uint8_t detectBoardInEeprom(void)
   testStr[4] = 0;
   if (strcmp(testStr, "ODAS") != 0)
   {
-    Serial.println(F("Board signature error in EEPROM"));
-    Serial.print(F("Expected ODAS, got "));
-    Serial.println((char*)testStr);
-    for (int loopv = 0; loopv < 4; loopv++)
-      Serial.print(readBuff[loopv]);
+    Serial.println(F("Board signature error in EEPROM on UUT"));
+    //    Serial.print(F("Expected ODAS, got "));
+    //    Serial.println((char*)testStr);
+    //    for (int loopv = 0; loopv < 4; loopv++)
+    //      Serial.print(readBuff[loopv]);
     return 1;
   }
   for (int loopv = 32; loopv < 48; loopv++)
@@ -279,18 +363,33 @@ uint8_t detectBoardInEeprom(void)
   return 1;
 }
 
-void selectBoardType(void)
+//////////////////////////////////////////////////////////
+//
+//////////////////////////////////////////////////////////
+
+void selectBoardType(uint8_t i2cDevCount, uint8_t isMCP23017)
 {
-  Serial.println(F("Select the board type"));
-  Serial.println(F("1 - DIGIO16-I2C board"));
-  Serial.println(F("2 - DIGIO-128 board"));
-  Serial.println(F("3 - OptoIn8-I2C board"));
-  Serial.println(F("4 - OptoOut8-I2C board"));
-  Serial.println(F("5 - DIGIO32-I2C board"));
-  Serial.println(F("6 - PROTO16-I2C board"));
-  Serial.println(F("7 - ODAS-PSOC5 board"));
-  Serial.println(F("8 - ODAS-RELAY16 board"));
-  Serial.println(F("A - DIGIO-128/64 board"));
+  Serial.println(F("Select the board type (EEPROM)"));
+  if ((i2cDevCount == 1) && (isMCP23017 == 1))
+    Serial.println(F("1 - DIGIO16-I2C board"));
+  if ((i2cDevCount == 8) && (isMCP23017 == 1))
+    Serial.println(F("2 - DIGIO-128 board"));
+  if ((i2cDevCount == 1) && (isMCP23017 == 0))
+  {
+    Serial.println(F("3 - OptoIn8-I2C board"));
+    Serial.println(F("4 - OptoOut8-I2C board"));
+  }
+  if ((i2cDevCount == 2) && (isMCP23017 == 1))
+  {
+    Serial.println(F("5 - DIGIO32-I2C board"));
+    Serial.println(F("6 - PROTO16-I2C board"));
+  }
+  if (i2cDevCount == 0)
+    Serial.println(F("7 - ODAS-PSOC5 board"));
+  if ((i2cDevCount == 1) && (isMCP23017 == 1))
+    Serial.println(F("8 - ODAS-RELAY16 board"));
+  if ((i2cDevCount == 4) && (isMCP23017 == 1))
+    Serial.println(F("A - DIGIO-128/64 board"));
   Serial.println(F("9 - TBD board"));
   Serial.println(F("X - Boards without EEPROMs"));
   Serial.print(F("Select board > "));
@@ -361,7 +460,7 @@ void selectBoardType(void)
       case 'X':
       case 'x':
         {
-          otherBoardType();
+          otherBoardType(-1,-1);
           break;
         }
       default:
@@ -373,17 +472,28 @@ void selectBoardType(void)
   }
 }
 
-void otherBoardType(void)
+//////////////////////////////////////////////////////////////////////////////////////
+//  void otherBoardType(uint8_t i2cDevCount, uint8_t isMCP23017)
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+void otherBoardType(uint8_t i2cDevCount, uint8_t isMCP23017)
 {
-  Serial.println(F("Select the board type"));
-  Serial.println(F("1 - I2CIO8 board"));
-  Serial.println(F("2 - I2CIO8X board"));
-  Serial.println(F("3 - SWLEDX8-I2C board"));
-  Serial.println(F("4 - OPTOFast/Small Non-Inverting board"));
-  Serial.println(F("5 - OPTOFast/Small Inverting board"));
-  Serial.println(F("6 - I2C-RPT-01 board"));
-  Serial.println(F("7 - I2C-RPT-08 board"));
-  Serial.println(F("8 - OptoFastBi board"));
+  Serial.println(F("Select the board type (Other)"));
+  if ((i2cDevCount == 1) && (isMCP23017 == 0))
+  {
+    Serial.println(F("1 - I2CIO8 board"));
+    Serial.println(F("2 - I2CIO8X board"));
+  }
+  if (i2cDevCount == 0)
+  {
+    Serial.println(F("3 - SWLEDX8-I2C board"));
+    Serial.println(F("4 - OPTOFast/Small Non-Inverting board"));
+    Serial.println(F("5 - OPTOFast/Small Inverting board"));
+    Serial.println(F("6 - I2C-RPT-01 board"));
+    Serial.println(F("7 - I2C-RPT-08 board"));
+    Serial.println(F("8 - OptoFastBi board"));
+  }
   Serial.print(F("Select board > "));
   int incomingByte = 0;   // for incoming serial data
 

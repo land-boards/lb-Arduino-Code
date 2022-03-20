@@ -171,6 +171,10 @@ void cardTestMenu(void)
   }
 }
 
+//////////////////////////////////////////////////////////
+//  void printBoardType(void)
+//////////////////////////////////////////////////////////
+
 void printBoardType(void)
 {
   switch (boardType)
@@ -179,7 +183,7 @@ void printBoardType(void)
       Serial.println("");
       break;
     case DIGIO16I2C_CARD:
-      Serial.println("DIGIO160I2C");
+      Serial.println("DIGIO16-I2C");
       break;
     case DIGIO128_CARD:
       Serial.println("DIGIO-128");
@@ -188,10 +192,10 @@ void printBoardType(void)
       Serial.println("DIGIO-128/64");
       break;
     case OPTOIN8I2C_CARD:
-      Serial.println("OPTOIN8-I2C");
+      Serial.println("OptoIn8-I2C");
       break;
     case OPTOOUT8I2C_CARD:
-      Serial.println("OPTOOUT8-I2C");
+      Serial.println("OptoOut8-I2C");
       break;
     case DIGIO32I2C_CARD:
       Serial.println("DIGIO32-I2C");
@@ -212,10 +216,10 @@ void printBoardType(void)
       Serial.println("No EEPROM");
       break;
     case I2CIO8_CARD:
-      Serial.println("I2CIO8");
+      Serial.println("I2CIO-8");
       break;
     case I2CIO8X_CARD:
-      Serial.println("I2CIO8X");
+      Serial.println("I2CIO-8X");
       break;
     case OPTOFST_SML_NON_INVERTING_CARD:
       Serial.println("Opto Non-inv");
@@ -227,7 +231,7 @@ void printBoardType(void)
       Serial.println("OPTO-FAST-BI");
       break;
     case I2CRPT01_CARD:
-      Serial.println("I2CRPT-01");
+      Serial.println("I2C-RPT");
       break;
     case I2CRPT08_CARD:
       Serial.println("I2CRPT-08");
@@ -437,7 +441,7 @@ void eepromAccessMenu(void)
           break;
         case 'W':
         case 'w':
-          selectBoardType();
+          selectBoardType(-1,-1);
           if (boardType != NONE)
           {
             eepromWrite();

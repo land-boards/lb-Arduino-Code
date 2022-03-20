@@ -94,14 +94,18 @@ LandBoards_I2CRPT08 UUTI2CMux8;
 
 void setup()
 {
+  uint8_t boardTypeEEPROM;
+  uint8_t i2cDevCount;
+  uint8_t isMCP23017;
   // Set USB-Serial port to 9600 baud
   Serial.begin(9600);
-  
+  while (!Serial);    // wait for serial port to connect. Needed for native USB
+
   // Initialize the internal DIGIO32-I2C card
   ODASTSTR_I2CMux.begin(1);
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   Dio32.begin(0);
-  ODASTSTR_I2CMux.setI2CChannel(NO_MUX_CH);
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
 
   // Global vars
   failCount = 0;
@@ -110,10 +114,29 @@ void setup()
   boardType = NEW_CARD;
   
   // If the UUT EEPROM was already set yp, use the information to setup card
-  if (detectBoardInEeprom() == 1)
+  //  0 : Board has an already programmed EEPROM
+  //  1 : Board has an unprogrammed EEPROM
+  //  2 : Board does not have an EEPROM
+  boardTypeEEPROM = detectBoardInEeprom();
+
+  if (boardTypeEEPROM == 1)
   {
-    selectBoardType();
+    i2cDevCount = count0x20_I2CDevices();
+    if (i2cDevCount > 0)
+      isMCP23017 = checkIfMCP23017(0x20);
+    else
+      isMCP23017 = 0;
+    selectBoardType(i2cDevCount,isMCP23017);
     eepromWrite();
+  }
+  else if (boardTypeEEPROM == 2)
+  {
+    i2cDevCount = count0x20_I2CDevices();
+    if (i2cDevCount > 0)
+      isMCP23017 = checkIfMCP23017(0x20);
+    else
+      isMCP23017 = 0;
+    otherBoardType(i2cDevCount,isMCP23017);
   }
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)    // Instantiate the classes here for the boards
@@ -137,10 +160,11 @@ void setup()
       Dio32.begin(0);
       break;
     case I2CIO8_CARD:
-      i2cio8Card.begin();
+      Serial.println(F("Init I2CIO-8 card"));
+      i2cio8Card.begin(0);
       break;
     case I2CIO8X_CARD:
-      i2cio8xCard.begin();
+      i2cio8xCard.begin(0);
       break;
     case I2CRPT01_CARD:
       UUTI2CMux.begin(0);                   // testing external I2C-RPT-01 card

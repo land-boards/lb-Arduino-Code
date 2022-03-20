@@ -37,6 +37,7 @@
 
 LandBoards_I2CIO8::LandBoards_I2CIO8(void)
 {
+	i2caddr = MCP23008_ADDRESS;
 	return;
 }
 

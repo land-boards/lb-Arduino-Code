@@ -223,7 +223,7 @@ void bounceLedsSingle23017_CARD(void)
 
 void bounceLedsDigio32(void)
 {
-  Serial.println(F("Bouncing LEDs - any key to stop"));
+  Serial.println(F("Bouncing LEDs DIGIO32 - any key to stop"));
   while (1)
   {
     for (uint8_t port = 0; port < 32; port++)
@@ -247,7 +247,7 @@ void bounceLedsDigio32(void)
 
 void bounceLedsSwLedX8(void)
 {
-  Serial.println(F("Bouncing LEDs - any key to stop"));
+  Serial.println(F("Bouncing LEDs LEDS-SWITCHES Card- any key to stop"));
   while (1)
   {
     for (uint8_t port = 8; port < 16; port++)
@@ -331,16 +331,12 @@ void bounceLedsDIGIO128_64_CARD(void)
 
 void bounceLedsI2CIO8(void)
 {
-  Serial.println(F("Bouncing LEDs I2CIO8 - any key to stop"));
+  uint8_t port;
+  Serial.println(F("Bouncing LEDs I2CIO-8 - any key to stop"));
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   while (1)
   {
-    for (uint8_t port = 0; port < 4; port++)
-    {
-      i2cio8Card.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card.writeLED(port, LOW);
-    }
-    for (uint8_t port = 2; port > 0; port--)
+    for (port = 0; port < 4; port++)
     {
       i2cio8Card.writeLED(port, HIGH);
       delay(250);
