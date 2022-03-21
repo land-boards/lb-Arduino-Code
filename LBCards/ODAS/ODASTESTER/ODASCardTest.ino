@@ -305,7 +305,7 @@ uint8_t testProto16(void)
   {
     uint8_t jumpers;
     uint8_t testResult = TEST_PASSED;
-    Serial.println(F("Test I2CIO8X card with external loopback cable"));
+    // Serial.println(F("Test I2CIO8X card with external loopback cable"));
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
     delay(2);
     //  Serial.println(F("Hit a key to stop test"));

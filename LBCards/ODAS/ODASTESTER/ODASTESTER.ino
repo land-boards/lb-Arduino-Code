@@ -112,7 +112,7 @@ void setup()
   passCount = 0;
   single0loop1 = 0;
   boardType = NEW_CARD;
-  
+
   // If the UUT EEPROM was already set up, use the information to setup card
   //  0 : Board has an already programmed EEPROM
   //  1 : Board has an unprogrammed EEPROM
@@ -126,7 +126,7 @@ void setup()
       isMCP23017 = checkIfMCP23017(0x20);
     else
       isMCP23017 = 0;
-    selectBoardType(i2cDevCount,isMCP23017);
+    selectBoardType(i2cDevCount, isMCP23017);
     eepromWrite();
   }
   else if (boardTypeEEPROM == 2)
@@ -136,7 +136,7 @@ void setup()
       isMCP23017 = checkIfMCP23017(0x20);
     else
       isMCP23017 = 0;
-    otherBoardType(i2cDevCount,isMCP23017);
+    otherBoardType(i2cDevCount, isMCP23017);
   }
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)    // Instantiate the classes here for the boards
@@ -169,41 +169,41 @@ void setup()
       break;
     case I2CRPT01_CARD:
       UUTI2CMux.begin(0);                   // testing external I2C-RPT-01 card
-      UUTI2CMux.setI2CChannel(0); 
+      UUTI2CMux.setI2CChannel(0);
       i2cio8Card1.begin(0);                  // Requires I2CIO8 cards connected to external I2C-RPT-01 card
-      UUTI2CMux.setI2CChannel(1); 
+      UUTI2CMux.setI2CChannel(1);
       i2cio8Card2.begin(0);
-      UUTI2CMux.setI2CChannel(2); 
+      UUTI2CMux.setI2CChannel(2);
       i2cio8Card3.begin(0);
-      UUTI2CMux.setI2CChannel(3); 
+      UUTI2CMux.setI2CChannel(3);
       i2cio8Card4.begin(0);
       break;
     case I2CRPT08_CARD:
       UUTI2CMux8.begin(0);                   // testing external I2C-RPT-01 card
-      UUTI2CMux8.setI2CChannel(0,1); 
+      UUTI2CMux8.setI2CChannel(0, 1);
       i2cio8Card1.begin(0);                  // Requires I2CIO8 cards connected to external I2C-RPT-01 card
-      UUTI2CMux8.setI2CChannel(0,0);
-      UUTI2CMux8.setI2CChannel(1,1); 
+      UUTI2CMux8.setI2CChannel(0, 0);
+      UUTI2CMux8.setI2CChannel(1, 1);
       i2cio8Card2.begin(0);
-      UUTI2CMux8.setI2CChannel(1,0);
-      UUTI2CMux8.setI2CChannel(2,1); 
+      UUTI2CMux8.setI2CChannel(1, 0);
+      UUTI2CMux8.setI2CChannel(2, 1);
       i2cio8Card3.begin(0);
-      UUTI2CMux8.setI2CChannel(2,0);
-      UUTI2CMux8.setI2CChannel(3,1); 
+      UUTI2CMux8.setI2CChannel(2, 0);
+      UUTI2CMux8.setI2CChannel(3, 1);
       i2cio8Card4.begin(0);
-      UUTI2CMux8.setI2CChannel(3,0);
-      UUTI2CMux8.setI2CChannel(4,1); 
+      UUTI2CMux8.setI2CChannel(3, 0);
+      UUTI2CMux8.setI2CChannel(4, 1);
       i2cio8Card5.begin(0);
-      UUTI2CMux8.setI2CChannel(4,0);
-      UUTI2CMux8.setI2CChannel(5,1); 
+      UUTI2CMux8.setI2CChannel(4, 0);
+      UUTI2CMux8.setI2CChannel(5, 1);
       i2cio8Card6.begin(0);
-      UUTI2CMux8.setI2CChannel(5,0);
-      UUTI2CMux8.setI2CChannel(6,1); 
+      UUTI2CMux8.setI2CChannel(5, 0);
+      UUTI2CMux8.setI2CChannel(6, 1);
       i2cio8Card7.begin(0);
-      UUTI2CMux8.setI2CChannel(6,0);
-      UUTI2CMux8.setI2CChannel(7,1); 
+      UUTI2CMux8.setI2CChannel(6, 0);
+      UUTI2CMux8.setI2CChannel(7, 1);
       i2cio8Card8.begin(0);
-      UUTI2CMux8.setI2CChannel(7,0);
+      UUTI2CMux8.setI2CChannel(7, 0);
       break;
   }
   Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));

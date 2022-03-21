@@ -81,7 +81,7 @@ uint8_t internalLBTestCard(void)
       return (intLBTstI2CIO8());
       break;
     case I2CIO8X_CARD:
-      Serial.println(F("Testing UUT I2CIO8-X card"));
+      // Serial.println(F("Testing UUT I2CIO8-X card"));
       return (intLBTstI2CIO8X());
       break;
     // Cards with single MCP23017 parts
@@ -183,7 +183,7 @@ uint8_t intLBTstI2CIO8X(void)
 {
   uint8_t rdVal;
   uint8_t testBit;
-  Serial.println(F("Testing I2CIO-8X card internal"));
+  //Serial.println(F("Testing I2CIO-8X card internal"));
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   delay(2);
   for (testBit = 0; testBit < 8; testBit++)
