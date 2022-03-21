@@ -68,7 +68,8 @@ void eepromRead(void)
 
 //////////////////////////////////////////////////////////
 // eepromWrite()
-// boardType
+// Globals:
+//    boardType
 //////////////////////////////////////////////////////////
 
 void eepromWrite(void)
@@ -175,13 +176,15 @@ void eepromWrite(void)
 }
 
 //////////////////////////////////////////////////////////
-// uint8_t detectBoardInEeprom(void)
-// If the board has an EEPROM that is already programmed,
-//  set boardType variable to match
-// Returns
-//  0 : Board has an already programmed EEPROM
-//  1 : Board has an unprogrammed EEPROM
-//  2 : Board does not have an EEPROM
+//  uint8_t detectBoardInEeprom(void)
+//    Detect the board type
+//    If the board has an EEPROM that is already programmed
+//  Globals
+//    boardType variable set to match
+//  Returns
+//    0 : Board has an already programmed EEPROM
+//    1 : Board has an unprogrammed EEPROM
+//    2 : Board does not have an EEPROM
 //////////////////////////////////////////////////////////
 
 uint8_t detectBoardInEeprom(void)
