@@ -113,7 +113,9 @@ void cardTestMenu(void)
             break;
           }
         case '?':
-          Serial.println(F("\nL/S = Loop Tests or Run Single Test (control)"));
+          Serial.println(F("\nCard Tests"));
+          Serial.println(F("L = Loop Tests (control)"));
+          Serial.println(F("S = Run Single Test (control)"));
           Serial.println(F("T = Test card with external loopback cable/hardware"));
           Serial.println(F("B = Bounce a single bit across the LEDs"));
           Serial.println(F("I = Internal Card Accesses (no loopback)"));
@@ -121,7 +123,7 @@ void cardTestMenu(void)
           break;
         default:
           {
-            Serial.println(F("\nL/S=Loop/Single, T=Test, B=Bounce LEDs, I=UUT Int'l Test, X=eXit sub-menu"));
+            Serial.println(F("\nL=Loop/S=Single, T=Test, B=Bounce LEDs, I=UUT Int'l Test, X=eXit sub-menu"));
             break;
           }
       }

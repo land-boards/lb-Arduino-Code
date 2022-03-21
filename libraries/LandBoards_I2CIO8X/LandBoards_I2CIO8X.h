@@ -59,9 +59,11 @@ class LandBoards_I2CIO8X
 	void pinMode(uint8_t, uint8_t);
 	void digitalWrite(uint8_t, uint8_t);
 	uint8_t digitalRead(uint8_t);
+	void writeOLAT(uint8_t);
+	uint8_t readGPIO(void);
+	void pullUp(uint8_t, uint8_t);
   private:
 	uint8_t i2caddr;
-	void pullUp(uint8_t, uint8_t);
 	void write8(uint8_t addr, uint8_t data);
 	uint8_t read8(uint8_t addr);
 };

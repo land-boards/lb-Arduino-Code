@@ -113,7 +113,7 @@ void setup()
   single0loop1 = 0;
   boardType = NEW_CARD;
   
-  // If the UUT EEPROM was already set yp, use the information to setup card
+  // If the UUT EEPROM was already set up, use the information to setup card
   //  0 : Board has an already programmed EEPROM
   //  1 : Board has an unprogrammed EEPROM
   //  2 : Board does not have an EEPROM
@@ -164,6 +164,7 @@ void setup()
       i2cio8Card.begin(0);
       break;
     case I2CIO8X_CARD:
+      Serial.println(F("Init I2CIO-8X card"));
       i2cio8xCard.begin(0);
       break;
     case I2CRPT01_CARD:

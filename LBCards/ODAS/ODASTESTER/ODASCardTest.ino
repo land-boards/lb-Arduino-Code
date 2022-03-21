@@ -292,35 +292,53 @@ uint8_t testProto16(void)
   }
 
   //////////////////////////////////////////////////////////////////////////////////////
-  // uint8_t testI2CIO8X(void)
+  //  uint8_t testI2CIO8X(void) - Test the I2CIO8-X card
+  //  Uses external loop connector
+  //    Jumps 0-4, 1-5, 2-6, 3-7
+  //  Set 0-3 = Inputs, 4-7 = Outputs
+  //  Returns
+  //    TEST_PASSED
+  //    TEST_FAILED
   //////////////////////////////////////////////////////////////////////////////////////
 
   uint8_t testI2CIO8X(void)
   {
     uint8_t jumpers;
-    //  Serial.println(F("I2CIO8X card"));
-    //  Serial.println(F("Install test jumper"));
+    uint8_t testResult = TEST_PASSED;
+    Serial.println(F("Test I2CIO8X card with external loopback cable"));
+    ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
+    delay(2);
     //  Serial.println(F("Hit a key to stop test"));
     for (jumpers = 0; jumpers < 4; jumpers++)
-      i2cio8xCard.pinMode(jumpers, INPUT);
-    for (jumpers = 4; jumpers < 8; jumpers++)
-      i2cio8xCard.pinMode(jumpers, OUTPUT);
+    {
+      i2cio8xCard.pinMode(jumpers, INPUT_PULLUP);
+      i2cio8xCard.pinMode(jumpers + H4JUMPER, OUTPUT);
+    }
+    delay(2);
     for (jumpers = 0; jumpers < 4; jumpers++)
     {
       i2cio8xCard.digitalWrite(jumpers + H4JUMPER, LOW);
+      delay(2);
       if (i2cio8xCard.digitalRead(jumpers) != LOW)
       {
-        Serial.println(F("Failed LOW"));
-        return TEST_FAILED;
+        Serial.println(F("testI2CIO8X() - Failed LOW, bit "));
+        Serial.println(jumpers);
+        testResult = TEST_FAILED;
       }
       i2cio8xCard.digitalWrite(jumpers + H4JUMPER, HIGH);
+      delay(2);
       if (i2cio8xCard.digitalRead(jumpers) != HIGH)
       {
-        Serial.println(F("Failed HIGH"));
-        return TEST_FAILED;
+        Serial.print(F("testI2CIO8X() - Failed HIGH, bit "));
+        Serial.println(jumpers);
+        testResult = TEST_FAILED;
       }
     }
-    return TEST_PASSED;
+    for (jumpers = 0; jumpers < 8; jumpers++)
+    {
+      i2cio8xCard.pinMode(jumpers, INPUT_PULLUP);
+    }
+    return testResult;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////
