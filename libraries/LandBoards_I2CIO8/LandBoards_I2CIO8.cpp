@@ -113,7 +113,12 @@ void LandBoards_I2CIO8::pinMode(uint8_t bit, uint8_t d)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-//  uint8_t pullUp(bit, d) 
+//  uint8_t pullUp(bit, d)
+// Arduino.h defines for direction are:
+//	#define INPUT 0x0
+//	#define OUTPUT 0x1
+//	#define INPUT_PULLUP 0x2
+// This eliminates the separate pullup function
 ////////////////////////////////////////////////////////////////////////////
 
 void LandBoards_I2CIO8::pullUp(uint8_t bit, uint8_t d) 
@@ -130,7 +135,7 @@ void LandBoards_I2CIO8::pullUp(uint8_t bit, uint8_t d)
 	// write the new GPIO
 	if (gppuCopy != dupGppu)
 		write8(MCP23008_GPPU, gppuCopy);
-	}
+}
 
 ////////////////////////////////////////////////////////////////////////////
 //  uint8_t digitalWrite(uint8_t, uint8_t)
