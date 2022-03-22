@@ -74,7 +74,7 @@ uint8_t internalLBTestCard(void)
     // Cards with single MCP23008 parts
     case OPTOIN8I2C_CARD:
     case OPTOOUT8I2C_CARD:
-      return (intLBTstSingleMCP23008());
+      return (testInternalMCP23008(0x20));
       break;
     case I2CIO8_CARD:
       Serial.println(F("Testing UUT single MCP23008 card"));
@@ -89,7 +89,7 @@ uint8_t internalLBTestCard(void)
     case PROTO16I2C_CARD:
     case ODASRELAY16_CARD:
       Serial.println(F("Testing UUT single MCP23017 card"));
-      return (intLBTstSingleMCP23017());
+      return (testInternalMCP23017(0x20));
       break;
     // Cards with two MCP23017 parts
     case DIGIO32I2C_CARD:
@@ -130,45 +130,10 @@ uint8_t internalLBTestCard(void)
 
 uint8_t intLBTstI2CIO8(void)
 {
-  uint8_t rdVal;
+  uint8_t retVal;
 //  Serial.println(F("Testing I2CIO-8 card"));
-  i2cio8Card.writeLED(0,HIGH);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x01) != 0x01)
-    return TEST_FAILED;
-  i2cio8Card.writeLED(0,LOW);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x01) != 0x00)
-    return TEST_FAILED;
-
-  i2cio8Card.writeLED(1,HIGH);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x02) != 0x02)
-    return TEST_FAILED;
-  i2cio8Card.writeLED(1,LOW);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x02) != 0x00)
-    return TEST_FAILED;
-    
-  i2cio8Card.writeLED(2,HIGH);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x04) != 0x04)
-    return TEST_FAILED;
-  i2cio8Card.writeLED(2,LOW);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x04) != 0x00)
-    return TEST_FAILED;
-    
-  i2cio8Card.writeLED(3,HIGH);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x08) != 0x08)
-    return TEST_FAILED;
-  i2cio8Card.writeLED(3,LOW);
-  rdVal = i2cio8Card.readGPIO();
-  if ((rdVal & 0x08) != 0x00)
-    return TEST_FAILED;
-    
-  return TEST_PASSED;
+  retVal = testInternalMCP23008(0x20);
+  return retVal;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -181,37 +146,11 @@ uint8_t intLBTstI2CIO8(void)
 
 uint8_t intLBTstI2CIO8X(void)
 {
-  uint8_t rdVal;
-  uint8_t testBit;
+  uint8_t retVal;
   //Serial.println(F("Testing I2CIO-8X card internal"));
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-  delay(2);
-  for (testBit = 0; testBit < 8; testBit++)
-    i2cio8xCard.pinMode(testBit,OUTPUT);
-  for (testBit = 0; testBit < 8; testBit++)
-  {
-    i2cio8xCard.digitalWrite(testBit,HIGH);
-    delay(2);
-    rdVal = i2cio8xCard.digitalRead(testBit);
-    if (rdVal != HIGH)
-    {
-      Serial.print(F("intLBTstI2CIO8X() Test failed, Wrote 1, Read "));
-      Serial.println(rdVal);
-      return TEST_FAILED;
-    }
-    i2cio8xCard.digitalWrite(testBit,LOW);
-    delay(2);
-    rdVal = i2cio8xCard.digitalRead(testBit);
-    if (rdVal != LOW)
-    {
-      Serial.print(F("intLBTstI2CIO8X() Test failed, Wrote 0, Read "));
-      Serial.println(rdVal);
-      return TEST_FAILED;
-    }
-  for (testBit = 0; testBit < 8; testBit++)
-    i2cio8xCard.pinMode(testBit,INPUT_PULLUP);
-  }
-  return TEST_PASSED;
+  retVal = testInternalMCP23008(0x20);
+  return retVal;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -467,4 +406,70 @@ uint8_t internalextLBTestDIGIO128_64_CARD(void)
     return 0;
   else
     return 1;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+//  uint8_t testInternalMCP23008(uint8_t addr) - Test internal access
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t testInternalMCP23008(uint8_t addr)
+{
+  uint8_t savePUPReg;
+  uint8_t testVal;
+  uint8_t retVal = TEST_PASSED;
+  savePUPReg = read8_I2C(addr,0x06);      // Save MCP23008 GPPU = 0x06
+  for (testVal = 1; testVal != 0; testVal <<= 1)
+  {
+    write8_I2C(addr,0x06,testVal);
+    if (read8_I2C(addr,0x06) != testVal)
+      retVal = TEST_FAILED;
+  }
+  write8_I2C(addr,0x06,savePUPReg);     // Restore GPPU
+  return retVal;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+//  uint8_t testInternalMCP23017(uint8_t addr) - Test internal access
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t testInternalMCP23017(uint8_t addr)
+{
+  uint8_t savePUPReg;
+  uint8_t testVal;
+  uint8_t retVal = TEST_PASSED;
+  savePUPReg = read8_I2C(addr,0x0c);      // Save MCP23008 GPPU = 0x06
+  for (testVal = 1; testVal != 0; testVal <<= 1)
+  {
+    write8_I2C(addr,0x0c,testVal);
+    if (read8_I2C(addr,0x0c) != testVal)
+      retVal = TEST_FAILED;
+  }
+  write8_I2C(addr,0x0c,savePUPReg);     // Restore GPPU
+  return retVal;
+}
+
+////////////////////////////////////////////////////////////////////////////
+// uint8_t read8_I2C(regAddr) 
+// https://www.arduino.cc/en/Reference/WireRequestFrom
+////////////////////////////////////////////////////////////////////////////
+
+uint8_t read8_I2C(uint8_t i2caddr, uint8_t regAddr) 
+{
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)regAddr); 
+  Wire.endTransmission();
+  Wire.requestFrom(i2caddr, 1);   // get 1 byte
+  return (uint8_t)Wire.read();
+}
+
+////////////////////////////////////////////////////////////////////////////
+// void write8_I2C(regAddr, value) 
+////////////////////////////////////////////////////////////////////////////
+
+void write8_I2C(uint8_t i2caddr, uint8_t regAddr, uint8_t value) 
+{
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)regAddr);
+  Wire.write((uint8_t)value);
+  Wire.endTransmission();
 }
