@@ -160,7 +160,7 @@ void cardTestMenu(void)
             }
           case BOUNCE_LEDS:
             {
-              if (bounceLedsCard() == 1)
+              if (bounceLedsCard() == 0)
                 Serial.println("Finished bouncing LEDs");
               break;
             }
