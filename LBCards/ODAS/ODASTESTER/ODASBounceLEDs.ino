@@ -1,5 +1,8 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// void bounceLedsCard(void) -
+// void bounceLedsCard(void) - Bounce a 1 across the output pins
+//  Returns
+//    0 : Terminted
+//    1 : Continuable if loop is set
 //////////////////////////////////////////////////////////////////////////////////////
 
 uint8_t bounceLedsCard(void)
@@ -29,7 +32,7 @@ uint8_t bounceLedsCard(void)
       break;
     case OPTOOUT8I2C_CARD:
       bounceOptoOut8();
-      return 0;
+      return 1;
       break;
     case DIGIO32I2C_CARD:
       bounceLedsDigio32();
