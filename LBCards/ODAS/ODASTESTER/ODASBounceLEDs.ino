@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////////
-// void bounceLedsCard(void) - Bounce a 1 across the output pins
+// void bounceLedsCard(void) - Bounce a LED across the output pins
 //  Returns
 //    0 : Terminted
 //    1 : Continuable if loop is set
@@ -97,19 +97,19 @@ void bounceOPTOFAST_CARD(uint8_t inv)
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   delay(10);
   for (port = 8; port < 12; port++)   // Set all inputs to Pullup
-    Dio32.pinMode(port, INPUT_PULLUP);
+    IntDio32.pinMode(port, INPUT_PULLUP);
   delay(10);
   for (port = 0; port < 4; port++)   // Set outputs
   {
-    Dio32.pinMode(port, OUTPUT);
-    Dio32.digitalWrite(port, LOW);
+    IntDio32.pinMode(port, OUTPUT);
+    IntDio32.digitalWrite(port, LOW);
   }
   delay(10);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
-    Dio32.digitalWrite(port, HIGH);
+    IntDio32.digitalWrite(port, HIGH);
     delay(10);
-    Dio32.digitalWrite(port, LOW);
+    IntDio32.digitalWrite(port, LOW);
     delay(10);
   }
 }
@@ -133,14 +133,14 @@ void bounceOptoIn8(void)
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 16; port++)     // Set DIGIO32 lines 0-15 inside the Test Station to outputs
   { // Need 16 Output lines to control the input LEDs
-    Dio32.pinMode(port, OUTPUT);    // Set to outputs
-    Dio32.digitalWrite(port, LOW);    // Start setting all LED+ and LED- outputs to LOW
+    IntDio32.pinMode(port, OUTPUT);    // Set to outputs
+    IntDio32.digitalWrite(port, LOW);    // Start setting all LED+ and LED- outputs to LOW
   }
   for (port = 0; port < 8; port++)    // Writing a High to the Digio32 D0-D7 should turn on LEDs
   { // Turning on LEDs should result in a low on the OptoIn8 card
-    Dio32.digitalWrite(port, HIGH);   // Turn on the LED
+    IntDio32.digitalWrite(port, HIGH);   // Turn on the LED
     delay(2);             // Optos take time, but 2 mS is way, way too long
-    Dio32.digitalWrite(port, LOW);   // Turn on the LED
+    IntDio32.digitalWrite(port, LOW);   // Turn on the LED
   }
 }
 
@@ -167,17 +167,17 @@ void bounceOptoOut8(void)
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH); // Leave LED off when done
   for (port = 0; port < 8; port++)    // Goes to Ground pins of the OptoOut card
   {
-    Dio32.pinMode(port, OUTPUT);
-    Dio32.digitalWrite(port, LOW);
+    IntDio32.pinMode(port, OUTPUT);
+    IntDio32.digitalWrite(port, LOW);
   }
   for (port = 8; port < 16; port++)     // Goes to Power pins of the OptoOut card connector
   {
-    Dio32.pinMode(port, OUTPUT);
-    Dio32.digitalWrite(port, HIGH);
+    IntDio32.pinMode(port, OUTPUT);
+    IntDio32.digitalWrite(port, HIGH);
   }
   for (port = 16; port < 24; port++)     // Set internal DIGIO32 lines on the Test Station to inputs
   {
-    Dio32.pinMode(port, INPUT);
+    IntDio32.pinMode(port, INPUT);
   }
   delay(10);
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
@@ -231,10 +231,10 @@ void bounceLedsDigio32(void)
   {
     for (uint8_t port = 0; port < 32; port++)
     {
-      Dio32.pinMode(port, OUTPUT);
-      Dio32.digitalWrite(port, HIGH);
+      ExtDio32.pinMode(port, OUTPUT);
+      ExtDio32.digitalWrite(port, HIGH);
       delay(250);
-      Dio32.digitalWrite(port, LOW);
+      ExtDio32.digitalWrite(port, LOW);
     }
     if (Serial.available() > 0)
     {

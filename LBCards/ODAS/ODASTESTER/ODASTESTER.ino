@@ -1,15 +1,25 @@
 //////////////////////////////////////////////////////////
-// ODASTESTER Factory Test code
-// Test each card and channel
+// ODASTESTER - Land Boards LLC Factory Test code
+//    http://land-boards.com/blwiki/index.php?title=Arduino_Based_Test_Station
+// Test each Land Boards LLC card that can be tested
 // Read/write EEPROM if there is one
+// Auto-detect card types
 //////////////////////////////////////////////////////////
-// Tester Hardware
-//  Blue Pill Hub card
-//    http://land-boards.com/blwiki/index.php?title=Blue_Pill_Hub
+// Hardware
+//  Black Pill Hub card
+//    http://land-boards.com/blwiki/index.php?title=BLACK-PILL-HUB
 //  DIGIO32-I2C 32 bit I2C card
 //    http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C
 //  LED-32 card
 //    http://land-boards.com/blwiki/index.php?title=LED-32
+//  Card specific cable sets
+//  DB25 and DB37 ribbin cable adapters
+//    http://land-boards.com/blwiki/index.php?title=DB37RIBBON
+//    http://land-boards.com/blwiki/index.php?title=DB25RIBBON
+//////////////////////////////////////////////////////////
+// Serial USB connection
+//  Running puTTY
+//  9600 baud
 //////////////////////////////////////////////////////////
 
 #include <LandBoards_DIGIO32I2C.h>
@@ -39,8 +49,8 @@ typedef enum {
   PROTO16I2C_CARD,
   ODASPSOC5_CARD,
   ODASRELAY16_CARD,
-  NEW_CARD = 499,
-  NOEEPROMAFTER = 500,
+  NEW_CARD = 127,
+  NOEEPROMAFTER = 128,
   I2CIO8_CARD,
   I2CIO8X_CARD,
   OPTOFST_SML_NON_INVERTING_CARD,
@@ -72,7 +82,8 @@ typedef enum {
 LandBoards_I2CRPT01 ODASTSTR_I2CMux;
 LandBoards_Digio128V2 Dio128;    // Call the class constructor for the DigIO32_I2C card
 LandBoards_Digio128_64 Dio128_64;    // Call the class constructor for the DigIO-128 card
-LandBoards_DIGIO32I2C Dio32;
+LandBoards_DIGIO32I2C IntDio32;
+LandBoards_DIGIO32I2C ExtDio32;
 LandBoards_I2CIO8 i2cio8Card;
 LandBoards_I2CIO8 i2cio8Card1;
 LandBoards_I2CIO8 i2cio8Card2;
@@ -94,32 +105,71 @@ LandBoards_I2CRPT08 UUTI2CMux8;
 
 void setup()
 {
-  uint8_t boardTypeEEPROM;
-  uint8_t i2cDevCount;
-  uint8_t isMCP23017;
+  // Flags
+  uint8_t boardTypeEEPROM;    // EEPROM status state
+  uint8_t i2cDevCount;        // Count of I2C devices in range 0x20-0x27
+  uint8_t isMCP23017;         // Is the device at 0x20 an MCP23017?
+  
   // Set USB-Serial port to 9600 baud
   Serial.begin(9600);
   while (!Serial);    // wait for serial port to connect. Needed for native USB
 
-  // Initialize the internal DIGIO32-I2C card
+  // Initialize the I2C mux on the BLACK-PILL-HUN card
   ODASTSTR_I2CMux.begin(1);
+  
+  // Initialize the internal DIGIO32-I2C card
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
-  Dio32.begin(0);
-  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-
-  // Global vars
+  IntDio32.begin(0);
+  
+  // Global variables
   failCount = 0;
   passCount = 0;
   single0loop1 = 0;
   boardType = NEW_CARD;
 
+  // EEPROM Detection
+  ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   // If the UUT EEPROM was already set up, use the information to setup card
   //  0 : Board has an already programmed EEPROM
   //  1 : Board has an unprogrammed EEPROM
   //  2 : Board does not have an EEPROM
-  boardTypeEEPROM = detectBoardInEeprom();
+  boardTypeEEPROM = boardEEPROMStatus();
 
-  if (boardTypeEEPROM == 1)
+  // For boards with EEPROMs
+  // Validate number of I2C devices match
+  if (boardTypeEEPROM == 0)
+  {
+    i2cDevCount = count0x20_I2CDevices();
+    switch (boardType)
+    {
+      case DIGIO16I2C_CARD:
+      case PROTO16I2C_CARD:
+      case ODASRELAY16_CARD:
+        if (i2cDevCount != 1)
+          Serial.print("ERROR - Mismatch I2C device count, expected 1, got ");
+          Serial.println(i2cDevCount,DEC);
+        break;
+      case DIGIO32I2C_CARD:
+        if (i2cDevCount != 2)
+          Serial.print("ERROR - Mismatch I2C device count, expected 2, got ");
+          Serial.println(i2cDevCount,DEC);
+        break;
+      case DIGIO128_64_CARD:
+        if (i2cDevCount != 4)
+          Serial.print("ERROR - Mismatch I2C device count, expected 4, got ");
+          Serial.println(i2cDevCount,DEC);
+        break;
+      case DIGIO128_CARD:
+        if (i2cDevCount != 8)
+          Serial.print("ERROR - Mismatch I2C device count, expected 8, got ");
+          Serial.println(i2cDevCount,DEC);
+        break;
+    }
+  }
+  // Board has unprogrammed EEPROM
+  // Count the number of MCP230xx devices
+  // Used to pre-select board choice
+  else if (boardTypeEEPROM == 1)
   {
     i2cDevCount = count0x20_I2CDevices();
     if (i2cDevCount > 0)
@@ -129,6 +179,9 @@ void setup()
     selectBoardType(i2cDevCount, isMCP23017);
     eepromWrite();
   }
+  // Board does not have an EEPROM
+  // Count the number I2C deices
+  // If there are I2C devices, detect if there are MCP23017 devices
   else if (boardTypeEEPROM == 2)
   {
     i2cDevCount = count0x20_I2CDevices();
@@ -138,6 +191,18 @@ void setup()
       isMCP23017 = 0;
     otherBoardType(i2cDevCount, isMCP23017);
   }
+  beginUUTDevice();
+  Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));
+}
+
+//////////////////////////////////////////////////////////
+//  void beginUUTDevice(void)
+//  Globals
+//    boardType_t boardType
+//////////////////////////////////////////////////////////
+
+void beginUUTDevice(void)
+{
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   switch (boardType)    // Instantiate the classes here for the boards
   {
@@ -157,7 +222,7 @@ void setup()
       Dio128_64.begin();
       break;
     case DIGIO32I2C_CARD:
-      Dio32.begin(0);
+      ExtDio32.begin(0);
       break;
     case I2CIO8_CARD:
       Serial.println(F("Init I2CIO-8 card"));
@@ -206,7 +271,6 @@ void setup()
       UUTI2CMux8.setI2CChannel(7, 0);
       break;
   }
-  Serial.println(F("C=Card Tests, D=Direct, E=EEPROM, I=access Internal DIGIO32"));
 }
 
 //////////////////////////////////////////////////////////

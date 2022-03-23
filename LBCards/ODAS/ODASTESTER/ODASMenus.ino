@@ -1,3 +1,8 @@
+//////////////////////////////////////////////////////////
+//  Menu system
+//////////////////////////////////////////////////////////
+
+
 enum {INTERNAL_DIGIO, EXTERNAL_DIGIO};
 
 enum {NO_TEST, LOOPBACK_TEST, INTERNAL_TEST, BOUNCE_LEDS};
@@ -375,7 +380,7 @@ void directAccessInternalDIGIO32Menu(void)
             bitToCheck = getHexSerial();
             Serial.println("");
             flushSerial();
-            Dio32.digitalWrite(bitToCheck, 1);
+            IntDio32.digitalWrite(bitToCheck, 1);
             //            Serial.println("Completed write");
             break;
           }
@@ -387,7 +392,7 @@ void directAccessInternalDIGIO32Menu(void)
             bitToCheck = getHexSerial();
             Serial.println("");
             flushSerial();
-            Dio32.digitalWrite(bitToCheck, 0);
+            IntDio32.digitalWrite(bitToCheck, 0);
             //            Serial.println("Completed write");
             break;
           }

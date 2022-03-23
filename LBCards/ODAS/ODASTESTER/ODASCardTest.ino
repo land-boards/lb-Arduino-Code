@@ -85,25 +85,25 @@ uint8_t testOptoFastSmallInverting(void)
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
-    Dio32.pinMode(port, OUTPUT);
-    Dio32.digitalWrite(port, LOW);
+    IntDio32.pinMode(port, OUTPUT);
+    IntDio32.digitalWrite(port, LOW);
   }
   for (port = 8; port < 12; port++)   // Set all inputs to Pullup
-    Dio32.pinMode(port, INPUT_PULLUP);
+    IntDio32.pinMode(port, INPUT_PULLUP);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
-    Dio32.digitalWrite(port, HIGH);
+    IntDio32.digitalWrite(port, HIGH);
     delay(2);
-    if (Dio32.digitalRead(port + 8) != LOW)
+    if (IntDio32.digitalRead(port + 8) != LOW)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected Low"));
       testResults = TEST_FAILED;
     }
-    Dio32.digitalWrite(port, LOW);
+    IntDio32.digitalWrite(port, LOW);
     delay(2);
-    if (Dio32.digitalRead(port + 8) != HIGH)
+    if (IntDio32.digitalRead(port + 8) != HIGH)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
@@ -124,14 +124,14 @@ uint8_t testOptoFastSmallNonInverting(void)
   uint8_t testResults = TEST_PASSED;
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
-    Dio32.pinMode(port, OUTPUT);
+    IntDio32.pinMode(port, OUTPUT);
   for (port = 8; port < 12; port++)   // Set all inputs to Pullup
-    Dio32.pinMode(port, INPUT_PULLUP);
+    IntDio32.pinMode(port, INPUT_PULLUP);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
-    Dio32.digitalWrite(port, LOW);
+    IntDio32.digitalWrite(port, LOW);
     delay(10);
-    if (Dio32.digitalRead(port + 8) != LOW)
+    if (IntDio32.digitalRead(port + 8) != LOW)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
@@ -139,9 +139,9 @@ uint8_t testOptoFastSmallNonInverting(void)
       testResults = TEST_FAILED;
     }
     delay(10);
-    Dio32.digitalWrite(port, HIGH);
+    IntDio32.digitalWrite(port, HIGH);
     delay(10);
-    if (Dio32.digitalRead(port + 8) != HIGH)
+    if (IntDio32.digitalRead(port + 8) != HIGH)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
@@ -164,21 +164,21 @@ uint8_t testOptoFastBi
   uint8_t testResults = TEST_PASSED;
   ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
   for (port = 0; port < 4; port++)   // Set ports 0-3 to outputs
-    Dio32.pinMode(port, OUTPUT);
+    IntDio32.pinMode(port, OUTPUT);
   for (port = 8; port < 12; port++)   // Set all inputs to Pullup
-    Dio32.pinMode(port, INPUT_PULLUP);
+    IntDio32.pinMode(port, INPUT_PULLUP);
   for (port = 0; port < 4; port++)   // Set all inputs to Pullup
   {
-    Dio32.digitalWrite(port, LOW);
-    if (Dio32.digitalRead(port + 8) != HIGH)
+    IntDio32.digitalWrite(port, LOW);
+    if (IntDio32.digitalRead(port + 8) != HIGH)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
       Serial.println(F(" Expected High"));
       testResults = TEST_FAILED;
     }
-    Dio32.digitalWrite(port, HIGH);
-    if (Dio32.digitalRead(port + 8) != LOW)
+    IntDio32.digitalWrite(port, HIGH);
+    if (IntDio32.digitalRead(port + 8) != LOW)
     {
       Serial.print(F("Error on port "));
       Serial.print(port);
@@ -372,18 +372,18 @@ uint8_t testProto16(void)
     // Set DIGIO32 lines inside the Test Station to be inputs with pull-ups
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     for (port = 0; port < 32; port++)
-      Dio32.pinMode(port, INPUT_PULLUP);
+      IntDio32.pinMode(port, INPUT_PULLUP);
     // Set all UUT channels to outputs
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
     for (port = 0; port < 32; port++)
-      Dio32.pinMode(port, OUTPUT);
+      ExtDio32.pinMode(port, OUTPUT);
     // Set bits being checked to Low, verify that a Low is read back
     for (port = 0; port < 32; port++)
     {
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);      // Write out from UUT card
-      Dio32.digitalWrite(port, LOW);
+      ExtDio32.digitalWrite(port, LOW);
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Read in from Test Station
-      if (Dio32.digitalRead(port) != LOW)
+      if (IntDio32.digitalRead(port) != LOW)
       {
         testResults = writePortBitError(port,0);
       }
@@ -392,35 +392,35 @@ uint8_t testProto16(void)
     for (port = 0; port < 32; port++)
     {
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);		// Write out from UUT card
-      Dio32.digitalWrite(port, HIGH);
+      ExtDio32.digitalWrite(port, HIGH);
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Read in from Test Station
-      if (Dio32.digitalRead(port) != HIGH)
+      if (IntDio32.digitalRead(port) != HIGH)
       {
         testResults = writePortBitError(port,1);
       }
     }
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);			// Leave the UUT as inputs when done
     for (port = 0; port < 32; port++)
-      Dio32.pinMode(port, INPUT);
+      ExtDio32.pinMode(port, INPUT);
     return testResults;
     
     // Reverse direction
     // UUT is input, Test Station is output
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
     for (port = 0; port < 32; port++)   // Set all UUT channels to inputs
-      Dio32.pinMode(port, INPUT_PULLUP);
+      ExtDio32.pinMode(port, INPUT_PULLUP);
     // Set DIGIO32 lines inside the Test Station to be outputs
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     for (port = 0; port < 32; port++)
-      Dio32.pinMode(port, OUTPUT);
+      IntDio32.pinMode(port, OUTPUT);
     // Set bits being checked to Low
     // Verify that a Low is read back
     for (port = 0; port < 32; port++)
     {
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);    // Write out from Test Station
-      Dio32.digitalWrite(port, LOW);
+      IntDio32.digitalWrite(port, LOW);
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);  // Read in from UUT card
-      if (Dio32.digitalRead(port) != LOW)
+      if (ExtDio32.digitalRead(port) != LOW)
       {
         testResults = writePortBitError(port,0);
       }
@@ -431,10 +431,10 @@ uint8_t testProto16(void)
     {
       // Write out from Test Station
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
-      Dio32.digitalWrite(port, HIGH);
+      IntDio32.digitalWrite(port, HIGH);
       // Read in from UUT card
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
-      if (Dio32.digitalRead(port) != HIGH)
+      if (ExtDio32.digitalRead(port) != HIGH)
       {
         testResults = writePortBitError(port,1);
       }
@@ -442,7 +442,7 @@ uint8_t testProto16(void)
     // Leave the Test Station as inputs when done
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     for (port = 0; port < 32; port++)
-      Dio32.pinMode(port, INPUT);
+      IntDio32.pinMode(port, INPUT);
     return testResults;
   }
 
@@ -460,7 +460,7 @@ uint8_t testProto16(void)
     uint8_t testResults = TEST_PASSED;	// Assume pass until proven otherwise
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
     for (port = 0; port < 32; port++)		// Set DIGIO32 lines inside the Test Station to be inputs with pull-ups
-      Dio32.pinMode(port, INPUT_PULLUP);
+      IntDio32.pinMode(port, INPUT_PULLUP);
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
     for (port = 0; port < 16; port++)					// Set all UUT channels to outputs
       singleMCP23017.pinMode(port, OUTPUT);
@@ -470,7 +470,7 @@ uint8_t testProto16(void)
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
       singleMCP23017.digitalWrite(port, LOW);			// Write out from UUT card
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
-      if (Dio32.digitalRead(port) != LOW)				// Read in from Test Station
+      if (IntDio32.digitalRead(port) != LOW)				// Read in from Test Station
       {
         Serial.print(F("Error on port "));
         Serial.print(port);
@@ -484,7 +484,7 @@ uint8_t testProto16(void)
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
       singleMCP23017.digitalWrite(port, HIGH);		// Write out from UUT card
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);
-      if (Dio32.digitalRead(port) != HIGH)			// Read in from Test Station
+      if (IntDio32.digitalRead(port) != HIGH)			// Read in from Test Station
       {
 
         Serial.print(F("Error on port "));
@@ -523,9 +523,9 @@ uint8_t testProto16(void)
     delay(2);              // Optos take time, but 2 mS is way, way too long
     for (port = 0; port < 16; port++)   	// Set DIGIO32 lines inside the Test Station to outputs
     { // Need 16 Output lines to control the output LEDs
-      Dio32.pinMode(port, OUTPUT);		// Set to outputs
+      IntDio32.pinMode(port, OUTPUT);		// Set to outputs
       delay(2);              // Optos take time, but 2 mS is way, way too long
-      Dio32.digitalWrite(port, LOW);		// Start setting all LED+ and LED- outputs to LOW
+      IntDio32.digitalWrite(port, LOW);		// Start setting all LED+ and LED- outputs to LOW
       delay(2);              // Optos take time, but 2 mS is way, way too long
     }
     ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
@@ -549,7 +549,7 @@ uint8_t testProto16(void)
     ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Loop sets it back to Test Station before the end
     for (port = 0; port < 8; port++)		// Writing a High to the Digio32 D0-D7 should turn on LEDs
     { // Turning on LEDs should result in a low on the OptoIn8 card
-      Dio32.digitalWrite(port, HIGH);		// Turn on the LED
+      IntDio32.digitalWrite(port, HIGH);		// Turn on the LED
       delay(2);							// Optos take time, but 2 mS is way, way too long
       ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
       delay(2);              // Optos take time, but 2 mS is way, way too long
@@ -563,11 +563,11 @@ uint8_t testProto16(void)
       delay(2);              // Optos take time, but 2 mS is way, way too long
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Leave LED off when done
       delay(2);              // Optos take time, but 2 mS is way, way too long
-      Dio32.digitalWrite(port, LOW);
+      IntDio32.digitalWrite(port, LOW);
     }
     for (port = 0; port < 32; port++)   	// Set internal DIGIO32 lines on the Test Station to inputs
     {
-      Dio32.pinMode(port, INPUT);
+      IntDio32.pinMode(port, INPUT);
       delay(2);              // Optos take time, but 2 mS is way, way too long
     }
     return (testResults);
@@ -605,24 +605,24 @@ uint8_t testProto16(void)
     delay(10);
     for (port = 0; port < 8; port++)   	// Goes to Ground pins of the OptoOut card
     {
-      Dio32.pinMode(port, OUTPUT);
-      Dio32.digitalWrite(port, LOW);
+      IntDio32.pinMode(port, OUTPUT);
+      IntDio32.digitalWrite(port, LOW);
       delay(10);
     }
     for (port = 8; port < 16; port++)   	// Goes to Power pins of the OptoOut card connector
     {
-      Dio32.pinMode(port, OUTPUT);
-      Dio32.digitalWrite(port, HIGH);
+      IntDio32.pinMode(port, OUTPUT);
+      IntDio32.digitalWrite(port, HIGH);
       delay(10);
     }
     for (port = 16; port < 24; port++)   	// Set internal DIGIO32 lines on the Test Station to inputs
     {
-      Dio32.pinMode(port, INPUT_PULLUP);
+      IntDio32.pinMode(port, INPUT_PULLUP);
       delay(10);
     }
     for (port = 16; port < 24; port++)   	// Check that all of the outputs are High from the OptoOut
     {
-      if (Dio32.digitalRead(port) != HIGH)
+      if (IntDio32.digitalRead(port) != HIGH)
       {
         testResults = TEST_FAILED;
         Serial.print(F("OptoOut8-I2C failed - Expected HIGH on bit "));
@@ -639,7 +639,7 @@ uint8_t testProto16(void)
       delay(10);
       ODASTSTR_I2CMux.setI2CChannel(TEST_STN_INT_MUX_CH);	// Leave LED off when done
       delay(10);
-      if (Dio32.digitalRead(0x100+port) != LOW)
+      if (IntDio32.digitalRead(0x100+port) != LOW)
       {
         testResults = TEST_FAILED;
         Serial.print(F("OptoOut8-I2C failed - Expected LOW on bit "));

@@ -1,3 +1,7 @@
+//////////////////////////////////////////////////////////////////////////////////////
+//  ODASEEPROM - Access EEPROM
+//////////////////////////////////////////////////////////////////////////////////////
+
 #include <I2C_eeprom.h>
 
 #define EE24LC024MAXBYTES 2048/8
@@ -87,10 +91,20 @@ void eepromWrite(void)
   eep_vals myEep;
 
   Serial.println(F("Initializing eep buffer"));
-  myEep.signature[0] = 'O';
-  myEep.signature[1] = 'D';
-  myEep.signature[2] = 'A';
-  myEep.signature[3] = 'S';
+  if (boardType != NEW_CARD)
+  {
+    myEep.signature[0] = 'O';
+    myEep.signature[1] = 'D';
+    myEep.signature[2] = 'A';
+    myEep.signature[3] = 'S';
+  }
+  else
+  {
+    myEep.signature[0] = 'X';
+    myEep.signature[1] = 'X';
+    myEep.signature[2] = 'X';
+    myEep.signature[3] = 'X';
+  }
   myEep.fmt_version = 0x01;
   myEep.rsvd = 0;
   myEep.numatoms = 0x2;
@@ -187,7 +201,7 @@ void eepromWrite(void)
 //    2 : Board does not have an EEPROM
 //////////////////////////////////////////////////////////
 
-uint8_t detectBoardInEeprom(void)
+uint8_t boardEEPROMStatus(void)
 {
   char testStr[66];
   char readBuff[97];
@@ -202,7 +216,7 @@ uint8_t detectBoardInEeprom(void)
     Serial.println(F("EEPROM is present on UUT"));
   eeprom.begin();
   Serial.print(F("Checking EEPROM for board type..."));
-  delay(10);
+  delay(2);
   eeprom.readBlock((const uint16_t) 0, (unsigned char*) &readBuff[0], (const uint16_t) 96);
   readBuff[96] = 0;
 

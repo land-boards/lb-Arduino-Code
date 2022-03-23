@@ -1,4 +1,9 @@
 //////////////////////////////////////////////////////////////////////////////////////
+//  ODASSirectAccess - digitalRead and digitalRead unctions for UUTs
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////////////
 // uint8_t readBitValue(uint8_t bitToCheck)
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +24,7 @@ uint8_t readBitValue(uint8_t bitToCheck)
       return (singleMCP23017.digitalRead(bitToCheck));
       break;
     case DIGIO32I2C_CARD:
-      return (Dio32.digitalRead(bitToCheck));
+      return (ExtDio32.digitalRead(bitToCheck));
       break;
     case PROTO16I2C_CARD:
       return (singleMCP23017.digitalRead(bitToCheck));
@@ -86,7 +91,7 @@ uint8_t readBitDIGIO32(uint8_t bitToCheck)
 {
   uint8_t rdVal;
   //  Serial.println(F("\nreadBitDIGIO32() - reached function"));
-  rdVal = Dio32.digitalRead(bitToCheck);
+  rdVal = ExtDio32.digitalRead(bitToCheck);
   return (rdVal);
 }
 
@@ -131,8 +136,8 @@ void writeBitValue(uint8_t bitToCheck, uint8_t bitToWrite)
       singleMCP23017.digitalWrite(bitToCheck, bitToWrite);
       break;
     case DIGIO32I2C_CARD:
-      Dio32.pinMode(bitToCheck, OUTPUT);
-      Dio32.digitalWrite(bitToCheck, bitToWrite);
+      ExtDio32.pinMode(bitToCheck, OUTPUT);
+      ExtDio32.digitalWrite(bitToCheck, bitToWrite);
       break;
     case DIGIO16I2C_CARD:
       singleMCP23017.pinMode(bitToCheck, OUTPUT);
