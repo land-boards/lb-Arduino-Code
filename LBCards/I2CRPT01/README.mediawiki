@@ -1,7 +1,5 @@
 <a href="https://www.tindie.com/products/7001/"><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
 
-== I2C-RPT-01 Software ==
-
 <img src="http://land-boards.com/blwiki/images/5/54/I2C-RPT-01-X2-CCA_6031-640px.jpg" alt="I2C-RPT-01 Card Image"></img>
 
 === Documentation ===
@@ -25,6 +23,8 @@
 * 4 solid 4-40 mounting holes
 * Arduino driver and example code
 * Raspberry Pi example code
+
+== I2C-RPT-01 Software ==
 
 === Ownership ===
 
