@@ -8,6 +8,24 @@
 
 *[http://land-boards.com/wiki/index.php?title=I2C-RPT-01 Wiki page for the I2C-RPT-01].
 
+== Features ==
+
+* I2C Hub / Repeater / Replicator / Multiplexer / De-multiplexer
+* Four I2C Ports
+* Host port Controlled via I2C
+* [https://www.ti.com/lit/ds/symlink/pca9544a.pdf PCA9544A] IC Multiple vendors
+* 3.3V or 5V host operation
+* 3.3V or 5V slave ports operation
+* Voltage translation between the ports
+* Example: A Raspberry PI which runs 3.3V can control an I2C device which runs at 5V
+* Interrupt line on each channel and host
+* 100KHz/400KHz operation
+* On-board termination resistors
+* 49x49mm form factor
+* 4 solid 4-40 mounting holes
+* Arduino driver and example code
+* Raspberry Pi example code
+
 === Ownership ===
 
 * Some of these files (particularly libraries) were created by others.
