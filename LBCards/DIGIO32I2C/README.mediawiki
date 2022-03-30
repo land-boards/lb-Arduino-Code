@@ -1,6 +1,4 @@
-<a href="https://www.tindie.com/products/land_boards/32-bit-digital-io-card-digio32-i2c/" >
-<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
-</img></a> 
+<a href="https://www.tindie.com/products/9325/"><img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo"></img></a> 
 
 <img src="http://land-boards.com/blwiki/images/5/53/DIGIO32-I2C-P232-720px.jpg" alt="DIGIO32-I2C Card image"></img>
 
