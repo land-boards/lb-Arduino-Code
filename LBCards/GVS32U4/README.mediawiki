@@ -7,9 +7,50 @@
 === Description ===
 * The GVS-32U4 is an Arduino Leonardo compatible board.
 
-=== Documentation ===
+== Features ==
 
-*[http://land-boards.com/wiki/index.php?title=GVS-32U4 Wiki page for the GVS-32U4].
+The GVS-32U4 board is the second generation of GVS-32U4 board based on the previous X1 Revision board. The board includes the features:
+
+* Arduino Leonardo compatible
+* Program board using the Arduino IDE
+* Atmel [https://www.microchip.com/en-us/product/ATmega32U4 ATmega32U4]
+** Low-power
+** Max. Operating Frequency: 16 MHz
+** 8-bit AVR RISC-based microcontroller
+** 32KB flash program memory
+** 2.5KB SRAM
+** 1KB EEPROM
+** USB 2.0 full-speed/low speed device
+** 12-channel 10-bit A/D-converter
+** Pin Count: 44
+** Max I/O Pins: 26
+** Ext Interrupts: 13
+** USB Transceiver: Yes (1)
+** USB Speed: Full Speed
+* USB-Mini connector
+* Standard connection as USB peripheral
+* ATMega32U4 has a built in USB interfaces so it does not require an FTDI part
+* Three flexible power options - Jumper controlled
+* Power from the USB port
+* The USB input is polyfuse protected
+* Power from External VIN pins (> 6.5V required)
+* Uses an on-board Low Dropout (LDO) Voltage Regulator (1.4V min drop)
+* Embedded power option
+* Power from reverse powering one of the GVS connector power pins
+* Red Power LED
+* GVS connectors for all input/output pins
+* GVS wiring is compatible with standard servo pinouts on 0.1" pitch
+* Note that typical servo connectors are wider than 0.1"
+* GVS wiring provides the ultimate in flexibility since individual sensors and outputs can be fully connected with standard 3-pin to 3-pin cables
+* Pololu is a good source of 0.1" pitch crimp connector housings and wires with pre-crimped terminals
+* Four solid 4-40 screw mounting holes
+* Mounting holes are spaced at 41mm x 41mm
+* Board size is 49mm x 49mm (less than 2"x2" which is smaller than the Leonardo 2.7" x 2.1")
+* Rounded board corners for installation into chassis with internal rounded corners such as inexpensive plastic project boxes
+* HWB jumper for programming part over the USB
+* Program using [http://www.atmel.com/tools/FLIP.aspx ATmel FLIP]
+* Pullup resistor to VCC
+* Compatible with Arduino Leonardo bootloader
 
 === Ownership ===
 
