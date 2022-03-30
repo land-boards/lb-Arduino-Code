@@ -21,7 +21,8 @@
 ** Daisy-chained 4-pin host interface connector (Ground, Power, Clock, Data)
 * Power Connector
 * DB-25 Connector for GPIO lines
-* 24LC024 Personality EEPROM
+* [https://ww1.microchip.com/downloads/en/DeviceDoc/21210N.pdf 24LC024] Personality EEPROM
+** Write protect jumper
 * 3.3V or 5V operation
 * Compatible with Arduino, Raspberry Pi, BeagleBone Black
 * 95x95mm form factor
