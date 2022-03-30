@@ -4,7 +4,7 @@
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=LED-18 Wiki page for the LED-18].
+* [http://land-boards.com/blwiki/index.php?title=LED-18 Wiki page for the LED-18].
 
 === Ownership ===
 
