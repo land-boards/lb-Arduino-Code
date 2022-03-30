@@ -2,18 +2,34 @@
 
 <img src="http://land-boards.com/blwiki/images/9/90/MyMenu-CCA-X3_5793-800px.jpg" alt="MyMenu Card Image"></img>
 
-=== Documentation ===
+== Features ==
+
+MyMenu is a self contained menu system with these features:
+
+* 0.96" OLED
+* Menu Pushbuttons
+** 5 Way Keypad (Up, Down, Left, Right, Select)
+* Direction, Select buttons
+* 2-wire I2C (VCC, GND, CLK, DATA) interface
+** Selectable I2C address in range 0x20-0x27 (resistor install option)
+** Interrupt output line on button press
+* [http://ww1.microchip.com/downloads/en/DeviceDoc/21919e.pdf MCP23008] I2C Port Expander
+* OLED connection - mounts OLED to card and shares I2C connection to Host
+* 3 LEDs
+* 49x49mm card with (4) 4-40 mounting holes
+
+== Documentation ==
 
 *[http://land-boards.com/wiki/index.php?title=MyMenu Wiki page for the MyMenu].
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by us based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not us.
