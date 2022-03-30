@@ -37,7 +37,6 @@
 ** Interrupt connectors
 * Power Connector
 ** 3.3V or 5V operation
-* [https://www.mouser.com/datasheet/2/268/21210G-39776.pdf 24LC024] I2C Personality EEPROM
 * Compatible with Arduino, Raspberry Pi, BeagleBone Black
 * 95x95mm form factor
 * (4) 6-32 mounting holes - one on each corner
