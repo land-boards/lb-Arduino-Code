@@ -13,7 +13,7 @@
 * I2C interface
 * [https://ww1.microchip.com/downloads/en/DeviceDoc/21919e.pdf MCP23008] - 8-Bit I/O Expander with I2C Interface
 * Base address = 0x20
-* Address offset jumpers (0-7)
+** Address offset jumpers (0-7)
 * Interrupt pin on I2C connectors
 * Interrupt LED
 * I2C Daisy-chain connectors
