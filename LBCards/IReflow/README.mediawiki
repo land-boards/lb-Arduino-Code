@@ -1,10 +1,30 @@
-== IReflow Software ==
-
 <img src="http://land-boards.com/blwiki/images/5/50/IReflow-MyMenu-P1010248-640px.jpg" alt="IReflow Card Image"></img>
 
-=== Documentation ===
+== Features ==
+
+* IR Oven controller
+** Lead free profile
+** Lead profile
+* Type K thermocouple
+** Connection via screw terminal block
+* ATMega328 Microprocessor
+** Arduino compatible
+** 16 MHz
+* FTDI connector for serial USB
+* ISP connector
+* Buzzer to indicate done
+* I2C
+** MyMenu - OLED plus buttons
+* 2 LEDs
+* Supports external SSR
+* 49x49mm form factor
+* 4-40 mounting holes spaced 41mm apart
+
+== Documentation ==
 
 *[http://land-boards.com/wiki/index.php?title=IReflow Wiki page for the IReflow].
+
+== IReflow Software ==
 
 === Ownership ===
 
