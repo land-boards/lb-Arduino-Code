@@ -4,7 +4,7 @@
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=OneWireLogger Wiki page for the OneWireLogger].
+* [http://land-boards.com/blwiki/index.php?title=One_Wire_Data_Logger Wiki page for the OneWireLogger].
 
 === Ownership ===
 
