@@ -1,5 +1,19 @@
-<a href="https://www.tindie.com/products/land_boards/i2cio-8x/" ><img src="http://land-boards.com/blwiki/images/e/eb/Tindie-larges-v2.png" alt="Tindie Logo"></img></a>
+<a href="https://www.tindie.com/products/8490/" ><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
+
+<img src="http://land-boards.com/blwiki/images/8/82/I2CIO-8X-6104-640px.jpg"></img>
 
 [http://land-boards.com/blwiki/index.php?title=I2CIO-8X Wiki page for I2CIO-8X carb]
 
-<img src="http://land-boards.com/blwiki/images/8/82/I2CIO-8X-6104-640px.jpg"></img>
+== Features ==
+
+* 8 bits of Digital I/O
+* I2C interface
+* MCP23008P
+* Base address = 0x20
+** Address offset jumpers (0-7)
+* Interrupt pin on I2C connectors
+* I2C Daisy-chain connectors
+* GVS (Ground/Voltage/Signal) pins for all 8-bits
+* 2.7V to 5.5V
+* 49x49mm form factor
+* (4) #4-40 mounting holes
