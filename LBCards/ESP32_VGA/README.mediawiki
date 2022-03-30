@@ -1,7 +1,22 @@
-<a href="https://www.tindie.com/products/land_boards/esp32-vga-keyboard-mouse-card-v2-pcb-only/" >
-<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
-</img></a> 
+<a href="https://www.tindie.com/products/19264/"><img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo"></img></a> 
 
 <img src="http://land-boards.com/blwiki/images/7/72/P968-cropped-720pxV.jpg" alt="BLACK-PILL-HUB Card photo"></img>
 
 [http://land-boards.com/blwiki/index.php?title=ESP32-VGA Wiki page]
+
+== Features ==
+
+* ESP32 Module
+* 6-bit VGA color
+** 2:2:2 R:G:B
+* 2 x PS-2 DIN connectors
+** 5V mouse/keyboard
+** 3.3V to 5V level shifters
+*** Better than 5V keyboard with series resistors
+** 10K pull-ups on both sides
+* 2 x FTDI connectors
+* 5V DC Jack
+* 3.3V regulator (optional)
+* GVS pins for extra ESP32 pins
+* 95x95mm form factor
+* 6-32 mounting holes
