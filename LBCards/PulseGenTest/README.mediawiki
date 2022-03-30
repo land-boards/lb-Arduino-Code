@@ -3,7 +3,7 @@
 
 == PulseGenTest Card Test Software ==
 
-<img src="http://land-boards.com/blwiki/images/8/8b/PulseGenX1-CCA.JPG" alt="PulseGenTest Card Test Station Image"></img>
+<img src="http://land-boards.com/blwiki/images/2/2c/PulseGen_5242-720px.JPG" alt="PulseGenTest Card Test Station Image"></img>
 
 === Documentation ===
 
