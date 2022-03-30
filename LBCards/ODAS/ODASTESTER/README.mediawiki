@@ -14,17 +14,17 @@
 
 * This list will grow with time. 
 * See listings for details of currently supported cards.
-** DIGIO16I2C
-** DIGIO128
-** OPTOIN8I2C
-** OPTOOUT8I2C
-** DIGIO32I2C
-** PROTO16I2C
-** ODASPSOC5
-** I2CIO8
-** I2CIO8X
-** OPTOSMALL
-** OPTOFAST
+** [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DIGIO16-I2C]
+** [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DIGIO-128]
+** [http://land-boards.com/blwiki/index.php?title=OptoIn8-I2C OPTOIN8-I2C]
+** [http://land-boards.com/blwiki/index.php?title=OptoOut8-I2C OPTOOUT8-I2C]
+** [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DIGIO32-I2C]
+** [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C]
+** [http://land-boards.com/blwiki/index.php?title=ODAS-PSOC5 ODAS-PSOC5]
+** [http://land-boards.com/blwiki/index.php?title=I2CIO-8 I2CIO-8]
+** [http://land-boards.com/blwiki/index.php?title=I2CIO-8X I2CIO8X]
+** [http://land-boards.com/blwiki/index.php?title=OptoSmall OptoSmall]
+** [http://land-boards.com/blwiki/index.php?title=OPTOFAST-2 OPTOFAST-2]
 
 === Program Function ===
 
