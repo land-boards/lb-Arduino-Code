@@ -26,7 +26,7 @@
 ** [http://land-boards.com/blwiki/index.php?title=OptoSmall OptoSmall]
 ** [http://land-boards.com/blwiki/index.php?title=OPTOFAST-2 OPTOFAST-2]
 
-=== Program Function ===
+== Program Function ==
 
 * Menu driven
 * 
@@ -35,16 +35,16 @@
 * Use to run Loopback Tests
 * Use to run Bouncing LEDs
 
-=== Files ===
+== Files ==
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by me based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not us.
