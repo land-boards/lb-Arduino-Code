@@ -2,10 +2,26 @@
 
 == I2CIO-8 Software ==
 
-<img src="http://land-boards.com/blwiki/images/e/ee/I2CIO-8_X2-6000-640px.jpg" alt="I2CIO-8 Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/8/8f/I2CIO-8_X2-6000-720px.jpg" alt="I2CIO-8 Card Image"></img>
 
 === Description ===
 * The I2CIO-8 is an I2C card with 4 LEDs and 4 Switches(headers) board.
+
+== Features ==
+
+* 8 bits of Digital I/O
+* I2C interface
+* [https://ww1.microchip.com/downloads/en/DeviceDoc/21919e.pdf MCP23008] - 8-Bit I/O Expander with I2C Interface
+* Base address = 0x20
+* Address offset jumpers (0-7)
+* Interrupt pin on I2C connectors
+* Interrupt LED
+* I2C Daisy-chain connectors
+* 4 input (or output) jumpers
+* 4 LEDs
+* 2.7V to 5.5V
+* 49x49mm form factor
+* (4) #4-40 mounting holes
 
 === Documentation ===
 
