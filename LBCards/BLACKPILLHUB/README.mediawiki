@@ -4,6 +4,20 @@
 
 <img src="http://land-boards.com/blwiki/images/c/c6/Black-Pill-Hub_P1383-720px.jpg" alt="BLACK-PILL-HUB Card photo"></img>
 
+== Features ==
+
+* Carrier for the [[STM32_Black_Pill|STM32 Black Pill Board]]
+** STM32F4XX|STM32F401/411 CPU
+** [https://www.aliexpress.com/item/4001098711269.html?spm=a2g0s.9042311.0.0.27424c4dqDjXsl AliExpress listing]
+* I2C Hub - [https://www.ti.com/lit/ds/symlink/pca9544a.pdf PCA9544A]
+** 4-channel
+** Independent 3.3V/5V power for each channel
+** Separate interrupts for each channel
+* GVS connections for Black Pill pins
+** Good for supplying power/ground to external I/O cards
+* Reset switch
+* Power options
+
 == BLACK-PILL-HUB Card ==
 
 [http://land-boards.com/blwiki/index.php?title=BLACK-PILL-HUB Wiki page]
