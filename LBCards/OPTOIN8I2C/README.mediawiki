@@ -2,7 +2,28 @@
 
 == OptoIn8-I2C Software ==
 
-<img src="http://land-boards.com/blwiki/images/2/26/OptoIn8-I2C-X3-CCA-5453-640px.jpg" alt="OptoIn8-I2C Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/3/3f/OptoIn8-I2C-X3-CCA-5456-720px.jpg" alt="OptoIn8-I2C Card Image"></img>
+
+== Features ==
+
+* Eight optically-isolated input channels on card
+** (8) 4N25 optoisolators (20% CTR)
+** 330 ohm series resistor
+** 3.3V or 5V input
+** Wider input voltage range by either replacing 1/4W R1-R8 resistors or adding additional external resistor
+* I2C host interface
+** MCP23008 I2C Parallel I/O
+** Two Wire interface
+** 100/400 KHZ operation
+** Jumper selectable I2C SDA/SCL terminators
+** 3-bit address (Jumper selectable) - Up to 8 boards
+** Single 4-pin host interface connector (Ground, Power, Clock, Data)
+* 24LC024 [[Open Data Acquisition System]] Personality EEPROM
+* 3.3V or 5V Host operation
+* Compatible with Arduino, Raspberry Pi, BeagleBone Black
+* DB-25 male Opto input connector for rugged uses
+* 95x95mm form factor
+* (4) 6-32 mounting holes - one on each corner
 
 === Documentation ===
 
