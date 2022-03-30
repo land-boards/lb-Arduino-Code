@@ -28,36 +28,36 @@
 * 95x95mm form factor
 * (4) 6-32 mounting holes - one on each corner
 
-=== Files ===
+== Files ==
 
-==== DIGIO16I2C_Blink ====
+=== DIGIO16I2C_Blink ===
 
 * Blink single bit of the DigIO16-I2C card
 
-==== DIGIO16I2C_Blink16 ====
+=== DIGIO16I2C_Blink16 ===
 
 * Bounce a light around the 16 bits of the DigIO16-I2C card
 
-==== DIGIO16I2C_DigitalReadSerial ====
+=== DIGIO16I2C_DigitalReadSerial ===
 
 * Read single bit of the DigIO16-I2C card
 * Code is stripped down to the bare minimum
 
-==== DIGIO16I2C_Tester ====
+=== DIGIO16I2C_Tester ===
 
 * Original Factory Acceptance Test for the DigIO16-I2C card
 ** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester Code]
 * Uses GVSDuino card
 * Uses MyMenu card
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by us based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not us.
