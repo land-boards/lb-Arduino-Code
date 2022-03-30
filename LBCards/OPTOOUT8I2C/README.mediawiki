@@ -1,4 +1,4 @@
-<a href="https://www.tindie.com/products/land_boards/eight-opto-isolated-output-card-optoout8-i2c/" ><img src="http://land-boards.com/blwiki/images/e/eb/Tindie-larges-v2.png" alt="Tindie Logo"></img></a>
+<a href="https://www.tindie.com/products/land_boards/eight-opto-isolated-output-card-optoout8-i2c/" ><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
 
 == OptoOut8-I2C Software ==
 
