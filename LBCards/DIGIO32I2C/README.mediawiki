@@ -2,6 +2,24 @@
 
 <img src="http://land-boards.com/blwiki/images/5/53/DIGIO32-I2C-P232-720px.jpg" alt="DIGIO32-I2C Card image"></img>
 
+== Features ==
+
+* 32-bit Digital I/O
+** Two [http://ww1.microchip.com/downloads/en/DeviceDoc/20001952C.pdf MCP23017] 16-bit I2C I/O Expanders
+* EEPROM for board ID and application specific information
+** Write Enable jumper protects EEPROM against accidental damage
+* I/O Connector is inexpensive/standard DB-37
+* I2C Interface
+** Daisy-chain I2C connector
+** I2C Termination jumpers for end of I2C chain
+** I2C Address select jumper (2 addresses - can support up to 4 cards)
+* Power Options
+** Supports 3.3V or 5V signal levels
+** Fuse protected power output on DB-37
+* Power connector (not required for minimal loads
+* ODAS form factor (width is 95 mm)
+* 6-32 Mounting holes
+
 == land-boards DigIO32-I2C Card Source Code Files ==
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card] Source code files.
