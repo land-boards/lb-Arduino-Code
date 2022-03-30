@@ -4,7 +4,7 @@
 
 == land-boards DigIO16-I2C Card Example Arduino Source Code Files ==
 
-* These are Land Boards' [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card related] files.
+* These are Land Boards [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card].
 * Requires [https://github.com/land-boards/lb-Arduino-Code/tree/master/libraries/LandBoards_MCP23017 LandBoards_MCP23017 library]
 
