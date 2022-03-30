@@ -17,6 +17,31 @@
 *** Requires paying close attention to the mapping/access to the specific chips
 * Older - LandBoards_DIGIO128 library has been deprecated
 
+== Features ==
+
+* 128 bits of General Purpose Digital I/O (GPIO)
+** Card uses I2C addresses 0x20-0x27 for I/O and 0x50 for Configuration EEPROM
+* (8) of [http://ww1.microchip.com/downloads/en/DeviceDoc/20001952C.pdf MCP23017] - 16 bit GPIO
+** I2C (Two Wire) host interface
+** 100/400 KHZ operation
+** 25mA sink/source capability per I/O
+*** Limited by current in/out of the IC
+* [https://ww1.microchip.com/downloads/en/DeviceDoc/21210N.pdf 24LC024] Configuration/Personality EEPROM
+* Jumper selectable I2C terminators
+* Single 4-pin host interface connector (Ground, Power, Clock, Data)
+* (8) I/O Connectors
+** 20 pin, 0.1" Pitch
+** 16 digital I/O
+** 2 Power
+** 2 Ground
+** Interrupt connectors
+* Power Connector
+** 3.3V or 5V operation
+* [https://www.mouser.com/datasheet/2/268/21210G-39776.pdf 24LC024] I2C Personality EEPROM
+* Compatible with Arduino, Raspberry Pi, BeagleBone Black
+* 95x95mm form factor
+* (4) 6-32 mounting holes - one on each corner
+
 === Ownership ===
 
 * Some of these files (particularly libraries) were created or inspired by others.
