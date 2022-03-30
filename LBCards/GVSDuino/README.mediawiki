@@ -1,6 +1,4 @@
-<a href="https://www.tindie.com/products/land_boards/arduino-uno-compatible-gvsduino/" >
-<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
-</img></a> 
+<a href="https://www.tindie.com/products/6201/"><img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo"></img></a> 
 
 <img src="http://land-boards.com/blwiki/images/a/af/GVSDuino-X5-5936-640px.jpg" alt="GVSDuino Card Image"></img>
 
