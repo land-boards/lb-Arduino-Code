@@ -30,6 +30,25 @@
 * Uses GVSDuino card
 * Uses MyMenu card
 
+== Features ==
+
+* 16 bit GPIO
+* [http://ww1.microchip.com/downloads/en/DeviceDoc/20001952C.pdf MCP23017] I2C Parallel I/O
+** I2C host interface
+** 100/400 KHZ operation
+** 25mA sink/source capability per I/O
+* Jumper selectable terminators
+* 3-bit address (Jumper selectable) - Up to 8 boards
+* I2C Connector
+** Daisy-chained 4-pin host interface connector (Ground, Power, Clock, Data)
+* Power Connector
+* DB-25 Connector for GPIO lines
+* 24LC024 Personality EEPROM
+* 3.3V or 5V operation
+* Compatible with Arduino, Raspberry Pi, BeagleBone Black
+* 95x95mm form factor
+* (4) 6-32 mounting holes - one on each corner
+
 === Ownership ===
 
 * Some of these files (particularly libraries) were created by others.
