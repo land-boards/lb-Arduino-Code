@@ -6,7 +6,7 @@
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=OptoOut8-I2C Wiki page for the OptoOut8-I2C].
+*[http://land-boards.com/blwiki/index.php?title=OptoOut8-I2C Wiki page for the OptoOut8-I2C].
 
 === Ownership ===
 
