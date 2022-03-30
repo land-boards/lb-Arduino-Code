@@ -8,31 +8,54 @@
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=ODAS-RELAY-16 ODAS-RELAY-16 card].
 * Requires [https://github.com/land-boards/lb-Arduino-Code/tree/master/libraries/LandBoards_MCP23017 LandBoards_MCP23017 library]
 
-=== Files ===
+== Features ==
 
-==== ODASRELAY16_Blink ====
+* I2C bus
+** Up to 400 KHz
+* MCP23017 I2C Expander
+** Extensive Library Support
+* Three I2C address jumpers allow up to 8 cards
+* 16-channels of relays
+** SPST
+** Normally Open Relays
+** 1 FORM A
+* Individual Relay Channel Drivers
+* D-Sub DC-37 connector
+** Two pins for contact pair
+* 3.3V or 5V I2C operation
+** Power via I2C connector or dedicated power connector
+* Relay Power Connector
+** 12V
+** 5mm terminal block
+* Configuration EEPROM
+* ODAS Form Factor
+** 95x95mm
+
+== Files ==
+
+=== ODASRELAY16_Blink ===
 
 * Blink single bit of the ODAS-RELAY-16 card
 
-==== ODASRELAY16_Blink16 ====
+=== ODASRELAY16_Blink16 ===
 
 * Bounce a light around the 16 bits of the ODAS-RELAY-16 card
 
-==== ODASRELAY16_Tester ====
+=== ODASRELAY16_Tester ===
 
 * Original Factory Acceptance Test for the ODAS-RELAY-16 card
 ** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester Code]
 * Uses GVSDuino card
 * Uses MyMenu card
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by us based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not us.
