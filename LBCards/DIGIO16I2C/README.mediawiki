@@ -1,8 +1,8 @@
 <a href="https://www.tindie.com/products/land_boards/16-channel-digital-io-card-digio16-i2c/" ><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
 
-== land-boards DigIO16-I2C Card Example Arduino Source Code Files ==
-
 <img src="http://land-boards.com/blwiki/images/b/b8/DigIO16-I2C-X3-CCA-5454-640px.jpg" alt="DigIO16-I2C Card image"></img>
+
+== land-boards DigIO16-I2C Card Example Arduino Source Code Files ==
 
 * These are Land Boards' [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=DigIO16-I2C DigIO16-I2C card].
