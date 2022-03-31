@@ -1,6 +1,6 @@
 == OneWireLogger Software ==
 
-<img src="http://land-boards.com/blwiki/images/0/0d/MenuCodeHardware.jpg" alt="OneWireLogger Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/4/4b/OWDL_3D.jpg" alt="OneWireLogger Card Image"></img>
 
 === Documentation ===
 
