@@ -4,6 +4,7 @@
 
 == RPI-CONSOLE Card Test Software ==
 
+<img src="http://land-boards.com/blwiki/images/5/54/RPI-Console-Test-5459-cropped-640px.jpg"></img>
 
 == Raspberry PI Console Card - Features ==
 
