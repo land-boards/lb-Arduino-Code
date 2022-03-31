@@ -24,7 +24,8 @@
 
 == Documentation ==
 
-*[http://land-boards.com/wiki/index.php?title=SPI-POTX2 Wiki page for the SPI-POTX2].
+* [http://land-boards.com/wiki/index.php?title=SPI-POTX2 Wiki page for the SPI-POTX2]
+* Code drives triangle wave
 
 == Ownership ==
 
