@@ -18,18 +18,18 @@
 * Nuts and washers for BNC mounting included
 * Small size (1.8" x 1.3)
 
-=== Documentation ===
+== Documentation ==
 
 *[https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/PulseGenTest PulseGenTest test software]
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by us based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melts to a puddle, it's on you not us.
