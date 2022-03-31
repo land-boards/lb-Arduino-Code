@@ -18,6 +18,7 @@
 ** 26-pin extender connector works with Model A and Model B Pis
 ** 40-pin extender connector works with Model A+, Model B+ Pis and the new Pi 2
 ** 26-pin non-extender connector works with all Model Pis
+
 === Documentation ===
 
 * [http://land-boards.com/blwiki/index.php?title=RPI-CONSOLE Wiki page for the RPI-CONSOLE] test software.
