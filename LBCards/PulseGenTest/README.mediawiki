@@ -7,9 +7,9 @@
 
 == Features ==
 
+* Very fast pulse edge (typical 2 nS rise time) and symmetric high/low drive
 * Power Supply from 2V to 6V range so battery operation is possible eliminating need for power supply, etc
 * 5mm Terminal Block for power allows for batteries, etc to be easily connected without soldering
-* Very fast pulse edge (typical 2 nS rise time) and symmetric high/low drive.
 * 50 or 75 Ohm (other values could be made, send us your specs and we can add them)
 * BNC connectors on both ends
 * Connectors are a stuffing option with either BNC or SMA connectors (SMA is a special order so contact us)
