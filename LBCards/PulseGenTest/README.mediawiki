@@ -20,7 +20,7 @@
 
 === Documentation ===
 
-*[http://land-boards.com/wiki/index.php?title=PulseGenTest Wiki page for the PulseGenTest] test software.
+*[https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/PulseGenTest PulseGenTest test software]
 
 === Ownership ===
 
