@@ -2,6 +2,20 @@
 
 <img src="http://land-boards.com/blwiki/images/4/4b/OWDL_3D.jpg" alt="OneWireLogger Card Image"></img>
 
+== Features ==
+
+* One wire RJ-45 connector
+* ATMega32U4 Microprocessor
+** USB connector
+* 0.96" OLED
+* LiPo battery
+** JST connector
+** Battery charger
+* Real-time clock
+** Battery
+* I2C connector
+* Switching power regulator
+
 === Documentation ===
 
 * [http://land-boards.com/blwiki/index.php?title=One_Wire_Data_Logger Wiki page for the OneWireLogger].
