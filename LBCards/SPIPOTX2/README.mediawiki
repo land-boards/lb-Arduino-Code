@@ -4,18 +4,36 @@
 
 <img src="http://land-boards.com/blwiki/images/3/31/SPI-POTX2-720px.jpg" alt="SPI-POTX2 Card Image"></img>
 
-=== Documentation ===
+== Features ==
+
+* Dual Digital potentiometer
+** [http://ww1.microchip.com/downloads/en/DeviceDoc/22060b.pdf MCP4231 Digital Pot]
+** 7-bit: 128 Resistors (129 Steps)
+** Zero Scale to Full Scale Wiper operation
+** 10K
+** Power on reset to half wiper value
+** SPI Interface
+*** SPI Serial Interface (10 MHz, modes 0,0 & 1,1)
+*** High-Speed Read/Writes to wiper register
+*** 10 MHz (max SPI speed)
+* 2.7V to 5.5V
+* Daisy-chain I2C connector
+* 49x49mm form factor
+* (4) #4-40 mounting holes
+* Daisy-chain connectors
+
+== Documentation ==
 
 *[http://land-boards.com/wiki/index.php?title=SPI-POTX2 Wiki page for the SPI-POTX2].
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by us based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not us.
