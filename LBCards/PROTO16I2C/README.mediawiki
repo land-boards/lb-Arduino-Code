@@ -9,6 +9,43 @@
 * These are our [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C card].
 
+== Features ==
+
+* 16-bit Digital I/O card
+** [http://ww1.microchip.com/downloads/en/DeviceDoc/21952b.pdf MCP23017] 16-bit I2C I/O Expander
+** Strong library support for all major microprocessors for MCP23017
+* I2C Interface - Two Wire Interface
+** Can run at 400 KHz or faster
+* I/O Connector is inexpensive/standard DB-25
+** Fuse protected power output on DB-25 with jumper bypass
+* Large prototyping area
+** Connections at edges to DB-25 and GPIO lines
+* EEPROM for board ID and application specific information
+** Write Enable jumper protects against accidental writes
+* [[Open Data Acquisition System]] (ODAS) form factor (width is 95 mm)
+* Host connectors
+** Daisy-chain I2C connector
+** Address select jumper
+** Expandable I2C via [[I2C-RPT]] - I2C Repeater
+** Interrupt out/Card Present
+** Power connector (not required for minimal loads)
+*** Reversible pinout for safety
+** I2C Termination jumpers for end of I2C chain
+* Power can be 3.3V or 5V
+* 95mm wide [[Open Data Acquisition System]] format
+* 6-32 Mounting holes
+
+=== Prototyping Area ===
+
+* Large prototyping area
+* Ideal for through-hole ICs
+* Extra I/O Rows on both sides
+** One side connects to DB-25 connector
+** Other side connects to MCP23017 pins
+* Prototyping area in the center of the card with power/ground bus up the middle two pins
+** Easy connection to IC Power/Grounds
+* Silkscreen on both sides of the card
+
 === Example Code ===
 
 * PROTO16I2CBlink - Attach an LED to bit 0 and blink the LED
