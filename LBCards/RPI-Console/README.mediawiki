@@ -8,6 +8,8 @@
 
 == Raspberry PI Console Card - Features ==
 
+* [http://land-boards.com/blwiki/index.php?title=RPI-CONSOLE RPI-CONSOLE Wiki Page]
+* [http://land-boards.com/blwiki/index.php?title=RPI-CONSOLE-U RPI-CONSOLE-U Wiki Page]
 * Console port lets you talk to your Raspberry Pi over USB without a keyboard/mouse/monitor or Ethernet connection.
 ** 115200 baud
 ** Real FTDI chip ([https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT230X.pdf FT230XS])
