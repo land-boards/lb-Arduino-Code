@@ -5,6 +5,19 @@
 
 <img src="http://land-boards.com/blwiki/images/2/2c/PulseGen_5242-720px.JPG" alt="PulseGenTest Card Test Station Image"></img>
 
+== Features ==
+
+* Power Supply from 2V to 6V range so battery operation is possible eliminating need for power supply, etc
+* 5mm Terminal Block for power allows for batteries, etc to be easily connected without soldering
+* Very fast pulse edge (typical 2 nS rise time) and symmetric high/low drive.
+* 50 or 75 Ohm (other values could be made, send us your specs and we can add them)
+* BNC connectors on both ends
+* Connectors are a stuffing option with either BNC or SMA connectors (SMA is a special order so contact us)
+* Four mounting holes - 4-40 holes
+* Rounded corners fit more easily into plastic enclosures with inside radius at the corners
+* Nuts and washers for BNC mounting included
+* Small size (1.8" x 1.3)
+
 === Documentation ===
 
 *[http://land-boards.com/wiki/index.php?title=PulseGenTest Wiki page for the PulseGenTest] test software.
