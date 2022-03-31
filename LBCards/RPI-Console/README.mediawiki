@@ -6,6 +6,20 @@
 
 <img src="http://land-boards.com/blwiki/images/f/f2/RP-Console-CCA-X1-4955-Ext40-640px.jpg" alt="RPI-CONSOLE Card Test Station Image"></img>
 
+== Raspberry PI Console Card - Features ==
+
+* Console port lets you talk to your Raspberry Pi over USB without a keyboard/mouse/monitor or Ethernet connection.
+** 115200 baud
+** Real FTDI chip ([https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT230X.pdf FT230XS])
+* USB Mini-B connector
+** Mounted on the bottom of the card (See also our Micro USB version)
+* Jumper selectable - power the Pi from your computer's USB port
+** Newer Pi cards may take too much power
+* Transmit/receive LEDs
+* (3) Pi Connector options - extender allows daughtercards to be added on top
+** 26-pin extender connector works with Model A and Model B Pis
+** 40-pin extender connector works with Model A+, Model B+ Pis and the new Pi 2
+** 26-pin non-extender connector works with all Model Pis
 === Documentation ===
 
 * [http://land-boards.com/blwiki/index.php?title=RPI-CONSOLE Wiki page for the RPI-CONSOLE] test software.
