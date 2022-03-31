@@ -4,7 +4,7 @@
 
 == land-boards PROTO16-I2C Card Files ==
 
-<img src="http://land-boards.com/blwiki/images/e/e1/Proto16-I2C-P1010411-640px.jpg" alt="PROTO16-I2C Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/b/b6/Proto16-I2C-P1010411-720px.jpg" alt="PROTO16-I2C Card Image"></img>
 
 * These are our [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=PROTO16-I2C PROTO16-I2C card].
