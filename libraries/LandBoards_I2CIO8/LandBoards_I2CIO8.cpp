@@ -189,7 +189,7 @@ uint8_t LandBoards_I2CIO8::readGPIO(void)
 uint8_t LandBoards_I2CIO8::read8(uint8_t regAddr) 
 {
 	Wire.beginTransmission(i2caddr);
-	Wire.write((uint8_t)regAddr);	
+	Wire.write((uint8_t)regAddr);
 	Wire.endTransmission();
 	Wire.requestFrom(i2caddr, 1);		// get 1 byte
 	return (uint8_t)Wire.read();

@@ -23,6 +23,12 @@
 #define PCA9544A_ADDRESS 0x70
 #define PCA9544A_CTRLREG 0x00
 
+#define I2CRPT01_CH0	0x04
+#define I2CRPT01_CH1	0x05
+#define I2CRPT01_CH2	0x06
+#define I2CRPT01_CH3	0x07
+#define I2CRPT01_NONE	0x00
+
 class LandBoards_I2CRPT01
 {
   public:
@@ -32,8 +38,8 @@ class LandBoards_I2CRPT01
     void setI2CChannel(uint8_t);
 	uint8_t getI2CChannel(void);
     uint8_t getIntStatus(void);
-	void setIntr(int intNum, int val);
-	void clrIntr(int intNum, int val);
+	// void setIntr(int intNum, int val);
+	// void clrIntr(int intNum, int val);
   private:
 	uint8_t i2caddr;
 	uint8_t ctrl_copy;
