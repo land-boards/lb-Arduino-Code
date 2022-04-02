@@ -2,6 +2,20 @@
 
 * These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8X card] library and example files.
 
+== Features ==
+
+* 8 bits of Digital I/O
+* I2C interface
+* MCP23008P
+* Base address = 0x20
+** Address offset jumpers (0-7)
+* Interrupt pin on I2C connectors
+* I2C Daisy-chain connectors
+* GVS (Ground/Voltage/Signal) pins for all 8-bits
+* 2.7V to 5.5V
+* 49x49mm form factor
+* (4) #4-40 mounting holes
+
 === Library Files ===
 
 * LandBoards_I2CIO8X.cpp
