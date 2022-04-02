@@ -1,9 +1,9 @@
 <a href="https://www.tindie.com/products/7001/"><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo">
 </img></a>
 
-== Land Boards, LLC - I2C-RPT-01 Factory Test Code ==
-
 <img src="http://land-boards.com/blwiki/images/5/54/I2C-RPT-01-X2-CCA_6031-640px.jpg" alt="I2C-RPT-01 Card Image"></img>
+
+== Land Boards, LLC - I2C-RPT-01 Factory Test Code ==
 
 === Documentation ===
 
