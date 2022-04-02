@@ -1,3 +1,5 @@
+<img src="http://land-boards.com/blwiki/images/f/f9/I2CIO-8X-6104-720px.jpg"></img>
+
 == Land Boards I2CIO-8X Library Files ==
 
 * These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8X card] library and example files.
