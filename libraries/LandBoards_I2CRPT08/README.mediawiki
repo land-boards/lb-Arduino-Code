@@ -1,3 +1,5 @@
+== Land Boards, LLC - I2C-RPT-08 Library ==
+
 <a href="https://www.tindie.com/products/8490/"><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
 
 <img src="http://land-boards.com/blwiki/images/f/f9/I2CIO-8X-6104-720px.jpg"></img>
@@ -20,8 +22,6 @@
 * On-board 2.2K termination resistors
 * 49x49mm form factor
 * 4 solid 4-40 mounting holes
-
-== Land Boards, LLC - I2C-RPT-08 Library ==
 
 === Documentation ===
 
