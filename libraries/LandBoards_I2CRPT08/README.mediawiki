@@ -4,7 +4,6 @@
 
 <img src="http://land-boards.com/blwiki/images/f/f9/I2CIO-8X-6104-720px.jpg"></img>
 
-
 == Features ==
 
 * I2C Hub / Repeater / Replicator / Multiplexer / De-multiplexer / Switch
@@ -23,19 +22,19 @@
 * 49x49mm form factor
 * 4 solid 4-40 mounting holes
 
-=== Documentation ===
+== Documentation ==
 
 *[http://land-boards.com/blwiki/index.php?title=I2C-RPT-08 Wiki page for the I2C-RPT-08]
 * [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
 
-=== Ownership ===
+== Ownership ==
 
 * Some of these files (particularly libraries) were created by others.
 ** There may be newer versions of these libraries "out there".
 ** Some libraries even have the same names but don't work the same.
 * Many of these files were created by us based on the work of others.
 
-=== Warning ===
+== Warning ==
 
 * Use at your own risk.
 ** If you brick your part or it melt to a puddle, it's on you not us.
