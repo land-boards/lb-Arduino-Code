@@ -2,6 +2,24 @@
 <img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
 </img></a> 
 
+== Features ==
+
+* I2C Hub / Repeater / Replicator / Multiplexer / De-multiplexer / Switch
+** [https://www.nxp.com/docs/en/data-sheet/PCA9548A.pdf PCA9548A Datasheet]
+** Eight I2C Ports
+** 100KHz/400KHz operation
+* Host port
+** Controlled via I2C
+** 3.3V or 5V host operation
+** Can power slave cards if they are at the same voltage
+* 3.3V or 5V slave ports operation
+** Removable jumper(s) to supply power from slave
+* Voltage translation between the ports
+* Ex: a Raspberry Pi which runs 3.3V can control I2C devices which run at 5V
+* On-board 2.2K termination resistors
+* 49x49mm form factor
+* 4 solid 4-40 mounting holes
+
 == Land Boards, LLC - I2C-RPT-08 Library ==
 
 <img src="http://land-boards.com/blwiki/images/c/c6/I2C-RPT-08-X1-P218-720px.jpg" alt="I2C-RPT-01 Card Image"></img>
