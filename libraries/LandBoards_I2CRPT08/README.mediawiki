@@ -1,6 +1,7 @@
-<a href="https://www.tindie.com/products/land_boards/8-channel-i2c-repeatermultiplexer-i2c-rpt-08/" >
-<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
-</img></a> 
+<a href="https://www.tindie.com/products/8490/"><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
+
+<img src="http://land-boards.com/blwiki/images/f/f9/I2CIO-8X-6104-720px.jpg"></img>
+
 
 == Features ==
 
@@ -21,8 +22,6 @@
 * 4 solid 4-40 mounting holes
 
 == Land Boards, LLC - I2C-RPT-08 Library ==
-
-<img src="http://land-boards.com/blwiki/images/c/c6/I2C-RPT-08-X1-P218-720px.jpg" alt="I2C-RPT-01 Card Image"></img>
 
 === Documentation ===
 
