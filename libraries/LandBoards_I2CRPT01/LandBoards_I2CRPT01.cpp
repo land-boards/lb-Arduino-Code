@@ -64,7 +64,7 @@ void LandBoards_I2CRPT01::setI2CChannel(uint8_t chNum)
 uint8_t LandBoards_I2CRPT01::getI2CChannel(void)
 {
 	Wire.requestFrom(i2caddr, 1);
-	return (Wire.read() & 0x3);
+	return (Wire.read() & 0x7);
 }
 
 ////////////////////////////////////////////////////////////////////////////

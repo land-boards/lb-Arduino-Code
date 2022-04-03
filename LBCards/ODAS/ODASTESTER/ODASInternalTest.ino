@@ -105,6 +105,12 @@ uint8_t internalLBTestCard(void)
     case ODASPSOC5_CARD:
       Serial.println(F("Not supported at present"));
       break;
+    case I2CRPT01_CARD:
+      Serial.println(F("Not supported at present"));
+      break;
+    case I2CRPT08_CARD:
+      return (internalLBTestI2CRPT08());
+      break;
     case NEW_CARD:
       Serial.println(F("Not supported at present"));
       break;
@@ -115,6 +121,68 @@ uint8_t internalLBTestCard(void)
   }
   ODASTSTR_I2CMux.setI2CChannel(UUT_CARD_MUX_CH);
   return 0; // fail
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+//  void internalLBTestI2CRPT08(void)
+//  Write the control register and read it nack
+//    setI2CChannel(port, EN_DIS)
+//////////////////////////////////////////////////////////////////////////////////////
+
+uint8_t internalLBTestI2CRPT08(void)
+{
+  uint8_t port;
+  uint8_t valTestRd;
+  uint8_t expectedVal;
+  uint8_t testResults = TEST_PASSED;
+  // Disable all mux channels
+  for (port = 0; port < 8; port++)
+    UUTI2CMux8Ch.setI2CChannel(port, I2CRPT08_MUXCH_DISABLE);
+  valTestRd = UUTI2CMux8Ch.getI2CChannel();
+  if (valTestRd != 0)
+  {
+    Serial.println(F("Mux channels did not clear"));
+    testResults = TEST_FAILED;
+  }
+  expectedVal = 0x01;
+  for (port = 0; port < 8; port++)
+  {
+    UUTI2CMux8Ch.setI2CChannel(port, I2CRPT08_MUXCH_ENABLE);
+    valTestRd = UUTI2CMux8Ch.getI2CChannel();
+    if (valTestRd != expectedVal)
+    {
+      Serial.print(F("Mux channel did not set, bit "));
+      Serial.print(port,HEX);
+      Serial.print(F(", expected "));
+      Serial.print(expectedVal,HEX);
+      Serial.print(F(", read value "));
+      Serial.println(valTestRd,HEX);
+      testResults = TEST_FAILED;
+    }
+    expectedVal <<= 1;
+    expectedVal |= 0x01;
+  }
+  expectedVal = 0xfe;
+  for (port = 0; port < 8; port++)
+  {
+    UUTI2CMux8Ch.setI2CChannel(port, I2CRPT08_MUXCH_DISABLE);
+    valTestRd = UUTI2CMux8Ch.getI2CChannel();
+    if (valTestRd != expectedVal)
+    {
+      Serial.print(F("Mux channel did not set, bit "));
+      Serial.print(port,HEX);
+      Serial.print(F(", expected "));
+      Serial.print(expectedVal,HEX);
+      Serial.print(F(", read value "));
+      Serial.println(valTestRd,HEX);
+      testResults = TEST_FAILED;
+    }
+    expectedVal <<= 1;
+  }
+  // Disable all mux channels
+  for (port = 0; port < 8; port++)
+    UUTI2CMux8Ch.setI2CChannel(port, I2CRPT08_MUXCH_DISABLE);
+  return testResults;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

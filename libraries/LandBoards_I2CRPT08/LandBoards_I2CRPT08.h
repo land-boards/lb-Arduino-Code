@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_I2CRPT08.h - I2C Bridge PCA9544A Library 
+//  LandBoards_I2CRPT08.h - I2C Bridge PCA9548A Library 
 //  Created by Douglas Gilliland. 2015-09-05
 //	http://land-boards.com/blwiki/index.php?title=I2C-RPT
 ////////////////////////////////////////////////////////////////////////////
@@ -19,13 +19,15 @@
 // I2C Ports
 ////////////////////////////////////////////////////////////////////////////
 
-#define PCA9544A_ADDRESS 0x70
-#define PCA9544A_CTRLREG 0x00
+#define I2CRPT08_ADDRESS 0x70
+#define I2CRPT08_CTRLREG 0x00
+#define I2CRPT08_MUXCH_ENABLE 0x01
+#define I2CRPT08_MUXCH_DISABLE 0x00
 
 class LandBoards_I2CRPT08
 {
   public:
-	void begin(uint8_t addr);
+	void begin(uint8_t);
 	void begin();
     LandBoards_I2CRPT08(void);
     void setI2CChannel(uint8_t,uint8_t);

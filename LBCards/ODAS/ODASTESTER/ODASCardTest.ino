@@ -51,7 +51,8 @@ uint8_t extLBTestCard(void)
       return (testLedsI2CRPT01());
       break;
     case I2CRPT08_CARD:
-      return (testLedsI2CRPT08());
+      // 1return (testLedsI2CRPT08());
+      Serial.println(F("Not supported at present"));
       break;
     case OPTOFST_SML_NON_INVERTING_CARD:
       return (testOptoFastSmallNonInverting());
@@ -811,82 +812,82 @@ uint8_t testLedsI2CRPT01(void)
 // void testLedsI2CRPT01(void)
 //////////////////////////////////////////////////////////////////////////////////////
 
-uint8_t testLedsI2CRPT08(void)
-{
-  uint8_t port;
-  uint8_t intStatus;
-  Serial.println(F("Testing I2C-RPT-08 using 8x I2CIO8 and jumpers - any key to stop"));
-  while (1)
-  {
-    // writes
-    UUTI2CMux8Ch.setI2CChannel(0, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card1.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card1.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(0, 0);
-    UUTI2CMux8Ch.setI2CChannel(1, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card2.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card2.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(1, 0);
-    UUTI2CMux8Ch.setI2CChannel(2, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card3.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card3.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(2, 0);
-    UUTI2CMux8Ch.setI2CChannel(3, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card4.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card4.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(3, 0);
-    UUTI2CMux8Ch.setI2CChannel(4, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card5.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card5.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(4, 0);
-    UUTI2CMux8Ch.setI2CChannel(5, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card6.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card6.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(5, 0);
-    UUTI2CMux8Ch.setI2CChannel(6, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card7.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card7.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(6, 0);
-    UUTI2CMux8Ch.setI2CChannel(7, 1);
-    for (port = 0; port < 4; port++)
-    {
-      i2cio8Card8.writeLED(port, HIGH);
-      delay(250);
-      i2cio8Card8.writeLED(port, LOW);
-    }
-    UUTI2CMux8Ch.setI2CChannel(7, 0);
-    if (Serial.available() > 0)
-    {
-      Serial.read();
-      return (TEST_PASSED);
-    }
-  }
-}
+//uint8_t testLedsI2CRPT08(void)
+//{
+//  uint8_t port;
+//  uint8_t intStatus;
+//  Serial.println(F("Testing I2C-RPT-08 using 8x I2CIO8 and jumpers - any key to stop"));
+//  while (1)
+//  {
+//    // writes
+//    UUTI2CMux8Ch.setI2CChannel(0, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card1.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card1.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(0, 0);
+//    UUTI2CMux8Ch.setI2CChannel(1, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card2.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card2.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(1, 0);
+//    UUTI2CMux8Ch.setI2CChannel(2, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card3.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card3.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(2, 0);
+//    UUTI2CMux8Ch.setI2CChannel(3, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card4.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card4.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(3, 0);
+//    UUTI2CMux8Ch.setI2CChannel(4, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card5.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card5.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(4, 0);
+//    UUTI2CMux8Ch.setI2CChannel(5, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card6.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card6.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(5, 0);
+//    UUTI2CMux8Ch.setI2CChannel(6, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card7.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card7.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(6, 0);
+//    UUTI2CMux8Ch.setI2CChannel(7, 1);
+//    for (port = 0; port < 4; port++)
+//    {
+//      i2cio8Card8.writeLED(port, HIGH);
+//      delay(250);
+//      i2cio8Card8.writeLED(port, LOW);
+//    }
+//    UUTI2CMux8Ch.setI2CChannel(7, 0);
+//    if (Serial.available() > 0)
+//    {
+//      Serial.read();
+//      return (TEST_PASSED);
+//    }
+//  }
+//}

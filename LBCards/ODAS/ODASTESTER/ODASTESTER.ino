@@ -291,28 +291,76 @@ void beginUUTDevice(void)
       ODASTSTR_I2CMux.setI2CChannel(NO_MUX_CH);
       UUTI2CMux8Ch.begin(0);                   // testing external I2C-RPT-01 card
       UUTI2CMux8Ch.setI2CChannel(0, 1);
-      i2cio8Card1.begin(0);                  // Requires I2CIO8 cards connected to external I2C-RPT-01 card
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #0 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #0 was detected"));
+        i2cio8Card1.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(0, 0);
       UUTI2CMux8Ch.setI2CChannel(1, 1);
-      i2cio8Card2.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #1 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #1 was detected"));
+        i2cio8Card2.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(1, 0);
       UUTI2CMux8Ch.setI2CChannel(2, 1);
-      i2cio8Card3.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #2 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #2 was detected"));
+        i2cio8Card3.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(2, 0);
       UUTI2CMux8Ch.setI2CChannel(3, 1);
-      i2cio8Card4.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #3 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #3 was detected"));
+        i2cio8Card4.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(3, 0);
       UUTI2CMux8Ch.setI2CChannel(4, 1);
-      i2cio8Card5.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #4 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #4 was detected"));
+        i2cio8Card5.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(4, 0);
       UUTI2CMux8Ch.setI2CChannel(5, 1);
-      i2cio8Card6.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #5 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #5 was detected"));
+        i2cio8Card6.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(5, 0);
       UUTI2CMux8Ch.setI2CChannel(6, 1);
-      i2cio8Card7.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #6 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #6 was detected"));
+        i2cio8Card7.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(6, 0);
       UUTI2CMux8Ch.setI2CChannel(7, 1);
-      i2cio8Card8.begin(0);
+      if (checkI2CAddr(0x20) != 0)
+        Serial.println(F("I2CIO8 card #7 not detected"));
+      else
+      {
+        Serial.println(F("I2CIO8 card #7 was detected"));
+        i2cio8Card8.begin(0);
+      }
       UUTI2CMux8Ch.setI2CChannel(7, 0);
       break;
   }

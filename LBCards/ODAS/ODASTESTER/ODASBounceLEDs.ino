@@ -462,12 +462,24 @@ void bounceLedsI2CRPT08(void)
       delay(250);
       i2cio8Card1.writeLED(port, LOW);
     }
+    UUTI2CMux8Ch.setI2CChannel(0, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
     UUTI2CMux8Ch.setI2CChannel(1, 1);
     for (port = 0; port < 4; port++)
     {
       i2cio8Card2.writeLED(port, HIGH);
       delay(250);
       i2cio8Card2.writeLED(port, LOW);
+    }
+    UUTI2CMux8Ch.setI2CChannel(1, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
     }
     UUTI2CMux8Ch.setI2CChannel(2, 1);
     for (port = 0; port < 4; port++)
@@ -476,12 +488,24 @@ void bounceLedsI2CRPT08(void)
       delay(250);
       i2cio8Card3.writeLED(port, LOW);
     }
+    UUTI2CMux8Ch.setI2CChannel(2, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
     UUTI2CMux8Ch.setI2CChannel(3, 1);
     for (port = 0; port < 4; port++)
     {
       i2cio8Card4.writeLED(port, HIGH);
       delay(250);
       i2cio8Card4.writeLED(port, LOW);
+    }
+    UUTI2CMux8Ch.setI2CChannel(3, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
     }
     UUTI2CMux8Ch.setI2CChannel(4, 1);
     for (port = 0; port < 4; port++)
@@ -490,12 +514,24 @@ void bounceLedsI2CRPT08(void)
       delay(250);
       i2cio8Card5.writeLED(port, LOW);
     }
+    UUTI2CMux8Ch.setI2CChannel(4, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
     UUTI2CMux8Ch.setI2CChannel(5, 1);
     for (port = 0; port < 4; port++)
     {
       i2cio8Card4.writeLED(port, HIGH);
       delay(250);
       i2cio8Card6.writeLED(port, LOW);
+    }
+    UUTI2CMux8Ch.setI2CChannel(5, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
     }
     UUTI2CMux8Ch.setI2CChannel(6, 1);
     for (port = 0; port < 4; port++)
@@ -504,6 +540,12 @@ void bounceLedsI2CRPT08(void)
       delay(250);
       i2cio8Card7.writeLED(port, LOW);
     }
+    UUTI2CMux8Ch.setI2CChannel(6, 0);
+    if (Serial.available() > 0)
+    {
+      Serial.read();
+      return;
+    }
     UUTI2CMux8Ch.setI2CChannel(7, 1);
     for (port = 0; port < 4; port++)
     {
@@ -511,6 +553,7 @@ void bounceLedsI2CRPT08(void)
       delay(250);
       i2cio8Card8.writeLED(port, LOW);
     }
+    UUTI2CMux8Ch.setI2CChannel(7, 0);
     if (Serial.available() > 0)
     {
       Serial.read();

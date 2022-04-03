@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//  LandBoards_I2CRPT08.cpp - I2C Bridge PCA9544A Library 
+//  LandBoards_I2CRPT08.cpp - I2C Bridge PCA9548A Library 
 //  Created by Douglas Gilliland. 2015-09-05
 //  LandBoards_I2CRPT08
 //	http://land-boards.com/blwiki/index.php?title=I2C-RPT
@@ -12,7 +12,6 @@
 
 LandBoards_I2CRPT08::LandBoards_I2CRPT08()
 {
-	
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -21,7 +20,7 @@ LandBoards_I2CRPT08::LandBoards_I2CRPT08()
 
 void LandBoards_I2CRPT08::begin(uint8_t addr) 
 {
-	i2caddr = PCA9544A_ADDRESS | (addr & 0x7);
+	i2caddr = I2CRPT08_ADDRESS | (addr & 0x7);
 	Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
@@ -71,5 +70,5 @@ void LandBoards_I2CRPT08::setI2CChannel(uint8_t chNum, uint8_t enableFlag)
 uint8_t LandBoards_I2CRPT08::getI2CChannel(void)
 {
 	Wire.requestFrom(i2caddr, 1);
-	return (Wire.read() & 0x7);
+	return (Wire.read());
 }
