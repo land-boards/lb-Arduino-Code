@@ -17,7 +17,7 @@
 *** High-Speed Read/Writes to wiper register
 *** 10 MHz (max SPI speed)
 * 2.7V to 5.5V
-* Daisy-chain I2C connector
+* Daisy-chain SPI connector
 * 49x49mm form factor
 * (4) #4-40 mounting holes
 * Daisy-chain connectors
