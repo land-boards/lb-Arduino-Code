@@ -1,7 +1,7 @@
 == land-boards DigIO-128 Library Files ==
 
 * [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card] library files.
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 * [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/DIGIO128 DIGIO-128 Example files]
 
 === Ownership ===
