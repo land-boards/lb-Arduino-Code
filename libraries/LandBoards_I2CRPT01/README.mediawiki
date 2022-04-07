@@ -25,7 +25,7 @@
 === Documentation ===
 
 * [http://land-boards.com/blwiki/index.php?title=I2C-RPT#Factory_Testing Wiki page for the I2C-RPT-01]
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to import a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 === Ownership ===
 
