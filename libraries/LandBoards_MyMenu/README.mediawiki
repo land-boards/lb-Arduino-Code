@@ -7,8 +7,7 @@
 ==== LandBoards_MyMenu ====
 
 * [http://land-boards.com/blwiki/index.php?title=MyMenu MyMenu Wiki Page]
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
-
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 === Ownership ===
 
