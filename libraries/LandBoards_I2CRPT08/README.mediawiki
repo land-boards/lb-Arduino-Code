@@ -24,8 +24,8 @@
 
 == Documentation ==
 
-*[http://land-boards.com/blwiki/index.php?title=I2C-RPT-08 Wiki page for the I2C-RPT-08]
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [http://land-boards.com/blwiki/index.php?title=I2C-RPT-08 Wiki page for the I2C-RPT-08]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 == Ownership ==
 
