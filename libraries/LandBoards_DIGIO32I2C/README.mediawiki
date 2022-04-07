@@ -1,6 +1,10 @@
-== land-boards DigIO32-I2C Library Files ==
+<a href="https://www.tindie.com/products/land_boards/64128-channel-digital-io-card-digio-128/" >
+<img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo">
+</img></a> 
 
 <img src="http://land-boards.com/blwiki/images/a/a2/DigIO32-I2C-P1010486-720px.jpg" alt="DIGIO32-I2C Card image"></img>
+
+== land-boards DigIO32-I2C Library Files ==
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DIGIO32-I2C DigIO32-I2C card library] files.
 * [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
