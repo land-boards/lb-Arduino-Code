@@ -1,8 +1,8 @@
-<a href="https://www.tindie.com/products/land_boards/64128-channel-digital-io-card-digio-128/" >
+<a href="https://www.tindie.com/products/9325/" >
 <img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo">
 </img></a> 
 
-<img src="http://land-boards.com/blwiki/images/a/a2/DigIO32-I2C-P1010486-720px.jpg" alt="DIGIO32-I2C Card image"></img>
+<img src="http://land-boards.com/blwiki/images/5/53/DIGIO32-I2C-P232-720px.jpg" alt="DIGIO32-I2C Card image"></img>
 
 == land-boards DigIO32-I2C Library Files ==
 
