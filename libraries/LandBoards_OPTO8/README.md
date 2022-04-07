@@ -1,5 +1,7 @@
 This code is based on the [Adafruit MCP23008 driver](https://github.com/adafruit/Adafruit-MCP23008-library).
 
+[https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
+
 The Adafruit driver was "very much beta" with the following features:
 
 * "it seems to work fine"
