@@ -24,7 +24,7 @@
 * Read single bit of the DigIO32-I2C card
 * Code is stripped down to the bare minimum
 
-==== DIGIO32I2C_Tester ====
+==== DIGIO32I2C_FAT ====
 
 * Original Factory Acceptance Test for the DigIO32-I2C card
 ** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Tester Code]
