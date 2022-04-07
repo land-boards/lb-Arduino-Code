@@ -11,7 +11,7 @@ This library is for the 64-bit version of the DIGIO-128 card
 These files are not dependent on the Adafruit library
 
 * [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card] library files.
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 * [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/DIGIO128V2 DIGIO-128 Example files]
 
 === Ownership ===
