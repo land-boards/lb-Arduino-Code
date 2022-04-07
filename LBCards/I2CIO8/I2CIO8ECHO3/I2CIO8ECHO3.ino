@@ -40,8 +40,8 @@ void setup()
   Serial.begin(9600);   // 9600 baud serial
   Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
-  TWBR = 12;          // go to 400 KHz I2C speed mode
-#elif defined(ARDUINO_ARCH_STM32)
+  Wire.setClock(400000);  // 400KHz speed
+#elif defined(ARDUINO_ARCH_STM32F1)
   Wire.setClock(400000);  // 400KHz speed
 #else
   #error “This library only supports boards with an AVR or SAM processor.”

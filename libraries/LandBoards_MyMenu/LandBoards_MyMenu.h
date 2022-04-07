@@ -17,7 +17,7 @@
 #define LandBoards_MyMenu_h
 
 #include <inttypes.h>
-#include <Adafruit_MCP23008.h>
+#include <LandBoards_MCP23008.h>
 #include "Arduino.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ class LandBoards_MyMenu
 	void begin();
   private:
     void initPins(void);
-	Adafruit_MCP23008 mcp;
+	LandBoards_MCP23008 mcp;
 };
 
 #endif

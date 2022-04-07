@@ -3,16 +3,12 @@
 // Blink LED
 ////////////////////////////////////////////////////////////////////////
 // Hardware
-//  Arduino NANO Breakout board
-//    http://land-boards.com/blwiki/index.php?title=NANO-BKOUT
-//  or STM32 Blue Pill board
-//    http://land-boards.com/blwiki/index.php?title=STM32
+//  BLACK-PILL-HUB
 //  I2C Repeater
 //    http://land-boards.com/blwiki/index.php?title=I2C-RPT
 //  I2CIO-8 - I2C Expander with 4 LEDs/4 jumpers
 //    http://land-boards.com/blwiki/index.php?title=I2CIO-8
 ////////////////////////////////////////////////////////////////////////
-//  2019-03-03 - Tested with SMT32F103C Blue Pill
 //  2020-01-30 - Built for STM32F4XX board
 ////////////////////////////////////////////////////////////////////////
 

@@ -47,7 +47,7 @@ void LandBoards_Digio128_64::begin(void)
 	Wire.begin();			// Join I2C as a master (void = master)
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
-#elif defined(STM32F1)
+#elif defined(ARDUINO_BLUEPILL_F103C8)
 	Wire.setClock(400000);	// 400KHz speed
 #elif defined(STM32F4)
 	Wire.setClock(400000);	// 400KHz speed

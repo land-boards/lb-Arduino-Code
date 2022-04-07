@@ -3,10 +3,10 @@
 // Blink each line, one at a time
 
 #include <Wire.h>
-#include "Adafruit_MCP23017.h"
+#include "LandBoards_MCP23017.h"
 #include <LandBoards_I2CRPT01.h>
 
-Adafruit_MCP23017 mcp0;
+LandBoards_MCP23017 mcp0;
 
 LandBoards_I2CRPT01 mux;
 

@@ -106,7 +106,7 @@ namespace fabgl {
 static uint8_t    regs[48];
 static uint8_t    flags[10];
 static int32_t    regs_offset;
-static uint8_t    * regs8, i_mod_size, i_d, i_w, raw_opcode_id, xlat_opcode_id, extra, rep_mode, seg_override_en, rep_override_en, trap_flag;
+static uint8_t    * regs8, i_mod_size, i_d, i_w, raw_opcode_id, xlat_opcode_id, extra, rep_mode, seg_override_en, rep_override_en;
 static uint16_t   * regs16, reg_ip, seg_override;
 static uint32_t   op_source, op_dest, set_flags_type;
 static int32_t    op_to_addr, op_from_addr;
@@ -634,7 +634,7 @@ bool i8086::IRQ(uint8_t interrupt_num)
 #define MEM16(addr) (*(uint16_t*)(s_memory + (addr)))
 
 
-inline __attribute__((always_inline)) uint8_t i8086::RMEM8(int addr)
+uint8_t i8086::RMEM8(int addr)
 {
   if (addr >= VIDEOMEM_START && addr < VIDEOMEM_END) {
     return s_readVideoMemory8(s_context, addr);
@@ -644,7 +644,7 @@ inline __attribute__((always_inline)) uint8_t i8086::RMEM8(int addr)
 }
 
 
-inline __attribute__((always_inline)) uint16_t i8086::RMEM16(int addr)
+uint16_t i8086::RMEM16(int addr)
 {
   if (addr >= VIDEOMEM_START && addr < VIDEOMEM_END) {
     return s_readVideoMemory16(s_context, addr);
@@ -679,43 +679,19 @@ inline __attribute__((always_inline)) uint16_t i8086::WMEM16(int addr, uint16_t 
 
 
 
-
-// Helper functions
-
-// Set carry flag
-static int8_t set_CF(int new_CF)
-{
-  return FLAG_CF = !!new_CF;
-}
-
-
-// Set auxiliary flag
-static int8_t set_AF(int new_AF)
-{
-  return FLAG_AF = !!new_AF;
-}
-
-
-// Set overflow flag
-static int8_t set_OF(int new_OF)
-{
-  return FLAG_OF = !!new_OF;
-}
-
-
 // Set auxiliary and overflow flag after arithmetic operations
-int8_t set_AF_OF_arith(int32_t op_result, uint8_t i_w)
+void IRAM_ATTR set_AF_OF_arith(int32_t op_result)
 {
-  set_AF((op_source ^= op_dest ^ op_result) & 0x10);
+  FLAG_AF = (bool)((op_source ^= op_dest ^ op_result) & 0x10);
   if (op_result == op_dest)
-    return FLAG_OF = 0;
+    FLAG_OF = 0;
   else
-    return set_OF(1 & (FLAG_CF ^ op_source >> (8 * (i_w + 1) - 1)));
+    FLAG_OF = 1 & (FLAG_CF ^ op_source >> (8 * (i_w + 1) - 1));
 }
 
 
 // Assemble and return emulated CPU FLAGS register
-uint16_t i8086::make_flags()
+uint16_t IRAM_ATTR i8086::make_flags()
 {
   #if I80186MODE
   uint16_t r = 0x0002;    // to pass test186 tests, just unused bit nr. 1 is set to 1 (some programs checks this to know if this is a 80186 or 8086)
@@ -727,23 +703,23 @@ uint16_t i8086::make_flags()
 }
 
 
-void i8086::set_flags(int new_flags)
+void IRAM_ATTR i8086::set_flags(int new_flags)
 {
-  FLAG_CF = (new_flags >> 0) & 1;
-  FLAG_PF = (new_flags >> 2) & 1;
-  FLAG_AF = (new_flags >> 4) & 1;
-  FLAG_ZF = (new_flags >> 6) & 1;
-  FLAG_SF = (new_flags >> 7) & 1;
-  FLAG_TF = (new_flags >> 8) & 1;
-  FLAG_IF = (new_flags >> 9) & 1;
-  FLAG_DF = (new_flags >> 10) & 1;
-  FLAG_OF = (new_flags >> 11) & 1;
+  FLAG_CF = (bool)(new_flags & 0x001);
+  FLAG_PF = (bool)(new_flags & 0x004);
+  FLAG_AF = (bool)(new_flags & 0x010);
+  FLAG_ZF = (bool)(new_flags & 0x040);
+  FLAG_SF = (bool)(new_flags & 0x080);
+  FLAG_TF = (bool)(new_flags & 0x100);
+  FLAG_IF = (bool)(new_flags & 0x200);
+  FLAG_DF = (bool)(new_flags & 0x400);
+  FLAG_OF = (bool)(new_flags & 0x800);
 }
 
 
 // Convert raw opcode to translated opcode index. This condenses a large number of different encodings of similar
 // instructions into a much smaller number of distinct functions, which we then execute
-void i8086::set_opcode(uint8_t opcode)
+void IRAM_ATTR set_opcode(uint8_t opcode)
 {
   raw_opcode_id  = opcode;
   xlat_opcode_id = xlat_ids[opcode];
@@ -754,7 +730,7 @@ void i8086::set_opcode(uint8_t opcode)
 
 
 // Execute INT #interrupt_num on the emulated machine
-uint8_t i8086::pc_interrupt(uint8_t interrupt_num)
+void IRAM_ATTR i8086::pc_interrupt(uint8_t interrupt_num)
 {
   // fab: interrupt can exit from halt state
   if (s_halted) {
@@ -763,22 +739,20 @@ uint8_t i8086::pc_interrupt(uint8_t interrupt_num)
   }
 
   if (!s_interrupt(s_context, interrupt_num)) {
-    regs16[REG_SP] -= 2;
-    MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = make_flags();
+    uint16_t newIP     = MEM16(4 * interrupt_num);
+    uint16_t newCS     = MEM16(4 * interrupt_num + 2);
 
-    regs16[REG_SP] -= 2;
-    MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = regs16[REG_CS];
+    regs16[REG_SP] -= 6;
+    uint16_t * stack = &MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
+    stack[2] = make_flags();
+    stack[1] = regs16[REG_CS];
+    stack[0] = reg_ip;
 
-    regs16[REG_SP] -= 2;
-    MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = reg_ip;
-
-    regs16[REG_CS] = MEM16(4 * interrupt_num + 2);
-
-    reg_ip = MEM16(4 * interrupt_num);
+    reg_ip         = newIP;
+    regs16[REG_CS] = newCS;
 
     FLAG_TF = FLAG_IF = 0;
   }
-  return 0;
 }
 
 
@@ -795,15 +769,42 @@ uint8_t i8086::raiseDivideByZeroInterrupt()
       --reg_ip;
     }
   }
-  return pc_interrupt(0);
+  pc_interrupt(0);
+  return 0;
 }
 
 
 // AAA and AAS instructions - which_operation is +1 for AAA, and -1 for AAS
-int i8086::AAA_AAS(int8_t which_operation)
+static int32_t AAA_AAS()
 {
-  regs16[REG_AX] += 262 * which_operation * set_AF(set_CF(((regs8[REG_AL] & 0x0F) > 9) || FLAG_AF));
+  FLAG_AF = FLAG_CF = ((regs8[REG_AL] & 0x0F) > 9) || FLAG_AF;
+  regs16[REG_AX] += 262 * (extra - 1) * FLAG_AF;
   return regs8[REG_AL] &= 0x0F;
+}
+
+
+static int32_t DAA_DAS()
+{
+  // fab: fixed to pass test186
+  i_w = 0;
+  FLAG_AF = (regs8[REG_AL] & 0x0f) > 9 || FLAG_AF;
+  FLAG_CF = regs8[REG_AL] > 0x99 || FLAG_CF;
+  if (extra) {
+    // DAS
+    if (FLAG_CF)
+      regs8[REG_AL] -= 0x60;
+    else if (FLAG_AF)
+      FLAG_CF = (regs8[REG_AL] < 6);
+    if (FLAG_AF)
+      regs8[REG_AL] -= 6;
+  } else {
+    // DAA
+    if (FLAG_CF)
+      regs8[REG_AL] += 0x60;
+    if (FLAG_AF)
+      regs8[REG_AL] += 6;
+  }
+  return regs8[REG_AL];
 }
 
 
@@ -828,9 +829,61 @@ void i8086::reset()
 }
 
 
+// tries to make more compact opcode "switch"
+static uint8_t optcodes[] = {
+// 0    1   2   3   4   5   6   7   8   9   a   b   c   d   e   f
+   0,   0,  0,  0,  0,  0, 13, 12,  0,  0,  0,  0,  0,  0, 13,  0, // 00 - 0f
+   0,   0,  0,  0,  0,  0, 13, 12,  0,  0,  0,  0,  0,  0, 13, 12, // 10 - 1f
+   0,   0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  1,  0, // 20 - 2f
+   0,   0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  0,  1,  0, // 30 - 3f
+   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, // 40 - 4f
+   9,   9,  9,  9,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  8,  8, // 50 - 5f
+   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, // 60 - 6f
+   2,   2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2, // 70 - 7f
+   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 18,  0, // 80 - 8f
+   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, // 90 - 9f
+   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, // a0 - af
+   10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, // b0 - bf
+   0,   0,  0,  7,  0,  0,  0,  0,  0,  0,  0, 17,  0, 15,  0, 16, // c0 - cf
+   0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, // d0 - df
+   0,   0,  0,  5,  0,  0,  0,  0,  6,  0,  0,  3,  0,  0,  0,  0, // e0 - ef
+   0,   0, 14, 14,  0,  0,  0,  0,  4,  4,  4,  4,  4,  4,  0,  0, // f0 - ff
+};
+
+
 void IRAM_ATTR i8086::step()
 {
-  do {
+
+  // Interrupts handling
+  // Following instructions inhibits interrupts for the next instruction:
+  //    MOV SS, xxx     [opcode 0x8e]
+  //    POP SS          [opcode 0x17]
+  //    STI             [opcode 0xfb]
+  // They are hard coded inside below loop, repeating it using "break" instead of "return"
+
+  // Application has set trap flag, so fire INT 1
+  if (FLAG_TF && !seg_override_en && !rep_override_en) {
+    pc_interrupt(1);
+  }
+  // Check for interrupts triggered by system interfaces
+  else if (FLAG_IF && s_pendingIRQ && !seg_override_en && !rep_override_en) {
+    pc_interrupt(s_pendingIRQIndex);
+    s_pendingIRQ = false;
+  }
+
+  // Instructions handling
+
+  PSRAM_WORKAROUND2
+  
+  // external interrupts allowed only out of this loop
+  while (true) {
+
+    // seg_override_en and rep_override_en contain number of instructions to hold segment override and REP prefix respectively
+    if (seg_override_en)
+      --seg_override_en;
+    if (rep_override_en)
+      --rep_override_en;
+
     uint8_t const * opcode_stream = s_memory + 16 * regs16[REG_CS] + reg_ip;
 
     #if I8086_SHOW_OPCODE_STATS
@@ -839,7 +892,7 @@ void IRAM_ATTR i8086::step()
     static uint64_t opcodeStatsT0 = esp_timer_get_time();
     opcodeStats[*opcode_stream] += 1;
     ++opcodeStatsCount;
-    if ((opcodeStatsCount % 1000000) == 0) {
+    if ((opcodeStatsCount % 500000000) == 0) {
       opcodeStatsCount = 0;
       if (Serial.available()) {
         Serial.read();
@@ -855,28 +908,21 @@ void IRAM_ATTR i8086::step()
     }
     #endif
 
-    // seg_override_en and rep_override_en contain number of instructions to hold segment override and REP prefix respectively
-    if (seg_override_en)
-      seg_override_en--;
-    if (rep_override_en)
-      rep_override_en--;
-
-    // quick and dirty processing of the most common instructions (statistically measured)
-    switch (*opcode_stream) {
+    // quick and dirty processing of simple and common instructions
+    switch (optcodes[*opcode_stream]) {
 
       // SEG ES
       // SEG CS
       // SEG SS
       // SEG DS
-      case 0x26:
-      case 0x2e:
-      case 0x36:
-      case 0x3e:
+      // opcodes 0x26, 0x2e, 0x36, 0x3e
+      case 1:
         seg_override_en = 2;
         seg_override    = ex_data[*opcode_stream];
-        rep_override_en && rep_override_en++;
+        if (rep_override_en)
+          ++rep_override_en;
         ++reg_ip;
-        break;
+        return;
 
       // JO
       // JNO
@@ -894,113 +940,163 @@ void IRAM_ATTR i8086::step()
       // JGE/JNL
       // JLE/JNG
       // JG/JNLE
-      case 0x70 ... 0x7f:
+      // opcodes 0x70 ... 0x7f
+      case 2:
       {
-        int inv = *opcode_stream & 1; // inv is the invert flag, e.g. i_w == 1 means JNAE, whereas i_w == 0 means JAE
-        int idx = (*opcode_stream >> 1) & 7;
+        int32_t inv = *opcode_stream & 1; // inv is the invert flag, e.g. 1 means JNAE, whereas 0 means JAE
+        int32_t idx = (*opcode_stream >> 1) & 7;
         reg_ip += 2 + (int8_t)opcode_stream[1] * (inv ^ (flags[jxx_dec_a[idx]] || flags[jxx_dec_b[idx]] || flags[jxx_dec_c[idx]] ^ flags[jxx_dec_d[idx]]));
-        break;
+        return;
       }
 
       // JMP disp8
-      case 0xeb:
+      // opcode 0xeb
+      case 3:
         reg_ip += 2 + (int8_t)opcode_stream[1];
-        break;
+        return;
 
       // CLC|STC|CLI|STI|CLD|STD
-      case 0xf8 ... 0xfd:
+      // opcodes 0xf8 ... 0xfd
+      case 4:
       {
-        static const int FADDR[3] = { CF_ADDR, IF_ADDR, DF_ADDR };
+        static int16_t FADDR[3] = { CF_ADDR, IF_ADDR, DF_ADDR };
         flags[FADDR[(*opcode_stream >> 1) & 3]] = *opcode_stream & 1;
         ++reg_ip;
-        break;
+        break;  // reloop, this is required to inhibit interrupt until next instruction (actually should be just for STI...)
       }
 
       // JCXZ
-      case 0xe3:
+      // opcode 0xe3
+      case 5:
         reg_ip += 2 + !regs16[REG_CX] * (int8_t)opcode_stream[1];
-        break;
+        return;
 
       // CALL disp16
-      case 0xe8:
+      // opcode 0xe8
+      case 6:
+      {
+        uint16_t pIP = reg_ip + 3;
+        reg_ip = pIP + *(uint16_t*)(opcode_stream + 1);
         regs16[REG_SP] -= 2;
-        MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = reg_ip + 3;
-        #ifndef TESTING_CPU
-        ASM_MEMW
-        #endif
-        reg_ip += 3 + *(uint16_t*)(opcode_stream + 1);
-        break;
+        MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = pIP;
+        return;
+      }
 
       // RET (intrasegment)
-      case 0xc3:
+      // opcode 0xc3
+      case 7:
         reg_ip = MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
         regs16[REG_SP] += 2;
-        break;
+        return;
 
       // POP reg
-      case 0x58 ... 0x5f:
+      // opcodes 0x58 ... 0x5f
+      case 8:
         regs16[REG_SP] += 2;  // SP may be read from stack, so we have to increment here
         regs16[*opcode_stream & 7] = MEM16(16 * regs16[REG_SS] + (uint16_t)(regs16[REG_SP] - 2));
         ++reg_ip;
-        break;
+        return;
 
       // PUSH reg
-      case 0x50 ... 0x57:
+      // opcodes 0x50 ... 0x57
+      case 9:
         regs16[REG_SP] -= 2;
         MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = regs16[*opcode_stream & 7];
         ++reg_ip;
-        break;
+        return;
 
       // MOV reg8, data8
-      case 0xb0 ... 0xb7:
+      // opcodes 0xb0 ... 0xb7
+      case 10:
         regs8[((*opcode_stream >> 2) & 1) + (*opcode_stream & 3) * 2] = *(opcode_stream + 1);
         reg_ip += 2;
-        break;
+        return;
 
       // MOV reg16, data16
-      case 0xb8 ... 0xbf:
+      // opcodes 0xb8 ... 0xbf
+      case 11:
         regs16[*opcode_stream & 0x7] = *(uint16_t*)(opcode_stream + 1);
         reg_ip += 3;
-        break;
+        return;
 
       // POP ES
-      // POP CS (actually undefined on 8086)
       // POP SS
       // POP DS
-      case 0x07:
-      case 0x0f:
-      case 0x17:
-      case 0x1f:
+      // opcodes 0x07 0x17 0x1f
+      case 12:
         regs16[REG_ES + (*opcode_stream >> 3)] = MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
         regs16[REG_SP] += 2;
         ++reg_ip;
-        break;
+        break; // reloop, this is required to inhibit interrupt until next instruction (actually just for POP SS)
+
+      // PUSH ES
+      // PUSH CS (80186)
+      // PUSH SS
+      // PUSH DS
+      // opcodes 0x06 0x0e 0x16 0x1e
+      case 13:
+        regs16[REG_SP] -= 2;
+        MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = regs16[REG_ES + (*opcode_stream >> 3)];
+        ++reg_ip;
+        return;
+
+      // REP / REPE / REPNE / REPNZ / REPZ
+      // opcodes 0xf2 0xf3
+      case 14:
+        rep_override_en = 2;
+        rep_mode = *opcode_stream & 1;
+        if (seg_override_en)
+          ++seg_override_en;
+        ++reg_ip;
+        return;
+
+      // INT imm8
+      // opcode 0xcd
+      case 15:
+        reg_ip += 2;
+        pc_interrupt(opcode_stream[1]);
+        return;
+
+      // IRET
+      // opcode 0xcf
+      case 16:
+      {
+        uint16_t * stack = &MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
+        reg_ip         = stack[0];
+        regs16[REG_CS] = stack[1];
+        set_flags(stack[2]);
+        regs16[REG_SP] += 6;
+        return;
+      }
+
+      // RETF (intersegment RET)
+      // opcode 0xcb
+      case 17:
+      {
+        uint16_t * stack = &MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
+        reg_ip         = stack[0];
+        regs16[REG_CS] = stack[1];
+        regs16[REG_SP] += 4;
+        return;
+      }
+
+      // MOV SS, r/m
+      case 18:
+        stepEx(opcode_stream);
+        break;  // reloop, this is required to inhibit interrupt until next instruction
 
       default:
         stepEx(opcode_stream);
-        break;
+        return;
 
     }
-
-  } while (seg_override_en > 1 || rep_override_en > 1);
-
-  // Application has set trap flag, so fire INT 1
-  if (trap_flag) {
-    pc_interrupt(1);
-  }
-
-  trap_flag = FLAG_TF;
-
-  // Check for interrupts triggered by system interfaces
-  if (FLAG_IF && !FLAG_TF && s_pendingIRQ) {
-    pc_interrupt(s_pendingIRQIndex);
-    s_pendingIRQ = false;
-  }
+    
+  };
 
 }
 
 
-void i8086::stepEx(uint8_t const * opcode_stream)
+void IRAM_ATTR i8086::stepEx(uint8_t const * opcode_stream)
 {
   set_opcode(*opcode_stream);
 
@@ -1010,9 +1106,9 @@ void i8086::stepEx(uint8_t const * opcode_stream)
   i_d = i_reg4bit / 2 & 1;
 
   // Extract instruction data fields
-  uint16_t i_data0 = * (int16_t *) & opcode_stream[1];
-  uint16_t i_data1 = * (int16_t *) & opcode_stream[2];
-  uint16_t i_data2 = * (int16_t *) & opcode_stream[3];
+  uint16_t i_data0 = opcode_stream[1] | (opcode_stream[2] << 8);
+  uint16_t i_data1 = (i_data0 >> 8) | (opcode_stream[3] << 8);
+  uint16_t i_data2 = (i_data1 >> 8) | (opcode_stream[4] << 8);
 
   uint8_t i_mod = 0, i_rm = 0, i_reg = 0;
   int32_t op_result = 0;
@@ -1027,7 +1123,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
     i_reg = i_data0 / 8 & 7;
 
     if ((!i_mod && i_rm == 6) || (i_mod == 2))
-      i_data2 = * (int16_t *) & opcode_stream[4];
+      i_data2 = (i_data2 >> 8) | (opcode_stream[5] << 8);
     else if (i_mod != 1)
       i_data2 = i_data1;
     else // If i_mod is 1, operand is (usually) 8 bits rather than 16 bits
@@ -1066,13 +1162,16 @@ void i8086::stepEx(uint8_t const * opcode_stream)
           op_result = WMEM8(op_from_addr, (uint16_t)op_dest + 1 - 2 * i_reg);
         }
         op_source = 1;
-        set_AF_OF_arith(op_result, i_w);
-        set_OF(op_dest + 1 - i_reg == 1 << (8 * (i_w + 1) - 1));
-        if (xlat_opcode_id == 5)
-          set_opcode(0x10); // Decode like ADC
+        set_AF_OF_arith(op_result);
+        FLAG_OF = (bool)(op_dest + 1 - i_reg == 1 << (8 * (i_w + 1) - 1));
+        if (xlat_opcode_id == 5) {
+          // Decode like ADC (0x10)
+          xlat_opcode_id = 0x10;
+          set_flags_type = 1;
+        }
       } else if (i_reg != 6) {
         // JMP|CALL
-        uint16_t jumpTo = i_w ? MEM16(op_from_addr) : MEM8(op_from_addr); // to avoid ASM_MEMW
+        uint16_t jumpTo = i_w ? MEM16(op_from_addr) : MEM8(op_from_addr);
         if (i_reg - 3 == 0) {
           // CALL (far)
           i_w = 1;
@@ -1087,6 +1186,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
         }
         if (i_reg & 1) {
           // JMP|CALL (far)
+          PSRAM_WORKAROUND2
           regs16[REG_CS] = MEM16(op_from_addr + 2);
         }
         reg_ip = jumpTo;
@@ -1095,7 +1195,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
         // PUSH
         i_w = 1;
         regs16[REG_SP] -= 2;
-        MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = MEM16(rm_addr);
+        MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = RMEM16(rm_addr);
       }
       break;
     case 6: // TEST r/m, imm16 / NOT|NEG|MUL|IMUL|DIV|IDIV reg
@@ -1103,7 +1203,10 @@ void i8086::stepEx(uint8_t const * opcode_stream)
 
       switch (i_reg) {
         case 0: // TEST
-          set_opcode(0x20); // Decode like AND
+          // Decode like AND (0x20)
+          raw_opcode_id = 0x20;
+          set_flags_type = 5;
+
           reg_ip += i_w + 1;
           if (i_w) {
             op_dest = RMEM16(op_to_addr);
@@ -1127,35 +1230,37 @@ void i8086::stepEx(uint8_t const * opcode_stream)
           else
             op_result = WMEM8(op_to_addr, -(op_source = RMEM8(op_from_addr)));
           op_dest = 0;
-          set_opcode(0x28); // Decode like SUB
+
+          // Decode like SUB (0x28)
+          raw_opcode_id  = 0x28;
+          set_flags_type = 3;
+
           FLAG_CF = op_result > op_dest;
           break;
         case 4: // MUL
+          raw_opcode_id  = 0x10;
+          set_flags_type = 1;
           if (i_w) {
-            set_opcode(0x10);
             regs16[REG_DX] = (op_result = RMEM16(rm_addr) * regs16[REG_AX]) >> 16;
             regs16[REG_AX] = op_result;
-            set_OF(set_CF(op_result - (uint16_t)op_result));
+            FLAG_OF = FLAG_CF = (bool)(op_result - (uint16_t)op_result);
           } else {
-            set_opcode(0x10);
             regs16[REG_AX] = op_result = RMEM8(rm_addr) * regs8[REG_AL];
-            set_OF(set_CF(op_result - (uint8_t) op_result));
+            FLAG_OF = FLAG_CF = (bool)(op_result - (uint8_t) op_result);
           }
           break;
         case 5: // IMUL
-        {
+          raw_opcode_id  = 0x10;
+          set_flags_type = 1;
           if (i_w) {
-            set_opcode(0x10);
             regs16[REG_DX] = (op_result = (int16_t)RMEM16(rm_addr) * (int16_t)regs16[REG_AX]) >> 16;
             regs16[REG_AX] = op_result;
-            set_OF(set_CF(op_result - (int16_t)op_result));
+            FLAG_OF = FLAG_CF = (bool)(op_result - (int16_t)op_result);
           } else {
-            set_opcode(0x10);
             regs16[REG_AX] = op_result = (int8_t)RMEM8(rm_addr) * (int8_t)regs8[REG_AL];
-            set_OF(set_CF(op_result - (int8_t) op_result));
+            FLAG_OF = FLAG_CF = (bool)(op_result - (int8_t) op_result);
           }
           break;
-        }
         case 6: // DIV
         {
           int32_t scratch_int;
@@ -1221,7 +1326,6 @@ void i8086::stepEx(uint8_t const * opcode_stream)
     case 9: // ADD|OR|ADC|SBB|AND|SUB|XOR|CMP|MOV reg, r/m
       switch (extra) {
         case 0: // ADD
-        {
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
             op_source = RMEM16(op_from_addr);
@@ -1235,9 +1339,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
           }
           FLAG_CF = op_result < op_dest;
           break;
-        }
         case 1: // OR
-        {
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
             op_source = RMEM16(op_from_addr);
@@ -1250,7 +1352,6 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             WMEM8(op_to_addr, op_result);
           }
           break;
-        }
         case 2: // ADC
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
@@ -1261,8 +1362,8 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             op_source = RMEM8(op_from_addr);
             op_result = WMEM8(op_to_addr, op_dest + FLAG_CF + op_source);
           }
-          set_CF((FLAG_CF && (op_result == op_dest)) || (+op_result < +(int) op_dest));
-          set_AF_OF_arith(op_result, i_w);
+          FLAG_CF = (FLAG_CF && (op_result == op_dest)) || (op_result < (int) op_dest);
+          set_AF_OF_arith(op_result);
           break;
         case 3: // SBB
           if (i_w) {
@@ -1274,11 +1375,10 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             op_source = RMEM8(op_from_addr);
             op_result = WMEM8(op_to_addr, op_dest - (FLAG_CF + op_source));
           }
-          set_CF((FLAG_CF && (op_result == op_dest)) || (-op_result < -(int) op_dest));
-          set_AF_OF_arith(op_result, i_w);
+          FLAG_CF = (FLAG_CF && (op_result == op_dest)) || (-op_result < -(int) op_dest);
+          set_AF_OF_arith(op_result);
           break;
         case 4: // AND
-        {
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
             op_source = RMEM16(op_from_addr);
@@ -1291,7 +1391,6 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             WMEM8(op_to_addr, op_result);
           }
           break;
-        }
         case 5: // SUB
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
@@ -1305,7 +1404,6 @@ void i8086::stepEx(uint8_t const * opcode_stream)
           FLAG_CF = op_result > op_dest;
           break;
         case 6: // XOR
-        {
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
             op_source = RMEM16(op_from_addr);
@@ -1318,7 +1416,6 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             WMEM8(op_to_addr, op_result);
           }
           break;
-        }
         case 7: // CMP
           if (i_w) {
             op_dest   = RMEM16(op_to_addr);
@@ -1362,7 +1459,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
       } else {  // i_w == 1 && i_d == 1
         // POP
         regs16[REG_SP] += 2;
-        WMEM16(rm_addr, RMEM16(16 * regs16[REG_SS] + (uint16_t)(-2 + regs16[REG_SP])));
+        WMEM16(rm_addr, MEM16(16 * regs16[REG_SS] + (uint16_t)(-2 + regs16[REG_SP])));
       }
       break;
     case 11: // MOV AL/AX, [loc]
@@ -1418,7 +1515,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
         if (i_reg > 3) // Shift operations
           set_flags_type = 1; // Shift instructions affect SZP
         if (i_reg > 4) // SHR or SAR
-          set_CF(op_dest >> (scratch_uint - 1) & 1);
+          FLAG_CF = op_dest >> (scratch_uint - 1) & 1;
       }
 
       switch (i_reg) {
@@ -1431,7 +1528,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             op_result = WMEM8(rm_addr, (uint8_t)op_dest + (op_source = (uint8_t)scratch2_uint >> (8 - scratch_uint)));
           }
           if (scratch_uint) // fab: zero shift/rotation doesn't change CF or OF ("rotate.asm" and "shift.asm" tests)
-            set_OF((1 & op_result >> (8 * (i_w + 1) - 1)) ^ set_CF(op_result & 1));
+            FLAG_OF = (1 & op_result >> (8 * (i_w + 1) - 1)) ^ (FLAG_CF = op_result & 1);
           break;
         case 1: // ROR
           scratch2_uint &= (1 << scratch_uint) - 1;
@@ -1443,7 +1540,8 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             op_result = WMEM8(rm_addr, (uint8_t)op_dest + (op_source = (uint8_t)scratch2_uint << (8 - scratch_uint)));
           }
           if (scratch_uint) // fab: zero shift/rotation doesn't change CF or OF ("rotate.asm" and "shift.asm" tests)
-            set_OF((1 & (i_w ? (int16_t)op_result * 2 : op_result * 2) >> (8 * (i_w + 1) - 1)) ^ set_CF((1 & (i_w ? (int16_t)op_result : op_result) >> (8 * (i_w + 1) - 1))));
+            FLAG_OF = (1 & (i_w ? (int16_t)op_result * 2 : op_result * 2) >> (8 * (i_w + 1) - 1)) ^ (FLAG_CF = 1 & (i_w ? (int16_t)op_result : op_result) >> (8 * (i_w + 1) - 1));
+            ;
           break;
         case 2: // RCL
           if (i_w) {
@@ -1454,7 +1552,7 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             op_result = WMEM8(rm_addr, (uint8_t)op_dest + (FLAG_CF << (scratch_uint - 1)) + (op_source = (uint8_t)scratch2_uint >> (9 - scratch_uint)));
           }
           if (scratch_uint) // fab: zero shift/rotation doesn't change CF or OF ("rotate.asm" and "shift.asm" tests)
-            set_OF((1 & op_result >> (8 * (i_w + 1) - 1)) ^ set_CF(scratch2_uint & 1 << (8 * (i_w + 1) - scratch_uint)));
+            FLAG_OF = (1 & op_result >> (8 * (i_w + 1) - 1)) ^ (FLAG_CF = (bool)(scratch2_uint & 1 << (8 * (i_w + 1) - scratch_uint)));
           break;
         case 3: // RCR
           if (i_w) {
@@ -1465,20 +1563,20 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             op_result = WMEM8(rm_addr, (uint8_t)op_dest + (FLAG_CF << (8 - scratch_uint)) + (op_source = (uint8_t)scratch2_uint << (9 - scratch_uint)));
           }
           if (scratch_uint) { // fab: zero shift/rotation doesn't change CF or OF ("rotate.asm" and "shift.asm" tests)
-            set_CF(scratch2_uint & 1 << (scratch_uint - 1));
-            set_OF((1 & op_result >> (8 * (i_w + 1) - 1)) ^ (1 & (i_w ? (int16_t)op_result * 2 : op_result * 2) >> (8 * (i_w + 1) - 1)));
+            FLAG_CF = (bool)(scratch2_uint & 1 << (scratch_uint - 1));
+            FLAG_OF = (1 & op_result >> (8 * (i_w + 1) - 1)) ^ (1 & (i_w ? (int16_t)op_result * 2 : op_result * 2) >> (8 * (i_w + 1) - 1));
           }
           break;
         case 4: // SHL
           if (scratch_uint) // fab: zero shift/rotation doesn't change CF or OF ("rotate.asm" and "shift.asm" tests)
-            set_OF((1 & op_result >> (8 * (i_w + 1) - 1)) ^ set_CF((1 & (op_dest << (scratch_uint - 1)) >> (8 * (i_w + 1) - 1))));
+            FLAG_OF = (1 & op_result >> (8 * (i_w + 1) - 1)) ^ (FLAG_CF = (1 & (op_dest << (scratch_uint - 1)) >> (8 * (i_w + 1) - 1)));
           break;
         case 5: // SHR
           if (scratch_uint) // fab: zero shift/rotation doesn't change CF or OF ("rotate.asm" and "shift.asm" tests)
-            set_OF((1 & op_dest >> (8 * (i_w + 1) - 1)));
+            FLAG_OF = 1 & op_dest >> (8 * (i_w + 1) - 1);
           break;
         case 7: // SAR
-          scratch_uint < 8 * (i_w + 1) || set_CF(scratch2_uint);
+          scratch_uint < 8 * (i_w + 1) || (FLAG_CF = (bool)scratch2_uint);
           FLAG_OF = 0;
           if (i_w) {
             op_dest      = RMEM16(rm_addr);
@@ -1493,21 +1591,11 @@ void i8086::stepEx(uint8_t const * opcode_stream)
       };
       break;
     }
-    case 13: // LOOPxx / JCXZ
-    {
-      int32_t scratch_uint = !!--regs16[REG_CX];
-      switch (i_reg4bit) {
-        case 0: // LOOPNZ
-          scratch_uint &= !FLAG_ZF;
-          break;
-        case 1: // LOOPZ
-          scratch_uint &= FLAG_ZF;
-          break;
-        // case 2 is LOOP
-      }
-      reg_ip += scratch_uint * (int8_t) i_data0;
+    case 13: // LOOPxx
+      // i_reg4bit: 0=LOOPNZ, 1=LOOPZ, 2=LOOP
+      if (--regs16[REG_CX])
+        reg_ip += ((FLAG_ZF ^ !i_reg4bit) | (bool)(i_reg4bit & 2)) * (int8_t) i_data0;
       break;
-    }
     case 14: // JMP | CALL int16_t/near
       reg_ip += 3 - i_d;
       if (!i_w) {
@@ -1559,20 +1647,23 @@ void i8086::stepEx(uint8_t const * opcode_stream)
         const int dec = (2 * FLAG_DF - 1) * 2;
         for (int32_t i = rep_override_en ? regs16[REG_CX] : 1; i; --i) {
           uint16_t src = extra & 1 ? regs16[REG_AX] : RMEM16(16 * regs16[seg] + regs16[REG_SI]);
-          if (extra < 2)
+          if (extra < 2) {
             WMEM16(16 * regs16[REG_ES] + regs16[REG_DI], src);
-          else
+            PSRAM_WORKAROUND2;
+          } else
             regs16[REG_AX] = src;
           extra & 1 || (regs16[REG_SI] -= dec);
           extra & 2 || (regs16[REG_DI] -= dec);
+
         }
       } else {
         const int dec = (2 * FLAG_DF - 1);
         for (int32_t i = rep_override_en ? regs16[REG_CX] : 1; i; --i) {
           uint8_t src = extra & 1 ? regs8[REG_AL] : RMEM8(16 * regs16[seg] + regs16[REG_SI]);
-          if (extra < 2)
+          if (extra < 2) {
             WMEM8(16 * regs16[REG_ES] + regs16[REG_DI], src);
-          else
+            PSRAM_WORKAROUND2;
+          } else
             regs8[REG_AL] = src;
           extra & 1 || (regs16[REG_SI] -= dec);
           extra & 2 || (regs16[REG_DI] -= dec);
@@ -1616,28 +1707,22 @@ void i8086::stepEx(uint8_t const * opcode_stream)
             rep_override_en && !(--regs16[REG_CX] && ((!op_result) == rep_mode)) && (count = 0);
           }
         }
-        set_flags_type = 1 | 2; // Funge to set SZP/AO flags
+        set_flags_type = 3; // set SZP/AO flags
         FLAG_CF = op_result > op_dest;
       };
       ++reg_ip;
       calcIP = false;
       break;
     }
-    case 19: // RET|RETF|IRET
-      i_d = i_w;
+    case 19: // RET / RETF imm16
       reg_ip = MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
       regs16[REG_SP] += 2;
       if (extra) {
-        // IRET|RETF|RETF imm16
+        // RETF
         regs16[REG_CS] = MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
         regs16[REG_SP] += 2;
       }
-      if (extra & 2) {
-        // IRET
-        set_flags(MEM16(16 * regs16[REG_SS] + regs16[REG_SP]));
-        regs16[REG_SP] += 2;
-      } else if (!i_d) // RET|RETF imm16
-        regs16[REG_SP] += i_data0;
+      regs16[REG_SP] += i_data0;
       return; // no calc ip, no flags
     case 20: // MOV r/m, immed
       if (i_w) {
@@ -1662,41 +1747,11 @@ void i8086::stepEx(uint8_t const * opcode_stream)
         s_writePort(s_context, port + 1, regs8[REG_AH]);
       break;
     }
-    case 23: // REPxx
-      rep_override_en = 2;
-      rep_mode = i_w;
-      seg_override_en && seg_override_en++;
-      ++reg_ip;
-      return; // no calc ip, no flags
-    case 25: // PUSH segreg
-      regs16[REG_SP] -= 2;
-      MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = regs16[extra];
-      ++reg_ip;
-      return; // no calc ip, no flags
     case 28: // DAA/DAS
-      // fab: fixed to pass test186
-      i_w = 0;
-      FLAG_AF = (regs8[REG_AL] & 0x0f) > 9 || FLAG_AF;
-      FLAG_CF = regs8[REG_AL] > 0x99 || FLAG_CF;
-      if (extra) {
-        // DAS
-        if (FLAG_CF)
-          regs8[REG_AL] -= 0x60;
-        else if (FLAG_AF)
-          FLAG_CF = (regs8[REG_AL] < 6);
-        if (FLAG_AF)
-          regs8[REG_AL] -= 6;
-      } else {
-        // DAA
-        if (FLAG_CF)
-          regs8[REG_AL] += 0x60;
-        if (FLAG_AF)
-          regs8[REG_AL] += 6;
-      }
-      op_result = regs8[REG_AL];
+      op_result = DAA_DAS();
       break;
     case 29: // AAA/AAS
-      op_result = AAA_AAS(extra - 1);
+      op_result = AAA_AAS();
       break;
     case 30: // CBW
       regs8[REG_AH] = -(1 & (i_w ? * (int16_t *) & regs8[REG_AL] : regs8[REG_AL]) >> (8 * (i_w + 1) - 1));
@@ -1705,13 +1760,15 @@ void i8086::stepEx(uint8_t const * opcode_stream)
       regs16[REG_DX] = -(1 & (i_w ? * (int16_t *) & regs16[REG_AX] : regs16[REG_AX]) >> (8 * (i_w + 1) - 1));
       break;
     case 32: // CALL FAR imm16:imm16
-      regs16[REG_SP] -= 2;
-      MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = regs16[REG_CS];
-      regs16[REG_SP] -= 2;
-      MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = reg_ip + 5;
-      regs16[REG_CS] = i_data2;
-      reg_ip = i_data0;
+    {
+      regs16[REG_SP] -= 4;
+      uint16_t * stack = &MEM16(16 * regs16[REG_SS] + regs16[REG_SP]);
+      stack[1] = regs16[REG_CS];
+      stack[0] = reg_ip + 5;
+      regs16[REG_CS]  = i_data2;
+      reg_ip          = i_data0;
       return; // no calc ip, no flags
+    }
     case 33: // PUSHF
       regs16[REG_SP] -= 2;
       MEM16(16 * regs16[REG_SS] + regs16[REG_SP]) = make_flags();
@@ -1737,13 +1794,10 @@ void i8086::stepEx(uint8_t const * opcode_stream)
       ++reg_ip;
       pc_interrupt(3);
       return; // no calc ip, no flags
-    case 39: // INT imm8
-      reg_ip += 2;
-      pc_interrupt(i_data0);
-      return; // no calc ip, no flags
     case 40: // INTO
       ++reg_ip;
-      FLAG_OF && pc_interrupt(4);
+      if (FLAG_OF)
+        pc_interrupt(4);
       return; // no calc ip, no flags
     case 41: // AAM;
       if (i_data0 &= 0xFF) {
@@ -1778,7 +1832,6 @@ void i8086::stepEx(uint8_t const * opcode_stream)
       }
       break;
     case 48: // LOCK:
-      ;
       break;
     case 49: // HLT
       //printf("CPU HALT, IP = %04X:%04X, AX = %04X, BX = %04X, CX = %04X, DX = %04X\n", regs16[REG_CS], reg_ip, regs16[REG_AX], regs16[REG_BX], regs16[REG_CX], regs16[REG_DX]);
@@ -1905,11 +1958,9 @@ void i8086::stepEx(uint8_t const * opcode_stream)
 
     // If instruction is an arithmetic or logic operation, also set AF/OF/CF as appropriate.
     if (set_flags_type & 2)
-      set_AF_OF_arith(op_result, i_w);
-    if (set_flags_type & 4) {
-      FLAG_CF = 0;
-      FLAG_OF = 0;
-    }
+      set_AF_OF_arith(op_result);
+    else if (set_flags_type & 4)
+      FLAG_CF = FLAG_OF = 0;
   }
 
 }

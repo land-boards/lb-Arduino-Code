@@ -1,0 +1,50 @@
+== land-boards DigIO-128 Card Files ==
+
+<img src="http://land-boards.com/blwiki/images/2/26/DIGIO-128-X3-CCA_5847-640px.jpg" alt="DIGIO-128 Card photo"></img>
+* [https://github.com/douggilliland/lb-Arduino-Code/tree/master/libraries/LandBoards_Digio128 Library for the DIGIO-128 card]
+* These are the [http://land-boards.com/blwiki/index.php?title=DIGIO-128 DigIO-128 card related] files.
+
+=== Files ===
+
+==== D128FAT ====
+
+* Original Factory Acceptance Test for the DigIO-128 card
+** Replaced by [https://github.com/douggilliland/lb-Arduino-Code/tree/master/LBCards/ODAS ODAS Test Station Software]
+* Uses an Arduino UNO with a Host USB connection
+* Requires 8 loopback cables (10 pin 1:1 jumper cables)
+* Performs loopback testing from one chip to the next (0-1, 2-3, 4-5, 6-7 chips)
+* Also, attempts to program the EEPROM and presents the result if successful
+* Runs with Host Serial Connection
+* Loops on running the loopback test forever - good for endurance testing
+
+==== D128LEDS ====
+
+* Move the light around 128 LEDs
+* Uses a [http://land-boards.com/blwiki/index.php?title=GVSDuino GVSDuino card]
+
+==== D128Loopback ====
+
+* The FAT code isolated for the 128-bit loopback
+* Loops on running the loopback test forever - good for endurance testing
+
+==== D128Utils ====
+
+* D128eep - EEPROM test portion isolated
+** Programs the EEPROM in the DigIO-128 Card
+** Uses an Arduino UNO with a Host USB connection
+** Standalone version of the eeprom code contained in the D128FAT
+** Write, read and check functions
+* D128Loop - Loopback test portion isolated
+* D128mcp - MCP23017 expansion from single chip to 8 chips
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by me based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not me.

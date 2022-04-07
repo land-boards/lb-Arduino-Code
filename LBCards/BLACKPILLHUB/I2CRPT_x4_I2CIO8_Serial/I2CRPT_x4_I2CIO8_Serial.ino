@@ -2,8 +2,7 @@
 // I2CRPT_x4_I2CIO8_Serial Example code
 // I2C-RPI-01 as UUT
 // http://land-boards.com/blwiki/index.php?title=I2C-RPT#Factory_Test_Procedure
-// Uses GVSDuino (Arduino UNO compatible)
-// http://land-boards.com/blwiki/index.php?title=GVSDuino
+// BLACK-PILL-HUB
 // 4x I2CIO-8 cards - I2C addressable card with 4 LEDs and 4 jumpers
 // http://land-boards.com/blwiki/index.php?title=I2CIO-8
 // Blink 4 LEDs on each I2CIO-8 card, one at a time

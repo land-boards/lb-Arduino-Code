@@ -1,6 +1,8 @@
 /*
   SPI_POTX2 - Example code
   Generate triangles on both outputs - one at a time
+  https://dan.drown.org/stm32duino/package_STM32duino_index.json
+
 */
 
 #include <LandBoards_MCP423X.h>

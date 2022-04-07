@@ -6,8 +6,7 @@
 // Hardware used
 // I2CIO-8 card
 //  http://land-boards.com/blwiki/index.php?title=I2CIO-8
-// GVSDuino (Arduino Uno Compatible)
-//  http://land-boards.com/blwiki/index.php?title=GVSDuino
+// BLACK-PILL-HUB
 // Cables
 //  4-pin to 2x3 pin connects I2CIO-8 (SDA,SCL,GND,VCC) to GVSDuino (A4,A5,GND,VCC) (female)
 //  1 pin female I2CIO-8 INT to GVSDuino D9
@@ -41,7 +40,9 @@ void setup()
   Wire.begin();
 #if defined(ARDUINO_ARCH_AVR)
   TWBR = 12;          // go to 400 KHz I2C speed mode
-#elif defined(ARDUINO_ARCH_STM32)
+#elif defined(ARDUINO_ARCH_STM32F1)
+  Wire.setClock(400000);  // 400KHz speed
+#elif defined(ARDUINO_ARCH_STM32F4)
   Wire.setClock(400000);  // 400KHz speed
 #else
   #error “This library only supports boards with an AVR or STM processor.”

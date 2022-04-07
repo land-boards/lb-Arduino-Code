@@ -21,11 +21,7 @@ Adafruit_MCP23008 mcp;
 void setup()
 {
   mcp.begin();      // use default address 0
-#if defined(ARDUINO_ARCH_AVR)
-  TWBR = 12;          // go to 400 KHz I2C speed mode
-#elif defined(ARDUINO_ARCH_STM32)
   Wire.setClock(400000);  // 400KHz speed
-#endif
   for (int loopCnt = 0; loopCnt < 4; loopCnt++)
     mcp.pinMode(loopCnt, OUTPUT);
   for (int loopCnt = 4; loopCnt < 8; loopCnt++)

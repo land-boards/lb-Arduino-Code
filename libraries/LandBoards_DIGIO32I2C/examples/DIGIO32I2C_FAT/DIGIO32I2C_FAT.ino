@@ -6,13 +6,13 @@
 // Use Serial Port for menu/test results
 //////////////////////////////////////////////////////////
 
-#include "LandBoards_DIGIO32_I2C.h"
+#include "LandBoards_DIGIO32I2C.h"
 
 uint32_t failCount;       // Globals used in the below code
 uint32_t passCount;
 int looping;
 
-Digio32 Dio32;
+LandBoards_DIGIO32I2C Dio32;
 
 //////////////////////////////////////////////////////////
 // setup()

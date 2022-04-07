@@ -1,0 +1,35 @@
+<a href="https://www.tindie.com/products/6256/" ><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
+
+<img src="http://land-boards.com/blwiki/images/1/16/I2C-TEMP-640px.jpg" alt="I2C-TEMP Card Image"></img>
+
+== Features ==
+
+* TCN75A Temperature sensor
+* I2C Base address = 0x48
+** Jumper selectable I2C offset address (0x48-0x4f)
+* Jumper selectable termination resistors
+* Up to 400 KHz operation
+* Interrupt output
+* Arduino library with example code
+* 2.7V to 5.5V
+* Daisy-chain connector
+* 49x49mm form factor
+* (4) #4-40 mounting holes
+
+=== Documentation ===
+
+*[http://land-boards.com/wiki/index.php?title=I2C-TEMP Wiki page for the I2C-TEMP].
+
+== I2C-TEMP Software ==
+
+=== Ownership ===
+
+* Some of these files (particularly libraries) were created by others.
+** There may be newer versions of these libraries "out there".
+** Some libraries even have the same names but don't work the same.
+* Many of these files were created by us based on the work of others.
+
+=== Warning ===
+
+* Use at your own risk.
+** If you brick your part or it melt to a puddle, it's on you not us.

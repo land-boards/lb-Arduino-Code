@@ -33,9 +33,9 @@ void LandBoards_MyMenu::begin(int portNum)
 	mcp.begin(portNum);   	// use default address 0	
 #if defined(ARDUINO_ARCH_AVR)
 	TWBR = 12;    			// go to 400 KHz I2C speed mode
-#elif defined(STM32F1)
+#elif defined(ARDUINO_ARCH_STM32F1)
 	Wire.setClock(400000);	// 400KHz speed
-#elif defined(STM32F4)
+#elif defined(ARDUINO_ARCH_STM32F4)
 	Wire.setClock(400000);	// 400KHz speed
 #else
   #error “This library only supports boards with an AVR or STM processor.”

@@ -51,10 +51,10 @@ void LandBoards_MCP423X::begin(void)
 {
 #if defined(ARDUINO_ARCH_AVR)
 	slaveSelectPin = 10;
-#elif defined(STM32F4)
-	slaveSelectPin = PA4;
-#elif defined(STM32F1)
+#elif defined(ARDUINO_ARCH_STM32F1)
 	slaveSelectPin = PA15;
+#elif defined(ARDUINO_ARCH_STM32F4)
+	slaveSelectPin = PA4;
 #else
   #error "This library only supports boards with an AVR or STM32F1, STM32F4 processor."
 #endif

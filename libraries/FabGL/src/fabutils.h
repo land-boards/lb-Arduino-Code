@@ -1,6 +1,6 @@
 /*
   Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-  Copyright (c) 2019-2021 Fabrizio Di Vittorio.
+  Copyright (c) 2019-2022 Fabrizio Di Vittorio.
   All rights reserved.
 
 
@@ -88,10 +88,18 @@ namespace fabgl {
 // Place between a write and a read PSRAM operation (write->ASM_MEMW->read), not viceversa
 #define ASM_MEMW asm(" MEMW");
 
+#define ASM_NOP asm(" NOP");
+
+#define PSRAM_WORKAROUND1 asm(" nop;nop;nop;nop");
+#define PSRAM_WORKAROUND2 asm(" memw");
+
 
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#define TORAD(a) ((a) * M_PI / 180.)
 
 
 // Integer square root by Halleck's method, with Legalize's speedup
@@ -178,6 +186,16 @@ inline uint32_t changeEndiannesDWord(uint32_t value)
 {
   return ((value & 0xff) << 24) | ((value & 0xff00) << 8) | ((value & 0xff0000) >> 8) | ((value & 0xff000000) >> 24);
 }
+
+
+struct APLLParams {
+  uint8_t sdm0;
+  uint8_t sdm1;
+  uint8_t sdm2;
+  uint8_t o_div;
+};
+
+void APLLCalcParams(double freq, APLLParams * params, uint8_t * a, uint8_t * b, double * out_freq, double * error);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////

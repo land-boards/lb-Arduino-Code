@@ -101,21 +101,21 @@ static size_t mui_fds_get_cmd_size_without_text(fds_t *s)
   c &= 0xdf; /* consider upper and lower case */
   switch(c)
   {
-    case 'U': return 2;
-    case 'S': return 2;
-    case 'F': return 5;         // CMD, ID (2 Bytes), X, Y
-    case 'B': return 5;         // CMD, ID (2 Bytes), X, Y, Text (does not count here)
-    case 'T': return 6;         // CMD, ID (2 Bytes), X, Y, Arg, Text (does not count here)
-    case 'A': return 6;         // CMD, ID (2 Bytes), X, Y, Arg, Text
-    case 'L': return 3;
-    //case 'M': return 4;
-    //case 'X': return 3;
-    //case 'J': return 4;
-    case 'G': return 4;  
+    case 'U': return 2;         // User Form: CMD  (1 Byte), Form-Id (1 Byte)
+    case 'S': return 2;         // Style: CMD (1 Byte), Style Id (1 Byte)
+    case 'D': return 3;         // Data within Text: CMD (1 Byte), ID (2 Bytes), Text (does not count here)
+    case 'Z': return 3;         // Zero field without x, y, arg & text: CMD (1 Byte), ID (2 Bytes)
+    case 'F': return 5;         // Field without arg & text: CMD (1 Byte), ID (2 Bytes), X, Y
+    case 'B': return 5;         // Field with text: CMD (1 Byte), ID (2 Bytes), X, Y, Text (does not count here)
+    case 'T': return 6;         // Field with arg & text: CMD (1 Byte), ID (2 Bytes), X, Y, Arg, Text (does not count here)
+    case 'A': return 6;         // Field with arg (no text): CMD (1 Byte), ID (2 Bytes), X, Y, Arg, Text
+    case 'L': return 3;          // Text Label: CMD (1 Byte), X, Y (same as 'B' but with fixed ID '.L', MUIF_LABEL, MUI_LABEL)
+    case 'G': return 4;         // Goto Btutton: CMD (1Byte), X, Y, Arg, Text  (same as 'T' but with fixed ID '.G', MUIF_GOTO, MUI_GOTO)
     case 0: return 0;
   }
   return 1;
 }
+
 
 
 /*
@@ -188,7 +188,9 @@ uint8_t mui_fds_first_token(mui_t *ui)
   return mui_fds_next_token(ui);
 }
 
-
+/*
+  The inner token delimiter "|" is fixed. It must be the pipe symbol.
+*/
 uint8_t mui_fds_next_token(mui_t *ui)
 {
   uint8_t c;
@@ -224,7 +226,7 @@ uint8_t mui_fds_next_token(mui_t *ui)
 }
 
 /*
-  find nth token, return 0 if n exceeds the number of tokens, 1 otherwise
+  find nth token ('|' delimiter), return 0 if n exceeds the number of tokens, 1 otherwise
   the result is stored in ui->text
 */
 uint8_t mui_fds_get_nth_token(mui_t *ui, uint8_t n)
@@ -260,7 +262,7 @@ uint8_t mui_fds_get_token_cnt(mui_t *ui)
 }
 
 
-#define mui_fds_is_text(c) ( (c) == 'U' || (c) == 'S' || (c) == 'F' || (c) == 'A' ? 0 : 1 )
+#define mui_fds_is_text(c) ( (c) == 'U' || (c) == 'S' || (c) == 'F' || (c) == 'A' || (c) == 'Z' ? 0 : 1 )
 
 /*
   s must point to a valid command within FDS
@@ -318,7 +320,7 @@ int mui_find_uif(mui_t *ui, uint8_t id0, uint8_t id1)
 
 /*
   assumes a valid position in ui->fds and calculates all the other variables
-  some fields are alway calculated like the ui->cmd and ui->len field
+  some fields are always calculated like the ui->cmd and ui->len field
   other member vars are calculated only if the return value is 1
   will return 1 if the field id was found.
   will return 0 if the field id was not found in uif or if ui->fds points to something else than a field
@@ -370,6 +372,11 @@ static uint8_t mui_prepare_current_field(mui_t *ui)
       {
         ui->arg = mui_get_fds_char(ui->fds+5);
       }
+  }
+  else if ( ui->cmd == 'D' || ui->cmd == 'Z' )
+  {
+      ui->id0 = mui_get_fds_char(ui->fds+1);
+      ui->id1 = mui_get_fds_char(ui->fds+2);
   }
   else if ( ui->cmd == 'S' )
   {
@@ -425,7 +432,7 @@ static void mui_inner_loop_over_form(mui_t *ui, uint8_t (*task)(mui_t *ui))
     cmd = mui_get_fds_char(ui->fds);
     if ( cmd == 'U' || cmd == 0 )
       break;
-    if ( mui_prepare_current_field(ui) )
+    if ( mui_prepare_current_field(ui) )  /* side effect: calculate ui->len */
       if ( task(ui) )         /* call the task, which was provided as argument to this function */
       {
         //MUI_DEBUG("mui_inner_loop_over_form break by task\n");
@@ -592,6 +599,16 @@ uint8_t mui_task_read_nth_selectable_field(mui_t *ui)
   return 0;     /* continue with the loop */
 }
 
+uint8_t mui_task_find_execute_on_select_field(mui_t *ui)
+{
+  if ( muif_get_cflags(ui->uif) & MUIF_CFLAG_IS_EXECUTE_ON_SELECT )
+  {
+      ui->target_fds = ui->fds;
+      return 1;         /* stop looping */
+  }
+  return 0;     /* continue with the loop */
+}
+
 
 /* === utility functions for the user API === */
 
@@ -614,11 +631,17 @@ static uint8_t mui_send_cursor_msg(mui_t *ui, uint8_t msg)
   If the first selectable field has the focus, then 0 will be returned
   Unselectable fields (for example labels) are skipped by this count.
   If no fields are selectable, then 0 is returned
+
+  The return value can be used as last argument for mui_EnterForm or mui_GotoForm
+
+  WARNING: This function will destroy current fds and field information.
 */
 uint8_t mui_GetCurrentCursorFocusPosition(mui_t *ui)
 {
-  ui->tmp8 = 0;
+  //fds_t *fds = ui->fds;
+  ui->tmp8 = 0;  
   mui_loop_over_form(ui, mui_task_get_current_cursor_focus_position);
+  //ui->fds = fds;
   return ui->tmp8;
 }
 
@@ -641,55 +664,46 @@ void mui_next_field(mui_t *ui)
   }
 }
 
+
 /*
   this function will overwrite the ui field related member variables
   nth_token can be 0 if the fiel text is not a option list
   the result is stored in ui->text
+  
+  token delimiter is '|' (pipe symbol)
+  
+  fds:  The start of a field (MUI_DATA)
+  nth_token: The position of the token, which should be returned
 */
-void mui_GetSelectableFieldTextOption(mui_t *ui, uint8_t form_id, uint8_t cursor_position, uint8_t nth_token)
+uint8_t mui_GetSelectableFieldTextOption(mui_t *ui, fds_t *fds, uint8_t nth_token)
 {
-  fds_t *fds = ui->fds;                                // backup the current fds, so that this function can be called inside a task loop 
-  int len = ui->len;          // backup length of the current command
-
+  fds_t *fds_backup = ui->fds;                                // backup the current fds, so that this function can be called inside a task loop 
+  int len = ui->len;          // backup length of the current command, 26 sep 2021: probably this is not required any more
+  uint8_t is_found;
   
-  ui->fds = mui_find_form(ui, form_id);          // search for the target form and overwrite the current fds
-
-  // use the inner_loop procedure, because ui->fds has been assigned already
-  ui->tmp8 = cursor_position;   // maybe we should also backup tmp8, but at the moment tmp8 is only used by mui_task_get_current_cursor_focus_position
-  //MUI_DEBUG("mui_GetSelectableFieldTextOption\n");
-  mui_inner_loop_over_form(ui, mui_task_read_nth_selectable_field);
-  // at this point ui->fds contains the field which was selected from above
-  
+  ui->fds = fds;
+  // at this point ui->fds contains the field which contains the tokens  
   // now get the opion string out of the text field. nth_token can be 0 if this is no opion string
-  mui_fds_get_nth_token(ui, nth_token);          // return value is ignored here
+  is_found = mui_fds_get_nth_token(ui, nth_token);          // return value is ignored here
   
-  ui->fds = fds;                        // restore the previous fds position
+  ui->fds = fds_backup;                        // restore the previous fds position
   ui->len = len;
   // result is stored in ui->text
+  return is_found;
 }
 
-/*
-  this function will overwrite the ui field related member variables
-  return the number of options in the referenced field
-*/
-uint8_t mui_GetSelectableFieldOptionCnt(mui_t *ui, uint8_t form_id, uint8_t cursor_position)
+uint8_t mui_GetSelectableFieldOptionCnt(mui_t *ui, fds_t *fds)
 {
-  fds_t *fds = ui->fds;                                // backup the current fds, so that this function can be called inside a task loop 
-  int len = ui->len;          // backup length of the current command
+  fds_t *fds_backup = ui->fds;                                // backup the current fds, so that this function can be called inside a task loop 
+  int len = ui->len;          // backup length of the current command   26 sep 2021: probably this is not required any more
   uint8_t cnt = 0;
   
-  ui->fds = mui_find_form(ui, form_id);          // search for the target form and overwrite the current fds
-
-  // use the inner_loop procedure, because ui->fds has been assigned already
-  ui->tmp8 = cursor_position;   // maybe we should also backup tmp8, but at the moment tmp8 is only used by mui_task_get_current_cursor_focus_position
-  //MUI_DEBUG("mui_GetSelectableFieldOptionCnt\n");
-  mui_inner_loop_over_form(ui, mui_task_read_nth_selectable_field);
-  // at this point ui->fds contains the field which was selected from above
-  
+  ui->fds = fds;
+  // at this point ui->fds contains the field which contains the tokens  
   // now get the opion string out of the text field. nth_token can be 0 if this is no opion string
   cnt = mui_fds_get_token_cnt(ui); 
   
-  ui->fds = fds;                        // restore the previous fds position
+  ui->fds = fds_backup;                        // restore the previous fds position
   ui->len = len;
   // result is stored in ui->text
   return cnt;
@@ -698,10 +712,10 @@ uint8_t mui_GetSelectableFieldOptionCnt(mui_t *ui, uint8_t form_id, uint8_t curs
 
 
 //static void mui_send_cursor_enter_msg(mui_t *ui) MUI_NOINLINE;
-static void mui_send_cursor_enter_msg(mui_t *ui)
+static uint8_t mui_send_cursor_enter_msg(mui_t *ui)
 {
   ui->is_mud = 0;
-  mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_ENTER);
+  return mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_ENTER);
 }
 
 /* 
@@ -726,7 +740,7 @@ void mui_EnterForm(mui_t *ui, fds_t *fds, uint8_t initial_cursor_position)
   ui->current_form_fds = fds;
   
   /* inform all fields that we start a new form */
-  MUI_DEBUG("mui_EnterForm: form_start\n");
+  MUI_DEBUG("mui_EnterForm: form_start, initial_cursor_position=%d\n", initial_cursor_position);
   mui_loop_over_form(ui, mui_task_form_start);
   
   /* assign initional cursor focus */
@@ -741,7 +755,10 @@ void mui_EnterForm(mui_t *ui, fds_t *fds, uint8_t initial_cursor_position)
     initial_cursor_position--;
   }
   
-  mui_send_cursor_enter_msg(ui);
+  while( mui_send_cursor_enter_msg(ui) == 255 )
+  {
+    mui_NextField(ui);          // mui_next_field(ui) is not sufficient in case of scrolling
+  }
 }
 
 /* input: current_form_fds */
@@ -781,6 +798,7 @@ void mui_SaveForm(mui_t *ui)
   if ( mui_IsFormActive(ui) == 0 )
     return;
   
+  ui->last_form_fds = ui->cursor_focus_fds;
   ui->last_form_id = mui_get_fds_char(ui->current_form_fds+1);
   ui->last_form_cursor_focus_position = mui_GetCurrentCursorFocusPosition(ui);
 }
@@ -794,6 +812,50 @@ void mui_RestoreForm(mui_t *ui)
 }
 
 /*
+  Save a cursor position for mui_GotoFormAutoCursorPosition command
+  Two such positions is stored.
+*/
+void mui_SaveCursorPosition(mui_t *ui, uint8_t cursor_position)
+{
+  uint8_t form_id = mui_get_fds_char(ui->current_form_fds+1);
+  MUI_DEBUG("mui_SaveCursorPosition form_id=%d cursor_position=%d\n", form_id, cursor_position);
+  
+  if ( form_id == ui->menu_form_id[0] )
+    ui->menu_form_last_added = 0;
+  else if ( form_id == ui->menu_form_id[1] )
+    ui->menu_form_last_added = 1;
+  else 
+    ui->menu_form_last_added ^= 1;
+  ui->menu_form_id[ui->menu_form_last_added] = form_id;
+  ui->menu_form_cursor_focus_position[ui->menu_form_last_added] = cursor_position;
+  MUI_DEBUG("mui_SaveCursorPosition ui->menu_form_last_added=%d \n", ui->menu_form_last_added);
+}
+
+/*
+  Similar to mui_GotoForm, but will jump to previously stored cursor location (mui_SaveCursorPosition) or 0 if the cursor position was not saved.
+*/
+uint8_t mui_GotoFormAutoCursorPosition(mui_t *ui, uint8_t form_id)
+{
+  uint8_t cursor_position = 0;
+  if ( form_id == ui->menu_form_id[0] )
+    cursor_position = ui->menu_form_cursor_focus_position[0];
+  if ( form_id == ui->menu_form_id[1] )
+    cursor_position = ui->menu_form_cursor_focus_position[1];
+  MUI_DEBUG("mui_GotoFormAutoCursorPosition form_id=%d cursor_position=%d\n", form_id, cursor_position);
+  return mui_GotoForm(ui, form_id, cursor_position);
+}
+
+/*
+  return current form id or -1 if the menu system is inactive
+*/
+int mui_GetCurrentFormId(mui_t *ui)
+{
+  if ( mui_IsFormActive(ui) == 0 )
+    return -1;
+  return mui_get_fds_char(ui->current_form_fds+1);
+}
+
+/*
   updates "ui->cursor_focus_fds"
 */
 /*
@@ -801,11 +863,13 @@ void mui_RestoreForm(mui_t *ui)
 */
 void mui_NextField(mui_t *ui)
 {
-  if ( mui_send_cursor_msg(ui, MUIF_MSG_EVENT_NEXT) )
-    return;
-  mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_LEAVE);
-  mui_next_field(ui);
-  mui_send_cursor_enter_msg(ui);
+  do 
+  {
+    if ( mui_send_cursor_msg(ui, MUIF_MSG_EVENT_NEXT) )
+      return;
+    mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_LEAVE);
+    mui_next_field(ui);
+  } while ( mui_send_cursor_enter_msg(ui) == 255 );
 }
 
 /*
@@ -816,21 +880,21 @@ void mui_NextField(mui_t *ui)
 */
 void mui_PrevField(mui_t *ui)
 {
-  if ( mui_send_cursor_msg(ui, MUIF_MSG_EVENT_PREV) )
-    return;
-  mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_LEAVE);
-  
-  mui_loop_over_form(ui, mui_task_find_prev_cursor_uif);
-  //ui->cursor_focus_position--;
-  ui->cursor_focus_fds = ui->target_fds;      // NULL is ok  
-  if ( ui->target_fds == NULL )
+  do
   {
-    //ui->cursor_focus_position = 0;
-    mui_loop_over_form(ui, mui_task_find_last_cursor_uif);
+    if ( mui_send_cursor_msg(ui, MUIF_MSG_EVENT_PREV) )
+      return;
+    mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_LEAVE);
+ 
+    mui_loop_over_form(ui, mui_task_find_prev_cursor_uif);
     ui->cursor_focus_fds = ui->target_fds;      // NULL is ok  
-  }
-  
-  mui_send_cursor_enter_msg(ui);
+    if ( ui->target_fds == NULL )
+    {
+      //ui->cursor_focus_position = 0;
+      mui_loop_over_form(ui, mui_task_find_last_cursor_uif);
+      ui->cursor_focus_fds = ui->target_fds;      // NULL is ok  
+    }
+  } while( mui_send_cursor_enter_msg(ui) == 255 );
 }
 
 
@@ -839,3 +903,35 @@ void mui_SendSelect(mui_t *ui)
   mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_SELECT);  
 }
 
+/*
+  Same as mui_SendSelect(), but will try to find a field, which is marked as "execute on select" (MUIF_EXECUTE_ON_SELECT_BUTTON).
+  If such a field exists, then this field is executed, otherwise the current field will receive the select message.
+*/
+void mui_SendSelectWithExecuteOnSelectFieldSearch(mui_t *ui)
+{
+  mui_loop_over_form(ui, mui_task_find_execute_on_select_field);  /* Is there a exec on select field? */
+  if ( ui->target_fds != NULL )       /* yes, found, ui->fds already points to the field */
+  {
+    fds_t *exec_on_select_field = ui->target_fds;
+    mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_LEAVE);
+    ui->cursor_focus_fds = exec_on_select_field;    /* more cursor on the "exec on select" field */
+    mui_send_cursor_enter_msg(ui);      
+    mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_SELECT);  
+  }
+  else
+  {
+    /* no "exec on select" field found, just send the select message to the field */
+    mui_send_cursor_msg(ui, MUIF_MSG_CURSOR_SELECT);  
+  }
+}
+
+
+void mui_SendValueIncrement(mui_t *ui)
+{
+  mui_send_cursor_msg(ui, MUIF_MSG_VALUE_INCREMENT);  
+}
+
+void mui_SendValueDecrement(mui_t *ui)
+{
+  mui_send_cursor_msg(ui, MUIF_MSG_VALUE_DECREMENT);  
+}

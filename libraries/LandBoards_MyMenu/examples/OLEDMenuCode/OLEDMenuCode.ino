@@ -54,7 +54,15 @@ void setup(void)
   menuState = FIRST_LINE_MENU;  // Set up the init menu state - Menu should show the first line selected
   displayInit();                // Hardware specific function to set up the display
   menuCard.begin(1);            // pass the address of the mcp23008 on the menu card
-  TWBR = 12;                    // 400 KHz I2C
+ #if defined(ARDUINO_ARCH_AVR)
+	TWBR = 12;    			// go to 400 KHz I2C speed mode
+#elif defined(ARDUINO_ARCH_STM32F1)
+	Wire.setClock(400000);	// 400KHz speed
+#elif defined(STM32F4)
+	Wire.setClock(400000);	// 400KHz speed
+#else
+  #error “This library only supports boards with an AVR or STM processors.”
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////
