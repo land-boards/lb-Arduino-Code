@@ -24,7 +24,7 @@
 
 * LandBoards_I2CIO8X.cpp
 * LandBoards_I2CIOX8.h
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 ==== Examples ====
 
