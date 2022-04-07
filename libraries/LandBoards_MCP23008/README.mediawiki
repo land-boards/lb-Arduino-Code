@@ -1,7 +1,7 @@
 == Land Boards MCP23008 Library Files ==
 
 * These are our MCP23008 library and example files.
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 === Library Files ===
 
