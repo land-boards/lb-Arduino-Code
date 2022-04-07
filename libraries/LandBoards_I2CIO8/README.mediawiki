@@ -1,7 +1,7 @@
 == Land Boards I2CIO-8 Library Files ==
 
 * These are the [http://land-boards.com/blwiki/index.php?title=I2CIO8 I2CIO-8 card] library and example files.
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 === Library Files ===
 
