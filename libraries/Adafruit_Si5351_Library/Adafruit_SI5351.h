@@ -11,7 +11,7 @@
 #include <WProgram.h>
 #endif
 //#include <Adafruit_Sensor.h>
-#include <Wire.h>
+#include <Adafruit_I2CDevice.h>
 
 #include "asserts.h"
 #include "errors.h"
@@ -208,6 +208,7 @@ enum {
   SI5351_REGISTER_90_MULTISYNTH6_PARAMETERS = 90,
   SI5351_REGISTER_91_MULTISYNTH7_PARAMETERS = 91,
   SI5351_REGISTER_092_CLOCK_6_7_OUTPUT_DIVIDER = 92,
+  SI5351_REGISTER_149_SPREAD_SPECTRUM_PARAMETERS = 149,
   SI5351_REGISTER_165_CLK0_INITIAL_PHASE_OFFSET = 165,
   SI5351_REGISTER_166_CLK1_INITIAL_PHASE_OFFSET = 166,
   SI5351_REGISTER_167_CLK2_INITIAL_PHASE_OFFSET = 167,
@@ -272,8 +273,8 @@ class Adafruit_SI5351 {
 public:
   Adafruit_SI5351(void); //!< SI5351 object
 
-  err_t begin(void);               //!< @return ERROR_NONE
-  err_t setClockBuilderData(void); //!< @return ERROR_NONE
+  err_t begin(TwoWire *theWire = &Wire); //!< @return ERROR_NONE
+  err_t setClockBuilderData(void);       //!< @return ERROR_NONE
   err_t setupPLL(si5351PLL_t pll, uint8_t mult, uint32_t num,
                  uint32_t denom);                   //!< @return ERROR_NONE
   err_t setupPLLInt(si5351PLL_t pll, uint8_t mult); //!< @return ERROR_NONE
@@ -281,10 +282,8 @@ public:
                         uint32_t num, uint32_t denom); //!< @return ERROR_NONE
   err_t setupMultisynthInt(uint8_t output, si5351PLL_t pllSource,
                            si5351MultisynthDiv_t div); //!< @return ERROR_NONE
-                                                       /*!
-                                                        * @param enabled Whether output is enabled
-                                                        * @return ERROR_NONE
-                                                        */
+
+  err_t enableSpreadSpectrum(bool enabled);
   err_t enableOutputs(bool enabled);
   /*!
    * @param output Enables or disables output
@@ -295,6 +294,7 @@ public:
 private:
   si5351Config_t m_si5351Config;
 
+  Adafruit_I2CDevice *i2c_dev = NULL; ///< Pointer to I2C bus interface
   err_t write8(uint8_t reg, uint8_t value);
   err_t read8(uint8_t reg, uint8_t *value);
   err_t writeN(uint8_t *data, uint8_t n);

@@ -81,15 +81,19 @@ Adafruit_SI5351::Adafruit_SI5351(void) {
 
 /**************************************************************************/
 /*!
-    Initializes I2C and configures the breakout (call this function before
-    doing anything else)
+    @brief  Initializes I2C and configures the breakout (call this function
+   before doing anything else)
+
+    @param  theWire The I2C (Wire) bus to use.
 */
 /**************************************************************************/
-err_t Adafruit_SI5351::begin(void) {
+err_t Adafruit_SI5351::begin(TwoWire *theWire) {
   /* Initialise I2C */
-  Wire.begin();
-
-  /* ToDo: Make sure we're actually connected */
+  if (i2c_dev)
+    delete i2c_dev;
+  i2c_dev = new Adafruit_I2CDevice(SI5351_ADDRESS, theWire);
+  if (!i2c_dev->begin())
+    return ERROR_I2C_DEVICENOTFOUND;
 
   /* Disable all outputs setting CLKx_DIS high */
   ASSERT_STATUS(write8(SI5351_REGISTER_3_OUTPUT_ENABLE_CONTROL, 0xFF));
@@ -107,6 +111,9 @@ err_t Adafruit_SI5351::begin(void) {
   /* Set the load capacitance for the XTAL */
   ASSERT_STATUS(write8(SI5351_REGISTER_183_CRYSTAL_INTERNAL_LOAD_CAPACITANCE,
                        m_si5351Config.crystalLoad));
+
+  /* Disable spread spectrum output. */
+  enableSpreadSpectrum(false);
 
   /* Set interrupt masks as required (see Register 2 description in AN619).
      By default, ClockBuilder Desktop sets this register to 0x18.
@@ -406,9 +413,9 @@ err_t Adafruit_SI5351::setupMultisynth(uint8_t output, si5351PLL_t pllSource,
 
   /* Make sure the requested PLL has been initialised */
   if (pllSource == SI5351_PLL_A) {
-    ASSERT(m_si5351Config.plla_configured = true, ERROR_INVALIDPARAMETER);
+    ASSERT(m_si5351Config.plla_configured, ERROR_INVALIDPARAMETER);
   } else {
-    ASSERT(m_si5351Config.pllb_configured = true, ERROR_INVALIDPARAMETER);
+    ASSERT(m_si5351Config.pllb_configured, ERROR_INVALIDPARAMETER);
   }
 
   /* Output Multisynth Divider Equations
@@ -501,6 +508,8 @@ err_t Adafruit_SI5351::setupMultisynth(uint8_t output, si5351PLL_t pllSource,
 /**************************************************************************/
 /*!
     @brief  Enables or disables all clock outputs
+    @param  enabled Whether output is enabled
+    @return ERROR_NONE
 */
 /**************************************************************************/
 err_t Adafruit_SI5351::enableOutputs(bool enabled) {
@@ -510,6 +519,26 @@ err_t Adafruit_SI5351::enableOutputs(bool enabled) {
   /* Enabled desired outputs (see Register 3) */
   ASSERT_STATUS(
       write8(SI5351_REGISTER_3_OUTPUT_ENABLE_CONTROL, enabled ? 0x00 : 0xFF));
+
+  return ERROR_NONE;
+}
+
+/**************************************************************************/
+/*!
+    @brief  Enables or disables spread spectrum
+    @param  enabled Whether spread spectrum output is enabled
+    @return ERROR_NONE
+*/
+/**************************************************************************/
+err_t Adafruit_SI5351::enableSpreadSpectrum(bool enabled) {
+  uint8_t regval;
+  ASSERT_STATUS(read8(SI5351_REGISTER_149_SPREAD_SPECTRUM_PARAMETERS, &regval));
+  if (enabled) {
+    regval |= 0x80;
+  } else {
+    regval &= ~0x80;
+  }
+  ASSERT_STATUS(write8(SI5351_REGISTER_149_SPREAD_SPECTRUM_PARAMETERS, regval));
 
   return ERROR_NONE;
 }
@@ -524,30 +553,20 @@ err_t Adafruit_SI5351::enableOutputs(bool enabled) {
 */
 /**************************************************************************/
 err_t Adafruit_SI5351::write8(uint8_t reg, uint8_t value) {
-  Wire.beginTransmission(SI5351_ADDRESS);
-#if ARDUINO >= 100
-  Wire.write(reg);
-  Wire.write(value & 0xFF);
-#else
-  Wire.send(reg);
-  Wire.send(value & 0xFF);
-#endif
-  Wire.endTransmission();
-
-  // ToDo: Check for I2C errors
-
-  return ERROR_NONE;
+  uint8_t buffer[2] = {reg, value};
+  if (i2c_dev->write(buffer, 2)) {
+    return ERROR_NONE;
+  } else {
+    return ERROR_I2C_TRANSACTION;
+  }
 }
 
 err_t Adafruit_SI5351::writeN(uint8_t *data, uint8_t n) {
-  Wire.beginTransmission(SI5351_ADDRESS);
-#if ARDUINO >= 100
-  Wire.write(data, n);
-#else
-  Wire.send(data, n);
-#endif
-  Wire.endTransmission();
-  return ERROR_NONE;
+  if (i2c_dev->write(data, n)) {
+    return ERROR_NONE;
+  } else {
+    return ERROR_I2C_TRANSACTION;
+  }
 }
 
 /**************************************************************************/
@@ -556,22 +575,9 @@ err_t Adafruit_SI5351::writeN(uint8_t *data, uint8_t n) {
 */
 /**************************************************************************/
 err_t Adafruit_SI5351::read8(uint8_t reg, uint8_t *value) {
-  Wire.beginTransmission(SI5351_ADDRESS);
-#if ARDUINO >= 100
-  Wire.write(reg);
-#else
-  Wire.send(reg);
-#endif
-  Wire.endTransmission();
-
-  Wire.requestFrom(SI5351_ADDRESS, 1);
-#if ARDUINO >= 100
-  *value = Wire.read();
-#else
-  *value = Wire.read();
-#endif
-
-  // ToDo: Check for I2C errors
-
-  return ERROR_NONE;
+  if (i2c_dev->write_then_read(&reg, 1, value, 1)) {
+    return ERROR_NONE;
+  } else {
+    return ERROR_I2C_TRANSACTION;
+  }
 }

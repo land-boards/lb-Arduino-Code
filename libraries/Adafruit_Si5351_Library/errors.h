@@ -33,6 +33,7 @@ typedef enum {
   ERROR_I2C_NOACK = 0x102, /**< No ACK signal received during an I2C transfer */
   ERROR_I2C_TIMEOUT =
       0x103, /**< Device timed out waiting for response (missing pullups?) */
+  ERROR_I2C_TRANSACTION = 0x104, /**< Error during I2C read/write operation */
   /*=======================================================================*/
 } err_t;
 
