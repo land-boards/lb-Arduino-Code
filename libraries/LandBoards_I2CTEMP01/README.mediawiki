@@ -7,7 +7,7 @@
 ==== LandBoards_I2CTEMP01 ====
 
 * [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C_TEMP_01 Wiki Page]
-* [https://www.arduino.cc/en/Guide/Libraries#toc4 How to install a ZIP library]
+* [https://www.arduino.cc/en/Guide/Libraries?setlang=en#importing-a-zip-library Importing an Arduino ZIP library]
 
 ==== Examples ====
 
