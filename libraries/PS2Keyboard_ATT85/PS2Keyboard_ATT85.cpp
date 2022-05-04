@@ -1,15 +1,15 @@
 /*
-  PS2Keyboard.cpp - PS2Keyboard library
+  PS2Keyboard_ATT85.cpp - PS2Keyboard_ATT85 library
   Copyright (c) 2007 Free Software Foundation.  All right reserved.
   Written by Christian Weichel <info@32leaves.net>
 
   ** Mostly rewritten Paul Stoffregen <paul@pjrc.com> 2010, 2011
   ** Modified for use beginning with Arduino 13 by L. Abraham Smith, <n3bah@microcompdesign.com> * 
-  ** Modified for easy interrup pin assignement on method begin(datapin,irq_pin). Cuningan <cuninganreset@gmail.com> **
+  ** Modified for easy interrup pin assignment on method begin(datapin,irq_pin). Cuningan <cuninganreset@gmail.com> **
 
   for more information you can read the original wiki in arduino.cc
-  at http://www.arduino.cc/playground/Main/PS2Keyboard
-  or http://www.pjrc.com/teensy/td_libs_PS2Keyboard.html
+  at http://www.arduino.cc/playground/Main/PS2Keyboard_ATT85
+  or http://www.pjrc.com/teensy/td_libs_PS2Keyboard_ATT85.html
 
   Version 2.4 (March 2013)
   - Support Teensy 3.0, Arduino Due, Arduino Leonardo & other boards
@@ -48,7 +48,9 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "PS2Keyboard.h"
+#include <avr/interrupt.h>
+#include "PS2Keyboard_ATT85.h"
+
 
 #define BUFFER_SIZE 45
 static volatile uint8_t buffer[BUFFER_SIZE];
@@ -58,8 +60,8 @@ static uint8_t CharBuffer=0;
 static uint8_t UTF8next=0;
 static const PS2Keymap_t *keymap=NULL;
 
-// The ISR for the external interrupt
-void ps2interrupt(void)
+// The ISR for the change of state on pin interrupt
+ISR(PCINT0_vect)
 {
 	static uint8_t bitcount=0;
 	static uint8_t incoming=0;
@@ -67,6 +69,9 @@ void ps2interrupt(void)
 	uint32_t now_ms;
 	uint8_t n, val;
 
+    // digitalWrite(2,HIGH);
+    // delay(10);
+    // digitalWrite(2,LOW);
 	val = digitalRead(DataPin);
 	now_ms = millis();
 	if (now_ms - prev_ms > 250) {
@@ -105,7 +110,7 @@ static inline uint8_t get_scan_code(void)
 }
 
 // http://www.quadibloc.com/comp/scan.htm
-// http://www.computer-engineering.org/ps2keyboard/scancodes2.html
+// http://www.computer-engineering.org/PS2Keyboard_ATT85/scancodes2.html
 
 // These arrays provide a simple key map, to turn scan codes into ISO8859
 // output.  If a non-US keyboard is used, these may need to be modified
@@ -346,14 +351,14 @@ static char get_iso8859_code(void)
 	}
 }
 
-bool PS2Keyboard::available() {
+bool PS2Keyboard_ATT85::available() {
 	if (CharBuffer || UTF8next) return true;
 	CharBuffer = get_iso8859_code();
 	if (CharBuffer) return true;
 	return false;
 }
 
-int PS2Keyboard::read() {
+int PS2Keyboard_ATT85::read() {
 	uint8_t result;
 
 	result = UTF8next;
@@ -375,7 +380,7 @@ int PS2Keyboard::read() {
 	return result;
 }
 
-int PS2Keyboard::readUnicode() {
+int PS2Keyboard_ATT85::readUnicode() {
 	int result;
 
 	result = CharBuffer;
@@ -386,161 +391,29 @@ int PS2Keyboard::readUnicode() {
 	return result;
 }
 
-PS2Keyboard::PS2Keyboard() {
+PS2Keyboard_ATT85::PS2Keyboard_ATT85() {
   // nothing to do here, begin() does it all
 }
 
-void PS2Keyboard::begin(uint8_t data_pin, uint8_t irq_pin, const PS2Keymap_t &map) {
+void PS2Keyboard_ATT85::begin(uint8_t data_pin, uint8_t irq_pin, const PS2Keymap_t &map) {
   uint8_t irq_num=255;
 
   DataPin = data_pin;
   keymap = &map;
 
   // initialize the pins
-#ifdef INPUT_PULLUP
   pinMode(irq_pin, INPUT_PULLUP);
   pinMode(data_pin, INPUT_PULLUP);
-#else
-  pinMode(irq_pin, INPUT);
-  digitalWrite(irq_pin, HIGH);
-  pinMode(data_pin, INPUT);
-  digitalWrite(data_pin, HIGH);
-#endif
-
-#ifdef CORE_INT_EVERY_PIN
-  irq_num = irq_pin;
-
-#else
-  switch(irq_pin) {
-    #ifdef CORE_INT0_PIN
-    case CORE_INT0_PIN:
-      irq_num = 0;
-	#error “INT”
-      break;
-    #endif
-    #ifdef CORE_INT1_PIN
-    case CORE_INT1_PIN:
-      irq_num = 1;
-      break;
-    #endif
-    #ifdef CORE_INT2_PIN
-    case CORE_INT2_PIN:
-      irq_num = 2;
-      break;
-    #endif
-    #ifdef CORE_INT3_PIN
-    case CORE_INT3_PIN:
-      irq_num = 3;
-      break;
-    #endif
-    #ifdef CORE_INT4_PIN
-    case CORE_INT4_PIN:
-      irq_num = 4;
-      break;
-    #endif
-    #ifdef CORE_INT5_PIN
-    case CORE_INT5_PIN:
-      irq_num = 5;
-      break;
-    #endif
-    #ifdef CORE_INT6_PIN
-    case CORE_INT6_PIN:
-      irq_num = 6;
-      break;
-    #endif
-    #ifdef CORE_INT7_PIN
-    case CORE_INT7_PIN:
-      irq_num = 7;
-      break;
-    #endif
-    #ifdef CORE_INT8_PIN
-    case CORE_INT8_PIN:
-      irq_num = 8;
-      break;
-    #endif
-    #ifdef CORE_INT9_PIN
-    case CORE_INT9_PIN:
-      irq_num = 9;
-      break;
-    #endif
-    #ifdef CORE_INT10_PIN
-    case CORE_INT10_PIN:
-      irq_num = 10;
-      break;
-    #endif
-    #ifdef CORE_INT11_PIN
-    case CORE_INT11_PIN:
-      irq_num = 11;
-      break;
-    #endif
-    #ifdef CORE_INT12_PIN
-    case CORE_INT12_PIN:
-      irq_num = 12;
-      break;
-    #endif
-    #ifdef CORE_INT13_PIN
-    case CORE_INT13_PIN:
-      irq_num = 13;
-      break;
-    #endif
-    #ifdef CORE_INT14_PIN
-    case CORE_INT14_PIN:
-      irq_num = 14;
-      break;
-    #endif
-    #ifdef CORE_INT15_PIN
-    case CORE_INT15_PIN:
-      irq_num = 15;
-      break;
-    #endif
-    #ifdef CORE_INT16_PIN
-    case CORE_INT16_PIN:
-      irq_num = 16;
-      break;
-    #endif
-    #ifdef CORE_INT17_PIN
-    case CORE_INT17_PIN:
-      irq_num = 17;
-      break;
-    #endif
-    #ifdef CORE_INT18_PIN
-    case CORE_INT18_PIN:
-      irq_num = 18;
-      break;
-    #endif
-    #ifdef CORE_INT19_PIN
-    case CORE_INT19_PIN:
-      irq_num = 19;
-      break;
-    #endif
-    #ifdef CORE_INT20_PIN
-    case CORE_INT20_PIN:
-      irq_num = 20;
-      break;
-    #endif
-    #ifdef CORE_INT21_PIN
-    case CORE_INT21_PIN:
-      irq_num = 21;
-      break;
-    #endif
-    #ifdef CORE_INT22_PIN
-    case CORE_INT22_PIN:
-      irq_num = 22;
-      break;
-    #endif
-    #ifdef CORE_INT23_PIN
-    case CORE_INT23_PIN:
-      irq_num = 23;
-      break;
-    #endif
-  }
-#endif
-
   head = 0;
   tail = 0;
-  if (irq_num < 255) {
-    attachInterrupt(irq_num, ps2interrupt, FALLING);
-  }
+  //Enable PIN Change Interrupt 1 - This enables interrupts on pins
+  GIMSK |= 0x20;
+
+  //Set the mask on Pin change interrupt 1 so that only PCINT1 (PB1) triggers
+  //the interrupt.
+  PCMSK |= 0x02;
+  sei();
+//  attachInterrupt(0, PCINT0_vect, FALLING);
 }
 
 

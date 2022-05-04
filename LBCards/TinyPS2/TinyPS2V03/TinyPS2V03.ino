@@ -1,4 +1,4 @@
-// TinyPS02 - Write Serial with A-Z using SoftwareSerial
+// TinyPS03 - Write Serial with A-Z using SoftwareSerial
 // 9600 baud, bit time ~100uS
 
 #include <SoftwareSerial.h>
