@@ -1,5 +1,5 @@
-// TinyPS02 - Read PS/2 Keyboard
-// Write Serial data
+// TinyPS02 - Write Serial with A-Z using SoftwareSerial
+// 9600 baud, bit time ~100uS
 
 #include <SoftwareSerial.h>
 
@@ -23,6 +23,9 @@ void loop()
   while (1)
   {
     for (c = 'A'; c <= 'Z'; c++)
+    {
       mySerial.write(c);
+      delay(10);
+    }
   }
 }
