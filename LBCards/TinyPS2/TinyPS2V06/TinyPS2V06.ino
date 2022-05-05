@@ -40,7 +40,7 @@ void outSer(uint8_t b)
 {
   uint8_t oldSREG = SREG;
   uint8_t _inverse_logic = 0;
-  cli();  // turn off interrupts for a clean txmit
+  //cli();  // turn off interrupts for a clean txmit
 
   // Write the start bit
   tx_pin_write(_inverse_logic ? HIGH : LOW);
@@ -76,7 +76,7 @@ void outSer(uint8_t b)
     tx_pin_write(HIGH); // restore pin to natural state
   }
 
-  SREG = oldSREG; // turn interrupts back on
+  //SREG = oldSREG; // turn interrupts back on
   tunedDelay(_tx_delay);
   
   return 1;
