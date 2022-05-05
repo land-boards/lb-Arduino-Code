@@ -1,5 +1,7 @@
 /*--------------------------------------------------------------------------*
 * UART interface implementation for ATmega
+* From
+*   https://github.com/thegaragelab/tinytemplate
 *---------------------------------------------------------------------------*
 * 01-Apr-2014 ShaneG
 *

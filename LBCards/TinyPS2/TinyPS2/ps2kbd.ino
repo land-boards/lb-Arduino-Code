@@ -1,3 +1,6 @@
+// From
+//  http://www.nerdkits.com/videos/interrupts_and_ps2_keyboard/
+
 #include <stdio.h>
 
 #include <avr/io.h>

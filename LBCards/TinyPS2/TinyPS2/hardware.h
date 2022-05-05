@@ -37,7 +37,7 @@
  * anything below 57600 on an 8MHz clock. It does work at up to 250000 baud
  * but you may experience a small amount of dropped packets at that speed.
  */
-#define BAUD_RATE 115200
+// #define BAUD_RATE 115200
 
 /** Define the pin to use for transmission
  */
