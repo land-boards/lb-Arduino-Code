@@ -1,6 +1,6 @@
 == land-boards DisplayProc Card Source Code ==
 
-<img src="http://land-boards.com/blwiki/images/f/f2/DISPLAYPROC-01-640pxY.jpg"></img>
+<img src="http://land-boards.com/blwiki/images/f/f2/DISPLAYPROC-01-640pxY.jpg"></img> 
 
 * These are the [http://land-boards.com/blwiki/index.php?title=DisplayProc-01 DisplayProc-01] source code files.
 * This code is [http://searle.hostei.com/grant/MonitorKeyboard/index.html#SourceCode Grant Searle's code]
