@@ -27,11 +27,14 @@
 */
 
 #include <Arduino.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 #include <U8g2lib.h>
 
 // defines and enums - Set defines/undefs appropriately
-#define HAS_INTERNAL_EEPROM   // Arduini Pro Mini has internal EEPROM (STM32 does not)
+
+// EEPROM is used to store initial values
+// ATMEGA parts have internal EEPROM
+//#define HAS_INTERNAL_EEPROM   // Arduini Pro Mini has internal EEPROM (STM32 does not)
 
 // Rotary encoder pins on the Arduino Pro Mini
 #define ROTARY_DATA 2
@@ -39,9 +42,6 @@
 #define encoderSwitch  4
 
 #define U8X8_HAVE_HW_I2C
-
-// EEPROM is used to store initial values
-// ATMEGA parts have internal EEPROM
 
 // Gloibal variables
 
@@ -52,7 +52,6 @@ enum ControlsState
   ENC_UP,
   ENC_DOWN
 };
-
 
 // Constructors
   
@@ -66,7 +65,7 @@ void setup(void)
   bool i2c_found;
 
   u8x8.begin();
-  u8x8.setBusClock(100000);   // I2C clock = 400 KHz
+  u8x8.setBusClock(400000);   // I2C clock = 400 KHz
   u8x8.clearDisplay();
   u8x8.setFont(u8x8_font_amstrad_cpc_extended_r);
   u8x8.draw2x2String(0,0,"Hello");
