@@ -8,16 +8,6 @@
 //  Look undder "Code For Improved Table Decode" near bottom of page
 // Clean no-bounce rotary switch code
 
-/*
-enum ControlsState
-{
-  NOTHING,
-  ENC_SW_PRESSED,
-  ENC_UP,
-  ENC_DOWN
-};
-*/
-
 static int encoder0Pos = 0;
 static uint8_t prevNextCode = 0;
 static uint16_t store = 0;
@@ -29,13 +19,6 @@ void setupEncoder()
   pinMode(ROTARY_DATA, INPUT);
   pinMode(encoderSwitch, INPUT);
 }
-
-//void pollEncoder()
-//{
-//  static int8_t val;
-//  if ( val = read_rotary() )
-//    encoder0Pos += val;
-//}
 
 // A vald CW or  CCW move returns 1, invalid returns 0.
 int8_t read_rotary()
@@ -122,3 +105,4 @@ uint8_t checkControls()
     }
     return (0);
   }
+  
