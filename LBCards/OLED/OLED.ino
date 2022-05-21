@@ -55,7 +55,8 @@
 // U8g2 Contructor List (Frame Buffer)
 // The complete list is available here: https://github.com/olikraus/u8g2/wiki/u8g2setupcpp
 //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  // Adafruit ESP8266/32u4/ARM Boards + FeatherWing OLED
-U8G2_SSD1306_128X32_WINSTAR_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+// U8G2_SSD1306_128X32_WINSTAR_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+U8X8_SSD1306_128X32_UNIVISION_HW_I2C u8x8(U8X8_PIN_NONE);
 
 // Please update the pin numbers according to your setup. Use U8X8_PIN_NONE if the reset pin is not connected
 //U8G2_NULL u8g2(U8G2_R0);	// null device, a 8x8 pixel display which does nothing
