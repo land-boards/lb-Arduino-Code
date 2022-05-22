@@ -1,1 +1,132 @@
 <img src="http://land-boards.com/blwiki/images/f/f9/ArduinoInABox-P18170_720px.jpg"></img>
+
+== Features ==
+
+* [https://www.arduino.cc/en/pmwiki.php?n=Main/ArduinoBoardProMini Arduino Pro Mini]
+* Detachable Human Interface design (HID)
+* Flexible Input power
+** On-board DC/DC buck regulator allows 7-23V input
+** Direct 7-9V input (USE VRAW jumper)
+** 3.3V of 5V Arduino support
+** Measured 12 mA with 9V input and 3.3V Arduino Pro Mini
+* I/O Boards
+** DB-25
+* Mounts in a standard extruded Aluminum enclosure
+
+=== Arduino Pro Mini ===
+
+* Inexpensive and widely available
+* [https://www.arduino.cc/en/uploads/Main/Arduino-Pro-Mini-schematic.pdf Arduino Pro Mini sCHEMATIC]
+* I/O - 14 digital input/output pins (of which 6 can be used as PWM outputs)
+** Serial: 0 (RX) and 1 (TX).
+*** Used to receive (RX) and transmit (TX) TTL serial data.
+*** These pins are connected to the TX-0 and RX-1 pins of the six pin header.
+** External Interrupts: 2 and 3. 
+*** These pins can be configured to trigger an interrupt on a low value, a rising or falling edge, or a change in value. 
+*** See the attachInterrupt function for details.
+** PWM: 3, 5, 6, 9, 10, and 11. 
+*** Provide 8-bit PWM output with the analogWrite function.
+** SPI: 10 (SS), 11 (MOSI), 12 (MISO), 13 (SCK). 
+*** These pins support SPI communication, which, although provided by the underlying hardware.
+** LED: 13.
+*** There is a built-in LED connected to digital pin 13.
+*** When the pin is HIGH value, the LED is on, when the pin is LOW, it's off.
+** 6 analog inputs
+* On-board resonator (8 or 16 MHz)
+* Reset button
+* A six pin header can be connected to an FTDI cable provide USB power and communication to the board
+* 3.3 or 5V
+* 8 MHz (3.3V) or 16 MHz (5V)
+* Programmable in Arduino IDE
+
+** 3.35-12 V (3.3V model) or 5-12 V (5V model)
+
+==== RF Filters ===
+
+* RF filter into Switching regulator board
+* 2nd RF filter into HID card
+
+== Connectors ==
+
+[[file:ArduinoInABox_CAD_X1.png]]
+
+=== J1 - OLED ===
+
+* Pinout
+
+# SDA
+# SCL
+# +VCC
+# GND
+
+=== J2, J4 - On Base and HID card(s) ===
+
+[[file:ARB_J2.PNG]]
+
+* Can detach HID to mount in box
+* Pinout
+
+# GND
+# ENCODER A
+# ENCODER B
+# ENCODER SWITCH
+# I2C_SCL
+# I2C_SDA
+# VCC
+# GND
+
+=== J4, J7, J8 - BNC/SMA input headers ===
+
+* Connect here to use the BNC or SMA jacks on the rear (option)
+
+=== J5 - Arduino Pins ===
+
+[[file:ARB_J5.PNG]]
+
+=== J6 - Voltage Adjustment ===
+
+* Adjust voltage for 3.3V or 5V to match Pro Mini voltage before installing jumper
+
+=== J9 - Use Raw Power ===
+
+[[file:AIB_J9.PNG]]
+
+=== FTDI (on Arduino Pro Mini) ===
+
+* Used to download program to Arduino Pro Mini
+
+== Human Interface (HID) ==
+
+* OLED
+* Rotary Switch with Pushbutton
+* Detachable board
+** Can be mounted to Front Panel of enclosure
+
+<IMG SRC="http://land-boards.com/blwiki/images/b/bc/HID_Connect.PNG"></IMG>
+
+=== OLED ===
+
+* 0.91" 128x32 or so rotary switch (installed in SW1 location) is to the right
+* 0.96" 128x64 (rotated) with rotary switch (installed in SW1 location) below
+* SSD1306 family of displays
+* Connections to Arduino Pins
+** A4/SDA
+** A5/SCL
+
+=== Rotary Encoder ===
+
+* Connections to Arduino Pins
+** A=P2
+** B=P3
+** Switch=P4
+
+== I/O Boards ==
+
+* Base board has 3 optional BNC (P1-P3) or edge launch SMA (P4-P6) connectors
+** Brought to headers (J4, J7, J8)
+* Easy to application specific custom I/O cards
+** All Arduino pins brought to J5 - 2x13 pin header
+** I/O pins are on 0.1" grid for easier prototyping
+** P2-P13, A0-A3
+** A4/A5 or SDA/SCL (connects to OLED)
+* Location of mounting holes
