@@ -48,7 +48,7 @@
 
 == Connectors ==
 
-[[file:ArduinoInABox_CAD_X1.png]]
+<img src="http://land-boards.com/blwiki/images/1/10/ArduinoInABox_CAD_X1.png"></img>
 
 === J1 - OLED ===
 
@@ -61,7 +61,7 @@
 
 === J2, J4 - On Base and HID card(s) ===
 
-[[file:ARB_J2.PNG]]
+<img src="http://land-boards.com/blwiki/images/a/a3/ARB_J2.PNG"></img>
 
 * Can detach HID to mount in box
 * Pinout
@@ -81,7 +81,7 @@
 
 === J5 - Arduino Pins ===
 
-[[file:ARB_J5.PNG]]
+<img src="http://land-boards.com/blwiki/images/7/70/ARB_J5.PNG"></img>
 
 === J6 - Voltage Adjustment ===
 
@@ -89,7 +89,7 @@
 
 === J9 - Use Raw Power ===
 
-[[file:AIB_J9.PNG]]
+<img src="http://land-boards.com/blwiki/images/2/24/AIB_J9.PNG"></img>
 
 === FTDI (on Arduino Pro Mini) ===
 
