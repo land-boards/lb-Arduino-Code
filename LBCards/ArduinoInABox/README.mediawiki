@@ -1,3 +1,5 @@
+[http://land-boards.com/blwiki/index.php?title=ArduinoInABox Wiki Page]
+
 <img src="http://land-boards.com/blwiki/images/f/f9/ArduinoInABox-P18170_720px.jpg"></img>
 
 == Features ==
