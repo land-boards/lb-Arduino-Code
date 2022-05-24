@@ -20,3 +20,11 @@ void blinkAll(void)
   for (outPort = 5; outPort <= TOP_PORT;  outPort++)
     pinMode(outPort, INPUT);
 }
+
+// Test the SWLEDX8 card
+void testSWLEDX8(void)
+{
+  uint8_t rdWrVal;
+  rdWrVal = mcp.readGPIOA();
+  mcp.writeOLATB(rdWrVal);
+}

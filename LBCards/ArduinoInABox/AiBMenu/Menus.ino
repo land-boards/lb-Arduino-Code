@@ -35,7 +35,7 @@ void displayTopMenu(uint8_t activeLineNum)
     u8x8.setInverseFont(1);
   else
     u8x8.setInverseFont(0);
-  u8x8.drawString(0, 1, "Line 2");
+  u8x8.drawString(0, 1, "SWLEDX8 Test");
   if (activeLineNum == 2)
     u8x8.setInverseFont(1);
   else
@@ -55,15 +55,15 @@ void runSelectedTop(uint8_t activeLineNum)
   {
     blinkAll();
   }
-  else if (activeLineNum == 0)
+  else if (activeLineNum == 1)
+  {
+    testSWLEDX8();
+  }
+  else if (activeLineNum == 2)
   {
     delay(500);
   }
-  else if (activeLineNum == 0)
-  {
-    delay(500);
-  }
-  else if (activeLineNum == 0)
+  else if (activeLineNum == 3)
   {
     delay(500);
   }

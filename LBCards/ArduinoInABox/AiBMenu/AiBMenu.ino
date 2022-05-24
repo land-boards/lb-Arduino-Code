@@ -20,6 +20,7 @@
 
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include <LandBoards_MCP23017.h>
 
 // defines and enums - Set defines/undefs appropriately
 
@@ -47,11 +48,20 @@ enum ControlsState
 
 U8X8_SSD1306_128X32_UNIVISION_HW_I2C u8x8(U8X8_PIN_NONE);
 
+LandBoards_MCP23017 mcp;   // Uses the LandBoards MCP23017 library
+
 // End of constructor list
 
 //setup run once
 void setup(void)
 {
+  uint8_t mcpPortNum;
+  mcp.begin(0);      // use default chip offset 0 (Adafruit library adds 0x20)
+  for (mcpPortNum=0; mcpPortNum < 8; mcpPortNum++)
+    mcp.pinMode(mcpPortNum, INPUT);
+  for (mcpPortNum=8; mcpPortNum < 16; mcpPortNum++)
+    mcp.pinMode(mcpPortNum, OUTPUT);
+    
   u8x8.begin();
   u8x8.setBusClock(400000);   // I2C clock = 400 KHz
   u8x8.clearDisplay();
