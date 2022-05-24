@@ -1,1 +1,5 @@
+== SWLED8X Card ==
+
 <img src="http://land-boards.com/blwiki/images/f/fc/SWLEDX8-I2C-P119-Orth-720px.JPG"></img>
+
+* Example Arduino code to read the 8 switches and write the 8 LEDS
