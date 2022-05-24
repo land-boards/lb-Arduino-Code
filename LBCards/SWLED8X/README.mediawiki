@@ -1,4 +1,4 @@
-== SWLED8X Card ==
+== SWLED8X Card Code ==
 
 <img src="http://land-boards.com/blwiki/images/f/fc/SWLEDX8-I2C-P119-Orth-720px.JPG"></img>
 
