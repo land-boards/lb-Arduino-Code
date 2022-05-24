@@ -2,4 +2,4 @@
 
 <img src="http://land-boards.com/blwiki/images/f/fc/SWLEDX8-I2C-P119-Orth-720px.JPG"></img>
 
-* Example Arduino code to read the 8 switches and write the 8 LEDS
+* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SWLED8X/SWLEDX8_01/SWLEDX8_01.ino Example Arduino code to read the 8 switches and write the 8 LEDS]
