@@ -1,8 +1,6 @@
 <a href="https://www.tindie.com/products/land_boards/sd-card-adapter-sd_card_x49/">
 <img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png"></img></a>
 
-[[File:tindie-mediums.png|link=https://www.tindie.com/products/land_boards/sd-card-adapter-sd_card_x49/]]
-
 = SD Card Arduino Example Code =
 
 <img src="http://land-boards.com/blwiki/images/e/ea/SDCARDX49_P935_cropped-512px.jpg"></img>
