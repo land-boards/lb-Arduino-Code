@@ -1,5 +1,5 @@
 /*
-  Listfiles
+  SD_Dir
   This example shows how print out the files in a
   directory on a SD card.Pin numbers reflect the default
   SPI pins for Uno and Nano models
