@@ -44,13 +44,9 @@
  */
 #include <Arduino.h>
 
-/*
- * Define macros for input and output pin etc.
- */
-#include "PinDefinitionsAndMore.h"
+//#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 900 bytes program memory
 
-//#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 900 bytes program space
-
+#include "PinDefinitionsAndMore.h" //Define macros for input and output pin etc.
 #include <IRremote.hpp>
 
 int SEND_BUTTON_PIN = APPLICATION_PIN;
@@ -79,7 +75,7 @@ void sendCode(storedIRDataStruct *aIRDataToSend);
 
 void setup() {
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
@@ -93,21 +89,10 @@ void setup() {
     pinMode(STATUS_PIN, OUTPUT);
 
     Serial.print(F("Ready to receive IR signals of protocols: "));
-    printActiveIRProtocols (&Serial);
-    Serial.print(F("at pin "));
-#if defined(ARDUINO_ARCH_STM32) || defined(ESP8266)
-    Serial.println(IR_RECEIVE_PIN_STRING);
-#else
-    Serial.println(IR_RECEIVE_PIN);
-#endif
+    printActiveIRProtocols(&Serial);
+    Serial.println(F("at pin " STR(IR_RECEIVE_PIN)));
 
-    Serial.print(F("Ready to send IR signals at pin "));
-#  if defined(IR_SEND_PIN_STRING)
-    Serial.print(IR_SEND_PIN_STRING);
-#  else
-    Serial.print(IR_SEND_PIN);
-#  endif
-    Serial.print(F(" on press of button at pin "));
+    Serial.print(F("Ready to send IR signals at pin " STR(IR_SEND_PIN) " on press of button at pin "));
     Serial.println(SEND_BUTTON_PIN);
 
 }

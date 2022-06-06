@@ -29,8 +29,8 @@
  *
  ************************************************************************************
  */
-#ifndef IR_DENON_HPP
-#define IR_DENON_HPP
+#ifndef _IR_DENON_HPP
+#define _IR_DENON_HPP
 
 #include <Arduino.h>
 
@@ -56,11 +56,9 @@
 // Denon publish all their IR codes:
 //  https://www.google.co.uk/search?q=DENON+MASTER+IR+Hex+Command+Sheet
 //  -> http://assets.denon.com/documentmaster/us/denon%20master%20ir%20hex.xls
-
 // Having looked at the official Denon Pronto sheet and reverse engineered
 // the timing values from it, it is obvious that Denon have a range of
 // different timings and protocols ...the values here work for my AVR-3801 Amp!
-
 // MSB first, no start bit, 5 address + 8 command + 2 frame + 1 stop bit - each frame 2 times
 //
 #define DENON_ADDRESS_BITS      5
@@ -110,8 +108,9 @@ void IRsend::sendDenon(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberO
     while (tNumberOfCommands > 0) {
 
         // Data
-        sendPulseDistanceWidthData(DENON_BIT_MARK, DENON_ONE_SPACE, DENON_BIT_MARK, DENON_ZERO_SPACE, tData, DENON_BITS, PROTOCOL_IS_MSB_FIRST,
-        SEND_STOP_BIT);
+        sendPulseDistanceWidthData(DENON_BIT_MARK, DENON_ONE_SPACE, DENON_BIT_MARK, DENON_ZERO_SPACE, tData, DENON_BITS,
+                PROTOCOL_IS_MSB_FIRST,
+                SEND_STOP_BIT);
 
         // Inverted autorepeat frame
         delay(DENON_AUTO_REPEAT_SPACE / MICROS_IN_ONE_MILLI);
@@ -125,6 +124,7 @@ void IRsend::sendDenon(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberO
             delay( DENON_AUTO_REPEAT_SPACE / MICROS_IN_ONE_MILLI);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 //+=============================================================================
@@ -139,22 +139,22 @@ bool IRrecv::decodeDenon() {
     // Check we have the right amount of data (32). The + 2 is for initial gap + stop bit mark
     if (decodedIRData.rawDataPtr->rawlen != (2 * DENON_BITS) + 2) {
         IR_DEBUG_PRINT(F("Denon: "));
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
-        IR_DEBUG_PRINTLN(" is not 32");
+        IR_DEBUG_PRINTLN(F(" is not 32"));
         return false;
     }
 
     // Read the bits in
     if (!decodePulseDistanceData(DENON_BITS, 1, DENON_BIT_MARK, DENON_ONE_SPACE, DENON_ZERO_SPACE, PROTOCOL_IS_MSB_FIRST)) {
-        IR_DEBUG_PRINT("Denon: ");
-        IR_DEBUG_PRINTLN("Decode failed");
+        IR_DEBUG_PRINT(F("Denon: "));
+        IR_DEBUG_PRINTLN(F("Decode failed"));
         return false;
     }
 
     // Check for stop mark
     if (!matchMark(decodedIRData.rawDataPtr->rawbuf[(2 * DENON_BITS) + 1], DENON_HEADER_MARK)) {
-        IR_DEBUG_PRINT("Denon: ");
+        IR_DEBUG_PRINT(F("Denon: "));
         IR_DEBUG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;
     }
@@ -239,9 +239,10 @@ void IRsend::sendDenon(unsigned long data, int nbits) {
     space(DENON_HEADER_SPACE);
 
     // Data
-    sendPulseDistanceWidthData(DENON_BIT_MARK, DENON_ONE_SPACE, DENON_BIT_MARK, DENON_ZERO_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST,
-    SEND_STOP_BIT);
-
+    sendPulseDistanceWidthData(DENON_BIT_MARK, DENON_ONE_SPACE, DENON_BIT_MARK, DENON_ZERO_SPACE, data, nbits,
+            PROTOCOL_IS_MSB_FIRST,
+            SEND_STOP_BIT);
+    IrReceiver.restartAfterSend();
 }
 
 void IRsend::sendSharp(unsigned int aAddress, unsigned int aCommand) {
@@ -249,5 +250,4 @@ void IRsend::sendSharp(unsigned int aAddress, unsigned int aCommand) {
 }
 
 /** @}*/
-#endif
-#pragma once
+#endif // _IR_DENON_HPP

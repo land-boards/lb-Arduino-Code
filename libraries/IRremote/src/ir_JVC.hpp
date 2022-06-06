@@ -29,8 +29,8 @@
  *
  ************************************************************************************
  */
-#ifndef IR_JVC_HPP
-#define IR_JVC_HPP
+#ifndef _IR_JVC_HPP
+#define _IR_JVC_HPP
 
 #include <Arduino.h>
 
@@ -94,6 +94,7 @@ void IRsend::sendJVC(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfR
             delay(JVC_REPEAT_SPACE / MICROS_IN_ONE_MILLI);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 /*
@@ -106,9 +107,9 @@ bool IRrecv::decodeJVC() {
     // Check we have the right amount of data (36 or 34). The +4 is for initial gap, start bit mark and space + stop bit mark. +2 is for repeats
     if (decodedIRData.rawDataPtr->rawlen != ((2 * JVC_BITS) + 4) && decodedIRData.rawDataPtr->rawlen != ((2 * JVC_BITS) + 2)) {
         IR_DEBUG_PRINT(F("JVC: "));
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
-        IR_DEBUG_PRINTLN(" is not 34 or 36");
+        IR_DEBUG_PRINTLN(F(" is not 34 or 36"));
         return false;
     }
 
@@ -133,8 +134,8 @@ bool IRrecv::decodeJVC() {
         // Check header "mark" and "space"
         if (!matchMark(decodedIRData.rawDataPtr->rawbuf[1], JVC_HEADER_MARK)
                 || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], JVC_HEADER_SPACE)) {
-            IR_DEBUG_PRINT("JVC: ");
-            IR_DEBUG_PRINTLN("Header mark or space length is wrong");
+            IR_DEBUG_PRINT(F("JVC: "));
+            IR_DEBUG_PRINTLN(F("Header mark or space length is wrong"));
             return false;
         }
 
@@ -179,9 +180,9 @@ bool IRrecv::decodeJVCMSB(decode_results *aResults) {
 
     // Check we have enough data - +3 for start bit mark and space + stop bit mark
     if (aResults->rawlen <= (2 * JVC_BITS) + 3) {
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(aResults->rawlen);
-        IR_DEBUG_PRINTLN(" is too small. >= 36 is required.");
+        IR_DEBUG_PRINTLN(F(" is too small. >= 36 is required."));
 
         return false;
     }
@@ -234,8 +235,8 @@ void IRsend::sendJVCMSB(unsigned long data, int nbits, bool repeat) {
     // Old version with MSB first Data
     sendPulseDistanceWidthData(JVC_BIT_MARK, JVC_ONE_SPACE, JVC_BIT_MARK, JVC_ZERO_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST,
     SEND_STOP_BIT);
+    IrReceiver.restartAfterSend();
 }
 
 /** @}*/
-#endif
-#pragma once
+#endif // _IR_JVC_HPP

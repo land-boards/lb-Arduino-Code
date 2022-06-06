@@ -41,6 +41,14 @@
 
 #include "freertos/FreeRTOS.h"
 
+#if __has_include("esp32/rom/lldesc.h")
+  #include "esp32/rom/lldesc.h"
+#else
+  #include "rom/lldesc.h"
+#endif
+#include "soc/i2s_struct.h"
+#include "soc/sens_struct.h"
+
 #include "fabglconf.h"
 #include "fabutils.h"
 
@@ -49,13 +57,13 @@
 namespace fabgl {
 
 
-#define DEFAULT_SAMPLE_RATE 16000
+#define FABGL_SOUNDGEN_DEFAULT_SAMPLE_RATE 16384
 
-// 512 samples, at 16KHz generate a send every 512/16000*1000 = 32ms (16000/512=31.25 sends per second)
-// 200 samples, at 16Khz generate a send every 200/16000*1000 = 12.5ms (16000/200=80 sends per second)
-#define I2S_SAMPLE_BUFFER_SIZE 200  // must be even
 
-#define WAVEGENTASK_STACK_SIZE 2000
+// DAC mode specific:
+// setting 64 at 16KHz, generates 16000/64=250 interrupts per second
+#define FABGL_SOUNDGEN_SAMPLE_BUFFER_SIZE 64
+
 
 
 /** @brief Base abstract class for waveform generators. A waveform generator can be seen as an audio channel that will be mixed by SoundGenerator. */
@@ -315,22 +323,20 @@ private:
 
 
 /** \ingroup Enumerations
- * @brief
+ * @brief Specifies sound generation method
  */
-enum class SoundGeneratorState {
-  Stop,             /**<  */
-  RequestToPlay,    /**<  */
-  Playing,          /**<  */
-  RequestToStop,    /**<  */
+enum class SoundGenMethod {
+  DAC,             /**< Use DAC. Available on gpio 25 or 26. Very low resources occupation. */
+  SigmaDelta,      /**< Use Sigma-Delta. Available on almost all GPIO pins. Requires a lot of CPU power for high sample rates. */
+  Auto,            /**< Use DAC when video output is VGA, use SigmaDelta when video output is Composite. */
 };
 
 
 /**
  * @brief SoundGenerator handles audio output
  *
+ * SoundGenerator generates audio samples using DAC or Sigma-Delta modulation. Use constructor to specify GPIO and generation method.
  * Applications attach waveform generators (like SineWaveformGenerator, SquareWaveformGenerator, etc...) and call SoundGenerator.play() to start audio generation.
- *
- * The GPIO used for audio output is GPIO-25. See @ref confAudio "Configuring Audio port" for audio connection sample schema.
  *
  * Here is a list of supported sound generators:
  * - SineWaveformGenerator
@@ -347,8 +353,23 @@ public:
 
   /**
    * @brief Creates an instance of the sound generator. Only one instance is allowed
+   *
+   * @param sampleRate Sample rate in Hertz.
+   * @param gpio GPIO to use. DAC mode can be set on 25 or 26. Value GPIO_AUTO will set GPIO 25 when genMethod is DAC and GPIO 23 when genMethod is SigmaDelta.
+   * @param genMethod Sound generation method. Can be DAC, sigma-delta or automatic. If automatic then DAC is selected when VGA is used, otherwise SigmaDelta is selected when Composite is used.
+   *
+   * Example:
+   *
+   *     // creates sound generator with automatic values (depends by selected video output, VGA or CVBS)
+   *     SoundGenerator soundGenerator;
+   *
+   *     // creates sound generator using 16Khz sample rate, GPIO 25 in DAC mode
+   *     SoundGenerator soundGenerator(16000, GPIO_NUM_25, SoundGenMethod::DAC);
+   *
+   *     // creates sound generator using 16Khz sample rate, GPIO 23 in sigma-delta mode
+   *     SoundGenerator soundGenerator(16000, GPIO_NUM_23, SoundGenMethod::SigmaDelta);
    */
-  SoundGenerator(int sampleRate = DEFAULT_SAMPLE_RATE);
+  SoundGenerator(int sampleRate = FABGL_SOUNDGEN_DEFAULT_SAMPLE_RATE, gpio_num_t gpio = GPIO_AUTO, SoundGenMethod genMethod = SoundGenMethod::Auto);
 
   ~SoundGenerator();
 
@@ -465,27 +486,48 @@ public:
 
 private:
 
-  void i2s_audio_init();
-  static void waveGenTask(void * arg);
-  bool forcePlay(bool value);
-  void mutizeOutput();
+  static void ISRHandler(void * arg);     // used in DAC mode
+  static void timerHandler(void * args);  // used in sigma-delta mode
+
+  void dac_init();
+  void sigmadelta_init();
   void detachNoSuspend(WaveformGenerator * value);
-  bool actualPlaying();
+  void setDMANode(int index, volatile uint16_t * buf, int len);
+  void init();
+  
+  int getSample();
+  
+  #ifdef FABGL_EMULATED
+  void sdl_init();
+  static void SDLAudioCallback(void * data, Uint8 * buffer, int length);
+  #endif
 
-
-  TaskHandle_t        m_waveGenTaskHandle;
 
   WaveformGenerator * m_channels;
 
-  uint16_t *          m_sampleBuffer;
+  uint16_t *          m_sampleBuffer[2];
 
   int8_t              m_volume;
 
   uint16_t            m_sampleRate;
 
   bool                m_play;
-  SoundGeneratorState m_state;
-  SemaphoreHandle_t   m_mutex;
+  
+  gpio_num_t          m_gpio;
+  
+  intr_handle_t       m_isr_handle;
+  
+  lldesc_t volatile * m_DMAChain;
+  
+  SoundGenMethod      m_genMethod;
+  
+  bool                m_initDone;
+  
+  esp_timer_handle_t  m_timerHandle;
+  
+  #ifdef FABGL_EMULATED
+  SDL_AudioDeviceID   m_device;
+  #endif
 
 };
 

@@ -27,8 +27,8 @@
  *
  ************************************************************************************
  */
-#ifndef IR_SONY_HPP
-#define IR_SONY_HPP
+#ifndef _IR_SONY_HPP
+#define _IR_SONY_HPP
 
 #include <Arduino.h>
 
@@ -57,7 +57,7 @@
 #define SONY_BITS_MAX           (SONY_COMMAND_BITS + SONY_ADDRESS_BITS + SONY_EXTRA_BITS)    // 20 bits == SIRCS_20_PROTOCOL
 #define SONY_UNIT               600 // 24 periods of 40kHz
 
-#define SONY_HEADER_MARK        (4 * SONY_UNIT) //2400
+#define SONY_HEADER_MARK        (4 * SONY_UNIT) // 2400
 #define SONY_ONE_MARK           (2 * SONY_UNIT) // 1200
 #define SONY_ZERO_MARK          SONY_UNIT
 #define SONY_SPACE              SONY_UNIT
@@ -96,6 +96,7 @@ void IRsend::sendSony(uint16_t aAddress, uint8_t aCommand, uint_fast8_t aNumberO
             delay(SONY_REPEAT_SPACE / MICROS_IN_ONE_MILLI);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 //+=============================================================================
@@ -111,22 +112,24 @@ bool IRrecv::decodeSony() {
     if (decodedIRData.rawDataPtr->rawlen != (2 * SONY_BITS_MIN) + 2 && decodedIRData.rawDataPtr->rawlen != (2 * SONY_BITS_MAX) + 2
             && decodedIRData.rawDataPtr->rawlen != (2 * SONY_BITS_15) + 2) {
         // ??? IR_TRACE_PRINT since I saw this too often
-        IR_DEBUG_PRINT("Sony: ");
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Sony: "));
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
-        IR_DEBUG_PRINTLN(" is not 12, 15 or 20");
-        return false;
-    }
-    // Check header "space"
-    if (!matchSpace(decodedIRData.rawDataPtr->rawbuf[2], SONY_SPACE)) {
-        IR_DEBUG_PRINT("Sony: ");
-        IR_DEBUG_PRINTLN("Header space length is wrong");
+        IR_DEBUG_PRINTLN(F(" is not 12, 15 or 20"));
         return false;
     }
 
-    if (!decodePulseWidthData((decodedIRData.rawDataPtr->rawlen - 1) / 2, 3, SONY_ONE_MARK, SONY_ZERO_MARK, SONY_SPACE, PROTOCOL_IS_LSB_FIRST)) {
-        IR_DEBUG_PRINT("Sony: ");
-        IR_DEBUG_PRINTLN("Decode failed");
+    // Check header "space"
+    if (!matchSpace(decodedIRData.rawDataPtr->rawbuf[2], SONY_SPACE)) {
+        IR_DEBUG_PRINT(F("Sony: "));
+        IR_DEBUG_PRINTLN(F("Header space length is wrong"));
+        return false;
+    }
+
+    if (!decodePulseWidthData((decodedIRData.rawDataPtr->rawlen - 1) / 2, 3, SONY_ONE_MARK, SONY_ZERO_MARK, SONY_SPACE,
+            PROTOCOL_IS_LSB_FIRST)) {
+        IR_DEBUG_PRINT(F("Sony: "));
+        IR_DEBUG_PRINTLN(F("Decode failed"));
         return false;
     }
 
@@ -162,7 +165,7 @@ bool IRrecv::decodeSonyMSB(decode_results *aResults) {
     // Some Sony's deliver repeats fast after first
     // unfortunately can't spot difference from of repeat from two fast clicks
     if (aResults->rawbuf[0] < (SONY_DOUBLE_SPACE_USECS / MICROS_PER_TICK)) {
-        IR_DEBUG_PRINTLN("IR Gap found");
+        IR_DEBUG_PRINTLN(F("IR Gap found"));
         aResults->bits = 0;
         aResults->value = 0xFFFFFFFF;
         decodedIRData.flags = IRDATA_FLAGS_IS_REPEAT;
@@ -220,8 +223,8 @@ void IRsend::sendSony(unsigned long data, int nbits) {
 
     // Old version with MSB first Data
     sendPulseDistanceWidthData(SONY_ONE_MARK, SONY_SPACE, SONY_ZERO_MARK, SONY_SPACE, data, nbits, PROTOCOL_IS_MSB_FIRST);
+    IrReceiver.restartAfterSend();
 }
 
 /** @}*/
-#endif
-#pragma once
+#endif // _IR_SONY_HPP

@@ -6,8 +6,8 @@
  *  This file is part of Arduino-IRremote https://github.com/Arduino-IRremote/Arduino-IRremote.
  *
  */
-#ifndef IR_BOSEWAVE_HPP
-#define IR_BOSEWAVE_HPP
+#ifndef _IR_BOSEWAVE_HPP
+#define _IR_BOSEWAVE_HPP
 
 #include <Arduino.h>
 
@@ -32,7 +32,6 @@
 // As seen on my trusty oscilloscope, there is no repeat code.  Instead, when I
 // press and hold a button on my remote, it sends a command, makes a 51.2ms space,
 // and resends the command, etc, etc.
-
 // LSB first, 1 start bit + 8 bit data + 8 bit inverted data + 1 stop bit.
 #define BOSEWAVE_BITS             16 // Command and inverted command
 
@@ -69,6 +68,7 @@ void IRsend::sendBoseWave(uint8_t aCommand, uint_fast8_t aNumberOfRepeats) {
             delay( BOSEWAVE_REPEAT_SPACE / MICROS_IN_ONE_MILLI);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 //+=============================================================================
@@ -82,28 +82,29 @@ bool IRrecv::decodeBoseWave() {
 
     // Check we have enough data +4 for initial gap, start bit mark and space + stop bit mark
     if (decodedIRData.rawDataPtr->rawlen != (2 * BOSEWAVE_BITS) + 4) {
-        IR_DEBUG_PRINT("Bose: ");
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Bose: "));
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
-        IR_DEBUG_PRINTLN(" is not 36");
+        IR_DEBUG_PRINTLN(F(" is not 36"));
         return false;
     }
     // Check header "space"
     if (!matchSpace(decodedIRData.rawDataPtr->rawbuf[2], BOSEWAVE_HEADER_SPACE)) {
-        IR_DEBUG_PRINT("Bose: ");
-        IR_DEBUG_PRINTLN("Header space length is wrong");
+        IR_DEBUG_PRINT(F("Bose: "));
+        IR_DEBUG_PRINTLN(F("Header space length is wrong"));
         return false;
     }
 
-    if (!decodePulseDistanceData(BOSEWAVE_BITS, 3, BOSEWAVE_BIT_MARK, BOSEWAVE_ONE_SPACE, BOSEWAVE_ZERO_SPACE, PROTOCOL_IS_LSB_FIRST)) {
-        IR_DEBUG_PRINT("Bose: ");
-        IR_DEBUG_PRINTLN("Decode failed");
+    if (!decodePulseDistanceData(BOSEWAVE_BITS, 3, BOSEWAVE_BIT_MARK, BOSEWAVE_ONE_SPACE, BOSEWAVE_ZERO_SPACE,
+            PROTOCOL_IS_LSB_FIRST)) {
+        IR_DEBUG_PRINT(F("Bose: "));
+        IR_DEBUG_PRINTLN(F("Decode failed"));
         return false;
     }
 
     // Stop bit
     if (!matchMark(decodedIRData.rawDataPtr->rawbuf[3 + (2 * BOSEWAVE_BITS)], BOSEWAVE_BIT_MARK)) {
-        IR_DEBUG_PRINT("Bose: ");
+        IR_DEBUG_PRINT(F("Bose: "));
         IR_DEBUG_PRINTLN(F("Stop bit mark length is wrong"));
         return false;
     }
@@ -115,8 +116,8 @@ bool IRrecv::decodeBoseWave() {
     uint8_t tCommandInverted = tDecodedValue >> 8;
     // parity check for command. Use this variant to avoid compiler warning "comparison of promoted ~unsigned with unsigned [-Wsign-compare]"
     if ((tCommandNotInverted ^ tCommandInverted) != 0xFF) {
-        IR_DEBUG_PRINT("Bose: ");
-        IR_DEBUG_PRINT("Command and inverted command check failed");
+        IR_DEBUG_PRINT(F("Bose: "));
+        IR_DEBUG_PRINT(F("Command and inverted command check failed"));
         return false;
     }
 
@@ -133,5 +134,4 @@ bool IRrecv::decodeBoseWave() {
 }
 
 /** @}*/
-#endif // #ifndef IR_BOSEWAVE_HPP
-#pragma once
+#endif // _IR_BOSEWAVE_HPP

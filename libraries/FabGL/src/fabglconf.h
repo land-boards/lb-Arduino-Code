@@ -123,7 +123,11 @@
 
 
 /** To reduce memory overhead the viewport is allocated as few big buffers. This parameter defines the maximum number of these big buffers. */
-#define FABGLIB_VIEWPORT_MEMORY_POOL_COUNT 10
+#define FABGLIB_VIEWPORT_MEMORY_POOL_COUNT 128
+
+
+/** Size (in bytes) of largest block to maintain free */
+#define FABGLIB_MINFREELARGESTBLOCK 40000
 
 
 /** Size of virtualkey queue */
@@ -139,7 +143,7 @@
 
 
 /** Stack size of primitives drawing task of paletted based VGA controllers */
-#define FABGLIB_VGAPALETTEDCONTROLLER_PRIMTASK_STACK_SIZE 1024
+#define FABGLIB_VGAPALETTEDCONTROLLER_PRIMTASK_STACK_SIZE 1200
 
 
 /** Priority of primitives drawing task of paletted based VGA controllers */
@@ -148,6 +152,7 @@
 
 
 // debug options
+#define FABGLIB_TERMINAL_DEBUG_REPORT                0  // this must be enabled to make below settings active
 #define FABGLIB_TERMINAL_DEBUG_REPORT_IN_CODES       0
 #define FABGLIB_TERMINAL_DEBUG_REPORT_INQUEUE_CODES  0  // use as alternative to FABGLIB_TERMINAL_DEBUG_REPORT_IN_CODES when write() is called inside isr
 #define FABGLIB_TERMINAL_DEBUG_REPORT_OUT_CODES      0
@@ -158,6 +163,7 @@
 #define FABGLIB_TERMINAL_DEBUG_REPORT_UNSUPPORT      1
 #define FABGLIB_TERMINAL_DEBUG_REPORT_ERRORS         1
 #define FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK     0
+#define FABGLIB_CVBSCONTROLLER_PERFORMANCE_CHECK     0
 
 
 /************ Preset Resolution Modelines ************/
@@ -265,6 +271,9 @@
 
 /** Modeline for 720x348@73Hz resolution */
 #define VGA_720x348_73Hz "\"720x348@73Hz\" 27 720 736 799 872 348 379 381 433 -HSync -VSync"
+
+/** Modeline for 720x350@70Hz resolution - thanks Stan Pechal */
+#define VGA_720x350_70Hz "\"720x350@70Hz\" 28.32 720 738 846 900 350 387 389 449 -HSync -VSync"
 
 /** Modeline for 720x400@70Hz resolution */
 #define VGA_720x400_70Hz "\"720x400@70Hz\" 28.32  720 738 846 900  400 412 414 449 -hsync +vsync"

@@ -460,7 +460,7 @@ void Terminal::connectSerialPort(HardwareSerial & serialPort, bool autoXONXOFF)
 // returns number of bytes received (in the UART2 rx fifo buffer)
 inline int uartGetRXFIFOCount()
 {
-  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
   return uart->status.rxfifo_cnt | ((int)(uart->mem_cnt_status.rx_cnt) << 8);
 }
 
@@ -468,7 +468,7 @@ inline int uartGetRXFIFOCount()
 // flushes TX buffer of UART2
 static void uartFlushTXFIFO()
 {
-  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
   while (uart->status.txfifo_cnt || uart->status.st_utx_out)
     ;
 }
@@ -477,7 +477,7 @@ static void uartFlushTXFIFO()
 // flushes RX buffer of UART2
 static void uartFlushRXFIFO()
 {
-  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
   while (uartGetRXFIFOCount() != 0 || uart->mem_rx_status.wr_addr != uart->mem_rx_status.rd_addr)
     uart->fifo.rw_byte;
 }
@@ -487,11 +487,12 @@ static void uartFlushRXFIFO()
 void Terminal::uartCheckInputQueueForFlowControl()
 {
   if (m_flowControl != FlowControl::None) {
-    uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+    auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
     if (uxQueueMessagesWaiting(m_inputQueue) == 0 && uart->int_ena.rxfifo_full == 0) {
       if (m_sentXOFF)
         flowControl(true);  // enable RX
-      uart->int_ena.rxfifo_full = 1;
+      // enable RX FIFO full interrupt
+      SET_PERI_REG_MASK(UART_INT_ENA_REG(2), UART_RXFIFO_FULL_INT_ENA_M);
     }
   }
 }
@@ -509,17 +510,15 @@ void Terminal::setRTSStatus(bool value)
 // enable/disable RX sending XON/XOFF and/or setting RTS
 void Terminal::flowControl(bool enableRX)
 {
-  //Serial.printf("flowControl(%d)\n", enableRX);
-  uart_dev_t * uart = (volatile uart_dev_t *) DR_REG_UART2_BASE;
   if (enableRX) {
     if (m_flowControl == FlowControl::Software || m_flowControl == FlowControl::Hardsoft)
-      uart->flow_conf.send_xon = 1;  // send XON
+      SET_PERI_REG_MASK(UART_FLOW_CONF_REG(2), UART_SEND_XON_M); // send XON
     if (m_flowControl == FlowControl::Hardware || m_flowControl == FlowControl::Hardsoft)
       setRTSStatus(true);            // assert RTS
     m_sentXOFF = false;
   } else {
     if (m_flowControl == FlowControl::Software || m_flowControl == FlowControl::Hardsoft)
-      uart->flow_conf.send_xoff = 1; // send XOFF
+      SET_PERI_REG_MASK(UART_FLOW_CONF_REG(2), UART_SEND_XOFF_M); // send XOFF
     if (m_flowControl == FlowControl::Hardware || m_flowControl == FlowControl::Hardsoft)
       setRTSStatus(false);           // disable RTS
     m_sentXOFF = true;
@@ -540,10 +539,8 @@ bool Terminal::flowControl()
 
 
 // connect to UART2
-void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int txPin, FlowControl flowControl, bool inverted, int rtsPin, int ctsPin)
+void Terminal::connectSerialPort(uint32_t baud, int dataLength, char parity, float stopBits, int rxPin, int txPin, FlowControl flowControl, bool inverted, int rtsPin, int ctsPin)
 {
-  uart_dev_t * uart = (volatile uart_dev_t *) DR_REG_UART2_BASE;
-
   bool initialSetup = !m_uart;
 
   if (initialSetup) {
@@ -579,21 +576,21 @@ void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int 
       configureGPIO(m_ctsPin, GPIO_MODE_INPUT);
     }
 
-    // RX interrupt
-    uart->conf1.rxfifo_full_thrhd = 1;  // an interrupt for each character received
-    uart->conf1.rx_tout_thrhd = 2;      // actually not used
-    uart->conf1.rx_tout_en    = 0;      // timeout not enabled
-    uart->int_ena.rxfifo_full = 1;      // interrupt on FIFO full (1 character - see rxfifo_full_thrhd)
-    uart->int_ena.frm_err     = 1;      // interrupt on frame error
-    uart->int_ena.rxfifo_tout = 0;      // no interrupt on rx timeout (see rx_tout_en and rx_tout_thrhd)
-    uart->int_ena.parity_err  = 1;      // interrupt on rx parity error
-    uart->int_ena.rxfifo_ovf  = 1;      // interrupt on rx overflow
-    uart->int_clr.val = 0xffffffff;
-    esp_intr_alloc(ETS_UART2_INTR_SOURCE, 0, uart_isr, this, nullptr);
+    // setup RX interrupt
+    WRITE_PERI_REG(UART_CONF1_REG(2), (1 << UART_RXFIFO_FULL_THRHD_S) |      // an interrupt for each character received
+                                      (2 << UART_RX_TOUT_THRHD_S)     |      // actually not used
+                                      (0 << UART_RX_TOUT_EN_S));             // timeout not enabled
+    WRITE_PERI_REG(UART_INT_ENA_REG(2), (1 << UART_RXFIFO_FULL_INT_ENA_S) |  // interrupt on FIFO full (1 character - see rxfifo_full_thrhd)
+                                        (1 << UART_FRM_ERR_INT_ENA_S)     |  // interrupt on frame error
+                                        (0 << UART_RXFIFO_TOUT_INT_ENA_S) |  // no interrupt on rx timeout (see rx_tout_en and rx_tout_thrhd)
+                                        (1 << UART_PARITY_ERR_INT_ENA_S)  |  // interrupt on rx parity error
+                                        (1 << UART_RXFIFO_OVF_INT_ENA_S));   // interrupt on rx overflow
+    WRITE_PERI_REG(UART_INT_CLR_REG(2), 0xffffffff);
+    esp_intr_alloc_pinnedToCore(ETS_UART2_INTR_SOURCE, 0, uart_isr, this, nullptr, CoreUsage::quietCore());
 
     // setup FIFOs size
-    uart->mem_conf.rx_size = 3;  // RX: 384 bytes (this is the max for UART2)
-    uart->mem_conf.tx_size = 1;  // TX: 128 bytes
+    WRITE_PERI_REG(UART_MEM_CONF_REG(2), (3 << UART_RX_SIZE_S) |    // RX: 3 * 128 = 384 bytes (this is the max for UART2)
+                                         (1 << UART_TX_SIZE_S));    // TX: 1 * 128 = 128 bytes
 
     if (!m_keyboardReaderTaskHandle && m_keyboard->isKeyboardAvailable())
       xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
@@ -603,34 +600,44 @@ void Terminal::connectSerialPort(uint32_t baud, uint32_t config, int rxPin, int 
 
   // set baud rate
   uint32_t clk_div = (getApbFrequency() << 4) / baud;
-  uart->clk_div.div_int  = clk_div >> 4;
-  uart->clk_div.div_frag = clk_div & 0xf;
+  WRITE_PERI_REG(UART_CLKDIV_REG(2), ((clk_div >> 4)  << UART_CLKDIV_S) |
+                                     ((clk_div & 0xf) << UART_CLKDIV_FRAG_S));
 
   // frame
-  uart->conf0.val = config;
-  if (uart->conf0.stop_bit_num == 0x3) {
-    uart->conf0.stop_bit_num = 1;
-    uart->rs485_conf.dl1_en  = 1;
+  uint32_t config0 = (1 << UART_TICK_REF_ALWAYS_ON_S) | ((dataLength - 5) << UART_BIT_NUM_S);
+  if (parity == 'E')
+    config0 |= (1 << UART_PARITY_EN_S);
+  else if (parity == 'O')
+    config0 |= (1 << UART_PARITY_EN_S) | (1 << UART_PARITY_S);
+  if (stopBits == 1.0)
+    config0 |= 1 << UART_STOP_BIT_NUM_S;
+  else if (stopBits == 1.5)
+    config0 |= 2 << UART_STOP_BIT_NUM_S;
+  else if (stopBits >= 2.0) {
+    config0 |= 1 << UART_STOP_BIT_NUM_S;
+    SET_PERI_REG_BITS(UART_RS485_CONF_REG(2), UART_DL1_EN_V, 1, UART_DL1_EN_S); // additional 1 stop bit
+    if (stopBits >= 3.0)
+      SET_PERI_REG_BITS(UART_RS485_CONF_REG(2), UART_DL0_EN_V, 1, UART_DL1_EN_S); // additional 1 stop bit
   }
+  WRITE_PERI_REG(UART_CONF0_REG(2), config0);
 
   // TX/RX Pin logic
   gpio_matrix_in(rxPin, U2RXD_IN_IDX, inverted);
   gpio_matrix_out(txPin, U2TXD_OUT_IDX, inverted, false);
 
   // Flow Control
-  uart->flow_conf.sw_flow_con_en = 0;
-  uart->flow_conf.xonoff_del     = 0;
+  WRITE_PERI_REG(UART_FLOW_CONF_REG(2), 0);
   if (flowControl != FlowControl::None) {
     // we actually use manual software control, using send_xon/send_xoff bits to send control characters
     // because we have to check both RX-FIFO and input queue
-    uart->swfc_conf.xon_threshold  = 0;
-    uart->swfc_conf.xoff_threshold = 0;
-    uart->swfc_conf.xon_char  = ASCII_XON;
-    uart->swfc_conf.xoff_char = ASCII_XOFF;
+    WRITE_PERI_REG(UART_SWFC_CONF_REG(2), (0 << UART_XON_THRESHOLD_S)    |
+                                          (0 << UART_XOFF_THRESHOLD_S)   |
+                                          (ASCII_XON << UART_XON_CHAR_S) |
+                                          (ASCII_XOFF << UART_XOFF_CHAR_S));
     if (initialSetup) {
       // send an XON right now
       m_sentXOFF = true;
-      uart->flow_conf.send_xon = 1;
+      SET_PERI_REG_MASK(UART_FLOW_CONF_REG(2), UART_SEND_XON_M);
     }
   }
 
@@ -852,8 +859,6 @@ void Terminal::loadFont(FontInfo const * font)
   resetTabStops();
 
   freeGlyphsMap();
-  m_glyphsBuffer.columns      = m_columns;
-  m_glyphsBuffer.rows         = m_rows;
   while (true) {
     m_glyphsBuffer.map = (uint32_t*) heap_caps_malloc(sizeof(uint32_t) * m_columns * m_rows, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
     if (m_glyphsBuffer.map)
@@ -861,6 +866,8 @@ void Terminal::loadFont(FontInfo const * font)
     // no enough memory, reduce m_rows
     --m_rows;
   }
+  m_glyphsBuffer.columns      = m_columns;
+  m_glyphsBuffer.rows         = m_rows;
 
   m_alternateMap = nullptr;
   m_alternateScreenBuffer = false;
@@ -1769,16 +1776,14 @@ void Terminal::pollSerialPort()
 void IRAM_ATTR Terminal::uart_isr(void *arg)
 {
   Terminal * term = (Terminal*) arg;
-  uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+  auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
 
   // look for overflow or RX errors
   if (uart->int_st.rxfifo_ovf || uart->int_st.frm_err || uart->int_st.parity_err) {
     // reset RX-FIFO, because hardware bug rxfifo_rst cannot be used, so just flush
     uartFlushRXFIFO();
-    // reset interrupt flags
-    uart->int_clr.rxfifo_ovf = 1;
-    uart->int_clr.frm_err    = 1;
-    uart->int_clr.parity_err = 1;
+    // clear interrupt flags
+    SET_PERI_REG_MASK(UART_INT_CLR_REG(2), UART_RXFIFO_OVF_INT_CLR_M | UART_FRM_ERR_INT_CLR_M | UART_PARITY_ERR_INT_CLR_M);
     return;
   }
 
@@ -1799,17 +1804,17 @@ void IRAM_ATTR Terminal::uart_isr(void *arg)
       if (!term->m_sentXOFF)
         term->flowControl(false);  // disable RX
       // block further interrupts
-      uart->int_ena.rxfifo_full = 0;
+      CLEAR_PERI_REG_MASK(UART_INT_ENA_REG(2), UART_RXFIFO_FULL_INT_ENA_M);
       break;
     }
     // add to input queue
-    auto r = uart->fifo.rw_byte;
+    uint8_t r = READ_PERI_REG(UART_FIFO_REG(2));
     if (term->m_uartRXEnabled)
       term->write(r, true);
   }
 
   // clear interrupt flag
-  uart->int_clr.rxfifo_full = 1;
+  SET_PERI_REG_MASK(UART_INT_CLR_REG(2), UART_RXFIFO_FULL_INT_CLR_M);
 }
 
 
@@ -1831,10 +1836,10 @@ void Terminal::send(uint8_t c)
   if (m_uart) {
     //while (!flowControl())
     //  vTaskDelay(1);
-    uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+    auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
     while (uart->status.txfifo_cnt == 0x7F)
       ;
-    uart->fifo.rw_byte = c;
+    WRITE_PERI_REG(UART_FIFO_AHB_REG(2), c);
   }
 
   localWrite(c);  // write to m_outputQueue
@@ -1861,13 +1866,13 @@ void Terminal::send(char const * str)
   #endif
 
   if (m_uart) {
-    uart_dev_t * uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
+    auto uart = (volatile uart_dev_t *)(DR_REG_UART2_BASE);
     while (*str) {
       //while (!flowControl())
       //  vTaskDelay(1);
       while (uart->status.txfifo_cnt == 0x7F)
         ;
-      uart->fifo.rw_byte = *str++;
+      WRITE_PERI_REG(UART_FIFO_AHB_REG(2), (*str++));
     }
   }
 
@@ -1935,7 +1940,8 @@ void Terminal::write(uint8_t c, bool fromISR)
   m_lastWrittenChar = c;
 
   #if FABGLIB_TERMINAL_DEBUG_REPORT_IN_CODES
-  logFmt("<= %02X  %s%c\n", (int)c, (c <= ASCII_SPC ? CTRLCHAR_TO_STR[(int)c] : ""), (c > ASCII_SPC ? c : ASCII_SPC));
+  if (!fromISR)
+    logFmt("<= %02X  %s%c\n", (int)c, (c <= ASCII_SPC ? CTRLCHAR_TO_STR[(int)c] : ""), (c > ASCII_SPC ? c : ASCII_SPC));
   #endif
 }
 
@@ -4578,32 +4584,38 @@ void Terminal::keyboardReaderTask(void * pvParameters)
     VirtualKeyItem item;
     if (term->m_keyboard->getNextVirtualKey(&item)) {
 
-      if (term->isActive() && term->flowControl()) {
-
+      if (term->isActive()) {
+      
         term->onVirtualKey(&item.vk, item.down);
         term->onVirtualKeyItem(&item);
 
-        if (item.down) {
+        if (term->flowControl()) {
 
-          if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == item.vk)
-            continue; // don't repeat
-          term->m_lastPressedKey = item.vk;
+          // note: when flow is locked, no key event is reinjected. This to allow onVirtualKey to always work on last pressed char.
 
-          xSemaphoreTake(term->m_mutex, portMAX_DELAY);
+          if (item.down) {
 
-          if (term->m_termInfo == nullptr) {
-            if (term->m_emuState.ANSIMode)
-              term->ANSIDecodeVirtualKey(item);
-            else
-              term->VT52DecodeVirtualKey(item);
-          } else
-            term->TermDecodeVirtualKey(item);
+            if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == item.vk)
+              continue; // don't repeat
+            term->m_lastPressedKey = item.vk;
 
-          xSemaphoreGive(term->m_mutex);
+            xSemaphoreTake(term->m_mutex, portMAX_DELAY);
 
-        } else {
-          // !keyDown
-          term->m_lastPressedKey = VK_NONE;
+            if (term->m_termInfo == nullptr) {
+              if (term->m_emuState.ANSIMode)
+                term->ANSIDecodeVirtualKey(item);
+              else
+                term->VT52DecodeVirtualKey(item);
+            } else
+              term->TermDecodeVirtualKey(item);
+
+            xSemaphoreGive(term->m_mutex);
+
+          } else {
+            // !keyDown
+            term->m_lastPressedKey = VK_NONE;
+          }
+          
         }
 
       } else {

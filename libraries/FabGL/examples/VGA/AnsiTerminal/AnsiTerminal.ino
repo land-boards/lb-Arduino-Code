@@ -61,16 +61,16 @@ fabgl::Terminal                     Terminal;
 #define RTS      13
 #define CTS      35
 
-///* prev conf
-#define RESET_PIN 12
-#define RESET_PIN_ACTIVE 1
-#define USERESETPIN 1
+// settings reset control
+/* for old WROOM-32 boards
+#define RESET_PIN        12
+#define RESET_PIN_ACTIVE  1   // 0 = reset when low, 1 = reset when high
+#define USERESETPIN       1   // 1 = reset enabled
 //*/
-/*
-#define RESET_PIN 39
-#define RESET_PIN_ACTIVE 0
-#define USERESETPIN 0
-//*/
+#define RESET_PIN        39
+#define RESET_PIN_ACTIVE  0   // 0 = reset when low, 1 = reset when high
+#define USERESETPIN       1   // 1 = reset enabled
+
 
 
 
@@ -80,7 +80,9 @@ fabgl::Terminal                     Terminal;
 
 void setup()
 {
-  //Serial.begin(115200); delay(500); Serial.write("\n\nReset\n\n"); // DEBUG ONLY
+  #if FABGLIB_TERMINAL_DEBUG_REPORT
+  Serial.begin(115200); delay(500); Serial.write("\n\nReset\n\n"); // DEBUG ONLY
+  #endif
 
   disableCore0WDT();
   delay(100); // experienced crashes without this delay!
@@ -111,7 +113,9 @@ void setup()
 
   ConfDialogApp::loadConfiguration();  
 
-  //Terminal.setLogStream(Serial);  // debug only
+  #if FABGLIB_TERMINAL_DEBUG_REPORT
+  Terminal.setLogStream(Serial);  // debug only
+  #endif
 
   Terminal.clear();
   Terminal.enableCursor(true);
@@ -120,7 +124,7 @@ void setup()
     Terminal.write("* *  FabGL - Serial Terminal                            * *\r\n");
     Terminal.write("* *  2019-2022 by Fabrizio Di Vittorio - www.fabgl.com  * *\r\n\n");
     Terminal.printf("Version            : %d.%d\r\n", TERMVERSION_MAJ, TERMVERSION_MIN);
-    Terminal.printf("Screen Size        : %d x %d\r\n", DisplayController->getScreenWidth(), DisplayController->getScreenHeight());
+    Terminal.printf("Screen Size        : %d x %d\r\n", DisplayController->getViewPortWidth(), DisplayController->getViewPortHeight());
     Terminal.printf("Terminal Size      : %d x %d\r\n", Terminal.getColumns(), Terminal.getRows());
     Terminal.printf("Keyboard Layout    : %s\r\n", PS2Controller.keyboard()->isKeyboardAvailable() ? SupportedLayouts::names()[ConfDialogApp::getKbdLayoutIndex()] : "No Keyboard");
     //Terminal.printf("Mouse              : %s\r\n", PS2Controller.mouse()->isMouseAvailable() ? "Yes" : "No");

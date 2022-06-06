@@ -42,6 +42,7 @@
 #include <driver/adc.h>
 #include <esp_system.h>
 #include "sdmmc_cmd.h"
+#include "soc/frc_timer_reg.h"
 
 
 namespace fabgl {
@@ -58,7 +59,8 @@ namespace fabgl {
 
 
 
-#define GPIO_UNUSED GPIO_NUM_MAX
+#define GPIO_UNUSED (GPIO_NUM_MAX)
+#define GPIO_AUTO   ((gpio_num_t)(GPIO_NUM_MAX + 1))
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,6 +198,8 @@ struct APLLParams {
 };
 
 void APLLCalcParams(double freq, APLLParams * params, uint8_t * a, uint8_t * b, double * out_freq, double * error);
+
+int calcI2STimingParams(int sampleRate, int * outA, int * outB, int * outN, int * outM);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -917,7 +921,7 @@ void removeRectangle(Stack<Rect> & rects, Rect const & mainRect, Rect const & re
 bool calcParity(uint8_t v);
 
 // why these? this is like heap_caps_malloc with MALLOC_CAP_32BIT. Unfortunately
-// heap_caps_malloc crashes, so we need this workaround.
+// heap_caps_realloc crashes, so we need this workaround.
 void * realloc32(void * ptr, size_t size);
 void free32(void * ptr);
 
@@ -980,22 +984,6 @@ inline __attribute__((always_inline)) uint32_t getCycleCount() {
 void replacePathSep(char * path, char newSep);
 
 
-/**
- * @brief Composes UART configuration word
- *
- * @param parity Parity. 0 = none, 1 = even, 2 = odd
- * @param dataLength Data word length. 0 = 5 bits, 1 = 6 bits, 2 = 7 bits, 3 = 8 bits
- * @param stopBits Number of stop bits. 1 = 1 bit, 2 = 1.5 bits, 3 = 2 bits
- */
-inline uint32_t UARTConf(int parity, int dataLength, int stopBits)
-{
-  uint32_t w = 0x8000000 | (dataLength << 2) | (stopBits << 4);
-  if (parity)
-    w |= (parity == 1 ? 0b10 : 0b11);
-  return w;
-}
-
-
 adc1_channel_t ADC1_GPIO2Channel(gpio_num_t gpio);
 
 
@@ -1014,6 +1002,31 @@ void configureGPIO(gpio_num_t gpio, gpio_mode_t mode);
 uint32_t getApbFrequency();
 
 uint32_t getCPUFrequencyMHz();
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///// FRC1 timer
+
+
+// FRC1 timer has 23 bits (8388608 values)
+constexpr int FRC1TimerMax = 8388607;
+
+
+// prescaler: FRC_TIMER_PRESCALER_1, FRC_TIMER_PRESCALER_16, FRC_TIMER_PRESCALER_256
+// 80Mhz / prescaler = timer frequency
+inline void FRC1Timer_init(int prescaler)
+{
+  REG_WRITE(FRC_TIMER_LOAD_REG(0), 0);
+  REG_WRITE(FRC_TIMER_CTRL_REG(0), prescaler | FRC_TIMER_ENABLE);
+}
+
+
+inline uint32_t FRC1Timer()
+{
+  return FRC1TimerMax - REG_READ(FRC_TIMER_COUNT_REG(0)); // make timer count up
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -1043,6 +1056,36 @@ struct CoreUsage {
   private:
     static int s_busiestCore;  // 0 = core 0, 1 = core 1 (default is FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE)
 };
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// VideoMode
+
+/** \ingroup Enumerations
+ * @brief Specifies a video mode
+ */
+enum class VideoMode {
+  None,     /**< Video mode has not been set. */
+  VGA,      /**< VGA display. */
+  CVBS,     /**< Composite display. */
+  I2C,      /**< I2C display. */
+  SPI,      /**< SPI display. */
+};
+
+
+/**
+ * @brief This class helps to know which is the current video output (VGA or Composite)
+ */
+struct CurrentVideoMode {
+
+  static VideoMode get()           { return s_videoMode; }
+  static void set(VideoMode value) { s_videoMode = value; }
+
+  private:
+    static VideoMode s_videoMode;
+};
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -1309,6 +1352,22 @@ enum VirtualKey {
   VK_SQUARE,          /**< Square     : ² */
   VK_CURRENCY,        /**< Currency   : ¤ */
   VK_MU,              /**< Mu         : µ */
+  
+  VK_aelig,           /** Lower case aelig  : æ */
+  VK_oslash,          /** Lower case oslash : ø */
+  VK_aring,           /** Lower case aring  : å */
+
+  VK_AELIG,           /** Upper case aelig  : Æ */
+  VK_OSLASH,          /** Upper case oslash : Ø */
+  VK_ARING,           /** Upper case aring  : Å */
+  
+  // Japanese layout support
+  VK_YEN,
+  VK_MUHENKAN,
+  VK_HENKAN,
+  VK_KATAKANA_HIRAGANA_ROMAJI,
+  VK_HANKAKU_ZENKAKU_KANJI,
+  VK_SHIFT_0,
 
   VK_ASCII,           /**< Specifies an ASCII code - used when virtual key is embedded in VirtualKeyItem structure and VirtualKeyItem.ASCII is valid */
   VK_LAST,            // marks the last virtual key

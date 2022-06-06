@@ -68,7 +68,7 @@ public:
 
   void setPaletteItem(int index, RGB888 const & color);
   
-  void setMonochrome(bool value)                            { m_monochrome = value; }
+  void setMonochrome(bool value);
   bool monochrome()                                         { return m_monochrome; }
 
 
@@ -137,9 +137,9 @@ private:
   // abstract method of BitmappedDisplayController
   int getBitmapSavePixelSize() { return 1; }
 
-  static void drawScanlineX1(void * arg, uint16_t * dest, int scanLine);
-  static void drawScanlineX2(void * arg, uint16_t * dest, int scanLine);
-  static void drawScanlineX3(void * arg, uint16_t * dest, int scanLine);
+  static void drawScanlineX1(void * arg, uint16_t * dest, int destSample, int scanLine);
+  static void drawScanlineX2(void * arg, uint16_t * dest, int destSample, int scanLine);
+  static void drawScanlineX3(void * arg, uint16_t * dest, int destSample, int scanLine);
 
 
   static CVBS16Controller *    s_instance;

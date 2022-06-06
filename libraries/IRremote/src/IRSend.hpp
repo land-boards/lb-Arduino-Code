@@ -29,8 +29,8 @@
  *
  ************************************************************************************
  */
-#ifndef IR_SEND_HPP
-#define IR_SEND_HPP
+#ifndef _IR_SEND_HPP
+#define _IR_SEND_HPP
 
 /*
  * This improves readability of code by avoiding a lot of #if defined clauses
@@ -71,7 +71,7 @@ void IRsend::begin(){
 /**
  * @param aFeedbackLEDPin if 0, then take board specific FEEDBACK_LED_ON() and FEEDBACK_LED_OFF() functions
  */
-void IRsend::begin(bool aEnableLEDFeedback, uint8_t aFeedbackLEDPin) {
+void IRsend::begin(bool aEnableLEDFeedback, uint_fast8_t aFeedbackLEDPin) {
 #if !defined(NO_LED_FEEDBACK_CODE)
     bool tEnableLEDFeedback = DO_NOT_ENABLE_LED_FEEDBACK;
     if(aEnableLEDFeedback) {
@@ -85,7 +85,7 @@ void IRsend::begin(bool aEnableLEDFeedback, uint8_t aFeedbackLEDPin) {
 }
 
 #else // defined(IR_SEND_PIN)
-IRsend::IRsend(uint8_t aSendPin) { // @suppress("Class members should be properly initialized")
+IRsend::IRsend(uint_fast8_t aSendPin) { // @suppress("Class members should be properly initialized")
     sendPin = aSendPin;
 #  if !defined(NO_LED_FEEDBACK_CODE)
     setLEDFeedback(0, DO_NOT_ENABLE_LED_FEEDBACK);
@@ -96,14 +96,14 @@ IRsend::IRsend(uint8_t aSendPin) { // @suppress("Class members should be properl
  * Initializes the send pin and enable LED feedback with board specific FEEDBACK_LED_ON() and FEEDBACK_LED_OFF() functions
  * @param aSendPin The Arduino pin number, where a IR sender diode is connected.
  */
-void IRsend::begin(uint8_t aSendPin) {
+void IRsend::begin(uint_fast8_t aSendPin) {
     sendPin = aSendPin;
 #  if !defined(NO_LED_FEEDBACK_CODE)
     setLEDFeedback(USE_DEFAULT_FEEDBACK_LED_PIN, LED_FEEDBACK_ENABLED_FOR_SEND);
 #  endif
 }
 
-void IRsend::setSendPin(uint8_t aSendPin) {
+void IRsend::setSendPin(uint_fast8_t aSendPin) {
     sendPin = aSendPin;
 }
 #endif // defined(IR_SEND_PIN)
@@ -113,7 +113,7 @@ void IRsend::setSendPin(uint8_t aSendPin) {
  * @param aSendPin The Arduino pin number, where a IR sender diode is connected.
  * @param aFeedbackLEDPin if 0, then take board specific FEEDBACK_LED_ON() and FEEDBACK_LED_OFF() functions
  */
-void IRsend::begin(uint8_t aSendPin, bool aEnableLEDFeedback, uint8_t aFeedbackLEDPin) {
+void IRsend::begin(uint_fast8_t aSendPin, bool aEnableLEDFeedback, uint_fast8_t aFeedbackLEDPin) {
 #if defined(IR_SEND_PIN)
     (void) aSendPin; // for backwards compatibility
 #else
@@ -122,7 +122,7 @@ void IRsend::begin(uint8_t aSendPin, bool aEnableLEDFeedback, uint8_t aFeedbackL
 
 #if !defined(NO_LED_FEEDBACK_CODE)
     bool tEnableLEDFeedback = DO_NOT_ENABLE_LED_FEEDBACK;
-    if(aEnableLEDFeedback) {
+    if (aEnableLEDFeedback) {
         tEnableLEDFeedback = LED_FEEDBACK_ENABLED_FOR_SEND;
     }
     setLEDFeedback(aFeedbackLEDPin, tEnableLEDFeedback);
@@ -257,11 +257,11 @@ void IRsend::sendRaw(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aLen
         }
     }
 
-//    ledOff();  // Always end with the LED off
+    IrReceiver.restartAfterSend();
 }
 
 /**
- * New function using an 8 byte tick timing array to save program space
+ * New function using an 8 byte tick timing array to save program memory
  * Raw data starts with a Mark. No leading space as in received timing data!
  */
 void IRsend::sendRaw(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
@@ -277,6 +277,7 @@ void IRsend::sendRaw(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfBuf
         }
     }
     IRLedOff();  // Always end with the LED off
+    IrReceiver.restartAfterSend();
 }
 
 /**
@@ -293,7 +294,7 @@ void IRsend::sendRaw_P(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aL
      * Raw data starts with a mark
      */
     for (uint_fast8_t i = 0; i < aLengthOfBuffer; i++) {
-        uint16_t duration = pgm_read_word(&aBufferWithMicroseconds[i]);
+        unsigned int duration = pgm_read_word(&aBufferWithMicroseconds[i]);
         if (i & 1) {
             // Odd
             space(duration);
@@ -301,12 +302,12 @@ void IRsend::sendRaw_P(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aL
             mark(duration);
         }
     }
-//    ledOff();  // Always end with the LED off
+    IrReceiver.restartAfterSend();
 #endif
 }
 
 /**
- * New function using an 8 byte tick timing array in FLASH to save program space
+ * New function using an 8 byte tick timing array in FLASH to save program memory
  * Raw data starts with a Mark. No leading space as in received timing data!
  */
 void IRsend::sendRaw_P(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
@@ -317,7 +318,7 @@ void IRsend::sendRaw_P(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfB
     enableIROut(aIRFrequencyKilohertz);
 
     for (uint_fast8_t i = 0; i < aLengthOfBuffer; i++) {
-        uint16_t duration = pgm_read_byte(&aBufferWithTicks[i]) * (uint16_t) MICROS_PER_TICK;
+        unsigned int duration = pgm_read_byte(&aBufferWithTicks[i]) * (unsigned int) MICROS_PER_TICK;
         if (i & 1) {
             // Odd
             space(duration);
@@ -326,6 +327,7 @@ void IRsend::sendRaw_P(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfB
         }
     }
     IRLedOff();  // Always end with the LED off
+    IrReceiver.restartAfterSend();
 #endif
 }
 
@@ -334,7 +336,7 @@ void IRsend::sendRaw_P(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfB
  * The output always ends with a space
  */
 void IRsend::sendPulseDistanceWidthData(unsigned int aOneMarkMicros, unsigned int aOneSpaceMicros, unsigned int aZeroMarkMicros,
-        unsigned int aZeroSpaceMicros, uint32_t aData, uint8_t aNumberOfBits, bool aMSBfirst, bool aSendStopBit) {
+        unsigned int aZeroSpaceMicros, uint32_t aData, uint_fast8_t aNumberOfBits, bool aMSBfirst, bool aSendStopBit) {
 
     if (aMSBfirst) {  // Send the MSB first.
         // send data from MSB to LSB until mask bit is shifted out
@@ -365,7 +367,7 @@ void IRsend::sendPulseDistanceWidthData(unsigned int aOneMarkMicros, unsigned in
         IR_TRACE_PRINT('S');
         mark(aZeroMarkMicros); // seems like this is used for stop bits
     }
-    IR_TRACE_PRINTLN("");
+    IR_TRACE_PRINTLN(F(""));
 }
 
 /*
@@ -381,7 +383,7 @@ void IRsend::sendBiphaseData(unsigned int aBiphaseTimeUnit, uint32_t aData, uint
     mark(aBiphaseTimeUnit);
 
     IR_TRACE_PRINT('S');
-    uint8_t tLastBitValue = 1; // Start bit is a 1
+    uint_fast8_t tLastBitValue = 1; // Start bit is a 1
 
 // Data - Biphase code MSB first
     for (uint32_t tMask = 1UL << (aNumberOfBits - 1); tMask; tMask >>= 1) {
@@ -408,7 +410,7 @@ void IRsend::sendBiphaseData(unsigned int aBiphaseTimeUnit, uint32_t aData, uint
             tLastBitValue = 0;
         }
     }
-    IR_TRACE_PRINTLN("");
+    IR_TRACE_PRINTLN(F(""));
 }
 
 /**
@@ -606,7 +608,7 @@ void IRsend::customDelayMicroseconds(unsigned long aMicroseconds) {
  * A few hours staring at the ATmega documentation and this will all make sense.
  * See my Secrets of Arduino PWM at http://www.righto.com/2009/07/secrets-of-arduino-pwm.html for details.
  */
-void IRsend::enableIROut(uint8_t aFrequencyKHz) {
+void IRsend::enableIROut(uint_fast8_t aFrequencyKHz) {
 #if defined(SEND_PWM_BY_TIMER)
     timerConfigForSend(aFrequencyKHz); // must set output pin mode and disable receive interrupt if required, e.g. uses the same resource
 
@@ -623,11 +625,18 @@ void IRsend::enableIROut(uint8_t aFrequencyKHz) {
 #  endif
 #endif // defined(SEND_PWM_BY_TIMER)
 
-#if defined(USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN) && defined(OUTPUT_OPEN_DRAIN)
-    pinMode(sendPin, OUTPUT_OPEN_DRAIN); // the mode INPUT for mimicking open drain is set at IRLedOff()
-#elif !defined(SEND_PWM_BY_TIMER)
-// For SEND_PWM_BY_TIMER this is handled by the timerConfigForSend() function
+#if defined(USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN) && defined(OUTPUT_OPEN_DRAIN) // the mode INPUT for mimicking open drain is set at IRLedOff()
+#    if defined(IR_SEND_PIN)
+    pinModeFast(IR_SEND_PIN, OUTPUT_OPEN_DRAIN);
+#    else
+    pinModeFast(sendPin, OUTPUT_OPEN_DRAIN);
+#    endif
+#else
+#    if defined(IR_SEND_PIN)
+    pinModeFast(IR_SEND_PIN, OUTPUT);
+#    else
     pinModeFast(sendPin, OUTPUT);
+#    endif
 #endif // defined(USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN)
 }
 
@@ -636,5 +645,4 @@ unsigned int IRsend::getPulseCorrectionNanos() {
 }
 
 /** @}*/
-#endif // IR_SEND_HPP
-#pragma once
+#endif // _IR_SEND_HPP

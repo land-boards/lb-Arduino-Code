@@ -58,11 +58,7 @@
 
 #include <Arduino.h>
 
-/*
- * Define macros for input and output pin etc.
- */
-#include "PinDefinitionsAndMore.h"
-
+#include "PinDefinitionsAndMore.h" //Define macros for input and output pin etc.
 #include <IRremote.hpp>
 
 void setup() {
@@ -75,8 +71,7 @@ void setup() {
 
     Serial.print(F("Ready to receive IR signals of protocols: "));
     printActiveIRProtocols(&Serial);
-    Serial.print(F("at pin "));
-    Serial.println(IR_RECEIVE_PIN);
+    Serial.println(F("at pin " STR(IR_RECEIVE_PIN)));
 }
 
 void loop() {
@@ -93,6 +88,7 @@ void loop() {
         // Print a short summary of received data
         IrReceiver.printIRResultShort(&Serial);
         if (IrReceiver.decodedIRData.protocol == UNKNOWN) {
+            Serial.println(F("Received noise or an unknown (or not yet enabled) protocol"));
             // We have an unknown protocol here, print more info
             IrReceiver.printIRResultRawFormatted(&Serial, true);
         }

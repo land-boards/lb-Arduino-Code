@@ -50,11 +50,15 @@ namespace fabgl {
 // CVBS Standards
 
 
-// interlaced PAL-B
+// interlaced PAL-B (max 640x480)
 static const struct CVBS_I_PAL_B : CVBSParams {
   CVBS_I_PAL_B() {
     desc                         = "I-PAL-B";
-    sampleRate_hz                = 17750000.0;  // = 1136/64*1000000
+    
+    //sampleRate_hz                = 17750000.0;  // = 1136/64*1000000
+    //sampleRate_hz                = 4433618.75*4;  // = 1136/64*1000000
+    sampleRate_hz                = 17500000.0; // 1120/64*1000000
+    
     subcarrierFreq_hz            = 4433618.75;
     line_us                      = 64.0;
     hline_us                     = 32.0;
@@ -108,17 +112,16 @@ static const struct CVBS_I_PAL_B : CVBSParams {
 } CVBS_I_PAL_B;
 
 
-// interlaced PAL-B wide
+// interlaced PAL-B wide (max 768x480)
 static const struct CVBS_I_PAL_B_WIDE : CVBS_I_PAL_B {
   CVBS_I_PAL_B_WIDE() : CVBS_I_PAL_B() {
     desc                         = "I-PAL-B-WIDE";
     defaultVisibleSamples        = 768;
-    defaultVisibleLines          = 240;
   }
 } CVBS_I_PAL_B_WIDE;
 
 
-// progressive PAL-B
+// progressive PAL-B (max 640x240)
 static const struct CVBS_P_PAL_B : CVBS_I_PAL_B {
   CVBS_P_PAL_B() : CVBS_I_PAL_B() {
     desc                         = "P-PAL-B";
@@ -129,7 +132,16 @@ static const struct CVBS_P_PAL_B : CVBS_I_PAL_B {
 } CVBS_P_PAL_B;
 
 
-// interlaced NTSC-M
+// progressive PAL-B wide (max 768x240)
+static const struct CVBS_P_PAL_B_WIDE : CVBS_P_PAL_B {
+  CVBS_P_PAL_B_WIDE() : CVBS_P_PAL_B() {
+    desc                         = "P-PAL-B-WIDE";
+    defaultVisibleSamples        = 768;
+  }
+} CVBS_P_PAL_B_WIDE;
+
+
+// interlaced NTSC-M (max 640x200)
 static const struct CVBS_I_NTSC_M : CVBSParams {
   CVBS_I_NTSC_M() {
     desc                         = "I-NTSC-M";
@@ -183,17 +195,16 @@ static const struct CVBS_I_NTSC_M : CVBSParams {
 } CVBS_I_NTSC_M;
 
 
-// interlaced NTSC-M wide
+// interlaced NTSC-M wide (max 768x200)
 static const struct CVBS_I_NTSC_M_WIDE : CVBS_I_NTSC_M {
   CVBS_I_NTSC_M_WIDE() : CVBS_I_NTSC_M() {
     desc                         = "I-NTSC-M-WIDE";
     defaultVisibleSamples        = 768;
-    defaultVisibleLines          = 200;
   };
 } CVBS_I_NTSC_M_WIDE;
 
 
-// progressive NTSC-M
+// progressive NTSC-M (max 640x200)
 static const struct CVBS_P_NTSC_M : CVBS_I_NTSC_M {
   CVBS_P_NTSC_M() : CVBS_I_NTSC_M() {
     desc                         = "P-NTSC-M";
@@ -204,13 +215,36 @@ static const struct CVBS_P_NTSC_M : CVBS_I_NTSC_M {
 } CVBS_P_NTSC_M;
 
 
+// progressive NTSC-M wide (max 768x200)
+static const struct CVBS_P_NTSC_M_WIDE : CVBS_P_NTSC_M {
+  CVBS_P_NTSC_M_WIDE() : CVBS_P_NTSC_M() {
+    desc                         = "P-NTSC-M-WIDE";
+    defaultVisibleSamples        = 768;
+  }
+} CVBS_P_NTSC_M_WIDE;
+
+
+// progressive NTSC-M extended (max 768x240)
+static const struct CVBS_P_NTSC_M_EXT : CVBS_P_NTSC_M_WIDE {
+  CVBS_P_NTSC_M_EXT() : CVBS_P_NTSC_M_WIDE() {
+    desc                         = "P-NTSC-M-EXT";
+    defaultVisibleLines          = 240;
+    blankLines                   = 17;
+  }
+} CVBS_P_NTSC_M_EXT;
+
+
+
 static CVBSParams const * CVBS_Standards[] = {
   &CVBS_I_PAL_B,
   &CVBS_P_PAL_B,
   &CVBS_I_PAL_B_WIDE,
+  &CVBS_P_PAL_B_WIDE,
   &CVBS_I_NTSC_M,
   &CVBS_P_NTSC_M,
   &CVBS_I_NTSC_M_WIDE,
+  &CVBS_P_NTSC_M_WIDE,
+  &CVBS_P_NTSC_M_EXT,
 };
 
 
@@ -226,15 +260,15 @@ volatile int          CVBSGenerator::s_field;
 volatile int          CVBSGenerator::s_frame;
 volatile int          CVBSGenerator::s_frameLine;
 volatile int          CVBSGenerator::s_activeLineIndex;
-volatile int          CVBSGenerator::s_interFrameLine;
 volatile scPhases_t * CVBSGenerator::s_subCarrierPhase;
 volatile scPhases_t * CVBSGenerator::s_lineSampleToSubCarrierSample;
 volatile int16_t      CVBSGenerator::s_firstVisibleSample;
 volatile int16_t      CVBSGenerator::s_visibleSamplesCount;
+volatile bool         CVBSGenerator::s_lineSwitch;
 
 
-#if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
-  volatile uint64_t s_compctrlcycles = 0;
+#if FABGLIB_CVBSCONTROLLER_PERFORMANCE_CHECK
+  volatile uint64_t s_cvbsctrlcycles = 0;
 #endif
 
 
@@ -379,14 +413,25 @@ void CVBSGenerator::closeDMAChain(int index)
 }
 
 
+void CVBSGenerator::addExtraSamples(double us, double * aus, int * node)
+{
+  int extra_samples = imin((us - *aus) / m_sample_us, m_blackBufferLength) & ~1;
+  if (extra_samples > 0) {
+    setDMANode((*node)++, m_blackBuffer, extra_samples);
+    *aus += extra_samples * m_sample_us;
+    printf("added %d extra samples\n", extra_samples);
+  }
+}
+
+
 // align samples, incrementing or decrementing value
 static int bestAlignValue(int value)
 {
   // 2 samples
-  return value & ~1;
+  //return value & ~1;
 
-/*
-  // 4 samples
+  ///*
+  // 4 samples (round up or down)
   int up   = (value + 3) & ~3;
   int down = (value & ~3);
   return abs(value - up) < abs(value - down) ? up : down;
@@ -399,8 +444,8 @@ void CVBSGenerator::buildDMAChain()
   int lineSamplesCount  = round(m_params->line_us / m_sample_us);
   int hlineSamplesCount = round(m_params->hline_us / m_sample_us);
 
-  printf("lineSamplesCount  = %d\n", lineSamplesCount);
-  printf("hlineSamplesCount = %d\n\n", hlineSamplesCount);
+  //printf("lineSamplesCount  = %d\n", lineSamplesCount);
+  //printf("hlineSamplesCount = %d\n\n", hlineSamplesCount);
 
   // make sizes aligned
   lineSamplesCount      = bestAlignValue(lineSamplesCount);
@@ -409,9 +454,10 @@ void CVBSGenerator::buildDMAChain()
   m_actualLine_us  = lineSamplesCount * m_sample_us;
   m_actualHLine_us = hlineSamplesCount * m_sample_us;
 
-  printf("adj lineSamplesCount  = %d\n", lineSamplesCount);
-  printf("adj hlineSamplesCount = %d\n", hlineSamplesCount);
-  printf("actual line duration  = %.2f us\n", m_actualLine_us);
+  //printf("adj lineSamplesCount  = %d\n", lineSamplesCount);
+  //printf("adj hlineSamplesCount = %d\n", hlineSamplesCount);
+  //printf("actual line duration       = %.6f us\n", m_actualLine_us);
+  //printf("actual half line duration  = %.6f us\n", m_actualHLine_us);
 
   // setup long sync pulse buffer
   m_lsyncBuf = (volatile uint16_t *) heap_caps_malloc(hlineSamplesCount * sizeof(uint16_t), MALLOC_CAP_DMA);
@@ -490,7 +536,7 @@ void CVBSGenerator::buildDMAChain()
                        m_params->postEqualizingPulseCount +
                        m_params->endFieldEqualizingPulseCount +
                        ceil(m_params->fieldLines) * m_params->fields + 2;
-  
+
   m_DMAChain = (volatile lldesc_t *) heap_caps_malloc(DMAChainLength * sizeof(lldesc_t), MALLOC_CAP_DMA);
   
   //printf("m_DMAChain size: %d bytes (%d items)\n", DMAChainLength * sizeof(lldesc_t), DMAChainLength);
@@ -503,10 +549,12 @@ void CVBSGenerator::buildDMAChain()
   volatile lldesc_t * nodeptr = nullptr;
   
   // microseconds since start of frame sequence
-  double us  = 0;  // @TODO: should we offset by half of hsync falling edge??
+  double us = m_params->hsyncEdge_us / 2.;
   
   // microseconds since start of frame sequence: actual value, sample size rounded
   double aus = us;
+
+  bool lineSwitch = false;
 
   for (int frame = 1; frame <= m_params->frameGroupCount; ++frame) {
 
@@ -552,11 +600,8 @@ void CVBSGenerator::buildDMAChain()
         //printf("frame(0)=%d frameLine(0)=%d scPhase=%.1f scSample=%d\n", frame-1, (int)frameLine-1, subCarrierPhase * 360., m_subCarrierPhases[frame - 1][(int)frameLine - 1]);
         
         #if SHOWDMADETAILS
-        int interFrameLine = m_params->fieldLines * m_params->fields * (frame - 1) + frameLine - 1; // range: 0...
-        bool oddLine = ((interFrameLine & 1) == 0);
-        printf("SCPhase = %.2f ", subCarrierPhase * 360.);
-        printf("BurstPhase = %.2f ", fmod(subCarrierPhase * 2. * M_PI + (oddLine ? 1 : -1) * 3. * M_PI / 4., 2. * M_PI) / M_PI * 180.);
-        oddLine = !oddLine;
+        printf("SCPhase = %.2f  ", subCarrierPhase * 360.);
+        printf("BurstPhase = %.2f (%c)  ", fmod(subCarrierPhase * 2. * M_PI + (lineSwitch ? 1 : -1) * 3. * M_PI / 4., 2. * M_PI) / M_PI * 180., lineSwitch ? 'O' : 'E');
         #endif
         
         if (fieldLine < m_params->preEqualizingPulseCount * .5 + 1.0) {
@@ -565,8 +610,10 @@ void CVBSGenerator::buildDMAChain()
           #if SHOWDMADETAILS
           printf("node = %d  - pre-equalizing pulse\n", node);
           #endif
-          if (frame == 1)
+          if (frame == 1) {
+            //addExtraSamples(us, &aus, &node);
             nodeptr = setDMANode(node++, m_ssyncBuf, hlineSamplesCount);
+          }
           frameLine += .5;
           fieldLine += .5;
           us        += m_params->hline_us;
@@ -579,6 +626,7 @@ void CVBSGenerator::buildDMAChain()
           printf("node = %d  - vsync pulse", node);
           #endif
           if (frame == 1) {
+            //addExtraSamples(us, &aus, &node);
             nodeptr = setDMANode(node++, m_lsyncBuf, hlineSamplesCount);
             if (!startOfFieldISR) {
               // generate interrupt at the first vsync, this will start drawing first lines
@@ -604,8 +652,10 @@ void CVBSGenerator::buildDMAChain()
           #if SHOWDMADETAILS
           printf("node = %d  - post-equalizing pulse\n", node);
           #endif
-          if (frame == 1)
+          if (frame == 1) {
+            //addExtraSamples(us, &aus, &node);
             nodeptr = setDMANode(node++, m_ssyncBuf, hlineSamplesCount);
+          }
           frameLine += .5;
           fieldLine += .5;
           us        += m_params->hline_us;
@@ -621,6 +671,7 @@ void CVBSGenerator::buildDMAChain()
          
           if (firstActiveLine) {
             m_firstActiveFrameLine[field - 1] = (int)frameLine - 1;
+            m_firstActiveFieldLineSwitch[frame - 1][field - 1] = lineSwitch;
             firstActiveLine = false;
             activeLineIndex = 0;
             #if SHOWDMADETAILS
@@ -647,8 +698,10 @@ void CVBSGenerator::buildDMAChain()
             #if SHOWDMADETAILS
             printf("ending half");
             #endif
-            if (frame == 1)
+            if (frame == 1) {
+              //addExtraSamples(us, &aus, &node);
               nodeptr = setDMANode(node++, m_lineBuf[activeLineIndex % CVBS_ALLOCATED_LINES] + hlineSamplesCount, hlineSamplesCount);
+            }
             frameLine += .5;
             fieldLine += .5;
             us        += m_params->hline_us;
@@ -658,8 +711,10 @@ void CVBSGenerator::buildDMAChain()
             #if SHOWDMADETAILS
             printf("beginning half");
             #endif
-            if (frame == 1)
+            if (frame == 1) {
+              //addExtraSamples(us, &aus, &node);
               nodeptr = setDMANode(node++, m_lineBuf[activeLineIndex % CVBS_ALLOCATED_LINES], hlineSamplesCount);
+            }
             frameLine += .5;
             fieldLine += .5;
             us        += m_params->hline_us;
@@ -669,8 +724,10 @@ void CVBSGenerator::buildDMAChain()
             #if SHOWDMADETAILS
             printf("full");
             #endif
-            if (frame == 1)
-              nodeptr = setDMANode(node++, m_lineBuf[activeLineIndex % CVBS_ALLOCATED_LINES], lineSamplesCount);
+            if (frame == 1) {
+              int l = activeLineIndex % CVBS_ALLOCATED_LINES;
+              nodeptr = setDMANode(node++, m_lineBuf[l], lineSamplesCount);
+            }
             frameLine += 1.0;
             fieldLine += 1.0;
             us        += m_params->line_us;
@@ -695,8 +752,10 @@ void CVBSGenerator::buildDMAChain()
           #if SHOWDMADETAILS
           printf("node = %d  - end-field equalizing pulse\n", node);
           #endif
-          if (frame == 1)
+          if (frame == 1) {
+            //addExtraSamples(us, &aus, &node);
             nodeptr = setDMANode(node++, m_ssyncBuf, hlineSamplesCount);
+          }
           frameLine += .5;
           fieldLine += .5;
           us        += m_params->hline_us;
@@ -704,17 +763,13 @@ void CVBSGenerator::buildDMAChain()
           
         }
         
-      /*
-      int extra_samples = imin(((us - aus) / m_sample_us), m_blackBufferLength) & ~3;
-      if (extra_samples > 0 && frame == 1 && ((int)fieldLine < m_firstVisibleFieldLine-1 || (int)fieldLine > m_lastVisibleFieldLine+1)) {
-        setDMANode(node++, m_blackBuffer, extra_samples);
-        aus += extra_samples * m_sample_us;
-        printf("added %d extra samples\n", extra_samples);
-      }
-      */
-        
+        if (frameLine == (int)frameLine)
+          lineSwitch = !lineSwitch;
         
       } // field-line loop
+      
+      //if (frame == 1)
+      //  addExtraSamples(us, &aus, &node);
             
     } // field loop
     
@@ -815,7 +870,7 @@ void CVBSGenerator::setup(CVBSParams const * params)
   
   double subcarrierCycle_us = 1000000. / m_params->subcarrierFreq_hz; // duration in microseconds of a subcarrier cycle
   
-  m_firstColorBurstSample   = (m_params->hsync_us + m_params->burstStart_us) / m_sample_us;
+  m_firstColorBurstSample   = (m_params->hsync_us + m_params->hsyncEdge_us / 2. + m_params->burstStart_us) / m_sample_us;
   m_lastColorBurstSample    = m_firstColorBurstSample + (subcarrierCycle_us * m_params->burstCycles) / m_sample_us - 1;
 }
 
@@ -891,7 +946,7 @@ void CVBSGenerator::setDrawScanlineCallback(CVBSDrawScanlineCallback drawScanlin
 
 void IRAM_ATTR CVBSGenerator::ISRHandler(void * arg)
 {
-  #if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
+  #if FABGLIB_CVBSCONTROLLER_PERFORMANCE_CHECK
   auto s1 = getCycleCount();
   #endif
 
@@ -905,11 +960,11 @@ void IRAM_ATTR CVBSGenerator::ISRHandler(void * arg)
       s_field = (s_field + 1) % ctrl->m_params->fields;
       if (s_field == 0)
         s_frame = (s_frame + 1) % ctrl->m_params->frameGroupCount;  // first field
-      s_interFrameLine   = ctrl->m_linesPerFrame * s_frame + ctrl->m_firstActiveFrameLine[s_field];
       s_frameLine        = ctrl->m_firstActiveFrameLine[s_field];
       s_subCarrierPhase  = &(ctrl->m_subCarrierPhases[s_frame][s_frameLine]);
       s_activeLineIndex  = 0;
       s_scanLine         = ctrl->m_startingScanLine[s_field];
+      s_lineSwitch       = ctrl->m_firstActiveFieldLineSwitch[s_frame][s_field];
       s_VSync            = false;
     }
 
@@ -924,7 +979,7 @@ void IRAM_ATTR CVBSGenerator::ISRHandler(void * arg)
     
     for (int i = 0; i < CVBS_ALLOCATED_LINES / 2; ++i) {
     
-      auto fullLineBuf = (uint16_t*) lineBuf[s_activeLineIndex % CVBS_ALLOCATED_LINES];
+      auto fullLineBuf = (uint16_t*)lineBuf[s_activeLineIndex % CVBS_ALLOCATED_LINES];
 
       if (*s_subCarrierPhase == CVBS_NOBURSTFLAG) {
         // no burst for this line
@@ -933,28 +988,29 @@ void IRAM_ATTR CVBSGenerator::ISRHandler(void * arg)
           fullLineBuf[s ^ 1] = blk;
       } else {
         // fill color burst
-        auto colorBurstLUT = ctrl->m_colorBurstLUT[s_interFrameLine & 1];
+        auto colorBurstLUT = (uint16_t *) ctrl->m_colorBurstLUT[s_lineSwitch];
+        auto sampleLUT     = CVBSGenerator::lineSampleToSubCarrierSample() + firstColorBurstSample;
         for (int s = firstColorBurstSample; s <= lastColorBurstSample; ++s)
-          fullLineBuf[s ^ 1] = colorBurstLUT[s_lineSampleToSubCarrierSample[s] + *s_subCarrierPhase];
+          fullLineBuf[s ^ 1] = colorBurstLUT[*sampleLUT++ + *s_subCarrierPhase];
       }
       
       // fill active area
-      auto visibleBuf = fullLineBuf + s_firstVisibleSample;
       if (s_frameLine >= firstVisibleFrameLine && s_frameLine <= lastVisibleFrameLine) {
         // visible lines
-        drawScanlineCallback(drawScanlineArg, visibleBuf, s_scanLine);
+        drawScanlineCallback(drawScanlineArg, fullLineBuf, s_firstVisibleSample, s_scanLine);
         s_scanLine += interlaceFactor; // +2 if interlaced, +1 if progressive
       } else {
         // blank lines
+        auto visibleBuf = fullLineBuf + s_firstVisibleSample;
         uint32_t blackFillX2 = (ctrl->m_params->blackLevel << 8) | (ctrl->m_params->blackLevel << (8 + 16));
         for (int col = 0; col < s_visibleSamplesCount; col += 2, visibleBuf += 2)
           *((uint32_t*)(visibleBuf)) = blackFillX2;
       }
       
       ++s_activeLineIndex;
-      ++s_interFrameLine;
       ++s_frameLine;
       ++s_subCarrierPhase;
+      s_lineSwitch = !s_lineSwitch;
       
     }
 
@@ -962,8 +1018,8 @@ void IRAM_ATTR CVBSGenerator::ISRHandler(void * arg)
       s_VSync = true;
   }
 
-  #if FABGLIB_VGAXCONTROLLER_PERFORMANCE_CHECK
-  s_compctrlcycles += getCycleCount() - s1;
+  #if FABGLIB_CVBSCONTROLLER_PERFORMANCE_CHECK
+  s_cvbsctrlcycles += getCycleCount() - s1;
   #endif
 
   I2S0.int_clr.val = I2S0.int_st.val;

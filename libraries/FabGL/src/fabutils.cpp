@@ -32,7 +32,9 @@
 
 #include "ff.h"
 #include "diskio.h"
-#include "vfs_api.h"
+extern "C" {
+  #include <dirent.h>
+}
 #include "esp_vfs_fat.h"
 #include "esp_task_wdt.h"
 #include "driver/sdspi_host.h"
@@ -1224,14 +1226,13 @@ bool FileBrowser::mountSDCard(bool formatOnFail, char const * mountPath, size_t 
   // @TODO: check again
   host.max_freq_khz = 19000;
 
-  spi_bus_config_t bus_cfg = {
-        .mosi_io_num = int2gpio(MOSI),
-        .miso_io_num = int2gpio(MISO),
-        .sclk_io_num = int2gpio(CLK),
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .max_transfer_sz = 4000,
-  };
+  spi_bus_config_t bus_cfg = { };
+  bus_cfg.mosi_io_num      = int2gpio(MOSI);
+  bus_cfg.miso_io_num      = int2gpio(MISO);
+  bus_cfg.sclk_io_num      = int2gpio(CLK);
+  bus_cfg.quadwp_io_num    = -1;
+  bus_cfg.quadhd_io_num    = -1;
+  bus_cfg.max_transfer_sz  = 4000;
   auto r = spi_bus_initialize((spi_host_device_t)host.slot, &bus_cfg, 2);
 
   if (r == ESP_OK || r == ESP_ERR_INVALID_STATE) {  // ESP_ERR_INVALID_STATE, maybe spi_bus_initialize already called
@@ -1488,6 +1489,18 @@ int CoreUsage::s_busiestCore = FABGLIB_VIDEO_CPUINTENSIVE_TASKS_CORE;
 
 
 ///////////////////////////////////////////////////////////////////////////////////
+// CurrentVideoMode
+
+
+VideoMode CurrentVideoMode::s_videoMode = VideoMode::None;
+
+
+// CurrentVideoMode
+///////////////////////////////////////////////////////////////////////////////////
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
 // APLLCalcParams
 
 
@@ -1714,6 +1727,57 @@ void APLLCalcParams(double freq, APLLParams * params, uint8_t * a, uint8_t * b, 
     }
   }
 }
+
+
+// derived from: https://linuxos.sk/blog/mirecove-dristy/detail/esp32-dynamicka-zmena-vzorkovacej-frekvencie-/
+// A    : 1..63
+// B    : 0..63
+// N    : 2..254
+// M    : 1..63
+// ret: actual sample rate
+int calcI2STimingParams(int sampleRate, int * outA, int * outB, int * outN, int * outM)
+{
+  *outM = 1;
+
+  double N = (double)APB_CLK_FREQ / sampleRate;
+  while (N >= 255) {
+    ++(*outM);
+    N = (double)APB_CLK_FREQ / sampleRate / *outM;
+  }
+
+  double min_error = 1.0;
+  *outN = N;
+  *outB = 0;
+  *outA = 1;
+
+  for (int a = 1; a < 64; ++a) {
+    int b = (N - (double)(*outN)) * (double)a;
+    if (b > 63)
+      continue;
+
+    double divisor = (double)(*outN) + (double)b / (double)a;
+    double error = divisor > N ? divisor - N : N - divisor;
+    if (error < min_error) {
+      min_error = error;
+      *outA = a;
+      *outB = b;
+    }
+
+    ++b;
+    if (b > 63)
+      continue;
+    divisor = (double)(*outN) + (double)b / (double)a;
+    error = divisor > N ? divisor - N : N - divisor;
+    if (error < min_error) {
+      min_error = error;
+      *outA = a;
+      *outB = b;
+    }
+  }
+
+  return APB_CLK_FREQ / ((double)(*outN) + (double)(*outB) / (*outA)) / *outM;
+}
+
 
 
 

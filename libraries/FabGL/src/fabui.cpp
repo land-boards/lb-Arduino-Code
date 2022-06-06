@@ -82,6 +82,7 @@ void dumpEvent(uiEvent * event)
     if (ot.uiButton) printf("uiButton ");
     if (ot.uiTextEdit) printf("uiTextEdit ");
     if (ot.uiLabel) printf("uiLabel ");
+    if (ot.uiStaticLabel) printf("uiStaticLabel ");
     if (ot.uiImage) printf("uiImage ");
     if (ot.uiPanel) printf("uiPanel ");
     if (ot.uiPaintBox) printf("uiPaintBox ");
@@ -264,7 +265,6 @@ int uiApp::run(BitmappedDisplayController * displayController, Keyboard * keyboa
   // root window always stays at 0, 0 and cannot be moved
   m_rootWindow = new uiFrame(nullptr, "", Point(0, 0), Size(m_canvas->getWidth(), m_canvas->getHeight()), false);
   m_rootWindow->setApp(this);
-  m_rootWindow->setCanvas(m_canvas);
 
   m_rootWindow->windowStyle().borderSize     = 0;
   m_rootWindow->frameStyle().backgroundColor = RGB888(255, 255, 255);
@@ -1122,7 +1122,7 @@ uiMessageBoxResult uiApp::messageBox(char const * title, char const * text, char
   }
 
   int y = font->height + titleHeight + (textHeight - font->height) / 2;
-  new uiLabel(mainFrame, text, Point(x, y));
+  new uiStaticLabel(mainFrame, text, Point(x, y));
 
   // setup panel (where buttons are positioned)
 
@@ -1212,7 +1212,7 @@ uiMessageBoxResult uiApp::inputBox(char const * title, char const * text, char *
 
   int x = 10;
   int y = font->height + titleHeight + (textHeight - font->height) / 2;
-  new uiLabel(mainFrame, text, Point(x, y));
+  new uiStaticLabel(mainFrame, text, Point(x, y));
 
   auto edit = new uiTextEdit(mainFrame, inOutString, Point(x + textExtent + 5, y - 4), Size(editExtent - 15, textHeight + 6));
 
@@ -1286,7 +1286,7 @@ uiMessageBoxResult uiApp::fileDialog(char const * title, char * inOutDirectory, 
   constexpr int lbloy = 3;
 
   constexpr int fnBorder = 20;
-  new uiLabel(mainFrame, "Filename", Point(x + fnBorder, y + lbloy));
+  new uiStaticLabel(mainFrame, "Filename", Point(x + fnBorder, y + lbloy));
   auto filenameEdit = new uiTextEdit(mainFrame, inOutFilename, Point(x + 50 + fnBorder, y), Size(frameWidth - x - 58 - fnBorder * 2, hh));
 
   y += dy;
@@ -1376,12 +1376,12 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
     m_parent(parent),
     m_pos(pos),
     m_size(size),
-    m_isMouseOver(false),
-    m_styleClassID(styleClassID),
     m_next(nullptr),
     m_prev(nullptr),
     m_firstChild(nullptr),
     m_lastChild(nullptr),
+    m_styleClassID(styleClassID),
+    m_isMouseOver(false),
     m_parentProcessKbdEvents(false)
 {
   objectType().uiWindow = true;
@@ -1391,7 +1391,6 @@ uiWindow::uiWindow(uiWindow * parent, const Point & pos, const Size & size, bool
 
   if (app()) {
     m_windowStyle.adaptToDisplayColors(app()->displayColors());
-    m_canvas = app()->canvas();
     if (app()->style() && styleClassID)
       app()->style()->setStyle(this, styleClassID);
   }
@@ -1835,6 +1834,12 @@ void uiWindow::reshape(Rect const & r)
   }
 
   app()->rootWindow()->generatePaintEvents(newRect);
+}
+
+
+Canvas * uiWindow::canvas()
+{
+  return app()->canvas();
 }
 
 
@@ -3178,8 +3183,7 @@ void uiTextEdit::selectWordAt(int mouseX)
 
 uiLabel::uiLabel(uiWindow * parent, char const * text, const Point & pos, const Size & size, bool visible, uint32_t styleClassID)
   : uiControl(parent, pos, size, visible, 0),
-    m_text(nullptr),
-    m_textExtent(0)
+    m_text(nullptr)
 {
   objectType().uiLabel = true;
 
@@ -3231,9 +3235,8 @@ void uiLabel::setTextFmt(const char *format, ...)
 
 void uiLabel::update()
 {
-  m_textExtent = canvas()->textExtent(m_labelStyle.textFont, m_text);
   if (m_autoSize)
-    app()->resizeWindow(this, m_textExtent, m_labelStyle.textFont->height);
+    app()->resizeWindow(this, canvas()->textExtent(m_labelStyle.textFont, m_text), m_labelStyle.textFont->height);
   repaint();
 }
 
@@ -3286,6 +3289,79 @@ void uiLabel::processEvent(uiEvent * event)
 
 
 // uiLabel
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// uiStaticLabel
+
+
+uiStaticLabel::uiStaticLabel(uiWindow * parent, char const * text, const Point & pos, bool visible, uint32_t styleClassID)
+  : uiControl(parent, pos, Size(0, 0), visible, 0),
+    m_text(nullptr)
+{
+  objectType().uiStaticLabel = true;
+
+  windowProps().focusable = false;
+  windowStyle().borderSize = 0;
+
+  if (app()) {
+    m_staticLabelStyle.adaptToDisplayColors(app()->displayColors());
+    if (app()->style() && styleClassID)
+      app()->style()->setStyle(this, styleClassID);
+  }
+
+  setText(text);
+}
+
+
+void uiStaticLabel::setText(char const * value)
+{
+  m_text = value;
+  update();
+}
+
+
+void uiStaticLabel::update()
+{
+  app()->resizeWindow(this, canvas()->textExtent(m_staticLabelStyle.textFont, m_text), m_staticLabelStyle.textFont->height);
+  repaint();
+}
+
+
+void uiStaticLabel::paintLabel()
+{
+  Rect r = uiControl::clientRect(uiOrigin::Window);
+  canvas()->setBrushColor(m_staticLabelStyle.backgroundColor);
+  canvas()->fillRectangle(r);
+  canvas()->setGlyphOptions(GlyphOptions().FillBackground(false).DoubleWidth(0).Bold(false).Italic(false).Underline(false).Invert(0));
+  canvas()->setPenColor(m_staticLabelStyle.textColor);
+
+  int x = r.X1; // default left align
+  int y = r.Y1 + (r.height() - m_staticLabelStyle.textFont->height) / 2;
+  canvas()->drawText(m_staticLabelStyle.textFont, x, y, m_text);
+}
+
+
+void uiStaticLabel::processEvent(uiEvent * event)
+{
+  uiControl::processEvent(event);
+
+  switch (event->id) {
+
+    case UIEVT_PAINT:
+      beginPaint(event, uiControl::clientRect(uiOrigin::Window));
+      paintLabel();
+      break;
+
+    default:
+      break;
+  }
+}
+
+
+// uiStaticLabel
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

@@ -11,6 +11,11 @@
  */
 #include <Arduino.h>
 
+//#define EXCLUDE_EXOTIC_PROTOCOLS // saves around 240 bytes program memory if IrSender.write is used
+//#define SEND_PWM_BY_TIMER
+//#define USE_NO_SEND_PWM
+//#define NO_LED_FEEDBACK_CODE // saves 566 bytes program memory
+
 #include <IRremote.hpp>
 
 // Function declarations for non Arduino IDE's
@@ -29,7 +34,7 @@ void dumpFooter();
 
 void setup() {
     Serial.begin(115200);
-#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) || defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
+#if defined(__AVR_ATmega32U4__) || defined(SERIAL_PORT_USBVIRTUAL) || defined(SERIAL_USB) /*stm32duino*/|| defined(USBCON) /*STM32_stm32*/|| defined(SERIALUSB_PID) || defined(ARDUINO_attiny3217)
     delay(4000); // To be able to connect Serial monitor after reset or power up and before first print out. Do not wait for an attached Serial Monitor!
 #endif
     // Just to know which program is running on my Arduino
@@ -61,35 +66,35 @@ void dumpRAW_BUFFER_LENGTH() {
 
 void dumpTIMER() {
     bool flag = false;
-#ifdef IR_USE_TIMER1
+#if defined(IR_USE_TIMER1)
     Serial.print(F("Timer defined for use: "));
     Serial.println(F("Timer1"));
     flag = true;
 #endif
-#ifdef IR_USE_TIMER2
+#if defined(IR_USE_TIMER2)
     Serial.print(F("Timer defined for use: "));
     Serial.println(F("Timer2"));
     flag = true;
 #endif
-#ifdef IR_USE_TIMER3
+#if defined(IR_USE_TIMER3)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer3")); flag = true;
 #endif
-#ifdef IR_USE_TIMER4
+#if defined(IR_USE_TIMER4)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer4")); flag = true;
 #endif
-#ifdef IR_USE_TIMER5
+#if defined(IR_USE_TIMER5)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer5")); flag = true;
 #endif
-#ifdef IR_USE_TIMER4_HS
+#if defined(IR_USE_TIMER4_HS)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer4_HS")); flag = true;
 #endif
-#ifdef IR_USE_TIMER_CMT
+#if defined(IR_USE_TIMER_CMT)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer_CMT")); flag = true;
 #endif
-#ifdef IR_USE_TIMER_TPM1
+#if defined(IR_USE_TIMER_TPM1)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer_TPM1")); flag = true;
 #endif
-#ifdef IR_USE_TIMER_TINY0
+#if defined(IR_USE_TIMER_TINY0)
   Serial.print(F("Timer defined for use: ")); Serial.println(F("Timer_TINY0")); flag = true;
 #endif
 
@@ -188,7 +193,7 @@ void dumpPulseParams() {
     ;
     Serial.println(F(" uSecs"));
     Serial.print(F("Measurement tolerance: "));
-    Serial.print(TOLERANCE);
+    Serial.print(TOLERANCE_FOR_DECODERS_MARK_OR_SPACE_MATCHING);
     Serial.println(F("%"));
 }
 
@@ -289,7 +294,7 @@ void dumpProtocols() {
     Serial.println(F("Disabled"));
 #endif
 
-#if !defined(EXCLUDE_EXOTIC_PROTOCOLS) // saves around 2000 bytes program space
+#if !defined(EXCLUDE_EXOTIC_PROTOCOLS) // saves around 2000 bytes program memory
 
     Serial.print(F("BOSEWAVE:     "));
 #if defined(DECODE_BOSEWAVE)

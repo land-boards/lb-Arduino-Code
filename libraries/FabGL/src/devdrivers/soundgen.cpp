@@ -33,13 +33,13 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "driver/i2s.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
-#if __has_include("hal/i2s_types.h")
-  #include "hal/i2s_types.h"
-#endif
+#include "driver/dac.h"
+#include "soc/i2s_reg.h"
+#include "driver/periph_ctrl.h"
+#include "soc/rtc.h"
+#include <soc/sens_reg.h>
 #include "esp_log.h"
+#include "driver/sigmadelta.h"
 
 
 #include "soundgen.h"
@@ -49,10 +49,6 @@
 
 
 namespace fabgl {
-
-
-// maximum value is I2S_SAMPLE_BUFFER_SIZE
-#define FABGL_SAMPLE_BUFFER_SIZE 32
 
 
 
@@ -111,8 +107,7 @@ int SineWaveformGenerator::getSample() {
 
   // get sample  (-128...+127)
   uint32_t index = m_phaseAcc >> 11;
-  double fmul = (double)(m_phaseAcc & 0x7ff) / 2048.0;
-  int sample = sinTable[index] + (sinTable[index + 1] - sinTable[index]) * fmul;
+  int sample = sinTable[index];
 
   // process volume
   sample = sample * volume() / 127;
@@ -447,10 +442,8 @@ int SamplesGenerator::getSample() {
 }
 
 
-// NoiseWaveformGenerator
+// SamplesGenerator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 
@@ -458,74 +451,216 @@ int SamplesGenerator::getSample() {
 // SoundGenerator
 
 
-SoundGenerator::SoundGenerator(int sampleRate)
-  : m_waveGenTaskHandle(nullptr),
-    m_channels(nullptr),
-    m_sampleBuffer(nullptr),
+SoundGenerator::SoundGenerator(int sampleRate, gpio_num_t gpio, SoundGenMethod genMethod)
+  : m_channels(nullptr),
+    m_sampleBuffer{0},
     m_volume(100),
     m_sampleRate(sampleRate),
     m_play(false),
-    m_state(SoundGeneratorState::Stop)
+    m_gpio(gpio),
+    m_isr_handle(nullptr),
+    m_DMAChain(nullptr),
+    m_genMethod(genMethod),
+    m_initDone(false),
+    m_timerHandle(nullptr)
 {
-  m_mutex = xSemaphoreCreateMutex();
-  i2s_audio_init();
 }
 
 
 SoundGenerator::~SoundGenerator()
 {
   clear();
-  vTaskDelete(m_waveGenTaskHandle);
-  heap_caps_free(m_sampleBuffer);
-  vSemaphoreDelete(m_mutex);
+    
+  if (m_isr_handle) {
+    // cleanup DAC mode
+    periph_module_disable(PERIPH_I2S0_MODULE);
+    esp_intr_free(m_isr_handle);
+    for (int i = 0; i < 2; ++i)
+      heap_caps_free(m_sampleBuffer[i]);
+    heap_caps_free((void*)m_DMAChain);
+  }
+  
+  if (m_timerHandle) {
+    // cleanup sigmadelta mode
+    esp_timer_stop(m_timerHandle);
+    esp_timer_delete(m_timerHandle);
+    m_timerHandle = nullptr;
+  }
+  
+  #ifdef FABGL_EMULATED
+  SDL_CloseAudioDevice(m_device);
+  #endif
+    
 }
 
 
 void SoundGenerator::clear()
 {
-  AutoSemaphore autoSemaphore(m_mutex);
   play(false);
   m_channels = nullptr;
 }
 
 
-void SoundGenerator::i2s_audio_init()
+void SoundGenerator::setDMANode(int index, volatile uint16_t * buf, int len)
 {
-  i2s_config_t i2s_config;
-  i2s_config.mode                 = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_DAC_BUILT_IN);
-  i2s_config.sample_rate          = m_sampleRate;
-  i2s_config.bits_per_sample      = I2S_BITS_PER_SAMPLE_16BIT;
-  #if FABGL_ESP_IDF_VERSION <= FABGL_ESP_IDF_VERSION_VAL(4, 1, 1)
-    i2s_config.communication_format = (i2s_comm_format_t) I2S_COMM_FORMAT_I2S_MSB;
-  #else
-    i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
-  #endif
-  i2s_config.channel_format       = I2S_CHANNEL_FMT_ONLY_RIGHT;
-  i2s_config.intr_alloc_flags     = 0;
-  i2s_config.dma_buf_count        = 2;
-  i2s_config.dma_buf_len          = FABGL_SAMPLE_BUFFER_SIZE * sizeof(uint16_t);
-  i2s_config.use_apll             = 0;
-  i2s_config.tx_desc_auto_clear   = 0;
-  i2s_config.fixed_mclk           = 0;
-  // install and start i2s driver
-  i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-  // init DAC pad
-  i2s_set_dac_mode(I2S_DAC_CHANNEL_RIGHT_EN); // GPIO25
-
-  m_sampleBuffer = (uint16_t*) heap_caps_malloc(FABGL_SAMPLE_BUFFER_SIZE * sizeof(uint16_t), MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+  m_DMAChain[index].eof          = 1; // always generate interrupt
+  m_DMAChain[index].sosf         = 0;
+  m_DMAChain[index].owner        = 1;
+  m_DMAChain[index].qe.stqe_next = (lldesc_t *) (m_DMAChain + index + 1);
+  m_DMAChain[index].offset       = 0;
+  m_DMAChain[index].size         = len * sizeof(uint16_t);
+  m_DMAChain[index].length       = len * sizeof(uint16_t);
+  m_DMAChain[index].buf          = (uint8_t*) buf;
 }
 
 
-// the same of forcePlay(), but fill also output DMA with 127s, making output mute (and making "bumping" effect)
+void SoundGenerator::dac_init()
+{
+  m_DMAChain = (volatile lldesc_t *) heap_caps_malloc(2 * sizeof(lldesc_t), MALLOC_CAP_DMA);
+  
+  for (int i = 0; i < 2; ++i) {
+    m_sampleBuffer[i] = (uint16_t *) heap_caps_malloc(FABGL_SOUNDGEN_SAMPLE_BUFFER_SIZE * sizeof(uint16_t), MALLOC_CAP_DMA);
+    for (int j = 0; j < FABGL_SOUNDGEN_SAMPLE_BUFFER_SIZE; ++j)
+      m_sampleBuffer[i][j] = 0x7f00;
+    setDMANode(i, m_sampleBuffer[i], FABGL_SOUNDGEN_SAMPLE_BUFFER_SIZE);
+  }
+  m_DMAChain[1].sosf = 1;
+  m_DMAChain[1].qe.stqe_next = (lldesc_t *) m_DMAChain; // closes DMA chain
+    
+  periph_module_enable(PERIPH_I2S0_MODULE);
+
+  // Initialize I2S device
+  I2S0.conf.tx_reset                     = 1;
+  I2S0.conf.tx_reset                     = 0;
+
+  // Reset DMA
+  I2S0.lc_conf.in_rst                    = 1;
+  I2S0.lc_conf.in_rst                    = 0;
+
+  // Reset FIFO
+  I2S0.conf.rx_fifo_reset                = 1;
+  I2S0.conf.rx_fifo_reset                = 0;
+  
+  I2S0.conf_chan.tx_chan_mod = (m_gpio == GPIO_NUM_25 ? 3 : 4);
+
+  I2S0.fifo_conf.tx_fifo_mod_force_en    = 1;
+  I2S0.fifo_conf.tx_fifo_mod             = 1;
+  I2S0.fifo_conf.dscr_en                 = 1;
+
+  I2S0.conf.tx_mono                      = 1;
+  I2S0.conf.tx_start                     = 0;
+  I2S0.conf.tx_msb_right                 = 1;
+  I2S0.conf.tx_right_first               = 1;
+  I2S0.conf.tx_slave_mod                 = 0;
+  I2S0.conf.tx_short_sync                = 0;
+  I2S0.conf.tx_msb_shift                 = 0;
+  
+  I2S0.conf2.lcd_en                      = 1;
+  I2S0.conf2.camera_en                   = 0;
+
+  int a, b, num, m;
+  m_sampleRate = calcI2STimingParams(m_sampleRate, &a, &b, &num, &m);
+  I2S0.clkm_conf.clka_en                 = 0;
+  I2S0.clkm_conf.clkm_div_a              = a;
+  I2S0.clkm_conf.clkm_div_b              = b;
+  I2S0.clkm_conf.clkm_div_num            = num;
+  I2S0.sample_rate_conf.tx_bck_div_num   = m;
+
+  I2S0.sample_rate_conf.tx_bits_mod      = 16;
+
+  if (m_isr_handle == nullptr) {
+    esp_intr_alloc_pinnedToCore(ETS_I2S0_INTR_SOURCE, ESP_INTR_FLAG_LEVEL1, ISRHandler, this, &m_isr_handle, CoreUsage::quietCore());
+    I2S0.int_clr.val     = 0xFFFFFFFF;
+    I2S0.int_ena.out_eof = 1;
+  }
+  
+  I2S0.out_link.addr  = (uintptr_t) m_DMAChain;
+  I2S0.out_link.start = 1;
+  I2S0.conf.tx_start  = 1;
+
+  dac_i2s_enable();
+  dac_output_enable(m_gpio == GPIO_NUM_25 ? DAC_CHANNEL_1 : DAC_CHANNEL_2);
+}
+
+
+void SoundGenerator::sigmadelta_init()
+{
+  sigmadelta_config_t sigmadelta_cfg;
+  sigmadelta_cfg.channel             = SIGMADELTA_CHANNEL_0;
+  sigmadelta_cfg.sigmadelta_prescale = 10;
+  sigmadelta_cfg.sigmadelta_duty     = 0;
+  sigmadelta_cfg.sigmadelta_gpio     = m_gpio;
+  sigmadelta_config(&sigmadelta_cfg);
+
+  esp_timer_create_args_t args = { };
+  args.callback        = timerHandler;
+  args.arg             = this;
+  args.dispatch_method = ESP_TIMER_TASK;
+  esp_timer_create(&args, &m_timerHandle);
+}
+
+
+#ifdef FABGL_EMULATED
+void SoundGenerator::sdl_init()
+{
+  SDL_AudioSpec wantSpec, haveSpec;
+  SDL_zero(wantSpec);
+  wantSpec.freq     = m_sampleRate;
+  wantSpec.format   = AUDIO_U8;
+  wantSpec.channels = 1;
+  wantSpec.samples  = 2048;
+  wantSpec.callback = SDLAudioCallback;
+  wantSpec.userdata = this;
+  m_device = SDL_OpenAudioDevice(NULL, 0, &wantSpec, &haveSpec, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+  m_sampleRate = haveSpec.freq;
+}
+#endif
+
+
+void SoundGenerator::init()
+{
+  if (!m_initDone) {
+    // handle automatic paramters
+    if (m_genMethod == SoundGenMethod::Auto)
+      m_genMethod = CurrentVideoMode::get() == VideoMode::CVBS ? SoundGenMethod::SigmaDelta : SoundGenMethod::DAC;
+    if (m_gpio == GPIO_AUTO)
+      m_gpio = m_genMethod == SoundGenMethod::DAC ? GPIO_NUM_25 : GPIO_NUM_23;
+    
+    // actual init
+    if (m_genMethod == SoundGenMethod::DAC)
+      dac_init();
+    else
+      sigmadelta_init();
+      
+    #ifdef FABGL_EMULATED
+    sdl_init();
+    #endif
+      
+    m_initDone = true;
+  }
+}
+
+
 bool SoundGenerator::play(bool value)
 {
-  AutoSemaphore autoSemaphore(m_mutex);
-  m_play = value;
-  if (actualPlaying() != value) {
-    bool r = forcePlay(value);
-    if (!value)
-      mutizeOutput();
-    return r;
+  if (value != m_play) {
+    init();
+    
+    if (m_genMethod == SoundGenMethod::DAC) {
+      I2S0.conf.tx_start = value;
+    } else {
+      if (value)
+        esp_timer_start_periodic(m_timerHandle, 1000000 / m_sampleRate);
+      else
+        esp_timer_stop(m_timerHandle);
+    }
+    
+    #ifdef FABGL_EMULATED
+    SDL_PauseAudioDevice(m_device, !value);
+    #endif
+    
+    m_play = value;
+    return !value;
   } else
     return value;
 }
@@ -545,50 +680,17 @@ SamplesGenerator * SoundGenerator::playSamples(int8_t const * data, int length, 
 }
 
 
-bool SoundGenerator::forcePlay(bool value)
-{
-  bool isPlaying = actualPlaying();
-  if (value) {
-    // play
-    if (!isPlaying) {
-      if (!m_waveGenTaskHandle)
-        xTaskCreate(waveGenTask, "", WAVEGENTASK_STACK_SIZE, this, 5, &m_waveGenTaskHandle);
-      m_state = SoundGeneratorState::RequestToPlay;
-      xTaskNotifyGive(m_waveGenTaskHandle);
-    }
-  } else {
-    // stop
-    if (isPlaying) {
-      // request task to suspend itself when possible
-      m_state = SoundGeneratorState::RequestToStop;
-      // wait for task switch to suspend state (TODO: is there a better way?)
-      while (m_state != SoundGeneratorState::Stop)
-        vTaskDelay(1);
-    }
-  }
-  return isPlaying;
-}
-
-
-bool SoundGenerator::actualPlaying()
-{
-  return m_waveGenTaskHandle && m_state == SoundGeneratorState::Playing;
-}
-
-
 // does NOT take ownership of the waveform generator
 void SoundGenerator::attach(WaveformGenerator * value)
 {
-  AutoSemaphore autoSemaphore(m_mutex);
-
-  bool isPlaying = forcePlay(false);
+  bool isPlaying = play(false);
 
   value->setSampleRate(m_sampleRate);
 
   value->next = m_channels;
   m_channels = value;
 
-  forcePlay(isPlaying || m_play);
+  play(isPlaying);
 }
 
 
@@ -597,11 +699,9 @@ void SoundGenerator::detach(WaveformGenerator * value)
   if (!value)
     return;
 
-  AutoSemaphore autoSemaphore(m_mutex);
-
-  bool isPlaying = forcePlay(false);
+  bool isPlaying = play(false);
   detachNoSuspend(value);
-  forcePlay(isPlaying);
+  play(isPlaying);
 }
 
 
@@ -621,75 +721,66 @@ void SoundGenerator::detachNoSuspend(WaveformGenerator * value)
 }
 
 
-void IRAM_ATTR SoundGenerator::waveGenTask(void * arg)
+int IRAM_ATTR SoundGenerator::getSample()
 {
-  SoundGenerator * soundGenerator = (SoundGenerator*) arg;
-
-  i2s_set_clk(I2S_NUM_0, soundGenerator->m_sampleRate, I2S_BITS_PER_SAMPLE_16BIT, I2S_CHANNEL_MONO);
-
-  uint16_t * buf = soundGenerator->m_sampleBuffer;
-
-  // number of mute (without channels to play) cycles
-  int muteCyclesCount = 0;
-
-  while (true) {
-
-    // suspend?
-    if (soundGenerator->m_state == SoundGeneratorState::RequestToStop || soundGenerator->m_state == SoundGeneratorState::Stop) {
-      soundGenerator->m_state = SoundGeneratorState::Stop;
-      while (soundGenerator->m_state == SoundGeneratorState::Stop)
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // wait for "give"
+  int sample = 0, tvol = 0;
+  for (auto g = m_channels; g; ) {
+    if (g->enabled()) {
+      sample += g->getSample();
+      tvol += g->volume();
+    } else if (g->duration() == 0 && g->autoDetach()) {
+      auto curr = g;
+      g = g->next;  // setup next item before detaching this one
+      detachNoSuspend(curr);
+      continue; // bypass "g = g->next;"
     }
-
-    // mutize output?
-    if (soundGenerator->m_channels == nullptr && muteCyclesCount >= 8) {
-      soundGenerator->m_state = SoundGeneratorState::Stop;
-      while (soundGenerator->m_state == SoundGeneratorState::Stop)
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);  // wait for "give"
-    }
-
-    soundGenerator->m_state = SoundGeneratorState::Playing;
-
-    int mainVolume = soundGenerator->volume();
-
-    for (int i = 0; i < FABGL_SAMPLE_BUFFER_SIZE; ++i) {
-      int sample = 0, tvol = 0;
-      for (auto g = soundGenerator->m_channels; g; ) {
-        if (g->enabled()) {
-          sample += g->getSample();
-          tvol += g->volume();
-        } else if (g->duration() == 0 && g->autoDetach()) {
-          auto curr = g;
-          g = g->next;  // setup next item before detaching this one
-          soundGenerator->detachNoSuspend(curr);
-          continue; // bypass "g = g->next;"
-        }
-        g = g->next;
-      }
-
-      int avol = tvol ? imin(127, 127 * 127 / tvol) : 127;
-      sample = sample * avol / 127;
-      sample = sample * mainVolume / 127;
-
-      buf[i + (i & 1 ? -1 : 1)] = (127 + sample) << 8;
-    }
-
-    size_t bytes_written;
-    i2s_write(I2S_NUM_0, buf, FABGL_SAMPLE_BUFFER_SIZE * sizeof(uint16_t), &bytes_written, portMAX_DELAY);
-
-    muteCyclesCount = soundGenerator->m_channels == nullptr ? muteCyclesCount + 1 : 0;
+    g = g->next;
   }
+
+  int avol = tvol ? imin(127, 127 * 127 / tvol) : 127;
+  sample = sample * avol / 127;
+  sample = sample * volume() / 127;
+  
+  return sample;
 }
 
 
-void SoundGenerator::mutizeOutput()
+// used by DAC generator
+void IRAM_ATTR SoundGenerator::ISRHandler(void * arg)
 {
-  for (int i = 0; i < FABGL_SAMPLE_BUFFER_SIZE; ++i)
-    m_sampleBuffer[i] = 127 << 8;
-  size_t bytes_written;
-  for (int i = 0; i < 4; ++i)
-    i2s_write(I2S_NUM_0, m_sampleBuffer, FABGL_SAMPLE_BUFFER_SIZE * sizeof(uint16_t), &bytes_written, portMAX_DELAY);
+  if (I2S0.int_st.out_eof) {
+
+    auto soundGenerator = (SoundGenerator *) arg;
+    auto desc = (volatile lldesc_t*) I2S0.out_eof_des_addr;
+    
+    auto buf = (uint16_t *) soundGenerator->m_sampleBuffer[desc->sosf];
+    
+    for (int i = 0; i < FABGL_SOUNDGEN_SAMPLE_BUFFER_SIZE; ++i)
+      buf[i ^ 1] = (soundGenerator->getSample() + 127) << 8;
+    
+  }
+  I2S0.int_clr.val = I2S0.int_st.val;
 }
+
+
+// used by sigma-delta generator
+void SoundGenerator::timerHandler(void * args)
+{
+  auto soundGenerator = (SoundGenerator *) args;
+
+  sigmadelta_set_duty(SIGMADELTA_CHANNEL_0, soundGenerator->getSample());
+}
+
+
+#ifdef FABGL_EMULATED
+void SoundGenerator::SDLAudioCallback(void * data, Uint8 * buffer, int length)
+{
+  auto soundGenerator = (SoundGenerator *) data;
+
+  for (int i = 0; i < length; ++i)
+    buffer[i] = soundGenerator->getSample() + 127;
+}
+#endif
 
 
 // SoundGenerator

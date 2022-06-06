@@ -3,7 +3,7 @@
  *
  * Library to process IR commands by calling functions specified in a mapping array.
  *
- * To run this example you need to install the "IRremote" library under "Tools -> Manage Libraries..." or "Ctrl+Shift+I"
+ * To run this example you need to install the "IRremote" or "IRMP" library under "Tools -> Manage Libraries..." or "Ctrl+Shift+I"
  *
  *  Copyright (C) 2019-2021  Armin Joachimsmeyer
  *  armin.joachimsmeyer@gmail.com
@@ -23,11 +23,11 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/gpl.html>.
+ *  along with this program. If not, see <http://www.gnu.org/licenses/gpl.html>.
  */
 
-#ifndef IR_COMMAND_DISPATCHER_H
-#define IR_COMMAND_DISPATCHER_H
+#ifndef _IR_COMMAND_DISPATCHER_H
+#define _IR_COMMAND_DISPATCHER_H
 
 #include <stdint.h>
 
@@ -56,7 +56,7 @@ struct IRDataForCommandDispatcherStruct {
     uint16_t address;           // to distinguish between multiple senders
     uint16_t command;
     bool isRepeat;
-    uint32_t MillisOfLastCode;  // millis() of last IR command received - for timeouts etc.
+    uint32_t MillisOfLastCode;  // millis() of last IR command -including repeats!- received - for timeouts etc.
     volatile bool isAvailable;  // flag for a polling interpreting function, that a new command has arrived.
 };
 
@@ -75,7 +75,7 @@ public:
     void init();
 
     bool checkAndRunNonBlockingCommands();
-    void checkAndRunSuspendedBlockingCommands();
+    bool checkAndRunSuspendedBlockingCommands();
     bool delayAndCheckForStop(uint16_t aDelayMillis);
 
     // The main dispatcher function
@@ -90,6 +90,7 @@ public:
     uint8_t BlockingCommandToRunNext = COMMAND_INVALID; // Storage for command currently suspended to allow the current command to end, before it is called by main loop
     /*
      * Flag for running blocking commands to terminate. To check, you can use "if (requestToStopReceived) return;" (available as macro RETURN_IF_STOP).
+     * Is reset by next IR command received. Can be reset by main loop, if command has stopped.
      */
     volatile bool requestToStopReceived;
     /*
@@ -103,5 +104,5 @@ public:
 
 extern IRCommandDispatcher IRDispatcher;
 
-#endif // IR_COMMAND_DISPATCHER_H
+#endif // _IR_COMMAND_DISPATCHER_H
 #pragma once

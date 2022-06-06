@@ -304,6 +304,7 @@ void IRAM_ATTR Machine::runTask(void * pvParameters)
       m->reset();
 
     #ifdef FABGL_EMULATED
+    pthread_testcancel();
     if (m->m_stepCallback)
       m->m_stepCallback(m);
     #endif
@@ -319,7 +320,7 @@ void Machine::tick()
 {
   ++m_ticksCounter;
 
-  if ((m_ticksCounter & 0xfff) == 0xfff) {
+  if ((m_ticksCounter & 0x7f) == 0x7f) {
     m_PIT8253.tick();
     // run keyboard controller every PIT tick (just to not overload CPU with continous checks)
     m_i8042.tick();

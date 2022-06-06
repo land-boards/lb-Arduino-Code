@@ -27,8 +27,8 @@
  *
  ************************************************************************************
  */
-#ifndef IR_RC5_RC6_HPP
-#define IR_RC5_RC6_HPP
+#ifndef _IR_RC5_RC6_HPP
+#define _IR_RC5_RC6_HPP
 
 #include <Arduino.h>
 
@@ -115,6 +115,7 @@ void IRsend::sendRC5(uint8_t aAddress, uint8_t aCommand, uint_fast8_t aNumberOfR
             delay(RC5_REPEAT_SPACE / MICROS_IN_ONE_MILLI);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 /**
@@ -140,16 +141,16 @@ bool IRrecv::decodeRC5() {
     if (decodedIRData.rawDataPtr->rawlen < MIN_RC5_MARKS + 2 && decodedIRData.rawDataPtr->rawlen > ((2 * RC5_BITS) + 2)) {
         // no debug output, since this check is mainly to determine the received protocol
         IR_DEBUG_PRINT(F("RC5: "));
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
-        IR_DEBUG_PRINTLN(" is not between 11 and 26");
+        IR_DEBUG_PRINTLN(F(" is not between 11 and 26"));
         return false;
     }
 
 // Check start bit, the first space is included in the gap
     if (getBiphaselevel() != MARK) {
         IR_DEBUG_PRINT(F("RC5: "));
-        IR_DEBUG_PRINTLN("first getBiphaselevel() is not MARK");
+        IR_DEBUG_PRINTLN(F("first getBiphaselevel() is not MARK"));
         return false;
     }
 
@@ -266,6 +267,7 @@ void IRsend::sendRC6(uint32_t aRawData, uint8_t aNumberOfBitsToSend) {
             mark(t);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 /**
@@ -297,6 +299,7 @@ void IRsend::sendRC6(uint64_t data, uint8_t nbits) {
             mark(t);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 /**
@@ -353,9 +356,9 @@ bool IRrecv::decodeRC6() {
     // Check we have the right amount of data (). The +3 for initial gap, start bit mark and space
     if (decodedIRData.rawDataPtr->rawlen < MIN_RC6_MARKS + 3 && decodedIRData.rawDataPtr->rawlen > ((2 * RC6_BITS) + 3)) {
         IR_DEBUG_PRINT(F("RC6: "));
-        IR_DEBUG_PRINT("Data length=");
+        IR_DEBUG_PRINT(F("Data length="));
         IR_DEBUG_PRINT(decodedIRData.rawDataPtr->rawlen);
-        IR_DEBUG_PRINTLN(" is not between 15 and 45");
+        IR_DEBUG_PRINTLN(F(" is not between 15 and 45"));
         return false;
     }
 
@@ -364,7 +367,7 @@ bool IRrecv::decodeRC6() {
             || !matchSpace(decodedIRData.rawDataPtr->rawbuf[2], RC6_HEADER_SPACE)) {
         // no debug output, since this check is mainly to determine the received protocol
         IR_DEBUG_PRINT(F("RC6: "));
-        IR_DEBUG_PRINTLN("Header mark or space length is wrong");
+        IR_DEBUG_PRINTLN(F("Header mark or space length is wrong"));
         return false;
     }
 
@@ -374,12 +377,12 @@ bool IRrecv::decodeRC6() {
 // Process first bit, which is known to be a 1 (mark->space)
     if (getBiphaselevel() != MARK) {
         IR_DEBUG_PRINT(F("RC6: "));
-        IR_DEBUG_PRINTLN("first getBiphaselevel() is not MARK");
+        IR_DEBUG_PRINTLN(F("first getBiphaselevel() is not MARK"));
         return false;
     }
     if (getBiphaselevel() != SPACE) {
         IR_DEBUG_PRINT(F("RC6: "));
-        IR_DEBUG_PRINTLN("second getBiphaselevel() is not SPACE");
+        IR_DEBUG_PRINTLN(F("second getBiphaselevel() is not SPACE"));
         return false;
     }
 
@@ -484,6 +487,7 @@ void IRsend::sendRC5(uint32_t data, uint8_t nbits) {
             space(RC5_UNIT);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 /*
@@ -550,8 +554,8 @@ void IRsend::sendRC5ext(uint8_t addr, uint8_t cmd, bool toggle) {
             space(RC5_UNIT);
         }
     }
+    IrReceiver.restartAfterSend();
 }
 
 /** @}*/
-#endif
-#pragma once
+#endif // _IR_RC5_RC6_HPP
