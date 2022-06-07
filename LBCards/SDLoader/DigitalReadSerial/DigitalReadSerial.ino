@@ -8,13 +8,16 @@
   http://www.arduino.cc/en/Tutorial/DigitalReadSerial
 */
 
+// #define THESERIAL Serial1
+#define THESERIAL Serial
+
 // digital pin 2 has a pushbutton attached to it. Give it a name:
 int pushButton = 2;
 
 // the setup routine runs once when you press reset:
 void setup() {
   // initialize serial communication at 9600 bits per second:
-  Serial1.begin(9600);
+  THESERIAL.begin(9600);
   // make the pushbutton's pin an input:
   pinMode(pushButton, INPUT);
 }
@@ -24,6 +27,6 @@ void loop() {
   // read the input pin:
   int buttonState = digitalRead(pushButton);
   // print out the state of the button:
-  Serial1.print(buttonState);
+  THESERIAL.print(buttonState);
   delay(1000);        // delay in between reads for stability
 }
