@@ -18,7 +18,10 @@
 */
 #include <SD.h>
 
-const int chipSelect = 10;
+// #define THESERIAL Serial1
+#define THESERIAL Serial
+
+const int chipSelect = 3;
 
 void setup() 
 {
@@ -39,7 +42,7 @@ void setup()
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datalog.txt");
+  File dataFile = SD.open("CivilWar.bas");
 
   // if the file is available, write to it:
   if (dataFile) 
@@ -54,7 +57,7 @@ void setup()
   // if the file isn't open, pop up an error:
   else 
   {
-    Serial.println("error opening datalog.txt");
+    Serial.println("error opening CivilWar.bas");
   }
 }
 
