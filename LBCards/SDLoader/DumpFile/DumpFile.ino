@@ -18,10 +18,11 @@
 */
 #include <SD.h>
 
-// #define THESERIAL Serial1
-#define THESERIAL Serial
+// Select the Serial port to send output to
+// #define THESERIAL Serial1  // UART pins
+#define THESERIAL Serial      // USB Serial
 
-const int chipSelect = 3;
+const int chipSelect = 3;   // SD card Chip Select
 
 void setup() 
 {
