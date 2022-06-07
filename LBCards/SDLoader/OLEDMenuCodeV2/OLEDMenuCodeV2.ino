@@ -62,8 +62,8 @@ void setup(void)
   TWBR = 12;          // go to 400 KHz I2C speed mode
 #elif defined(ARDUINO_ARCH_STM32F1)
   Wire.setClock(400000);  // 400KHz speed
-#else
-  #error “This library only supports boards with an AVR or SAM processor.”
+//#else
+//  #error “This library only supports boards with an AVR or SAM processor.”
 #endif
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.draw2x2String(0,2,"MyMenu");

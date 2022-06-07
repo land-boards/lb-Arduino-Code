@@ -36,7 +36,7 @@ SdFile root;
 // Sparkfun SD shield: pin 8
 // MKRZero SD: SDCARD_SS_PIN
 
-const int chipSelect = 10;
+const int chipSelect = 3;
 
 void setup() {
 

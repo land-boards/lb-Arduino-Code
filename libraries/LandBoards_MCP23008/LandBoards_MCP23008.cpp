@@ -47,8 +47,8 @@ void LandBoards_MCP23008::begin(uint8_t addr)
 	Wire.setClock(400000);	// 400KHz speed
 #elif defined(ARDUINO_ARCH_STM32F4)
 	Wire.setClock(400000);	// 400KHz speed
-#else
-  #error “This library only supports boards with an AVR or STM processor.”
+// #else
+  // #error “This library only supports boards with an AVR or STM processor.”
 #endif
 	write8(MCP23008_IODIR,0xff);	// set to all inputs
 	write8(MCP23008_GPIO, 0x00);	// preset output bits to 0
