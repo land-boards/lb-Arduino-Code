@@ -26,7 +26,7 @@
 
 #include <SD.h>
 
-const int chipSelect = 3;
+const int chipSelect = 10;
 
 File root;
 
