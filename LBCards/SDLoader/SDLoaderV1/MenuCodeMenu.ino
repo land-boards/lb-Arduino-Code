@@ -49,13 +49,12 @@ menuStruc menus[] =
   TOP_MENU_L01,   "File SEND",      1, TOP_MENU_L01,  TOP_MENU_L02,  TOP_MENU_L01,  TOP_MENU_L01,  &fileSend,      TOP_MENU_L01,
   TOP_MENU_L02,   "File RECEIVE",   2, TOP_MENU_L01,  TOP_MENU_L03,  TOP_MENU_L02,  TOP_MENU_L02,  &fileReceive,   TOP_MENU_L01,
   TOP_MENU_L03,   "Config COM",     3, TOP_MENU_L02,  TOP_MENU_L04,  TOP_MENU_L03,  TOP_MENU_L03,  &nullFcn,       COMM_MENU_L01,
-  TOP_MENU_L04,   "SD Info",        4, TOP_MENU_L03,  TOP_MENU_L05,  TOP_MENU_L04,  TOP_MENU_L04,  &nullFcn,       TOP_MENU_L01,
+  TOP_MENU_L04,   "SD Info",        4, TOP_MENU_L03,  TOP_MENU_L05,  TOP_MENU_L04,  TOP_MENU_L04,  &SDInfo,        TOP_MENU_L01,
   TOP_MENU_L05,   "Tests",          5, TOP_MENU_L04,  TOP_MENU_L05,  TOP_MENU_L05,  TOP_MENU_L05,  &nullFcn,       TEST_MENU_L01,
   // COMM Menu
-  COMM_MENU_L01,  "Enable USB Ser", 1, COMM_MENU_L01, COMM_MENU_L02, COMM_MENU_L01, COMM_MENU_L01, &initUSBSerial, COMM_MENU_L01,
-  COMM_MENU_L02,  "BAUD Rate",      2, COMM_MENU_L01, COMM_MENU_L03, COMM_MENU_L02, COMM_MENU_L02, &nullFcn,       BAUD_MENU_L01,
-  COMM_MENU_L03,  "Handshake",      3, COMM_MENU_L02, COMM_MENU_L04, COMM_MENU_L03, COMM_MENU_L03, &nullFcn,       HAND_MENU_L01,
-  COMM_MENU_L04,  "Return to top",  4, COMM_MENU_L03, COMM_MENU_L04, COMM_MENU_L04, COMM_MENU_L04, &nullFcn,       TOP_MENU_L01,
+  COMM_MENU_L01,  "BAUD Rate",      1, COMM_MENU_L01, COMM_MENU_L02, COMM_MENU_L01, COMM_MENU_L01, &nullFcn,       BAUD_MENU_L01,
+  COMM_MENU_L02,  "Handshake",      2, COMM_MENU_L01, COMM_MENU_L03, COMM_MENU_L02, COMM_MENU_L02, &nullFcn,       HAND_MENU_L01,
+  COMM_MENU_L03,  "Return to top",  3, COMM_MENU_L02, COMM_MENU_L03, COMM_MENU_L03, COMM_MENU_L03, &nullFcn,       TOP_MENU_L01,
   // COMM Menu
   BAUD_MENU_L01,  "300 Baud",       1, BAUD_MENU_L01, BAUD_MENU_L02, BAUD_MENU_L01, BAUD_MENU_L01, &baud_300,      BAUD_MENU_L05,
   BAUD_MENU_L02,  "1200 Baud",      2, BAUD_MENU_L01, BAUD_MENU_L03, BAUD_MENU_L02, BAUD_MENU_L02, &baud_1200,     BAUD_MENU_L05,
@@ -105,6 +104,7 @@ void menuRefresh(void)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // menuNav - Uses the joystick switch to move around the menu
+// Debounced by polling every 10 mS
 ////////////////////////////////////////////////////////////////////////////////////
 
 void menuNav(void)
@@ -116,19 +116,23 @@ void menuNav(void)
   {
   case UP:
     menuState = menus[menuState].UP_MENU_PTR;
-    while(menuCard.pollKeypad() == UP);
+    while(menuCard.pollKeypad() == UP)
+      delay(10);
     break;
   case DOWN:
     menuState = menus[menuState].DOWN_MENU_PTR;
-    while(menuCard.pollKeypad() == DOWN);
+    while(menuCard.pollKeypad() == DOWN)
+      delay(10);
     break;
   case LEFT:
     menuState = menus[menuState].LEFT_MENU_PTR;
-    while(menuCard.pollKeypad() == LEFT);
+    while(menuCard.pollKeypad() == LEFT)
+      delay(10);
     break;
   case RIGHT:
     menuState = menus[menuState].RIGHT_MENU_PTR;
-    while(menuCard.pollKeypad() == RIGHT);
+    while(menuCard.pollKeypad() == RIGHT)
+      delay(10);
     break;
   case SELECT:
     // run the selected function
@@ -136,7 +140,8 @@ void menuNav(void)
     foo = menus[menuState].pt2Function;
     foo();
     menuState = menus[menuState].SEL_MENU_PTR;
-    while(menuCard.pollKeypad() == SELECT);
+    while(menuCard.pollKeypad() == SELECT)
+      delay(10);
     break;
   }
 }
@@ -151,4 +156,15 @@ void nullFcn(void)
 //  delay(100);
 //  u8x8.drawString(0,1,"In nullFcn()");  // Do nothing 
 //  delay(2000);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// pressButtonToContinue()
+//////////////////////////////////////////////////////////////////////////////
+
+void pressButtonToContinue()
+{
+  while (menuCard.pollKeypad() == NONE);
+  while (menuCard.pollKeypad() != NONE);
+  delay(10);  
 }

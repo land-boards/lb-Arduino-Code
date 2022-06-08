@@ -13,6 +13,8 @@
 #include "Wire.h"               // Arduino I2C library
 #include "LandBoards_MyMenu.h"  // MyMenu card library handles switches and LEDs
 #include "U8x8lib.h"            // Direct 8x8 buffer-less mode
+#include <SD.h>
+#include <SPI.h>
 
 //////////////////////////////////////////////////////////////////////////////
 // enums for the menu system follow
@@ -58,20 +60,30 @@ enum HANDSHAKE_TYPE
   XON_XOFF_HANDSHAKE
 };
 
+
+//////////////////////////////////////////////////////////////////////////////
+// Constructors
+//////////////////////////////////////////////////////////////////////////////
+
+U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE);  // OLEDs without Reset of the Display
+LandBoards_MyMenu menuCard;                             // MyMenu card by Land Boards, LLC
+
 //////////////////////////////////////////////////////////////////////////////
 // Global variables follow
 //////////////////////////////////////////////////////////////////////////////
 
+const int chipSelect = 3;   // SD card Chip Select
 uint8_t menuState;           // Menu State variable which holds the currently selected menu lin
-
-U8X8_SSD1306_128X64_NONAME_HW_I2C u8x8(U8X8_PIN_NONE);   // OLEDs without Reset of the Display
-
-LandBoards_MyMenu menuCard;                // MyMenu card by Land Boards, LLC
-
 uint8_t comInit;
 uint8_t USBSerInit;
+uint8_t SDInitialized;
 uint32_t baudRate;
 HANDSHAKE_TYPE handshakeType = NO_HANDSHAKE;
+
+Sd2Card card;
+SdVolume volume;
+SdFile root;
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -90,6 +102,7 @@ void setup(void)
   comInit = 0;
   USBSerInit = 0;
   baudRate = 300;
+  SDInitialized = 0;
   delay(2000);  
 }
 

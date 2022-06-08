@@ -144,5 +144,5 @@ void initUSBSerial()
   }
   while (!Serial);
   USBSerInit = 1;
-  Serial.print("USB Serial is initialized");
+  Serial.println("Initialized USB Serial");
 }
