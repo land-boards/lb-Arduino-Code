@@ -19,7 +19,7 @@ uint8_t SDInit()
 {
   if (USBSerInit == 0)
     initUSBSerial();
-  Serial.print("Initializing SD card...");
+  // Serial.print("Initializing SD card...");
   if (!SD.begin(chipSelect))
     return (1);
   SDInitialized = 1;
@@ -59,10 +59,10 @@ void SDInfo()
   }
   
   u8x8.clear();
-  u8x8.drawString(0, 0, "SD Init = OK");
+  u8x8.drawString(0, 0, "SD Init=OK");
   
   // print the type of card
-  u8x8.drawString(0, 1, "Type:");
+  u8x8.drawString(0, 1, "Type=");
   switch (card.type()) 
   {
     case SD_CARD_TYPE_SD1:
@@ -90,25 +90,29 @@ void SDInfo()
     return;
   }
   if (volume.fatType() == 32)
-    u8x8.drawString(0, 3, "FAT32 File Sys");
+    u8x8.drawString(0, 2, "FAT32 File Sys");
   else if (volume.fatType() == 16)
-    u8x8.drawString(0, 3, "FAT16 File Sys");
+    u8x8.drawString(0, 2, "FAT16 File Sys");
   else
-    u8x8.drawString(0, 3, "Unknown F/S");
+    u8x8.drawString(0, 2, "Unknown F/S");
   // print the type and size of the first FAT-type volume
   uint32_t volumesize;
   volumesize = volume.blocksPerCluster();    // clusters are collections of blocks
   volumesize *= volume.clusterCount();       // we'll have a lot of clusters
   volumesize /= 2;                           // SD card blocks are always 512 bytes (2 blocks are 1KB)
-  // 
-  u8x8.drawString(0, 4, "MB:");
-  itoa(volumesize / 1024, numStr, 10);
-  u8x8.drawString(3, 4, numStr);
-  // 
-  u8x8.drawString(0, 5, "Clus:");
+  //
+  u8x8.drawString(0, 3, "Clus=");
   itoa(volume.clusterCount(), numStr, 10);
-  u8x8.drawString(5, 5, numStr);
+  u8x8.drawString(5, 3, numStr);
+  //
+  u8x8.drawString(0, 4, "Clus/Blk=");
+  itoa(volume.blocksPerCluster(), numStr, 10);
+  u8x8.drawString(9, 4, numStr);
   //  Serial.print("Volume size (Mb):  ");
+  // 
+  u8x8.drawString(0, 5, "MB=");
+  itoa(volumesize / 1024, numStr, 10);
+  u8x8.drawString(3, 5, numStr);
   volumesize /= 1024;
   Serial.println("\nFiles found on the card (name, date and size in bytes): ");
   root.openRoot(volume);
