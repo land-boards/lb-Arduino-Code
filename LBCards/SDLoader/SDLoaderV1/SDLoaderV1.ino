@@ -31,11 +31,11 @@ enum MENUITEMS              // MenuCode Customizable section
   TOP_MENU_L03,
   TOP_MENU_L04,
   TOP_MENU_L05,
+  TOP_MENU_L06,
   //
   COMM_MENU_L01,
   COMM_MENU_L02,
   COMM_MENU_L03,
-  COMM_MENU_L04,
   //
   BAUD_MENU_L01,
   BAUD_MENU_L02,
@@ -53,7 +53,7 @@ enum MENUITEMS              // MenuCode Customizable section
   TEST_MENU_L03
 };
 
-enum HANDSHAKE_TYPE
+enum HANDSHAKE_t
 {
   NO_HANDSHAKE,
   HW_HANDSHAKE,
@@ -73,17 +73,20 @@ LandBoards_MyMenu menuCard;                             // MyMenu card by Land B
 //////////////////////////////////////////////////////////////////////////////
 
 const int chipSelect = 3;   // SD card Chip Select
-uint8_t menuState;           // Menu State variable which holds the currently selected menu lin
-uint8_t comInit;
-uint8_t USBSerInit;
-uint8_t SDInitialized;
-uint32_t baudRate;
-HANDSHAKE_TYPE handshakeType = NO_HANDSHAKE;
+uint8_t menuState;          // Menu State variable which holds the currently selected menu lin
+bool comInit;               // Flag that indicates if the Serial port to the target has been opened
+bool USBSerInit;            // Flag that indicates if the USB Serial port to the host has been opened - used for debuggin
+bool SDInitialized;         // Flag that indicates if the SD interface has been opened
+uint32_t baudRate;          // Baud rate
+HANDSHAKE_t handshakeType;  // Handshake
+char  SavePath[32];
+uint8_t dirLevel;
 
 Sd2Card card;
 SdVolume volume;
 SdFile root;
 
+// unsigned char cwd[64];
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -99,11 +102,13 @@ void setup(void)
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.draw2x2String(1,2,"SD LDR");
   u8x8.draw2x2String(1,5,"v1.0");
-  comInit = 0;
-  USBSerInit = 0;
+  pinMode(10, OUTPUT);
+  comInit = false;
+  USBSerInit = false;
   baudRate = 300;
-  SDInitialized = 0;
-  delay(2000);  
+  handshakeType = NO_HANDSHAKE;
+  SDInitialized = false;
+  delay(500);  
 }
 
 //////////////////////////////////////////////////////////////////////////////

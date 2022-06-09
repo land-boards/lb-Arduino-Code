@@ -75,62 +75,64 @@ void x_hansh()
 
 void initSerial1(uint32_t baudRate)
 {
-  if (comInit == 1)
+  if (comInit)
     Serial1.end();
   // Open serial communications and wait for port to open:
   Serial1.begin(baudRate);
   // Wait for Serial Monitor to connect.
   // Needed for native USB port boards only
   while (!Serial1);
-  comInit = 1;
+  comInit = true;
 }
 
 // fileSend()
 void fileSend()
 {
-  if (comInit == 0)
+  if (!comInit)
   {
   u8x8.clear();
   u8x8.draw2x2String(0, 2, "Need to");
   u8x8.draw2x2String(0, 4, "set baud");
   u8x8.draw2x2String(0, 6, "rate");
-  delay(2000);
+  pressButtonToContinue();
   return;
   }
   u8x8.clear();
   u8x8.draw2x2String(0, 2, "File");
   u8x8.draw2x2String(1, 4, "Send");
-  delay(2000);
+  delay(500);
+  return;
 }
 
 // fileReceive()
 void fileReceive()
 {
-  if (comInit == 0)
+  if (!comInit)
   {
   u8x8.clear();
   u8x8.draw2x2String(0, 2, "Need to");
   u8x8.draw2x2String(0, 4, "set baud");
   u8x8.draw2x2String(0, 6, "rate");
-  delay(2000);
+  pressButtonToContinue();
   return;
   }
   u8x8.clear();
   u8x8.draw2x2String(0, 2, "File");
   u8x8.draw2x2String(1, 4, "Receive");
-  delay(2000);
+  delay(500);
+  return;
 }
 
 // debugUSB
 void initUSBSerial()
 {
-  if (USBSerInit == 1)
+  if (USBSerInit)
     return;
   u8x8.clear();
   u8x8.draw2x2String(0, 2, "USB");
   u8x8.draw2x2String(0, 4, "Serial");
   u8x8.draw2x2String(0, 6, "init");
-  delay(2000);
+  delay(500);
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   // Wait for Serial Monitor to connect.
@@ -143,6 +145,6 @@ void initUSBSerial()
     u8x8.draw2x2String(1, 6, "Monitor");
   }
   while (!Serial);
-  USBSerInit = 1;
-  Serial.println("Initialized USB Serial");
+  USBSerInit = true;
+  return;
 }
