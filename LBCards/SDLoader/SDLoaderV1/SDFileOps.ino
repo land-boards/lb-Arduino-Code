@@ -5,8 +5,12 @@
 */
 
 // Select the Serial port to send output to
-// #define Serial Serial1  // UART pins
+// #define Serial Serial1     // UART pins
 // #define Serial Serial      // USB Serial
+
+// List of 6 directory items
+char dirList[6][13];    // 8.3 entry plus null
+char currentDir[32];    // The current directory
 
 // ///////////////////////////////////////////////////////////////////////////////////////////////
 // SDInit()- Initialize the SD interface
@@ -19,6 +23,10 @@
 
 uint8_t SDInit()
 {
+  uint8_t listEntry;
+  // Clear the directory
+  for (listEntry = 0; listEntry < 6; listEntry++)
+    dirList[listEntry][0] = 0;
   if (!USBSerInit)
     initUSBSerial();
   // Serial.print("Initializing SD card...");
@@ -164,13 +172,18 @@ void SDDir()
 void printDirectory(File dir, int numTabs)
 {
   uint8_t lineOnOLED = 0;
+  uint8_t listEntry;
 //  Serial.println("Reached printDirectory()");
 //  Serial.print(" dirLevel = ");
 //  Serial.println(dirLevel);
   u8x8.clear();
+  listEntry = 0;
   u8x8.drawString(0, 0, "/               ");
   if (numTabs > 0)
+  {
     u8x8.drawString(1, 0, SavePath);
+    strcpy(&currentDir[0],SavePath);
+  }
   lineOnOLED++;
   while (true) {
     File entry =  dir.openNextFile();
@@ -186,6 +199,7 @@ void printDirectory(File dir, int numTabs)
 //      Serial.println(SavePath);
       dirLevel++;
       printDirectory(entry, numTabs + 1);   // print subdirectories
+      dirList[listEntry][0] = 0;            // NULL string
 //      Serial.print(" dirLevel = ");
 //      Serial.println(dirLevel);
     }

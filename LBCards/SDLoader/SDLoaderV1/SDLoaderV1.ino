@@ -1,5 +1,7 @@
 /*
-  SDLoaderV1.ino - 
+  SDLoaderV1.ino
+  http://land-boards.com/blwiki/index.php?title=SD_Loader
+  
   Based on the Land Boards, LLC menu system.
   This code runs on a standard Arduino or Arduino compatible card.
   This code uses the MyMenu card by Land Boards, LLC.
@@ -7,6 +9,15 @@
   http://land-boards.com/blwiki/index.php?title=MyMenu
 
   Original Author: Land Boards, LLC
+
+  Pin usage
+  D0 = INT* from MyMenum
+  D1 = RTS* Serial HW Handshake
+  D2 = CTS* Serial HW Handshake
+  D3 = SPI Slave Select to SD Card
+  SDA/SCL = I2C to MyMenu card
+  TX/RX - Serial data
+  SCK/MI/MO - SPI to SD Card
 */
 
 #include <Arduino.h>
