@@ -3,16 +3,16 @@
 
 #include <Adafruit_NeoPixel.h>
  
-int Power = 11;
-int PIN  = 12;
+int NeopixelPower = 11;
+int NeopixelData  = 12;
 #define NUMPIXELS 1
  
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(NUMPIXELS, NeopixelData, NEO_GRB + NEO_KHZ800);
  
 void setup() {
   pixels.begin();
-  pinMode(Power,OUTPUT);
-  digitalWrite(Power, HIGH);
+  pinMode(NeopixelPower,OUTPUT);
+  digitalWrite(NeopixelPower, HIGH);
  
 }
  
