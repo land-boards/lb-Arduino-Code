@@ -5,8 +5,8 @@
 = land-boards Arduino Code =
 
 * These are our [http://arduino.cc Arduino] Source Code/Library files.
-* [http://land-boards.com/blwiki/index.php?title=Main_Page#Arduino_Cards Wiki pages for the cards which use this code]
-* Most of this code was created to exercise our [http://land-boards.com/blwiki/index.php?title=Board_Designs_by_Function#Arduino_Compatible_Boards Arduino compatible cards] and [http://land-boards.com/blwiki/index.php?title=Open_Data_Acquisition_System Open Data Acquisition System cards]
+* [ Wiki pages for the cards which use this code]
+* Most of this code was created to exercise our [http://land-boards.com/blwiki/index.php?title=Main_Page#Arduino_Cards Arduino compatible cards] and [http://land-boards.com/blwiki/index.php?title=Open_Data_Acquisition_System Open Data Acquisition System cards]
 
 = Ownership =
 
