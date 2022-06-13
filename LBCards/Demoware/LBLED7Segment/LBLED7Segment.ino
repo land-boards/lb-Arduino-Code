@@ -1,4 +1,5 @@
-//We always have to include the library
+// LBLED7Segment.ino
+// Scroll Land-Boards across the LEDs on 8-digits MAX7219 
 
 #include "LedControl.h"
 
@@ -7,8 +8,10 @@
  pin 12 is connected to the DataIn 
  pin 11 is connected to the CLK 
  pin 10 is connected to LOAD 
+ Connecr Power/Ground
  We have only a single MAX72XX.
  */
+ 
 LedControl lc=LedControl(12,11,10,1);
 
 /* we always wait a bit between updates of the display */
@@ -28,8 +31,7 @@ void setup() {
 
 
 /*
- This method will display the characters for the
- word "Arduino" one after the other on digit 0. 
+ This method will display the characters for the word "Land-boards". 
  setRow values
  0x01 = center
  0x02 = upper left
@@ -48,7 +50,7 @@ void setup() {
 #define UR 0x20
 #define TOP 0x40
  
-void writeArduinoOn7Segment() 
+void writeLandBoardsOn7Seg() 
 {
   lc.setChar(0,7,'l',false);    // L
   delay(delaytime);
@@ -58,7 +60,7 @@ void writeArduinoOn7Segment()
   delay(delaytime);
   lc.setChar(0,4,'d',false);    // d
   delay(delaytime);
-  lc.setRow(0,3,(CENTER));          // r
+  lc.setRow(0,3,(CENTER));      // -
   delay(delaytime*4);
   lc.clearDisplay(0);
   lc.setChar(0,7,'b',false);    // b
@@ -76,9 +78,7 @@ void writeArduinoOn7Segment()
 } 
 
 /*
-  This method will scroll all the hexa-decimal
- numbers and letters on the display. You will need at least
- four 7-Segment digits. otherwise it won't really look that good.
+  This method will scroll the display.
  */
 void scrollDigits() {
   for(int i=0;i<9;i++) {
@@ -99,7 +99,6 @@ void scrollDigits() {
 void loop() { 
   lc.clearDisplay(0);
   delay(delaytime);
-  writeArduinoOn7Segment();
+  writeLandBoardsOn7Seg();
 //  scrollDigits();
 }
-
