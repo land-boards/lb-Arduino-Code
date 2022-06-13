@@ -1,6 +1,6 @@
 == land-boards Show Demos Arduino Source Code Files ==
 
-<img src="http://land-boards.com/blwiki/images/c/c6/LBLED7Seg-720px.jpg" alt="7-Segment LED Demo Card photo"></img>
+<img src="http://land-boards.com/blwiki/images/6/63/LB_Scroll_IMG_5929_cropped_720px.JPG" alt="7-Segment LED Demo Card photo"></img>
 
 <img src="http://land-boards.com/blwiki/images/5/54/NeoCylon-489px.JPG" alt="7-Segment LED Demo Card photo"></img>
 
