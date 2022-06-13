@@ -2,7 +2,7 @@
 
 <img src="http://land-boards.com/blwiki/images/6/63/LB_Scroll_IMG_5929_cropped_720px.JPG" alt="7-Segment LED Demo Card photo"></img>
 
-<img src="http://land-boards.com/blwiki/images/5/54/NeoCylon-489px.JPG" alt="7-Segment LED Demo Card photo"></img>
+<img src="http://land-boards.com/blwiki/images/d/d9/NeoCylon_IMG_5913-720px.jpg" alt="7-Segment LED Demo Card photo"></img>
 
 * These are the Land Boards Show Demos files.
 
