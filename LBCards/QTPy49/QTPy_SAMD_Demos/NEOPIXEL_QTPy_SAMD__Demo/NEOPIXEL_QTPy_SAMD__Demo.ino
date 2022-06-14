@@ -2,9 +2,9 @@
 // Some weird colors in the demo
 
 #include <Adafruit_NeoPixel.h>
- 
-int NeopixelPower = 11;
-int NeopixelData  = 12;
+
+int NeopixelPower = 12;
+int NeopixelData  = 11;
 #define NUMPIXELS 1
  
 Adafruit_NeoPixel pixels(NUMPIXELS, NeopixelData, NEO_GRB + NEO_KHZ800);
