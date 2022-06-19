@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////////////////////
-// PROTO16I2CReadInWriteOut
+// I2CIO16DB25_ReadInWriteOut
 // Copy input pin 0 to LED pin 1
 // 2019-03-03 - Tested with LandBoards_MCP23017 library v1.0.0
 // 2019-03-03 - Working on STM32F1
