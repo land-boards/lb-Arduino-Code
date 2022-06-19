@@ -36,7 +36,7 @@
 
 * I2CIO16_Blink - Attach an LED to bit 0 and blink the LED
 * I2CIO16_LEDS16 - Blinks 16 lines one at a time
-* I2CIO16_FAT - EEPROM exercise code
+* I2CIO16DB25_ReadInWriteOut - Read/Write code
 
 === Ownership ===
 
