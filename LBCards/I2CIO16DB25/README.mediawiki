@@ -1,10 +1,9 @@
-<a href="https://www.tindie.com/products/land_boards/16-bit-digital-io-w-proto-area-I2CIO16DB25/" >
-<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
+<a href="https://www.tindie.com/products/27089/"><img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
 </img></a>
 
 == land-boards I2CIO16DB25 Card Files ==
 
-<img src="http://land-boards.com/blwiki/images/b/b6/I2CIO16DB25-P1010411-720px.jpg" alt="I2CIO16DB25 Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/6/6d/I2CIO16-DB25_P18283-720px.jpg" alt="I2CIO16DB25 Card Image"></img>
 
 * These are our [http://land-boards.com/blwiki/index.php?title=I2CIO16-DB25 I2CIO16DB25 card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=I2CIO16-DB25 I2CIO16DB25 card].
