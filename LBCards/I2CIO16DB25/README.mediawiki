@@ -1,10 +1,9 @@
-<a href="https://www.tindie.com/products/land_boards/16-bit-digital-io-w-proto-area-I2CIO16DB25/" >
-<img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
+<a href="https://www.tindie.com/products/27089/"><img src="http://land-boards.com/tindie/tindie-larges-v2.png" alt="Tindie Logo">
 </img></a>
 
 == land-boards I2CIO16DB25 Card Files ==
 
-<img src="http://land-boards.com/blwiki/images/b/b6/I2CIO16DB25-P1010411-720px.jpg" alt="I2CIO16DB25 Card Image"></img>
+<img src="http://land-boards.com/blwiki/images/6/6d/I2CIO16-DB25_P18283-720px.jpg" alt="I2CIO16DB25 Card Image"></img>
 
 * These are our [http://land-boards.com/blwiki/index.php?title=I2CIO16-DB25 I2CIO16DB25 card related] files.
 ** These files were created to exercise our [http://land-boards.com/blwiki/index.php?title=I2CIO16-DB25 I2CIO16DB25 card].
@@ -20,37 +19,24 @@
 ** Fuse protected power output on DB-25 with jumper bypass
 * Large prototyping area
 ** Connections at edges to DB-25 and GPIO lines
-* EEPROM for board ID and application specific information
-** Write Enable jumper protects against accidental writes
-* [[Open Data Acquisition System]] (ODAS) form factor (width is 95 mm)
 * Host connectors
 ** Daisy-chain I2C connector
 ** Address select jumper
-** Expandable I2C via [[I2C-RPT]] - I2C Repeater
+** Expandable I2C via [http://land-boards.com/blwiki/index.php?title=I2C-RPT I2C-RPT] - I2C Repeater
 ** Interrupt out/Card Present
 ** Power connector (not required for minimal loads)
 *** Reversible pinout for safety
 ** I2C Termination jumpers for end of I2C chain
 * Power can be 3.3V or 5V
-* 95mm wide [[Open Data Acquisition System]] format
-* 6-32 Mounting holes
+* 95mm wide [http://land-boards.com/blwiki/index.php?title=Open_Data_Acquisition_System Open Data Acquisition System] format
+* 4-40 Mounting holes
 
-=== Prototyping Area ===
-
-* Large prototyping area
-* Ideal for through-hole ICs
-* Extra I/O Rows on both sides
-** One side connects to DB-25 connector
-** Other side connects to MCP23017 pins
-* Prototyping area in the center of the card with power/ground bus up the middle two pins
-** Easy connection to IC Power/Grounds
-* Silkscreen on both sides of the card
 
 === Example Code ===
 
-* PROTO16I2CBlink - Attach an LED to bit 0 and blink the LED
-* PROTO16I2CLEDS16 - Blinks 16 lines one at a time
-* PROTO16I2CFAT - EEPROM exercise code
+* I2CIO16_Blink - Attach an LED to bit 0 and blink the LED
+* I2CIO16_LEDS16 - Blinks 16 lines one at a time
+* I2CIO16_FAT - EEPROM exercise code
 
 === Ownership ===
 
