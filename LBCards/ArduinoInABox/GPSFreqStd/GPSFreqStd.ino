@@ -133,6 +133,7 @@ uint8_t waitForLock(void)
   else
   {
     FreqStatus = "                ";  //16 spaces to clear line if no lock
+     locked = 0;
   }
 
   Serial.print(GPGGAdata);          //These serial print lines are for testing using Serial Monitor
