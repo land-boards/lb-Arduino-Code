@@ -78,6 +78,10 @@ void UBloxGPS::writeFrequency(uint32_t freq)
 
   msg.frequency_locked = freq;
   msg.checksum = calculateChecksum(((uint8_t*)&msg) + 2, 4 + msg.length);
+  for (uint16_t i=0; i<sizeof(msg); i++)
+    printf("i=%d, val = %02x\r\n",i,(char)msg[i]);
+  return;
+
 
   ss_.write((char*)&msg, sizeof(msg));
 }

@@ -73,8 +73,11 @@ int decimalPlaces;  //number of decimal places used dependant on range
 void setup()
 {
 
-  Serial.begin(57600);
+  //Serial.begin(9600);
   GPSreceiver.begin(9600);
+  GPSreceiver.writeFrequency(10000000):
+  while(1);
+  
 
   u8x8.begin();
   u8x8.setBusClock(400000);   // I2C clock = 400 KHz
