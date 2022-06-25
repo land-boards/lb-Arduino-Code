@@ -1,14 +1,14 @@
 struct GPS_TP5_MSG
 {
-  uint8_t   header1;
-  uint8_t   header2;
-  uint8_t   message_class;
-  uint8_t   message_id;
-  uint16_t  length;
-  uint8_t   timepulse_idx;
-  uint8_t   version;
-  uint16_t  reserved;
-  int16_t   antenna_cable_delay;
+  uint8_t   header1;        // 0xB5
+  uint8_t   header2;        // 0x62
+  uint8_t   message_class;  // 0x06
+  uint8_t   message_id;     // 0x31
+  uint16_t  length;         // 0x20, 0x00 (32)
+  uint8_t   timepulse_idx;  // 0x00
+  uint8_t   version;        // 0x01
+  uint16_t  reserved;       // 0x00, 0x00
+  int16_t   antenna_cable_delay;  // 
   int16_t   rf_group_delay;
   uint32_t  frequency_unlocked;
   uint32_t  frequency_locked;
@@ -67,7 +67,7 @@ void setup()
   unsigned char * msgPtr = &msg.header1;
 
 //  msg.frequency_locked = freq;
-  msg.frequency_locked = 10000000;
+  msg.frequency_locked = 10000000UL;
   msg.checksum = calculateChecksum(((uint8_t*)&msg) + 2, 4 + msg.length);
   Serial.println("# 10 MHz output");
   Serial.print("bytStr = b'");
@@ -78,7 +78,7 @@ void setup()
   }
   Serial.print("'\n\r");
 
-  msg.frequency_locked = 8000000;
+  msg.frequency_locked = 8000000UL;
   msg.checksum = calculateChecksum(((uint8_t*)&msg) + 2, 4 + msg.length);
   Serial.println("# 8 MHz output");
   Serial.print("# bytStr = b'");
@@ -90,7 +90,7 @@ void setup()
   Serial.print("'\n\r");
 
   
-  msg.frequency_locked = 1000000;
+  msg.frequency_locked = 1000000UL;
   msg.checksum = calculateChecksum(((uint8_t*)&msg) + 2, 4 + msg.length);
   Serial.println("# 1 MHz output");
   Serial.print("# bytStr = b'");
