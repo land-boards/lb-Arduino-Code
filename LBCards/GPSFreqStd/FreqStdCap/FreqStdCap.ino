@@ -1,3 +1,6 @@
+// FreqStdCap.ino - Frequency Standard
+// Generate the bytesting tables for 1, 8, and 10 MHz
+
 struct GPS_TP5_MSG
 {
   uint8_t   header1;        // 0xB5
