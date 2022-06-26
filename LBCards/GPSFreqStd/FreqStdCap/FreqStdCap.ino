@@ -1,25 +1,26 @@
 // FreqStdCap.ino - Frequency Standard
 // Generate the bytesting tables for 1, 8, and 10 MHz
+// bytStr = b'\xB5\x62\x06\x31\x20\x00\x00\x01\x00\x00\x32\x00\x00\x00 \x05\x0D\x00\x00 \x80\x96\x98\x00 \x00\x00\x00\x80 \x00\x00\x00\x80 \x00\x00\x00\x00 \x0F\x00\x00\x00 \x59\x13'
 
 struct GPS_TP5_MSG
 {
-  uint8_t   header1;        // 0xB5
-  uint8_t   header2;        // 0x62
-  uint8_t   message_class;  // 0x06
-  uint8_t   message_id;     // 0x31
-  uint16_t  length;         // 0x20, 0x00 (32)
-  uint8_t   timepulse_idx;  // 0x00
-  uint8_t   version;        // 0x01
-  uint16_t  reserved;       // 0x00, 0x00
-  int16_t   antenna_cable_delay;  // 
-  int16_t   rf_group_delay;
-  uint32_t  frequency_unlocked;
-  uint32_t  frequency_locked;
-  uint32_t  duty_cycle_unlocked;
-  uint32_t  duty_cycle_locked;
-  uint32_t  user_delay;
-  uint32_t  flags;
-  uint16_t  checksum;
+  uint8_t   header1;              // 0xB5
+  uint8_t   header2;              // 0x62
+  uint8_t   message_class;        // 0x06
+  uint8_t   message_id;           // 0x31
+  uint16_t  length;               // 0x20, 0x00 (32)
+  uint8_t   timepulse_idx;        // 0x00
+  uint8_t   version;              // 0x01
+  uint16_t  reserved;             // 0x00, 0x00
+  int16_t   antenna_cable_delay;  // 0x32, 0x00
+  int16_t   rf_group_delay;       // 0x00, 0x00
+  uint32_t  frequency_unlocked;   // 0x05, 0x0D, 0x00, 0x00 = 3333 dec
+  uint32_t  frequency_locked;     // 0x80, 0x96, 0x98, 0x00 = 10,000,000 dec
+  uint32_t  duty_cycle_unlocked;  // 0x00, 0x00, 0x00, 0x80 
+  uint32_t  duty_cycle_locked;    // 0x00, 0x00, 0x00, 0x80
+  uint32_t  user_delay;           // 0x00, 0x00, 0x00, 0x00
+  uint32_t  flags;                // 0x0F, 0x00, 0x00, 0x00
+  uint16_t  checksum;             // 0x59, 0x13
 } __attribute__((packed));
 
 const uint16_t GPS_TP5_ACTIVE           = 0x01;
