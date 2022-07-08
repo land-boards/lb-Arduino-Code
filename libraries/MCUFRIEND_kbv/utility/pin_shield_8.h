@@ -387,11 +387,14 @@
 #if defined(D21_XPRO)
   #define AMASK 0x00220000
   #define BMASK 0x0000C0E4
+  #define WRMASK        ((0<<22) | (1<<28) | (1<<30)) //
+  #define RDMASK        ((1<<17) | (1<<28) | (1<<30)) //
   #define write_8(d) { \
-   PORTA.OUT.reg = (PORTA.OUT.reg & ~AMASK) \
+   PORTA.OUTCLR.reg = AMASK; PORTB.OUTCLR.reg = BMASK; \
+   PORTA.OUTSET.reg = 0 \
                   | (((d) & (1<<5)) << 16) \
                   | (((d) & (1<<7)) << 10); \
-   PORTB.OUT.reg = (PORTB.OUT.reg & ~BMASK) \
+   PORTB.OUTSET.reg = 0 \
                   | (((d) & (3<<0)) << 6) \
                   | (((d) & (1<<2)) << 12) \
                   | (((d) & (1<<3)) >> 1) \
@@ -408,17 +411,19 @@
   #define setWriteDir() { \
                   PORTA.DIRSET.reg = AMASK; \
                   PORTB.DIRSET.reg = BMASK; \
-                      PORTA.WRCONFIG.reg = (AMASK>>16) | (0<<22) | (0<<28) | (1<<30) | (1<<31); \
-                      PORTB.WRCONFIG.reg = (BMASK & 0xFFFF) | (0<<22) | (0<<28) | (1<<30); \
+                      PORTA.WRCONFIG.reg = (AMASK>>16) | WRMASK | (1<<31); \
+                      PORTB.WRCONFIG.reg = (BMASK & 0xFFFF) | WRMASK; \
                         }
   #define setReadDir()  { \
                           PORTA.DIRCLR.reg = AMASK; \
                       PORTB.DIRCLR.reg = BMASK; \
-                      PORTA.WRCONFIG.reg = (AMASK>>16) | (1<<17) | (0<<28) | (1<<30) | (1<<31); \
-                      PORTB.WRCONFIG.reg = (BMASK & 0xFFFF) | (1<<17) | (0<<28) | (1<<30); \
+                      PORTA.WRCONFIG.reg = (AMASK>>16) | RDMASK | (1<<31); \
+                      PORTB.WRCONFIG.reg = (BMASK & 0xFFFF) | RDMASK; \
                         }       
-#else
+#elif defined(M0_PRO)
   #define DMASK 0x0030C3C0
+  #define WRMASK        ((0<<22) | (1<<28) | (1<<30)) //
+  #define RDMASK        ((1<<17) | (1<<28) | (1<<30)) //
   #define write_8(x) {PORTA.OUTCLR.reg = (DMASK); \
                                           PORTA.OUTSET.reg = (((x) & 0x0F) << 6) \
                                        | (((x) & 0x30) << 10) \
@@ -427,14 +432,49 @@
                     | ((PORTA.IN.reg >> 10) & 0x30) \
                     | ((PORTA.IN.reg >> 14) & 0xC0))
   #define setWriteDir() { PORTA.DIRSET.reg = DMASK; \
-                      PORTA.WRCONFIG.reg = (DMASK & 0xFFFF) | (0<<22) | (1<<28) | (1<<30); \
-                      PORTA.WRCONFIG.reg = (DMASK>>16) | (0<<22) | (1<<28) | (1<<30) | (1<<31); \
+                      PORTA.WRCONFIG.reg = (DMASK & 0xFFFF) | WRMASK; \
+                      PORTA.WRCONFIG.reg = (DMASK>>16) | WRMASK | (1<<31); \
                         }
   #define setReadDir()  { PORTA.DIRCLR.reg = DMASK; \
-                      PORTA.WRCONFIG.reg = (DMASK & 0xFFFF) | (1<<17) | (1<<28) | (1<<30); \
-                      PORTA.WRCONFIG.reg = (DMASK>>16) | (1<<17) | (1<<28) | (1<<30) | (1<<31); \
+                      PORTA.WRCONFIG.reg = (DMASK & 0xFFFF) | RDMASK; \
+                      PORTA.WRCONFIG.reg = (DMASK>>16) | RDMASK | (1<<31); \
                         }       
 #endif
+
+//############################# SAM4S_XPRO ############################
+#elif defined(SAM4S_XPRO)
+ // configure macros for data bus
+  #define AMASK ((1<<9)|(1<<6)|(1<<23)|(1<<25)|(1<<24))
+  #define CMASK ((1<<25)|(1<<26)|(1<<27))
+  #define write_8(d) { \
+   PIOA->PIO_CODR = AMASK; PIOC->PIO_CODR = CMASK; \
+   PIOA->PIO_SODR = 0 \
+                  | (((d) & (3<<0)) << 24) \
+                  | (((d) & (1<<3)) << 20) \
+                  | (((d) & (1<<4)) << 2) \
+                  | (((d) & (1<<7)) << 2); \
+   PIOC->PIO_SODR = 0 \
+                  | (((d) & (1<<2)) << 24) \
+                  | (((d) & (1<<5)) << 20) \
+                  | (((d) & (1<<6)) << 21); \
+  }
+  #define read_8() (          (((PIOA->PIO_PDSR & (1<<24)) >> 24) \
+                             | ((PIOA->PIO_PDSR & (1<<25)) >> 24) \
+                             | ((PIOC->PIO_PDSR & (1<<26)) >> 24) \
+                             | ((PIOA->PIO_PDSR & (1<<23)) >> 20) \
+                             | ((PIOA->PIO_PDSR & (1<<6)) >> 2) \
+                             | ((PIOC->PIO_PDSR & (1<<25)) >> 20) \
+                             | ((PIOC->PIO_PDSR & (1<<27)) >> 21) \
+                             | ((PIOA->PIO_PDSR & (1<<9)) >> 2) \
+                             ))
+  #define setWriteDir() { \
+                  PIOA->PIO_OER = AMASK; \
+                  PIOC->PIO_OER = CMASK; \
+                        }
+  #define setReadDir()  { \
+                  PMC->PMC_PCER0 = (1 << ID_PIOA)|(1 << ID_PIOC);\
+                  PIOA->PIO_ODR = AMASK; PIOC->PIO_ODR = CMASK;\
+                        }
 
 //####################################### DUE ############################
 #elif defined(__SAM3X8E__)      //regular UNO shield on DUE

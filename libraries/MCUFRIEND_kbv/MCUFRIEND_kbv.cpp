@@ -1,5 +1,6 @@
 //#define SUPPORT_0139              //S6D0139 +280 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
+//#define SUPPORT_05A1              //for S6D05A1
 //#define SUPPORT_1289              //SSD1289,SSD1297 (ID=0x9797) +626 bytes, 0.03s
 //#define SUPPORT_1580              //R61580 Untested
 #define SUPPORT_1963              //only works with 16BIT bus anyway
@@ -16,18 +17,20 @@
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
 //#define SUPPORT_9163              //
 //#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
+#define SUPPORT_9320              //ID=0x0001, R61505, SPFD5408, ILI9320
+#define SUPPORT_9325              //RM68090, ILI9325, ILI9328, ILI9331, ILI9335 
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806              //UNTESTED
 #define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
-#define OFFSET_9327 32            //costs about 103 bytes, 0.08s
+//#define OFFSET_9327 32            //costs about 103 bytes, 0.08s
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
 #include "utility/mcufriend_serial.h"
  //uint8_t running;
-#elif defined(__MBED__)
+#elif defined(__MBED__) && !defined(ARDUINO_ARCH_MBED)
 #include "utility/mcufriend_mbed.h"
 #elif defined(__CC_ARM) || defined(__CROSSWORKS_ARM)
 #include "utility/mcufriend_keil.h"
@@ -214,6 +217,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0x1526;          //subsequent begin() enables Command Access
     if (ret == 0xFF00)          //R61520: [xx FF FF 00]
         return 0x1520;          //subsequent begin() enables Command Access
+    if (ret == 0xF000)          //S6D05A1: [xx F0 F0 00] 
+        return 0x05A1;          //subsequent begin() enables Command Access
 //#endif
 	ret = readReg40(0xBF);
 	if (ret == 0x8357)          //HX8357B: [xx 01 62 83 57 FF]
@@ -242,7 +247,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
     uint32_t ret32 = readReg32(0x04);
     msb = ret32 >> 16;
     ret = ret32;	
-//    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
+    if (msb == 0xE3 && ret == 0x0000) return 0xE300; //reg(04) = [xx E3 00 00] BangGood
+//    if (msb == 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
     if (msb == 0x00 && ret == 0x8000) { //HX8357-D [xx 00 80 00]
 #if 1
         uint8_t cmds[] = {0xFF, 0x83, 0x57};
@@ -352,7 +358,7 @@ int16_t MCUFRIEND_kbv::readGRAM(int16_t x, int16_t y, uint16_t * block, int16_t 
 
 void MCUFRIEND_kbv::setRotation(uint8_t r)
 {
-    uint16_t GS, SS_v, ORG, REV = _lcd_rev;
+    uint16_t GS, SS_v, ORG, REV = _lcd_rev, NL;
     uint8_t val, d[3];
     rotation = r & 3;           // just perform the operation ourselves on the protected variables
     _width = (rotation & 1) ? HEIGHT : WIDTH;
@@ -387,6 +393,14 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
+#if !defined(OFFSET_9327)
+        } else if (_lcd_ID == 0x9327) {  //better 
+            d[0] = 0; 
+            d[1] = (400 / 8) - 1;        //NL
+            d[2] = (val & 0x80) ? (432 - 400) / 4 : 0; //SCN (SM=0)
+            WriteCmdParamN(0xC0, 3, d);  //PANEL_DRV
+            goto common_MC;
+#endif
         } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511) {
             if (val & 0x80)
                 val |= 0x01;    //GS
@@ -458,9 +472,11 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
 		case 0xB509:
             _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
             GS = (val & 0x80) ? (1 << 15) : 0;
-			uint16_t NL;
-			NL = ((432 / 8) - 1) << 9;
-            if (_lcd_ID == 0x9326 || _lcd_ID == 0x5420) NL >>= 1;
+            NL = ((400 / 8) - 1) << 9;  // 400 rows
+            if (_lcd_ID == 0x9326 || _lcd_ID == 0x5420) { //NL and SCN are in diff position
+                if (GS) GS |= (4 << 0);  //start SCN at row 32 PLEASE TEST ILI9326, SPFD5420
+                NL >>= 1;
+            }
             WriteCmdData(0x400, GS | NL);
             goto common_SS;
         default:
@@ -634,7 +650,7 @@ void MCUFRIEND_kbv::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_
             STROBE_16BIT;
         }
 #else
-#if defined(SUPPORT_1289)
+#if defined(SUPPORT_1289) || defined(SUPPORT_1963)
         if (is9797) {
              uint8_t r = color565_to_r(color);
              uint8_t g = color565_to_g(color);
@@ -1030,6 +1046,37 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         break;
 #endif
 
+#ifdef SUPPORT_05A1
+    case 0x05A1:
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
+        static const uint8_t S6D05A1_regValues_max[] PROGMEM = {
+            0xF0, 2, 0x5A, 0x5A,
+            0xF1, 2, 0x5A, 0x5A,
+            0xF2, 19, 0x3B, 0x33, 0x03, 0x0C, 0x08, 0x08, 0x08, 0x00, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x33, 0x0C, 0x08, 0x0C, 0x08,
+            0xF4, 14, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x70, 0x03, 0x04, 0x70, 0x03,
+            0xF5, 12, 0x00, 0x46, 0x70, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x46, 0x70,
+            0xF6, 8, 0x03, 0x00, 0x08, 0x03, 0x03, 0x00, 0x03, 0x00,
+            0xF7, 5, 0x00, 0x80, 0x10, 0x02, 0x00,
+            0xF8, 2, 0x11, 0x00,
+            0xF9, 1, 0x14,
+            0xFA, 16, 0x33, 0x07, 0x04, 0x1A, 0x18, 0x1C, 0x24, 0x1D, 0x26, 0x28, 0x2F, 0x2E, 0x00, 0x00, 0x00, 0x00,
+            0xFB, 16, 0x33, 0x03, 0x00, 0x2E, 0x2F, 0x28, 0x26, 0x1D, 0x24, 0x1C, 0x18, 0x1A, 0x04, 0x00, 0x00, 0x00,
+            0xF9, 1, 0x12,
+            0xFA, 16, 0x36, 0x07, 0x04, 0x1C, 0x1C, 0x23, 0x28, 0x1C, 0x25, 0x26, 0x2E, 0x2B, 0x00, 0x00, 0x00, 0x00,
+            0xFB, 16, 0x33, 0x06, 0x00, 0x2B, 0x2E, 0x26, 0x25, 0x1C, 0x28, 0x23, 0x1C, 0x1C, 0x04, 0x00, 0x00, 0x00,
+            0xF9, 1, 0x11,
+            0xFA, 16, 0x33, 0x07, 0x04, 0x30, 0x32, 0x34, 0x35, 0x11, 0x1D, 0x20, 0x28, 0x20, 0x00, 0x00, 0x00, 0x00,
+            0xFB, 16, 0x33, 0x03, 0x00, 0x20, 0x28, 0x20, 0x1D, 0x11, 0x35, 0x34, 0x32, 0x30, 0x04, 0x00, 0x00, 0x00,
+            0x44, 2, 0x00, 0x01,
+        };
+        table8_ads = S6D05A1_regValues_max, table_size = sizeof(S6D05A1_regValues_max);
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+#endif
+
 #ifdef SUPPORT_1289
     case 0x9797:
         is9797 = 1;
@@ -1234,16 +1281,23 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         break;
 #endif
 
-#if defined(SUPPORT_1963) && USING_16BIT_BUS 
+#if defined(SUPPORT_1963) 
     case 0x1963:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | READ_NODUMMY | INVERT_SS | INVERT_RGB;
+#if USING_16BIT_BUS
+#define SSD1963_PIXDATA 0x03
+#else
+#define SSD1963_PIXDATA 0x00
+        is9797 = 1;
+        _lcd_capable |= READ_24BITS;
+#endif
         // from NHD 5.0" 8-bit
         static const uint8_t SSD1963_NHD_50_regValues[] PROGMEM = {
             (0xE0), 1, 0x01,    // PLL enable
             TFTLCD_DELAY8, 10,
             (0xE0), 1, 0x03,    // Lock PLL
             (0xB0), 7, 0x08, 0x80, 0x03, 0x1F, 0x01, 0xDF, 0x00,        //LCD SPECIFICATION
-            (0xF0), 1, 0x03,    //was 00 pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //was 00 pixel data interface
             //            (0x3A), 1, 0x60,        // SET R G B format = 6 6 6
             (0xE2), 3, 0x1D, 0x02, 0x54,        //PLL multiplier, set PLL clock to 120M
             (0xE6), 3, 0x02, 0xFF, 0xFF,        //PLL setting for PCLK, depends on resolution
@@ -1261,7 +1315,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0x01, 0,            //Soft Reset
             TFTLCD_DELAY8, 120,
             (0xB0), 7, 0x08, 0x80, 0x03, 0x1F, 0x01, 0xDF, 0x00,        //LCD SPECIFICATION
-            (0xF0), 1, 0x03,    //was 00 pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //was 00 pixel data interface
             //            (0x3A), 1, 0x60,        // SET R G B format = 6 6 6
             (0xE6), 3, 0x0F, 0xFF, 0xFF,        //PLL setting for PCLK, depends on resolution
             (0xB4), 8, 0x04, 0x20, 0x00, 0x58, 0x80, 0x00, 0x00, 0x00,  //HSYNC
@@ -1285,7 +1339,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -1309,7 +1363,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC VT=525, VPS=16, VPW=16, FPS=8
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -1333,7 +1387,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x02, 0x0D, 0x00, 0x10, 0x10, 0x00, 0x08,        //VSYNC VT=525, VPS=16, VPW=16, FPS=8
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -1357,7 +1411,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             (0xB6), 7, 0x01, 0x20, 0x00, 0x04, 0x0C, 0x00, 0x02,        //VSYNC
             (0xBA), 1, 0x0F,    //GPIO[3:0] out 1
             (0xB8), 2, 0x07, 0x01,      //GPIO3=input, GPIO[2:0]=output
-            (0xF0), 1, 0x03,    //pixel data interface
+            (0xF0), 1, SSD1963_PIXDATA,    //pixel data interface
             TFTLCD_DELAY8, 1,
             0x28, 0,            //Display Off
             0x11, 0,            //Sleep Out
@@ -2291,6 +2345,7 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
+#ifdef SUPPORT_9320
     case 0x0001:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS; //no RGB bug. thanks Ivo_Deshev
         goto common_9320;
@@ -2366,6 +2421,9 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9320_regValues, sizeof(ILI9320_regValues));
         break;
+#endif
+
+#ifdef SUPPORT_9325
     case 0x6809:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS | AUTO_READINC;
         goto common_93x5;
@@ -2439,6 +2497,7 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
+#endif
 
 #if defined(SUPPORT_9326_5420)
 	case 0x5420:
@@ -2539,6 +2598,9 @@ case 0x4532:    // thanks Leodino
         table8_ads = XX1602_regValues, table_size = sizeof(XX1602_regValues);
         break;
 
+    case 0xE300:    //weird from BangGood
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | INVERT_SS | INVERT_RGB;
+        goto common_9329;
     case 0x2053:    //weird from BangGood
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | REV_SCREEN | READ_BGR;
 		goto common_9329;

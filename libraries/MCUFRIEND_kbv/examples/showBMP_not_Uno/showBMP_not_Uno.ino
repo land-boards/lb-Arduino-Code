@@ -6,8 +6,13 @@
 //
 // if you are not using a UNO,  you must use Software SPI:
 //
-// install v1.0.1 of the <SdFat.h> library with the Arduino Library Manager.
-// edit the src/SdFatConfig.h file to #define ENABLE_SOFTWARE_SPI_CLASS 1
+// NEW: install <SdFat.h> v2.x.x library with the Arduino Library Manager
+// NEW: edit the src/SdFatConfig.h file to #define SPI_DRIVER_SELECT 2
+//
+// OBSOLETE SdFat v1.x.x uses a different system 
+// OBSOLETE v1.x.x SdFatConfig.h: #define ENABLE_SOFTWARE_SPI_CLASS 1
+// OBSOLETE: SdFatSoftSpi<12, 11, 13> SD; //Bit-Bang on the Shield pins SDFat.h v1
+// OBSOLETE: #define SD_CS 10
 //
 // copy all your BMP files to the root directory on the microSD with your PC
 // (or another directory)
@@ -15,13 +20,19 @@
 #include <SPI.h>             // f.k. for Arduino-1.5.2
 #define USE_SDFAT
 #include <SdFat.h>           // Use the SdFat library
-SdFatSoftSpi<12, 11, 13> SD; //Bit-Bang on the Shield pins
+
+#if SPI_DRIVER_SELECT != 2
+#error edit SdFatConfig.h .  READ THE SKETCH INSTRUCTIONS
+#endif
+
+SoftSpiDriver<12, 11, 13> softSpi; //Bit-Bang on the Shield pins SDFat.h v2
+SdFat SD;
+#define SD_CS SdSpiConfig(10, DEDICATED_SPI, SD_SCK_MHZ(0), &softSpi)
 
 #include <Adafruit_GFX.h>    // Hardware-specific library
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 
-#define SD_CS     10
 #define NAMEMATCH ""         // "" matches any name
 //#define NAMEMATCH "tiger"    // *tiger*.bmp
 #define PALETTEDEPTH   8     // support 256-colour Palette
@@ -220,10 +231,12 @@ uint8_t showBMP(char *nm, int x, int y)
                         r = 0;
                     }
                     switch (bmpDepth) {          // Convert pixel from BMP to TFT format
+                        case 32:
                         case 24:
                             b = sdbuffer[buffidx++];
                             g = sdbuffer[buffidx++];
                             r = sdbuffer[buffidx++];
+                            if (bmpDepth == 32) buffidx++; //ignore ALPHA
                             color = tft.color565(r, g, b);
                             break;
                         case 16:
@@ -258,4 +271,3 @@ uint8_t showBMP(char *nm, int x, int y)
     bmpFile.close();
     return (ret);
 }
-

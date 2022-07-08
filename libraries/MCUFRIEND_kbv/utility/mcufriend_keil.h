@@ -79,6 +79,10 @@
 #elif defined(STM32F411xE)
 #define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; } //100MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE2; }
+#elif defined(SAM4S_XPRO)
+#warning 120MHz
+#define WRITE_DELAY { WR_ACTIVE4; } //120MHz
+#define READ_DELAY  { RD_ACTIVE8; }
 #elif defined(STM32F446xx)
 #warning 180MHz
 #define WRITE_DELAY { WR_ACTIVE8; } //180MHz

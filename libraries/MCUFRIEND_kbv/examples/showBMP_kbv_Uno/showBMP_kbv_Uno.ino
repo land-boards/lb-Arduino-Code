@@ -217,10 +217,12 @@ uint8_t showBMP(char *nm, int x, int y)
                         r = 0;
                     }
                     switch (bmpDepth) {          // Convert pixel from BMP to TFT format
+                        case 32:
                         case 24:
                             b = sdbuffer[buffidx++];
                             g = sdbuffer[buffidx++];
                             r = sdbuffer[buffidx++];
+                            if (bmpDepth == 32) buffidx++; //ignore ALPHA
                             color = tft.color565(r, g, b);
                             break;
                         case 16:

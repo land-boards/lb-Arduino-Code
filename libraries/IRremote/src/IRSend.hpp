@@ -241,14 +241,14 @@ size_t IRsend::write(IRData *aIRSendData, uint_fast8_t aNumberOfRepeats) {
  * Function using an 16 byte microsecond timing array for every purpose.
  * Raw data starts with a Mark. No leading space as in received timing data!
  */
-void IRsend::sendRaw(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
+void IRsend::sendRaw(const uint16_t aBufferWithMicroseconds[], uint_fast16_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
 // Set IR carrier frequency
     enableIROut(aIRFrequencyKilohertz);
 
     /*
      * Raw data starts with a mark.
      */
-    for (uint_fast8_t i = 0; i < aLengthOfBuffer; i++) {
+    for (uint_fast16_t i = 0; i < aLengthOfBuffer; i++) {
         if (i & 1) {
             // Odd
             space(aBufferWithMicroseconds[i]);
@@ -264,11 +264,11 @@ void IRsend::sendRaw(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aLen
  * New function using an 8 byte tick timing array to save program memory
  * Raw data starts with a Mark. No leading space as in received timing data!
  */
-void IRsend::sendRaw(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
+void IRsend::sendRaw(const uint8_t aBufferWithTicks[], uint_fast16_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
 // Set IR carrier frequency
     enableIROut(aIRFrequencyKilohertz);
 
-    for (uint_fast8_t i = 0; i < aLengthOfBuffer; i++) {
+    for (uint_fast16_t i = 0; i < aLengthOfBuffer; i++) {
         if (i & 1) {
             // Odd
             space(aBufferWithTicks[i] * MICROS_PER_TICK);
@@ -284,7 +284,7 @@ void IRsend::sendRaw(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfBuf
  * Function using an 16 byte microsecond timing array in FLASH for every purpose.
  * Raw data starts with a Mark. No leading space as in received timing data!
  */
-void IRsend::sendRaw_P(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
+void IRsend::sendRaw_P(const uint16_t aBufferWithMicroseconds[], uint_fast16_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
 #if !defined(__AVR__)
     sendRaw(aBufferWithMicroseconds, aLengthOfBuffer, aIRFrequencyKilohertz); // Let the function work for non AVR platforms
 #else
@@ -293,7 +293,7 @@ void IRsend::sendRaw_P(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aL
     /*
      * Raw data starts with a mark
      */
-    for (uint_fast8_t i = 0; i < aLengthOfBuffer; i++) {
+    for (uint_fast16_t i = 0; i < aLengthOfBuffer; i++) {
         unsigned int duration = pgm_read_word(&aBufferWithMicroseconds[i]);
         if (i & 1) {
             // Odd
@@ -310,14 +310,14 @@ void IRsend::sendRaw_P(const uint16_t aBufferWithMicroseconds[], uint_fast8_t aL
  * New function using an 8 byte tick timing array in FLASH to save program memory
  * Raw data starts with a Mark. No leading space as in received timing data!
  */
-void IRsend::sendRaw_P(const uint8_t aBufferWithTicks[], uint_fast8_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
+void IRsend::sendRaw_P(const uint8_t aBufferWithTicks[], uint_fast16_t aLengthOfBuffer, uint_fast8_t aIRFrequencyKilohertz) {
 #if !defined(__AVR__)
     sendRaw(aBufferWithTicks, aLengthOfBuffer, aIRFrequencyKilohertz); // Let the function work for non AVR platforms
 #else
 // Set IR carrier frequency
     enableIROut(aIRFrequencyKilohertz);
 
-    for (uint_fast8_t i = 0; i < aLengthOfBuffer; i++) {
+    for (uint_fast16_t i = 0; i < aLengthOfBuffer; i++) {
         unsigned int duration = pgm_read_byte(&aBufferWithTicks[i]) * (unsigned int) MICROS_PER_TICK;
         if (i & 1) {
             // Odd
@@ -429,12 +429,7 @@ void IRsend::mark(unsigned int aMarkMicros) {
 #  endif
     ENABLE_SEND_PWM_BY_TIMER; // Enable timer or ledcWrite() generated PWM output
     customDelayMicroseconds(aMarkMicros);
-    IRLedOff();
-#  if !defined(NO_LED_FEEDBACK_CODE)
-    if (FeedbackLEDControl.LedFeedbackEnabled == LED_FEEDBACK_ENABLED_FOR_SEND) {
-        setFeedbackLED(false);
-    }
-#  endif
+    IRLedOff(); // manages also feedback LED
 
 #elif defined(USE_NO_SEND_PWM)
 #  if !defined(NO_LED_FEEDBACK_CODE)
@@ -626,17 +621,19 @@ void IRsend::enableIROut(uint_fast8_t aFrequencyKHz) {
 #endif // defined(SEND_PWM_BY_TIMER)
 
 #if defined(USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN) && defined(OUTPUT_OPEN_DRAIN) // the mode INPUT for mimicking open drain is set at IRLedOff()
-#    if defined(IR_SEND_PIN)
+#  if defined(IR_SEND_PIN)
     pinModeFast(IR_SEND_PIN, OUTPUT_OPEN_DRAIN);
-#    else
+#  else
     pinModeFast(sendPin, OUTPUT_OPEN_DRAIN);
-#    endif
+#  endif
 #else
+#  if !(defined(SEND_PWM_BY_TIMER) && defined(ESP32)) // ledcWrite since ESP 2.0.2 does not work if pin mode is set
 #    if defined(IR_SEND_PIN)
     pinModeFast(IR_SEND_PIN, OUTPUT);
 #    else
     pinModeFast(sendPin, OUTPUT);
 #    endif
+#  endif
 #endif // defined(USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN)
 }
 

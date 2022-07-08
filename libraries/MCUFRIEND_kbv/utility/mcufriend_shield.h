@@ -23,6 +23,9 @@
 #if 0
 //################################### UNO ##############################
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__)       //regular UNO shield on UNO
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PD7|PD6|PD5|PD4|PD3|PD2|PB1|PB0| |PC0|PC1|PC2|PC3|PC4|
+//UNO pins  |7  |6  |5  |4  |3  |2  |9  |8  | |A0 |A1 |A2 |A3 |A4 |
 #define RD_PORT PORTC
 #define RD_PIN  0
 #define WR_PORT PORTC
@@ -51,6 +54,8 @@
 
 //################################### MEGA2560 ##############################
 #elif defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)       //regular UNO shield on MEGA2560
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PH4|PH3|PE3|PG5|PE5|PE4|PH6|PH5| |PF0|PF1|PF2|PF3|PF4|
 #define RD_PORT PORTF
 #define RD_PIN  0
 #define WR_PORT PORTF
@@ -126,6 +131,8 @@
 #elif defined(__AVR_ATmega4809__) && (defined(ARDUINO_AVR_NANO_EVERY) || defined(ARDUINO_AVR_UNO_WIFI_REV2))
 #if defined(ARDUINO_AVR_NANO_EVERY)
 #warning EVERY-4809 with Nano-Shield_Adapter using VPORT.OUT and BLD/BST
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PA1|PF4|PB2|PC6|PF5|PA0|PB0|PE3| |PD3|PD2|PD1|PD0|PF2|
 #define RD_PORT VPORTD  //
 #define RD_PIN  3
 #define WR_PORT VPORTD
@@ -254,7 +261,7 @@ void write_8(uint8_t val)
  //  #define write_8(x) PORT->Group[0].OUT.reg = (PORT->Group[0].OUT.reg & ~DMASK)|(((x) & 0x0F) << 6)|(((x) & 0x30) << 10)|(((x) & 0xC0)<<14)
 #if defined(ARDUINO_SAMD_ZERO) || defined(ARDUINO_SAMD_ZERO)   // American ZERO
 //LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD |WR |RS  |CS  |RST |
-//SAMD21 pin |PA21|PA20|PA15|PB8 |PB9 |PA14|PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
+//SAMD21 pin |PA21|PA20|PA15|PA8 |PA9 |PA14|PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
 #define write_8(x) {\
 	PORT->Group[0].OUTCLR.reg = DMASK;\
 	PORT->Group[0].OUTSET.reg = (((x) & 0x0B) << 6)\
@@ -270,7 +277,7 @@ void write_8(uint8_t val)
                    |((PORT->Group[0].IN.reg >> 14) & 0xC0))
 #else   //default to an M0_PRO on v1.6.5 or 1.7.6
 //LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD |WR |RS  |CS  |RST |
-//SAMD21 pin |PA21|PA20|PA15|PA14|PB9 |PB8 |PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
+//SAMD21 pin |PA21|PA20|PA15|PA14|PA9 |PA8 |PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
 #define write_8(x) {\
 	PORT->Group[0].OUTCLR.reg = DMASK;\
 	PORT->Group[0].OUTSET.reg = (((x) & 0x0F) << 6)\
@@ -361,6 +368,8 @@ void write_8(uint8_t val)
 
 //####################################### DUE ############################
 #elif defined(__SAM3X8E__)      //regular UNO shield on DUE
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD  |WR  |RS  |CS  |RST |
+//SAM3XE pin |PC23|PC24|PC25|PC26|PC28|PB25|PC21|PC22| |PA16|PA24|PA23|PA22|PA6 |
 #define WRITE_DELAY { WR_ACTIVE; }
 #define IDLE_DELAY  { WR_IDLE; }
 #define READ_DELAY  { RD_ACTIVE;}
@@ -415,6 +424,8 @@ void write_8(uint8_t val)
 
 //################################### LEONARDO ##############################
 #elif defined(__AVR_ATmega32U4__)       //regular UNO shield on Leonardo
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
+//AVR   pin |PE6|PD7|PC6|PD4|PD0|PD1|PB5|PB4| |PF7|PF6|PF5|PF4|PF1|
 #define RD_PORT PORTF
 #define RD_PIN  7
 #define WR_PORT PORTF
@@ -505,6 +516,7 @@ void write_8(uint8_t x)
 
 //LCD pins  |D7  |D6  |D5 |D4 |D3 |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |  A5
 //MXRT pin  |7.17|7.10|9.8|9.6|9.5|9.4|7.11|7.16| |6.18|6.19|6.23|6.22|6.17|6.16
+//4.x pins  |7   |6   |5  |4  |3   |2  |9  |8   | |14  |15  |16  |17  |18  |
 
 #if 0
 #elif defined(__IMXRT1062__)
@@ -563,14 +575,21 @@ void write_8(uint8_t x)
 #define PIN_HIGH(port, pin) PASTE(port, _DR_SET) = (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _GDIR) |= (1<<(pin))
 
-//####################################### TEENSY 3.x ############################
-#elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) // regular UNO shield on a Teensy 3.x
-#warning regular UNO shield on a Teensy 3.x
+//################################ TEENSY 3.x and LC ############################
+#elif defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) || defined(__MKL26Z64__)
+#warning regular UNO shield on a Teensy 3.x or LC
 
 //LCD pins  |D7 |D6 |D5 |D4  |D3  |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
-//MK20 pin  |PD2|PD4|PD7|PA13|PA12|PD2|PC3|PD3| |PD1|PC0|PB0|PB1|PB3|
+//MK20,64,66|PD2|PD4|PD7|PA13|PA12|PD0|PC3|PD3| |PD1|PC0|PB0|PB1|PB3|
+//MKL26Z prt|PD2|PD4|PD7|PA2 |PA1 |PD0|PC3|PD3| |PD1|PC0|PB0|PB1|PB3|
+//3.6 pins  |7  |6  |5  |4   |3   |2  |9  |8  | |14 |15 |16 |17 |18 |
 
-#if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
+#if 0
+#elif defined(__MKL26Z64__) // TeensyLC 48MHz.  Thanks DaveLapp
+#define WRITE_DELAY { WR_ACTIVE; }
+#define IDLE_DELAY  { }
+#define READ_DELAY  { RD_ACTIVE4; }
+#elif defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE2; }
 #define IDLE_DELAY  { }
 #define READ_DELAY  { RD_ACTIVE8; RD_ACTIVE; }
@@ -598,6 +617,31 @@ void write_8(uint8_t x)
 #define RESET_PIN 3
 
 // configure macros for the data pins
+#if defined(__MKL26Z64__)     //TeensyLC.  Thanks DaveLapp
+#define AMASK ((1<<1)|(1<<2))  //PA2,PA1 vs PA13,PA12 on 3.x
+#define CMASK ((1<<3))
+#define DMASK ((1<<0)|(1<<2)|(1<<3)|(1<<4)|(1<<7))
+
+#define write_8(d) { \
+        GPIOA_PCOR = AMASK; GPIOC_PCOR = CMASK; GPIOD_PCOR = DMASK; \
+        GPIOA_PSOR = (((d) & (1 << 3)) >> 2) \
+                     | (((d) & (1 << 4)) >> 2); \
+        GPIOC_PSOR = (((d) & (1 << 1)) << 2); \
+        GPIOD_PSOR = (((d) & (1 << 0)) << 3) \
+                     | (((d) & (1 << 2)) >> 2) \
+                     | (((d) & (1 << 5)) << 2) \
+                     | (((d) & (1 << 6)) >> 2) \
+                     | (((d) & (1 << 7)) >> 5); \
+        }
+#define read_8() ((((GPIOD_PDIR & (1<<3)) >> 3) \
+                   | ((GPIOC_PDIR & (1 << 3)) >> 2) \
+                   | ((GPIOD_PDIR & (1 << 0)) << 2) \
+                   | ((GPIOA_PDIR & (1 << 1)) << 2) \
+                   | ((GPIOA_PDIR & (1 << 2)) << 2) \
+                   | ((GPIOD_PDIR & (1 << 7)) >> 2) \
+                   | ((GPIOD_PDIR & (1 << 4)) << 2) \
+                   | ((GPIOD_PDIR & (1 << 2)) << 5)))
+#else
 #define AMASK ((1<<12)|(1<<13))
 #define CMASK ((1<<3))
 #define DMASK ((1<<0)|(1<<2)|(1<<3)|(1<<4)|(1<<7))
@@ -621,6 +665,8 @@ void write_8(uint8_t x)
                    | ((GPIOD_PDIR & (1 << 7)) >> 2) \
                    | ((GPIOD_PDIR & (1 << 4)) << 2) \
                    | ((GPIOD_PDIR & (1 << 2)) << 5)))
+#endif
+
 #define setWriteDir() {GPIOA_PDDR |= AMASK;GPIOC_PDDR |= CMASK;GPIOD_PDDR |= DMASK; }
 #define setReadDir() {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
@@ -1079,6 +1125,78 @@ static void setReadDir()
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
+//################################## NANO33 BLE ############################
+#elif defined(ARDUINO_ARDUINO_NANO33BLE)
+#warning regular UNO shield on a Nano33 BLE
+
+//LCD pins  |D7   |D6   |D5   |D4   |D3   |D2   |D1   |D0   | |RD  |WR  |RS   |CS   |RST  |
+//BLE pin   |P0.23|P1.14|P1.13|P1.15|P1.12|P1.11|P0.27|P0.21| |P0.4|P0.5|P0.30|P0.29|P0.31|
+//NANO pins |7    |6    |5    |4    |3    |2    |9    |8    | |A0  |A1  |A2   |A3   |A4   |
+
+#define WRITE_DELAY { WR_ACTIVE8; }   //M4F @ 64MHz
+#define IDLE_DELAY  { WR_IDLE2; }
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
+
+#define RD_PORT NRF_P0
+#define RD_PIN 4
+#define WR_PORT NRF_P0
+#define WR_PIN 5
+#define CD_PORT NRF_P0
+#define CD_PIN 30
+#define CS_PORT NRF_P0
+#define CS_PIN 29
+#define RESET_PORT NRF_P0
+#define RESET_PIN 31
+
+// configure macros for the data pins
+#define P0MASK ((1<<23)|(1<<27)|(1<<21))   //NRF_P0
+#define P1MASK ((1<<14)|(1<<13)|(1<<15)|(1<<12)|(1<<11))  //NRF_P1
+
+#define write_8(d) { \
+        NRF_P0->OUTCLR = P0MASK; NRF_P1->OUTCLR = P1MASK; \
+        NRF_P0->OUTSET = (((d) & (1 << 0)) << 21) \
+                     | (((d) & (1 << 1)) << 26) \
+                     | (((d) & (1 << 7)) << 16); \
+        NRF_P1->OUTSET = (((d) & (1 << 2)) << 9) \
+                     | (((d) & (1 << 3)) << 9) \
+                     | (((d) & (1 << 4)) << 11) \
+                     | (((d) & (1 << 5)) << 8) \
+                     | (((d) & (1 << 6)) << 8); \
+        }
+
+#define read_8()   ((((NRF_P0->IN & (1<<21)) >> 21) \
+                   | ((NRF_P0->IN & (1 << 27)) >> 26) \
+                   | ((NRF_P1->IN & (1 << 11)) >> 9) \
+                   | ((NRF_P1->IN & (1 << 12)) >> 9) \
+                   | ((NRF_P1->IN & (1 << 15)) >> 11) \
+                   | ((NRF_P1->IN & (1 << 13)) >> 8) \
+                   | ((NRF_P1->IN & (1 << 14)) >> 8) \
+                   | ((NRF_P0->IN & (1 << 23)) >> 16)))
+
+#define BUS_CNF(x) {\
+    NRF_P0->PIN_CNF[21] = x;\
+    NRF_P0->PIN_CNF[27] = x;\
+    NRF_P1->PIN_CNF[11] = x;\
+    NRF_P1->PIN_CNF[12] = x;\
+    NRF_P1->PIN_CNF[15] = x;\
+    NRF_P1->PIN_CNF[13] = x;\
+    NRF_P1->PIN_CNF[14] = x;\
+    NRF_P0->PIN_CNF[23] = x;\
+}
+#define setWriteDir() {BUS_CNF(3); }
+#define setReadDir()  {BUS_CNF(0); }
+
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+//#define GPIO_INIT()   {for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
+
+#define PIN_LOW(port, pin)    (port)->OUTCLR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->OUTSET = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->DIR |= (1<<(pin))
+
+//############################# END OF BLOCKS ############################
 #else
 #error MCU unsupported
 #endif                          // regular UNO shields on Arduino boards

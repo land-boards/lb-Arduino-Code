@@ -641,45 +641,45 @@
   #include <samd21.h>
 // configure macros for the data pins
 #if defined(D21_XPRO)
-  #define D0_PORT PORT->Group[1]
+  #define D0_PORT PORT->Group[1] //EXT1-13 PB09 PA21
   #define D0_PIN  9
-  #define D1_PORT PORT->Group[1]
+  #define D1_PORT PORT->Group[1] //EXT1-14 PB08 PA22
   #define D1_PIN  8
-  #define D2_PORT PORT->Group[1]
+  #define D2_PORT PORT->Group[1] //EXT2-9  PB14 PC26
   #define D2_PIN  14
-  #define D3_PORT PORT->Group[1]
+  #define D3_PORT PORT->Group[1] //EXT1-7  PB02 PA23 SW101=down
   #define D3_PIN  2
-  #define D4_PORT PORT->Group[1]
+  #define D4_PORT PORT->Group[1] //EXT1-10 PB05 PA06
   #define D4_PIN  5
-  #define D5_PORT PORT->Group[0]
+  #define D5_PORT PORT->Group[0] //EXT2-6  PA21 PC25
   #define D5_PIN  21
-  #define D6_PORT PORT->Group[1]
+  #define D6_PORT PORT->Group[1] //EXT2-10 PB15 PC27
   #define D6_PIN  15
-  #define D7_PORT PORT->Group[0]
+  #define D7_PORT PORT->Group[0] //EXT2-15 PA17 PA09
   #define D7_PIN  17
-  #define D8_PORT PORT->Group[1]
+  #define D8_PORT PORT->Group[1] //EXT1-5  PB06 PA24
   #define D8_PIN  6
-  #define D9_PORT PORT->Group[1]
+  #define D9_PORT PORT->Group[1] //EXT1-6  PB07 PA25
   #define D9_PIN  7
-  #define D10_PORT PORT->Group[0]
+  #define D10_PORT PORT->Group[0] //EXT1-8 PA05 PA19
   #define D10_PIN  5
-  #define D11_PORT PORT->Group[0]
+  #define D11_PORT PORT->Group[0] //EXT1-16 PA06 PA13 SW100=down
   #define D11_PIN  6
-  #define D12_PORT PORT->Group[0]
+  #define D12_PORT PORT->Group[0] //EXT1-17 PA04 PA12
   #define D12_PIN  4
-  #define D13_PORT PORT->Group[0]
+  #define D13_PORT PORT->Group[0] //EXT1-18 PA07 PA14
   #define D13_PIN  7
-  #define A0_PORT PORT->Group[1]
+  #define A0_PORT PORT->Group[1] //EXT1-3  PB00 PA17
   #define A0_PIN  0
-  #define A1_PORT PORT->Group[1]
+  #define A1_PORT PORT->Group[1] //EXT1-4  PB01 PA18
   #define A1_PIN  1
-  #define A2_PORT PORT->Group[0]
+  #define A2_PORT PORT->Group[0] //EXT2-3  PA10 PB00
   #define A2_PIN  10
-  #define A3_PORT PORT->Group[0]
+  #define A3_PORT PORT->Group[0] //EXT2-4  PA11 PB01
   #define A3_PIN  11
-  #define A4_PORT PORT->Group[0]
+  #define A4_PORT PORT->Group[0] //EXT1-11 PA08 PA03
   #define A4_PIN  8
-  #define A5_PORT PORT->Group[0]
+  #define A5_PORT PORT->Group[0] //EXT1-12 PA09 PA04
   #define A5_PIN  9
 #elif defined(M0_PRO)
   #define D0_PORT PORT->Group[0]
@@ -742,6 +742,57 @@
 #define PIN_OUTPUT(port, pin) (port).DIR.reg |= (1<<(pin))
 #define PIN_INPUT(port, pin)  (port).DIR.reg &= ~(1u<<(pin))
 #define PIN_READ(port, pin)   (port).IN.reg & (1u<<(pin))
+
+
+//############################# SAM4S_XPRO ############################
+#elif defined(SAM4S_XPRO)
+  #include <sam4s.h>
+  #define D0_PORT PIOA //EXT1-13 PB09 PA21
+  #define D0_PIN  21
+  #define D1_PORT PIOA //EXT1-14 PB08 PA22
+  #define D1_PIN  22
+  #define D2_PORT PIOC //EXT2-9  PB14 PC26
+  #define D2_PIN  26
+  #define D3_PORT PIOA //EXT1-7  PB02 PA23 SW101=down
+  #define D3_PIN  23
+  #define D4_PORT PIOA //EXT1-10 PB05 PA06
+  #define D4_PIN  6
+  #define D5_PORT PIOC //EXT2-6  PA21 PC25
+  #define D5_PIN  25
+  #define D6_PORT PIOC //EXT2-10 PB15 PC27
+  #define D6_PIN  27
+  #define D7_PORT PIOA //EXT2-15 PA17 PA09
+  #define D7_PIN  9
+  #define D8_PORT PIOA //EXT1-5  PB06 PA24
+  #define D8_PIN  24
+  #define D9_PORT PIOA //EXT1-6  PB07 PA25
+  #define D9_PIN  25
+  #define D10_PORT PIOA //EXT1-8 PA05 PA19
+  #define D10_PIN  19
+  #define D11_PORT PIOA //EXT1-16 PA06 PA13 SW100=down
+  #define D11_PIN  13
+  #define D12_PORT PIOA //EXT1-17 PA04 PA12
+  #define D12_PIN  12
+  #define D13_PORT PIOA //EXT1-18 PA07 PA14
+  #define D13_PIN  14
+  #define A0_PORT PIOA //EXT1-3  PB00 PA17
+  #define A0_PIN  17
+  #define A1_PORT PIOA //EXT1-4  PB01 PA18
+  #define A1_PIN  18
+  #define A2_PORT PIOB //EXT2-3  PA10 PB00
+  #define A2_PIN  0
+  #define A3_PORT PIOB //EXT2-4  PA11 PB01
+  #define A3_PIN  1
+  #define A4_PORT PIOA //EXT1-11 PA08 PA03
+  #define A4_PIN  3
+  #define A5_PORT PIOA //EXT1-12 PA09 PA04
+  #define A5_PIN  4
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+#define PIN_INPUT(port, pin)  (port)->PIO_ODR &= ~(1u<<(pin))
+#define PIN_READ(port, pin)   (port)->PIO_PDSR & (1u<<(pin))
 
 
 //####################################### DUE ############################

@@ -59,6 +59,7 @@ ILI9488  320x480  ID=0x9488 (weird 555 display :#define SUPPORT_9488_555)
 LGDP4532 240x320  ID=0x4532 #define SUPPORT_4532
 LGDP4535 240x320  ID=0x4535 #define SUPPORT_4535
 NT35310  320x480  ID=0x5310 (hardware must be set for 8-bit parallel)
+NT37502  240x320  ID=0x1602 no readGRAM() or readPixel()
 R61505   240x320  ID=0x1505 works like an ILI9320
 R61505V  240x320  ID=0xB505
 R61505W  240x320  ID=0xC505 
@@ -84,12 +85,12 @@ ST7793   240x400  ID=0x7793 #define SUPPORT_B509_7793
 ST7796   320x480  ID=0x7796
 UC8230   240x320  ID=0x8230 #define SUPPORT_8230
 UNKNOWN  320x480  ID=0x1511 (scroll directions not correct)
-UNKNOWN  240x320  ID=0x1602 readGRAM() does not work
 UNKNOWN  240x320  ID=0xAC11
 UNKNOWN  240x320  ID=0x2053 weird controller from BangGood (was ID=0x0000)
 UNKNOWN  240x320  ID=0x8031 (no Vertical Scroll)
 UNKNOWN  240x320  ID=0x0001 (0x9320 style)
 UNKNOWN  240x320  ID=0x3229 readGRAM() does not work properly.   NEED DATASHEET.
+UNKNOWN  240x320  ID=0xE300 weird controller from BangGood.   NEED DATASHEET
 
 Most of these controllers are #define SUPPORT_xxxx by default.
 You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp
@@ -125,7 +126,7 @@ It also runs on NUCLEO-F103 and TEENSY3.2 with Sparkfun Adapter
 
 19. OPEN-SMART Shields have different wiring to regular Uno Shields:
     Edit utility/mcufriend_shield.h:  #define USE_SPECIAL
-    Edit utility/mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT
+    Edit utility/mcufriend_special.h: #define USE_OPENSMART_SHIELD_PINOUT_xxx e.g. USE_OPENSMART_SHIELD_PINOUT_MEGA
     Edit MCUFRIEND_kbv.cpp:           #define SUPPORT_8352B
 
 20. OPEN-SMART Shields can not read LM75A on a Mega because there are no SDA/SCL pins next on AREF header.
