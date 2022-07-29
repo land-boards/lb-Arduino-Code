@@ -1,6 +1,6 @@
-// LBLED7Segment.ino
+// LBMAX7219X4.ino
 // Displays Land-Boards across the LEDs on 8-digits MAX7219
-// First "LAND-" then "BOARDS"
+// First "LAND-", "BOARDS", "PRESENTS", "CARDS..."
 
 #include "LedControl.h"
 
@@ -16,7 +16,7 @@
 #define DATAIN_PIN 12
 #define CLK_PIN 11
 #define CS_PIN 10
-#define NUM_DEVICES 1
+#define NUM_DEVICES 4
  
 LedControl lc=LedControl(DATAIN_PIN,CLK_PIN,CS_PIN,NUM_DEVICES);
 
@@ -58,49 +58,44 @@ void setup() {
  
 void writeLandBoardsOn7Seg() 
 {
-  lc.setChar(0,7,'l',false);    // L
+  lc.setChar(0,31,'l',false);    // L
   delay(delaytime);
-  lc.setChar(0,6,'a',false);    // A
+  lc.setChar(0,30,'a',false);    // A
   delay(delaytime);
-  lc.setChar(0,5,'n',false);    // n
+  lc.setChar(0,29,'n',false);    // n
   delay(delaytime);
-  lc.setChar(0,4,'d',false);    // d
+  lc.setChar(0,28,'d',false);    // d
   delay(delaytime);
-  lc.setChar(0,3,'-',false);    // -
-  delay(delaytime*6);
-  lc.clearDisplay(0);
-  lc.setChar(0,7,'b',false);    // b
+  lc.setChar(0,27,'-',false);    // -
   delay(delaytime);
-  lc.setChar(0,6,'o',false);    // o
+  lc.setChar(0,23,'b',false);    // b
   delay(delaytime);
-  lc.setChar(0,5,'a',false);    // A
+  lc.setChar(0,22,'o',false);    // o
   delay(delaytime);
-  lc.setRow(0,4,(LL|CENTER));          // r
+  lc.setChar(0,21,'a',false);    // A
   delay(delaytime);
-  lc.setChar(0,3,'d',false);    // d
+  lc.setRow(0,20,(LL|CENTER));          // r
   delay(delaytime);
-//  lc.setChar(0,2,'s',false);    // s
-  lc.setRow(0,2 ,(BOTTOM|LR|CENTER|UL|TOP));          // S
-  delay(delaytime*6);
-  lc.clearDisplay(0);
-  lc.setChar(0,7,'p',false);    // P
+  lc.setChar(0,19,'d',false);    // d
   delay(delaytime);
-  lc.setRow(0,6,(LL|CENTER));          // r
+  lc.setRow(0,18 ,(BOTTOM|LR|CENTER|UL|TOP));          // S
   delay(delaytime);
-  lc.setDigit(0,5,0xe,false);    // e
+  lc.setChar(0,15,'p',false);    // P
   delay(delaytime);
-  lc.setRow(0,4,(BOTTOM|LR|CENTER|UL|TOP));          // S
+  lc.setRow(0,14,(LL|CENTER));          // r
   delay(delaytime);
-  lc.setDigit(0,3,0xe,false);    // e
+  lc.setDigit(0,13,0xe,false);    // e
   delay(delaytime);
-  lc.setChar(0,2,'n',false);    // n
+  lc.setRow(0,12,(BOTTOM|LR|CENTER|UL|TOP));          // S
   delay(delaytime);
-  lc.setRow(0,1,(UL|LL|BOTTOM|CENTER));          // t
-//  lc.setChar(0,1,'t',false);    // t
+  lc.setDigit(0,11,0xe,false);    // e
   delay(delaytime);
-  lc.setRow(0,0,(BOTTOM|LR|CENTER|UL|TOP));          // S
-  delay(delaytime*6);
-  lc.clearDisplay(0);
+  lc.setChar(0,10,'n',false);    // n
+  delay(delaytime);
+  lc.setRow(0,9,(UL|LL|BOTTOM|CENTER));          // t
+  delay(delaytime);
+  lc.setRow(0,8,(BOTTOM|LR|CENTER|UL|TOP));          // S
+  delay(delaytime);
   lc.setDigit(0,7,0xc,false);    // c
   delay(delaytime);
   lc.setDigit(0,6,0xa,false);    // a

@@ -1,6 +1,6 @@
-// LBLED7Segment.ino
+// LBMAX7219X1.ino
 // Displays Land-Boards across the LEDs on 8-digits MAX7219
-// First "LAND-" then "BOARDS"
+// First "LAND-" then "BOARDS" then "PRESENTS" then "CARDS..."
 
 #include "LedControl.h"
 

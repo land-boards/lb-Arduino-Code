@@ -89,6 +89,7 @@ public:
   Adafruit_GPS(SoftwareSerial *ser); // Constructor when using SoftwareSerial
 #endif
   Adafruit_GPS(HardwareSerial *ser); // Constructor when using HardwareSerial
+  Adafruit_GPS(Stream *data);        // Constructor when using Stream
   Adafruit_GPS(TwoWire *theWire);    // Constructor when using I2C
   Adafruit_GPS(SPIClass *theSPI, int8_t cspin); // Constructor when using SPI
   Adafruit_GPS(); // Constructor for no communications, just data storage
@@ -199,6 +200,7 @@ public:
   uint8_t fixquality;    ///< Fix quality (0, 1, 2 = Invalid, GPS, DGPS)
   uint8_t fixquality_3d; ///< 3D fix quality (1, 3, 3 = Nofix, 2D fix, 3D fix)
   uint8_t satellites;    ///< Number of satellites in use
+  uint8_t antenna;       ///< Antenna that is used (from PGTOP)
 
   uint16_t LOCUS_serial;  ///< Log serial number
   uint16_t LOCUS_records; ///< Log number of data record
@@ -247,24 +249,23 @@ private:
   char *parseStr(char *buff, char *p, int n);
   bool parseTime(char *);
   bool parseFix(char *);
+  bool parseAntenna(char *);
   bool isEmpty(char *pStart);
 
   // used by check() for validity tests, room for future expansion
-  const char *sources[6] = {"II", "WI", "GP",
+  const char *sources[7] = {"II", "WI", "GP", "PG",
                             "GN", "P",  "ZZZ"}; ///< valid source ids
 #ifdef NMEA_EXTENSIONS
-  const char
-      *sentences_parsed[20] =
-          {
-              "GGA", "GLL", "GSA", "RMC", "DBT", "HDM", "HDT",
-              "MDA", "MTW", "MWV", "RMB", "TXT", "VHW", "VLW",
-              "VPW", "VWR", "WCV", "XTE", "ZZZ"}; ///< parseable sentence ids
+  const char *sentences_parsed[21] = {"GGA", "GLL", "GSA", "RMC", "DBT", "HDM",
+                                      "HDT", "MDA", "MTW", "MWV", "RMB", "TOP",
+                                      "TXT", "VHW", "VLW", "VPW", "VWR", "WCV",
+                                      "XTE", "ZZZ"}; ///< parseable sentence ids
   const char *sentences_known[15] = {
       "APB", "DPT", "GSV", "HDG", "MWD", "ROT",
       "RPM", "RSA", "VDR", "VTG", "ZDA", "ZZZ"}; ///< known, but not parseable
 #else // make the lists short to save memory
-  const char *sentences_parsed[5] = {"GGA", "GLL", "GSA", "RMC",
-                                     "ZZZ"}; ///< parseable sentence ids
+  const char *sentences_parsed[6] = {"GGA", "GLL", "GSA", "RMC",
+                                     "TOP", "ZZZ"}; ///< parseable sentence ids
   const char *sentences_known[4] = {"DBT", "HDM", "HDT",
                                     "ZZZ"}; ///< known, but not parseable
 #endif
@@ -288,6 +289,7 @@ private:
 #endif
   bool noComms = false;
   HardwareSerial *gpsHwSerial;
+  Stream *gpsStream;
   TwoWire *gpsI2C;
   SPIClass *gpsSPI;
   int8_t gpsSPI_cs = -1;
