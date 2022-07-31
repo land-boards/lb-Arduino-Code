@@ -1,6 +1,6 @@
 // LBMAX7219X4.ino
 // Displays Land-Boards across the LEDs on 8-digits MAX7219
-// First "LAND-", "BOARDS", "PRESENTS", "CARDS..."
+// First "LAND-", "BOARDS", "PRESENTS", "CARDS...", "AND CODE"
 
 #include "LedControl.h"
 
@@ -28,11 +28,21 @@ void setup() {
    The MAX72XX is in power-saving mode on startup,
    we have to do a wakeup call
    */
+   Serial.begin(9600);
   lc.shutdown(0,false);
+  lc.shutdown(1,false);
+  lc.shutdown(2,false);
+  lc.shutdown(3,false);
   /* Set the brightness to a medium values */
   lc.setIntensity(0,8);
+  lc.setIntensity(1,8);
+  lc.setIntensity(2,8);
+  lc.setIntensity(3,8);
   /* and clear the display */
   lc.clearDisplay(0);
+  lc.clearDisplay(1);
+  lc.clearDisplay(2);
+  lc.clearDisplay(3);
 }
 
 
@@ -58,43 +68,43 @@ void setup() {
  
 void writeLandBoardsOn7Seg() 
 {
-  lc.setChar(0,31,'l',false);    // L
+  lc.setChar(3,7,'l',false);    // L
   delay(delaytime);
-  lc.setChar(0,30,'a',false);    // A
+  lc.setChar(3,6,'a',false);    // A
   delay(delaytime);
-  lc.setChar(0,29,'n',false);    // n
+  lc.setChar(3,5,'n',false);    // n
   delay(delaytime);
-  lc.setChar(0,28,'d',false);    // d
+  lc.setChar(3,4,'d',false);    // d
   delay(delaytime);
-  lc.setChar(0,27,'-',false);    // -
+  lc.setChar(3,3,'-',false);    // -
   delay(delaytime);
-  lc.setChar(0,23,'b',false);    // b
+  lc.setChar(2,7,'b',false);    // b
   delay(delaytime);
-  lc.setChar(0,22,'o',false);    // o
+  lc.setChar(2,6,'o',false);    // o
   delay(delaytime);
-  lc.setChar(0,21,'a',false);    // A
+  lc.setChar(2,5,'a',false);    // A
   delay(delaytime);
-  lc.setRow(0,20,(LL|CENTER));          // r
+  lc.setRow(2,4,(LL|CENTER));          // r
   delay(delaytime);
-  lc.setChar(0,19,'d',false);    // d
+  lc.setChar(2,3,'d',false);    // d
   delay(delaytime);
-  lc.setRow(0,18 ,(BOTTOM|LR|CENTER|UL|TOP));          // S
+  lc.setRow(2,2 ,(BOTTOM|LR|CENTER|UL|TOP));          // S
   delay(delaytime);
-  lc.setChar(0,15,'p',false);    // P
+  lc.setChar(1,7,'p',false);    // P
   delay(delaytime);
-  lc.setRow(0,14,(LL|CENTER));          // r
+  lc.setRow(1,6,(LL|CENTER));          // r
   delay(delaytime);
-  lc.setDigit(0,13,0xe,false);    // e
+  lc.setDigit(1,5,0xe,false);    // e
   delay(delaytime);
-  lc.setRow(0,12,(BOTTOM|LR|CENTER|UL|TOP));          // S
+  lc.setRow(1,4,(BOTTOM|LR|CENTER|UL|TOP));          // S
   delay(delaytime);
-  lc.setDigit(0,11,0xe,false);    // e
+  lc.setDigit(1,3,0xe,false);    // e
   delay(delaytime);
-  lc.setChar(0,10,'n',false);    // n
+  lc.setChar(1,2,'n',false);    // n
   delay(delaytime);
-  lc.setRow(0,9,(UL|LL|BOTTOM|CENTER));          // t
+  lc.setRow(1,1,(UL|LL|BOTTOM|CENTER));          // t
   delay(delaytime);
-  lc.setRow(0,8,(BOTTOM|LR|CENTER|UL|TOP));          // S
+  lc.setRow(1,0,(BOTTOM|LR|CENTER|UL|TOP));          // S
   delay(delaytime);
   lc.setDigit(0,7,0xc,false);    // c
   delay(delaytime);
@@ -111,9 +121,29 @@ void writeLandBoardsOn7Seg()
   lc.setChar(0,1,' ',true);    // period
   delay(delaytime);
   lc.setChar(0,0,' ',true);    // period
-  delay(delaytime*5);
+  delay(delaytime*2);
   lc.clearDisplay(0);
-  delay(delaytime*20);
+  lc.setDigit(0,7,0xa,false);    // a
+  delay(delaytime);
+  lc.setChar(0,6,'n',false);    // n
+  delay(delaytime);
+  lc.setChar(0,5,'d',false);    // d
+  delay(delaytime);
+  lc.setChar(0,4,' ',false);    // SPACE
+  delay(delaytime);
+  lc.setDigit(0,3,0xc,false);    // o
+  delay(delaytime);
+  lc.setChar(0,2,'o',false);    // o
+  delay(delaytime);
+  lc.setDigit(0,1,0xd,false);    // d
+  delay(delaytime);
+  lc.setDigit(0,0,0xe,false);    // e
+  delay(delaytime*10);
+  lc.clearDisplay(0);
+  lc.clearDisplay(1);
+  lc.clearDisplay(2);
+  lc.clearDisplay(3);
+  delay(delaytime*10);
 } 
 
 /*
@@ -132,11 +162,18 @@ void scrollDigits() {
     delay(delaytime);
   }
   lc.clearDisplay(0);
+  lc.clearDisplay(1);
+  lc.clearDisplay(2);
+  lc.clearDisplay(3);
   delay(delaytime);
 }
 
-void loop() { 
+void loop() {
+  Serial.println("Looping");
   lc.clearDisplay(0);
+  lc.clearDisplay(1);
+  lc.clearDisplay(2);
+  lc.clearDisplay(3);
   delay(delaytime);
   writeLandBoardsOn7Seg();
 //  scrollDigits();
