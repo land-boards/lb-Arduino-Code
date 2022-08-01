@@ -1,16 +1,30 @@
 // LBMAX7219X4.ino
-// Displays Land-Boards across the LEDs on 8-digits MAX7219
-// First "LAND-", "BOARDS", "PRESENTS", "CARDS...", "AND CODE"
+// Displays Land-Boards across the LEDs on 4 rows of 8-digits MAX7219X4 card
+//  "LAND-" (first line)
+//  "BOARDS" (second line)
+//  "PRESENTS" (third line)
+//  "CARDS...", "AND CODE" (4th line)
+//
+// MAX7219X4 card
+//  http://land-boards.com/blwiki/index.php?title=MAX7219X4
+//  Four rows with 8 digits per row
+//  3.3V signal levels
+//
+// Arduino In a Box
+//  http://land-boards.com/blwiki/index.php?title=ArduinoInABox
+//  3.3V signal levels
+//  8 MHz Arduino Pro Mini
+//  Card also provides 5V on J9-1
+//  5V on DC jack
+//
 
 #include "LedControl.h"
 
 /*
- Now we need a LedControl to work with.
  Arduino UNO pin 12 is connected to the DataIn 
  Arduino UNO pin 11 is connected to the CLK 
  Arduino UNO pin 10 is connected to CS
  Connector Power/Ground
- We have only a single MAX72XX.
  */
 
 #define DATAIN_PIN 12
