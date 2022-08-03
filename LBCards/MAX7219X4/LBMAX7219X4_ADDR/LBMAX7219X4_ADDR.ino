@@ -94,7 +94,6 @@ void loop()
 {
   int row, col;
   clearDigits();
-  delay(delaytime);
   for (row=0; row<4; row++)
   {
     for (col=0; col<8; col++)
@@ -113,5 +112,5 @@ void loop()
       writeHexDigit(row, col, (((row<<3) + col) & 0xf));
     }
   }
-  delay(delaytime*20);
+  delay(delaytime*10);
 }
