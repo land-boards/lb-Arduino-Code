@@ -11,7 +11,7 @@
 //  http://land-boards.com/blwiki/index.php?title=ArduinoInABox
 //  3.3V signal levels
 //  8 MHz Arduino Pro Mini
-//  Card also provides 5V on J9-1
+//  Card also provides 5V on J9-1 (VRAW header)
 //  5V on DC jack
 //
 
@@ -102,7 +102,7 @@ void loop()
       delay(delaytime);
     }
   }
-  delay(delaytime*10);
+  delay(delaytime*20);
   clearDigits();
   delay(delaytime*10);
   for (row=0; row<4; row++)
@@ -112,5 +112,17 @@ void loop()
       writeHexDigit(row, col, (((row<<3) + col) & 0xf));
     }
   }
+  delay(delaytime*20);
+  clearDigits();
+  delay(delaytime*10);
+  for (row=0; row<4; row++)
+  {
+    for (col=0; col<8; col++)
+    {
+      writeHexDigit(row, col, 8);
+    }
+  }
+  delay(delaytime*20);
+  clearDigits();
   delay(delaytime*10);
 }
