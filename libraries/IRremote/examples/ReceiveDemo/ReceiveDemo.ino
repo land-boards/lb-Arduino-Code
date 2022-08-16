@@ -40,10 +40,11 @@
  */
 //#define DECODE_LG
 //#define DECODE_NEC
+//#define DECODE_DISTANCE
 // etc. see IRremote.hpp
 //
 
-//#define RAW_BUFFER_LENGTH  750  // 750 is the value for air condition remotes.
+//#define RAW_BUFFER_LENGTH  750  // 750 is the value for air condition remotes. If DECODE_MAGIQUEST is enabled 112, otherwise 100 is default.
 
 //#define NO_LED_FEEDBACK_CODE // saves 92 bytes program memory
 #if FLASHEND <= 0x1FFF  // For 8k flash or less, like ATtiny85. Exclude exotic protocols.
@@ -71,11 +72,6 @@
 #define DEBUG_BUTTON_PIN    APPLICATION_PIN // if low, print timing for each received data set
 #else
 #define DEBUG_BUTTON_PIN   6
-#endif
-
-// On the Zero and others we switch explicitly to SerialUSB
-#if defined(ARDUINO_ARCH_SAMD)
-#define Serial SerialUSB
 #endif
 
 void setup() {
@@ -129,7 +125,7 @@ void loop() {
         if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_WAS_OVERFLOW) {
             Serial.println(F("Overflow detected"));
             Serial.println(F("Try to increase the \"RAW_BUFFER_LENGTH\" value of " STR(RAW_BUFFER_LENGTH) " in " __FILE__));
-            // see also https://github.com/Arduino-IRremote/Arduino-IRremote#modifying-compile-options-with-sloeber-ide
+            // see also https://github.com/Arduino-IRremote/Arduino-IRremote#compile-options--macros-for-this-library
 #  if !defined(ESP8266) && !defined(NRF5)
             /*
              * do double beep
@@ -149,6 +145,7 @@ void loop() {
         } else {
             // Print a short summary of received data
             IrReceiver.printIRResultShort(&Serial);
+            IrReceiver.printIRSendUsage(&Serial);
 
             if (IrReceiver.decodedIRData.protocol == UNKNOWN || digitalRead(DEBUG_BUTTON_PIN) == LOW) {
                 // We have an unknown protocol, print more info
@@ -158,10 +155,10 @@ void loop() {
 
         // tone on esp8266 works once, then it disables the successful IrReceiver.start() / timerConfigForReceive().
 #  if !defined(ESP8266) && !defined(NRF5)
-        if (IrReceiver.decodedIRData.protocol != UNKNOWN) {
+        if (IrReceiver.decodedIRData.protocol != UNKNOWN && digitalRead(DEBUG_BUTTON_PIN) != LOW) {
             /*
-             * If a valid protocol was received, play tone, wait and restore IR timer.
-             * Otherwise do not play a tone to get exact gap time between transmissions.
+             * If no debug mode or a valid protocol was received, play tone, wait and restore IR timer.
+             * Otherwise do not play a tone to get exact gap time between transmissions and not running into repeat frames while wait for tone to end.
              * This will give the next CheckForRecordGapsMicros() call a chance to eventually propose a change of the current RECORD_GAP_MICROS value.
              */
 #    if !defined(ESP32)

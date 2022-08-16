@@ -148,6 +148,7 @@ Serial.println( "PS2 Advanced Key Start" );
 // Configure the keyboard library
 keyboard.begin( DATAPIN, IRQPIN );
 Serial.println( "PS2 began" );
+Serial1.begin(115200);
 }
 
 
@@ -155,7 +156,7 @@ void loop( )
 {
 if( keyboard.available( ) )
   {
-  Serial.println( "Got a char" );
+//  Serial.println( "Got a char" );
   // read the next key
   c = keyboard.read( );
   if( c > 0 )
@@ -166,6 +167,8 @@ if( keyboard.available( ) )
     Serial.print( c >> 8, HEX );
     Serial.print( "  Code " );
     Serial.println( c & 0xFF, HEX );
+    if ((c & 0x8000) == 0x0000)
+      Serial1.write(c & 0xFF);
     }
   }
 }

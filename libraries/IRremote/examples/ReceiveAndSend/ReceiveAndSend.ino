@@ -55,11 +55,6 @@ int STATUS_PIN = LED_BUILTIN;
 int DELAY_BETWEEN_REPEAT = 50;
 int DEFAULT_NUMBER_OF_REPEATS_TO_SEND = 3;
 
-// On the Zero and others we switch explicitly to SerialUSB
-#if defined(ARDUINO_ARCH_SAMD)
-#define Serial SerialUSB
-#endif
-
 // Storage for the recorded code
 struct storedIRDataStruct {
     IRData receivedIRData;
@@ -171,6 +166,7 @@ void storeCode(IRData *aIRReceivedData) {
         IrReceiver.compensateAndStoreIRResultInArray(sStoredIRData.rawCode);
     } else {
         IrReceiver.printIRResultShort(&Serial);
+        IrReceiver.printIRSendUsage(&Serial);
         sStoredIRData.receivedIRData.flags = 0; // clear flags -esp. repeat- for later sending
         Serial.println();
     }
