@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
+  Copyright (c) 2019-2022 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,6 +36,8 @@
   */
 
 
+
+#include <string>
 
 #include <Preferences.h>
 
@@ -158,7 +164,7 @@ constexpr int MaxColorsIndex     = 5;
 #ifdef USE_TEXTUAL_DISPLAYCONTROLLER
 fabgl::VGATextController DisplayController;
 #else
-fabgl::VGAController     DisplayController;
+fabgl::VGA16Controller   DisplayController;
 #endif
 fabgl::PS2Controller     PS2Controller;
 fabgl::Terminal          Terminal;
@@ -174,6 +180,8 @@ Preferences          preferences;
 // base path (can be SPIFFS_MOUNT_PATH or SDCARD_MOUNT_PATH depending from what was successfully mounted first)
 char const * basepath = nullptr;
 
+
+using std::string;
 
 
 TermType getTerminalEmu()
@@ -455,23 +463,31 @@ void attachDisk(int drive, void const * data)
   auto filename = (char const *)data;
   auto dskimage = (uint8_t const *) data;
 
+  FileBrowser fb(basepath);
+
   if (dskimage[0] >= 0x80) {
     // "data" is a disk image
     if (FileBrowser::getDriveType(basepath) == fabgl::DriveType::SDCard) {
       // when storage is SD Card, copy read only disk image into a file, if doesn't already exist
-      auto newfilename = String(basepath) + String("/disk") + String((char)('A' + drive)) + String(".dsk");
-      Terminal.printf("\r\nAttaching disk %c to %s...", 'A' + drive, newfilename.c_str());
-      diskDrive.attachFileFromImage(drive, newfilename.c_str(), dskimage);
+      char newfilename[10] = { 'd', 'i', 's', 'k', (char)('A' + drive), '.', 'd', 's', 'k' };
+      Terminal.printf("\r\nAttaching disk %c to %s...", 'A' + drive, newfilename);
+      auto sz = fb.getFullPath(newfilename, nullptr, 0);
+      char newfilenamePath[sz];
+      fb.getFullPath(newfilename, newfilenamePath, sz);
+      diskDrive.attachFileFromImage(drive, newfilenamePath, dskimage);
     } else {
       // when storage is SPIFFS just mount image as Read Only image
       diskDrive.attachReadOnlyBuffer(drive, dskimage);
     }
   } else {
-    if (filename[0] < 0x80) {
+    if ((uint8_t)filename[0] < 0x80) {
       // "data" is a filename
       Terminal.printf("\r\nAttaching disk %c to %s...", 'A' + drive, filename);
       Terminal.flush();
-      diskDrive.attachFile(drive, (String(basepath) + String("/") + String(filename)).c_str());
+      auto sz = fb.getFullPath(filename, nullptr, 0);
+      char filenamePath[sz];
+      fb.getFullPath(filename, filenamePath, sz);
+      diskDrive.attachFile(drive, filenamePath);
     }
   }
 }
@@ -534,6 +550,11 @@ void loop()
   Terminal.printf("Press \e[93m[F12]\e[92m or \e[93m[PAUSE]\e[92m to display emulator menu\e[K\r\n");
 
   setupTerminalColors();
+
+  Terminal.setColorForAttribute(CharStyle::Bold, Color::BrightYellow, false);
+  Terminal.setColorForAttribute(CharStyle::Italic, Color::BrightRed, false);
+  Terminal.setColorForAttribute(CharStyle::Underline, Color::BrightWhite, false);
+  Terminal.setColorForAttribute(CharStyle::ReducedLuminosity, Color::BrightYellow, false);
 
   // setup keyboard layout
   setupKbdLayout();

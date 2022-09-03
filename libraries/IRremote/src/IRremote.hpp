@@ -65,9 +65,9 @@
 #ifndef _IR_REMOTE_HPP
 #define _IR_REMOTE_HPP
 
-#define VERSION_IRREMOTE "3.8.0"
+#define VERSION_IRREMOTE "3.9.0"
 #define VERSION_IRREMOTE_MAJOR 3
-#define VERSION_IRREMOTE_MINOR 8
+#define VERSION_IRREMOTE_MINOR 9
 #define VERSION_IRREMOTE_PATCH 0
 
 /*
@@ -147,7 +147,7 @@
 #define RAW_BUFFER_LENGTH  112  // MagiQuest requires 112 bytes.
 #  else
 #define RAW_BUFFER_LENGTH  100  ///< Length of raw duration buffer. Must be even. 100 supports up to 48 bit codings inclusive 1 start and 1 stop bit.
-//#define RAW_BUFFER_LENGTH  750  // 750 is the value for air condition remotes.
+//#define RAW_BUFFER_LENGTH  750  // 750 (600 if we have only 2k RAM) is the value for air condition remotes.
 #  endif
 #endif
 #if RAW_BUFFER_LENGTH % 2 == 1
@@ -244,7 +244,7 @@
  */
 //#define USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN
 #if defined(USE_OPEN_DRAIN_OUTPUT_FOR_SEND_PIN) && !defined(OUTPUT_OPEN_DRAIN)
-#warning Pin mode OUTPUT_OPEN_DRAIN is not supported on this platform -> fall back to mode OUTPUT.
+#warning Pin mode OUTPUT_OPEN_DRAIN is not supported on this platform -> mimick open drain mode by switching between INPUT and OUTPUT mode.
 #endif
 /**
  * This amount is subtracted from the on-time of the pulses generated for software PWM generation.

@@ -242,7 +242,7 @@ void Mouse::updateAbsolutePosition(MouseDelta * delta)
   int dz = delta->deltaZ;
 
   int64_t now   = esp_timer_get_time();
-  int deltaTime = now - m_prevDeltaTime; // time in microseconds
+  int deltaTime = (int) (now - m_prevDeltaTime); // time in microseconds
 
   if (deltaTime < maxDeltaTimeUS) {
 
@@ -314,7 +314,7 @@ void Mouse::mouseUpdateTask(void * arg)
 
         // queue (if you need availableStatus() or getNextStatus())
         if (mouse->m_absoluteQueue) {
-          xQueueSend(mouse->m_absoluteQueue, &mouse->m_status, 0);
+          xQueueSendToBack(mouse->m_absoluteQueue, &mouse->m_status, 0);
         }
 
         if (mouse->m_uiApp) {

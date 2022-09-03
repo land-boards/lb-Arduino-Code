@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
+  Copyright (c) 2019-2022 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,8 +26,8 @@
 
 /*
  * Optional SD Card connections:
- *   MISO => GPIO 16
- *   MOSI => GPIO 17
+ *   MISO => GPIO 16  (2 for PICO-D4)
+ *   MOSI => GPIO 17  (12 for PICO-D4)
  *   CLK  => GPIO 14
  *   CS   => GPIO 13
  *
@@ -93,7 +97,6 @@ class MyApp : public uiApp {
         int len = fileBrowser->content().getFullPath(filename);
         char fullpath[len];
         fileBrowser->content().getFullPath(filename, fullpath, len);
-        AutoSuspendInterrupts autoInt;
         FILE * f = fopen(fullpath, "wb");
         fclose(f);
         updateBrowser();
@@ -103,7 +106,7 @@ class MyApp : public uiApp {
     // rename button
     auto renameBtn = new uiButton(frame, "Rename", Point(160, 75), Size(90, 20));
     renameBtn->onClick = [&]() {
-      int maxlen = fabgl::imax(16, strlen(fileBrowser->filename()));
+      int maxlen = fabgl::imax(16, (int) strlen(fileBrowser->filename()));
       char filename[maxlen + 1];
       strcpy(filename, fileBrowser->filename());
       if (inputBox("Rename File", "New name", filename, maxlen, "Rename", "Cancel") == uiMessageBoxResult::Button1) {
@@ -137,7 +140,6 @@ class MyApp : public uiApp {
       char psw[32]  = "";
       if (inputBox("WiFi Connect", "Network Name", SSID, sizeof(SSID), "OK", "Cancel") == uiMessageBoxResult::Button1 &&
           inputBox("WiFi Connect", "Password", psw, sizeof(psw), "OK", "Cancel") == uiMessageBoxResult::Button1) {
-        AutoSuspendInterrupts autoInt;
         preferences.putString("SSID", SSID);
         preferences.putString("WiFiPsw", psw);
         connectWiFi();
@@ -177,7 +179,6 @@ class MyApp : public uiApp {
     WiFiStatusLbl->setText("WiFi Not Connected");
     WiFiStatusLbl->labelStyle().textColor = RGB888(255, 0, 0);
     char SSID[32], psw[32];
-    AutoSuspendInterrupts autoInt;
     if (preferences.getString("SSID", SSID, sizeof(SSID)) && preferences.getString("WiFiPsw", psw, sizeof(psw))) {
       WiFi.begin(SSID, psw);
       for (int i = 0; i < 16 && WiFi.status() != WL_CONNECTED; ++i) {
@@ -215,15 +216,13 @@ class MyApp : public uiApp {
         while (http.connected() && (len > 0 || len == -1)) {
           size_t size = stream->available();
           if (size) {
-            int c = stream->readBytes(buf, fabgl::imin(sizeof(buf), size));
-            AutoSuspendInterrupts autoInt;
+            int c = stream->readBytes(buf, fabgl::imin(sizeof(buf), (int) size));
             fwrite(buf, c, 1, f);
             if (len > 0)
               len -= c;
           }
         }
 
-        AutoSuspendInterrupts autoInt;
         fclose(f);
 
         updateBrowser();
@@ -247,7 +246,6 @@ void setup()
   //Serial.begin(115200); delay(500); Serial.write("\n\n\n"); // DEBUG ONLY
 
   preferences.begin("FileBrowser", false);
-  preferences.clear();
 
   PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1, KbdMode::GenerateVirtualKeys);
 

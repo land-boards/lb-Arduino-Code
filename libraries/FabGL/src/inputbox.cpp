@@ -27,6 +27,7 @@
 #include <string.h>
 #include <memory>
 
+#include "dispdrivers/vgacontroller.h"
 #include "dispdrivers/vga2controller.h"
 #include "dispdrivers/vga4controller.h"
 #include "dispdrivers/vga8controller.h"
@@ -79,8 +80,10 @@ void InputBox::begin(char const * modeline, int viewPortWidth, int viewPortHeigh
     m_vgaCtrl = new VGA4Controller;
   else if (displayColors <= 8)
     m_vgaCtrl = new VGA8Controller;
-  else
+  else if (displayColors <= 16)
     m_vgaCtrl = new VGA16Controller;
+  else
+    m_vgaCtrl = new VGAController;
   m_dispCtrl = m_vgaCtrl;
   m_vgaCtrl->begin();
   m_vgaCtrl->setResolution(modeline ? modeline : VESA_640x480_75Hz, viewPortWidth, viewPortHeight);
@@ -343,6 +346,8 @@ void InputForm::init(uiApp * app_, bool modalDialog_)
     auto btext = inputBox->buttonText(i);
     if (btext) {
       int buttonExtent = app->canvas()->textExtent(font, btext) + 10;
+      if (inputBox->buttonSubItems(i))
+        buttonExtent += 12; // add space for combobox open button
       buttonsWidth     = imax(buttonsWidth, buttonExtent);
       ++totButtons;
     }
@@ -418,7 +423,7 @@ void InputForm::init(uiApp * app_, bool modalDialog_)
       autoOKLabel = new uiLabel(panel, "", Point(4, y + 2));
 
       mainFrame->onTimer = [&](uiTimerHandle t) {
-        int now = esp_timer_get_time() / 1000;
+        int now = (int) (esp_timer_get_time() / 1000);
         if (app->lastUserActionTime() + 900 > now) {
           app->killTimer(t);
           app->destroyWindow(autoOKLabel);
@@ -516,7 +521,7 @@ void TextInputForm::addControls()
 void TextInputForm::finalize()
 {
   if (retval == InputResult::Enter) {
-    int len = imin(maxLength, strlen(edit->text()));
+    auto len = imin(maxLength, (int) strlen(edit->text()));
     memcpy(inOutString, edit->text(), len);
     inOutString[len] = 0;
   }
@@ -573,7 +578,7 @@ void SelectForm::calcRequiredSize()
   listBoxHeight           = 16 * itemsCount + 2;
   int requiredHeightUnCut = requiredHeight + listBoxHeight;
   requiredHeight          = imin(requiredHeightUnCut, app->canvas()->getHeight());
-  requiredWidth           = imax(requiredWidth, maxLength * app->canvas()->textExtent(font, "M"));
+  requiredWidth           = imax(requiredWidth, (int) maxLength * app->canvas()->textExtent(font, "M"));
   if (requiredHeightUnCut > requiredHeight)
     listBoxHeight -= requiredHeightUnCut - requiredHeight;
 }
@@ -644,13 +649,13 @@ int SelectForm::countItems(size_t * maxLength)
       if (!end)
         end = strchr(start, 0);
       int len = end - start;
-      *maxLength = imax(*maxLength, len);
+      *maxLength = imax((int) *maxLength, len);
       start += len + (*end == 0 ? 0 : 1);
       ++count;
     }
   } else if (itemsList) {
     for (int i = 0; i < itemsList->count(); ++i)
-      *maxLength = imax(*maxLength, strlen(itemsList->get(i)));
+      *maxLength = imax(*maxLength, (int) strlen(itemsList->get(i)));
     count += itemsList->count();
   }
   return count;
@@ -725,7 +730,7 @@ bool ProgressForm::update(int percentage, char const * format, ...)
 void FileBrowserForm::calcRequiredSize()
 {
   requiredWidth  = imax(requiredWidth, BROWSER_WIDTH + CTRLS_DIST + SIDE_BUTTONS_WIDTH);
-  requiredHeight = imax(requiredHeight, BROWSER_HEIGHT);
+  requiredHeight = imax(requiredHeight, (int) BROWSER_HEIGHT);
 }
 
 
@@ -764,7 +769,7 @@ void FileBrowserForm::addControls()
   renameButton->anchors().right = true;
   renameButton->onClick = [&]() {
     if (strcmp(fileBrowser->filename(), "..") != 0) {
-      int maxlen = fabgl::imax(MAXNAME, strlen(fileBrowser->filename()));
+      int maxlen = fabgl::imax((int)MAXNAME, (int) strlen(fileBrowser->filename()));
       unique_ptr<char[]> filename(new char[MAXNAME + 1] { 0 } );
       strcpy(filename.get(), fileBrowser->filename());
       if (app->inputBox("Rename File", "New name", filename.get(), maxlen, "Rename", "Cancel") == uiMessageBoxResult::Button1) {
@@ -852,7 +857,7 @@ void FileBrowserForm::doPaste()
     constexpr int BUFLEN = 4096;
     unique_ptr<uint8_t[]> buf(new uint8_t[BUFLEN]);
     while (bytesToCopy > 0) {
-      auto r = fread(buf.get(), 1, imin(BUFLEN, bytesToCopy), src);
+      auto r = fread(buf.get(), 1, imin(BUFLEN, (int) bytesToCopy), src);
       fwrite(buf.get(), 1, r, dst);
       bytesToCopy -= r;
       if (r == 0)
@@ -882,7 +887,7 @@ void FileSelectorForm::calcRequiredSize()
 {
   labelExtent     = app->canvas()->textExtent(font, labelText);
   editExtent      = imin(maxFilenameLength * app->canvas()->textExtent(font, "M") + 15, app->rootWindow()->clientSize().width - labelExtent);
-  requiredWidth   = imax(requiredWidth, imax(BROWSER_WIDTH, labelExtent + CTRLS_DIST + MINIMUM_EDIT_WIDTH) + CTRLS_DIST);
+  requiredWidth   = imax(requiredWidth, imax((int)BROWSER_WIDTH, labelExtent + CTRLS_DIST + MINIMUM_EDIT_WIDTH) + CTRLS_DIST);
   requiredHeight += font->height + CTRLS_DIST + BROWSER_HEIGHT;
 }
 
@@ -930,11 +935,11 @@ void FileSelectorForm::finalize()
 {
   if (retval == InputResult::Enter) {
     // filename
-    int len = imin(maxFilenameLength, strlen(edit->text()));
+    auto len = imin(maxFilenameLength, (int) strlen(edit->text()));
     memcpy(inOutFilename, edit->text(), len);
     inOutFilename[len] = 0;
     // directory
-    len = imin(maxDirectoryLength, strlen(fileBrowser->directory()));
+    len = imin(maxDirectoryLength, (int) strlen(fileBrowser->directory()));
     memcpy(inOutDirectory, fileBrowser->directory(), len);
     inOutDirectory[len] = 0;
   }

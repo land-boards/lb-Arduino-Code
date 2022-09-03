@@ -38,11 +38,51 @@ Preferences preferences;
 
 
 #define TERMVERSION_MAJ 1
-#define TERMVERSION_MIN 5
+#define TERMVERSION_MIN 6
 
 
-static const char * BAUDRATES_STR[]  = { "110", "300", "600", "1200", "2400", "4800", "9600", "14400", "19200", "38400", "57600", "115200", "128000", "230400", "250000", "256000", "500000", "1000000", "2000000" };
-static const int    BAUDRATES_INT[]  = { 110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 230400, 250000, 256000, 500000, 1000000, 2000000 };
+static const char * BAUDRATES_STR[]  = { "110",
+                                         "150",
+                                         "300",
+                                         "600",
+                                         "1200",
+                                         "2400",
+                                         "4800",
+                                         "9600",
+                                         "14400",
+                                         "19200",
+                                         "38400",
+                                         "57600",
+                                         "76800",
+                                         "115200",
+                                         "128000",
+                                         "230400",
+                                         "250000",
+                                         "256000",
+                                         "500000",
+                                         "1000000",
+                                         "2000000" };
+static const int    BAUDRATES_INT[]  = { 110,
+                                         150,
+                                         300,
+                                         600,
+                                         1200,
+                                         2400,
+                                         4800,
+                                         9600,
+                                         14400,
+                                         19200,
+                                         38400,
+                                         57600,
+                                         76800,
+                                         115200,
+                                         128000,
+                                         230400,
+                                         250000,
+                                         256000,
+                                         500000,
+                                         1000000,
+                                         2000000 };
 constexpr int       BAUDRATES_COUNT  = sizeof(BAUDRATES_INT) / sizeof(int);
 
 static const char * DATALENS_STR[]   = { "5 bits", "6 bits", "7 bits", "8 bits" };
@@ -136,8 +176,33 @@ constexpr int       BOOTINFO_DISABLED     = 0;
 constexpr int       BOOTINFO_ENABLED      = 1;
 constexpr int       BOOTINFO_TEMPDISABLED = 2;
 
-constexpr int       SERCTL_DISABLED     = 0;
-constexpr int       SERCTL_ENABLED      = 1;
+
+// flags of UARTPORT_FLAGS[]
+#define UARTFLAG_USE_PS2PORT1 0x01
+
+
+
+// notes about GPIO 2 and 12
+//    - GPIO2:  may cause problem on programming. GPIO2 must also be either left unconnected/floating, or driven Low, in order to enter the serial bootloader.
+//              In normal boot mode (GPIO0 high), GPIO2 is ignored.
+//    - GPIO12: should be avoided. It selects flash voltage. To use it disable GPIO12 detection setting efuses with:
+//                    python espefuse.py --port /dev/cu.SLAB_USBtoUART set_flash_voltage 3.3V
+//                       WARN!! Good for ESP32 with 3.3V voltage (ESP-WROOM-32). This will BRICK your ESP32 if the flash isn't 3.3V
+//                       NOTE1: replace "/dev/cu.SLAB_USBtoUART" with your serial port
+//                       NOTE2: espefuse.py is downloadable from https://github.com/espressif/esptool
+static const char *  UARTPORT_STR[]       = { "FabGL Terminal: TX=2 RX=34",
+                                              "USB: TX=1 RX=3",
+                                              "PS/2 Mouse: TX=27 RX=26" };
+static const uint8_t UARTPORT_TX[]        = { 2,
+                                              1,
+                                              27 };
+static const uint8_t UARTPORT_RX[]        = { 34,
+                                              3,
+                                              26 };
+static const bool    UARTPORT_FLAGS[]     = { 0,
+                                              0,
+                                              UARTFLAG_USE_PS2PORT1 };
+constexpr int        UARTPORT_COUNT       = sizeof(UARTPORT_STR) / sizeof(char const *);
 
 // preferences keys
 static const char * PREF_VERMAJ         = "VerMaj";
@@ -156,8 +221,8 @@ static const char * PREF_FONT           = "Font";
 static const char * PREF_COLUMNS        = "Columns";
 static const char * PREF_ROWS           = "Rows";
 static const char * PREF_BOOTINFO       = "BootInfo";
-static const char * PREF_SERCTL         = "SerCtl";
 static const char * PREF_TEMPRESOLUTION = "TempResolution";
+static const char * PREF_UARTPORT       = "UARTPort";
 
 
 struct ConfDialogApp : public uiApp {
@@ -181,7 +246,7 @@ struct ConfDialogApp : public uiApp {
   uiComboBox *      columnsComboBox;
   uiComboBox *      rowsComboBox;
   uiCheckBox *      infoCheckBox;
-  uiCheckBox *      serctlCheckBox;
+  uiComboBox *      uartPortComboBox;
   uiLabel *         RTSStatus;
   uiLabel *         CTSStatus;
 
@@ -313,19 +378,20 @@ struct ConfDialogApp : public uiApp {
 
     y += 48;
 
+    // select UART port
+    new uiStaticLabel(frame, "Port", Point(10, y), true, STYLE_STATICLABEL);
+    uartPortComboBox = new uiComboBox(frame, Point(10, y + 12), Size(160, 20), 50, true, STYLE_COMBOBOX);
+    uartPortComboBox->items().append(UARTPORT_STR, UARTPORT_COUNT);
+    uartPortComboBox->selectItem(getUARTPortIndex());
+
     // show boot info
-    new uiStaticLabel(frame, "Show Boot Info", Point(10, y), true, STYLE_STATICLABEL);
-    infoCheckBox = new uiCheckBox(frame, Point(80, y - 2), Size(16, 16), uiCheckBoxKind::CheckBox, true, STYLE_CHECKBOX);
+    new uiStaticLabel(frame, "Show Info", Point(200, y + 16), true, STYLE_STATICLABEL);
+    infoCheckBox = new uiCheckBox(frame, Point(250, y + 14), Size(16, 16), uiCheckBoxKind::CheckBox, true, STYLE_CHECKBOX);
     infoCheckBox->setChecked(getBootInfo() == BOOTINFO_ENABLED);
 
-    y += 24;
 
-    // set control to usb-serial
-    new uiStaticLabel(frame, "USBSerial", Point(10, y), true, STYLE_STATICLABEL);
-    serctlCheckBox = new uiCheckBox(frame, Point(80, y - 2), Size(16, 16), uiCheckBoxKind::CheckBox, true, STYLE_CHECKBOX);
-    serctlCheckBox->setChecked(getSerCtl() == SERCTL_ENABLED);
+    y += 48;
 
-    y += 24;
 
     // Quit button: exit without save
     auto exitNoSaveButton = new uiButton(frame, "Quit [ESC]", Point(10, y), Size(58, 20), uiButtonKind::Button, true, STYLE_BUTTON);
@@ -359,23 +425,23 @@ struct ConfDialogApp : public uiApp {
     };
 
     // RTS Status (clickable)
-    RTSStatus = new uiLabel(frame, "RTS", Point(300, 210), Size(30, 15), true, STYLE_LABELBUTTON);
-    setRTSStatus(Terminal.RTSStatus());
+    RTSStatus = new uiLabel(frame, "RTS", Point(300, 223), Size(30, 15), true, STYLE_LABELBUTTON);
+    setRTSStatus(SerialPort.RTSStatus());
     RTSStatus->onClick = [&]() {
-      bool newval = !Terminal.RTSStatus();
-      Terminal.setRTSStatus(newval);
+      bool newval = !SerialPort.RTSStatus();
+      SerialPort.setRTSStatus(newval);
       setRTSStatus(newval);
     };
 
     // CTS Status
-    CTSStatus = new uiLabel(frame, "CTS", Point(335, 210), Size(30, 15), true, STYLE_LABELBUTTON);
-    lastCTSStatus = Terminal.CTSStatus();
+    CTSStatus = new uiLabel(frame, "CTS", Point(335, 223), Size(30, 15), true, STYLE_LABELBUTTON);
+    lastCTSStatus = SerialPort.CTSStatus();
     setCTSStatus(lastCTSStatus);
 
     // timer
     frame->onTimer = [&](uiTimerHandle) {
       // monitor CTS status
-      if (Terminal.CTSStatus() != lastCTSStatus) {
+      if (SerialPort.CTSStatus() != lastCTSStatus) {
         lastCTSStatus = !lastCTSStatus;
         setCTSStatus(lastCTSStatus);
       }
@@ -407,7 +473,8 @@ struct ConfDialogApp : public uiApp {
                   fontComboBox->selectedItem()       != getFontIndex()       ||
                   columnsComboBox->selectedItem()    != getColumnsIndex()    ||
                   rowsComboBox->selectedItem()       != getRowsIndex()       ||
-                  bgColorComboBox->selectedColor()   != getBGColor();
+                  bgColorComboBox->selectedColor()   != getBGColor()         ||
+                  uartPortComboBox->selectedItem()   != getUARTPortIndex();
 
     preferences.putInt(PREF_TERMTYPE, termComboBox->selectedItem());
     preferences.putInt(PREF_KBDLAYOUT, kbdComboBox->selectedItem());
@@ -423,10 +490,12 @@ struct ConfDialogApp : public uiApp {
     preferences.putInt(PREF_COLUMNS, columnsComboBox->selectedItem());
     preferences.putInt(PREF_ROWS, rowsComboBox->selectedItem());
     preferences.putInt(PREF_BOOTINFO, infoCheckBox->checked() ? BOOTINFO_ENABLED : BOOTINFO_DISABLED);
-    preferences.putInt(PREF_SERCTL, serctlCheckBox->checked() ? SERCTL_ENABLED : SERCTL_DISABLED);
-
-    if (reboot)
+    preferences.putInt(PREF_UARTPORT, uartPortComboBox->selectedItem());
+    
+    if (reboot) {
+      preferences.end();
       performReboot(); // no return from here!
+    }
 
     loadConfiguration();
   }
@@ -439,10 +508,6 @@ struct ConfDialogApp : public uiApp {
 
 
   ~ConfDialogApp() {
-    // this is required, becasue the terminal may not cover the entire screen
-    canvas()->reset();
-    canvas()->setBrushColor(getBGColor());
-    canvas()->fillRectangle(frameRect);
   }
 
 
@@ -457,7 +522,7 @@ struct ConfDialogApp : public uiApp {
 
 
   static int getBaudRateIndex() {
-    return preferences.getInt(PREF_BAUDRATE, 11);              // default 11 = 115200
+    return preferences.getInt(PREF_BAUDRATE, 13);              // default 13 = 115200
   }
 
 
@@ -521,8 +586,8 @@ struct ConfDialogApp : public uiApp {
   }
 
 
-  static int getSerCtl() {
-    return preferences.getInt(PREF_SERCTL, SERCTL_DISABLED);
+  static int getUARTPortIndex() {
+    return preferences.getInt(PREF_UARTPORT, 0);
   }
 
 
@@ -578,6 +643,8 @@ struct ConfDialogApp : public uiApp {
     auto cols = COLUMNS_INT[getColumnsIndex()];
     auto rows = ROWS_INT[getRowsIndex()];
     Terminal.begin(DisplayController, (cols ? cols : -1), (rows ? rows : -1));
+    // connects SerialPort with Terminal
+    SerialPortTerminalConnector.connect(&SerialPort, &Terminal);
     // this is required when terminal columns and rows do not cover entire screen
     Terminal.canvas()->setBrushColor(getBGColor());
     Terminal.canvas()->clear();
@@ -596,12 +663,11 @@ struct ConfDialogApp : public uiApp {
     Terminal.keyboard()->setLayout(SupportedLayouts::layouts()[getKbdLayoutIndex()]);
     Terminal.setBackgroundColor(getBGColor());
     Terminal.setForegroundColor(getFGColor());
-    // configure serial port
-    bool serctl = (getSerCtl() == SERCTL_ENABLED);
-    auto rxPin  = serctl ? UART_URX : UART_SRX;
-    auto txPin  = serctl ? UART_UTX : UART_STX;
     
-    Terminal.connectSerialPort(BAUDRATES_INT[getBaudRateIndex()], DATALENS_INT[getDataLenIndex()], PARITY_CHAR[getParityIndex()], STOPBITS_FLOAT[getStopBitsIndex()], rxPin, txPin, getFlowCtrl(), false, RTS, CTS);
+    // configure serial port
+    auto uidx = getUARTPortIndex();
+    SerialPort.setSignals(UARTPORT_RX[uidx], UARTPORT_TX[uidx], UART_RTS, UART_CTS);
+    SerialPort.setup(2, BAUDRATES_INT[getBaudRateIndex()], DATALENS_INT[getDataLenIndex()], PARITY_CHAR[getParityIndex()], STOPBITS_FLOAT[getStopBitsIndex()], getFlowCtrl());
   }
 
 

@@ -1,9 +1,13 @@
 /*
-  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - www.fabgl.com
-  Copyright (c) 2019-2020 Fabrizio Di Vittorio.
+  Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
+  Copyright (c) 2019-2022 Fabrizio Di Vittorio.
   All rights reserved.
 
-  This file is part of FabGL Library.
+
+* Please contact fdivitto2013@gmail.com if you need a commercial license.
+
+
+* This library and related software is available under GPL v3.
 
   FabGL is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -124,19 +128,19 @@ struct IntroScene : public Scene {
 
       if (updateCount % 20 == 0) {
         canvas.setPenColor(random(256), random(256), random(256));
-        if (keyboard->isKeyboardAvailable() && mouse->isMouseAvailable())
+        if (keyboard && keyboard->isKeyboardAvailable() && mouse && mouse->isMouseAvailable())
           canvas.drawText(45, 75, "Press [SPACE] or CLICK to Play");
-        else if (keyboard->isKeyboardAvailable())
+        else if (keyboard && keyboard->isKeyboardAvailable())
           canvas.drawText(80, 75, "Press [SPACE] to Play");
-        else if (mouse->isMouseAvailable())
+        else if (mouse && mouse->isMouseAvailable())
           canvas.drawText(105, 75, "Click to Play");
       }
 
       // handle keyboard or mouse (after two seconds)
       if (updateCount > 50) {
-        if (keyboard->isKeyboardAvailable() && keyboard->isVKDown(fabgl::VK_SPACE))
+        if (keyboard && keyboard->isKeyboardAvailable() && keyboard->isVKDown(fabgl::VK_SPACE))
           controller_ = 1;  // select keyboard as controller
-        else if (mouse->isMouseAvailable() && mouse->deltaAvailable() && mouse->getNextDelta(nullptr, 0) && mouse->status().buttons.left)
+        else if (mouse && mouse->isMouseAvailable() && mouse->deltaAvailable() && mouse->getNextDelta(nullptr, 0) && mouse->status().buttons.left)
           controller_ = 2;  // select mouse as controller
         starting_ = (controller_ > 0);  // start only when a controller has been selected
       }
@@ -410,7 +414,7 @@ struct GameScene : public Scene {
     if (gameState_ == GAMESTATE_PLAYING || gameState_ == GAMESTATE_PLAYERKILLED) {
 
       // move enemies and shoot
-      if ((updateCount % max(3, 21 - level_ * 2)) == 0) {
+      if ((updateCount % std::max(3, 21 - level_ * 2)) == 0) {
         // handle enemy explosion
         if (lastHitEnemy_) {
           lastHitEnemy_->visible = false;

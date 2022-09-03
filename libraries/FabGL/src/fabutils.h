@@ -43,6 +43,11 @@
 #include <esp_system.h>
 #include "sdmmc_cmd.h"
 #include "soc/frc_timer_reg.h"
+#include "rom/lldesc.h"
+
+#ifdef ARDUINO
+#include "Arduino.h"
+#endif
 
 
 namespace fabgl {
@@ -86,15 +91,26 @@ namespace fabgl {
   #define PSRAM_HACK
 #endif
 
-// ESP32 PSRAM bug workaround (use when the library is NOT compiled with PSRAM hack enabled)
-// Place between a write and a read PSRAM operation (write->ASM_MEMW->read), not viceversa
-#define ASM_MEMW asm(" MEMW");
 
-#define ASM_NOP asm(" NOP");
+#ifdef FABGL_EMULATED
 
-#define PSRAM_WORKAROUND1 asm(" nop;nop;nop;nop");
-#define PSRAM_WORKAROUND2 asm(" memw");
+  #define ASM_MEMW
+  #define ASM_NOP
+  #define PSRAM_WORKAROUND1
+  #define PSRAM_WORKAROUND2
 
+#else
+
+  // ESP32 PSRAM bug workaround (use when the library is NOT compiled with PSRAM hack enabled)
+  // Place between a write and a read PSRAM operation (write->ASM_MEMW->read), not viceversa
+  #define ASM_MEMW asm(" MEMW");
+
+  #define ASM_NOP asm(" NOP");
+
+  #define PSRAM_WORKAROUND1 asm(" nop;nop;nop;nop");
+  #define PSRAM_WORKAROUND2 asm(" memw");
+
+#endif
 
 
 
@@ -199,7 +215,17 @@ struct APLLParams {
 
 void APLLCalcParams(double freq, APLLParams * params, uint8_t * a, uint8_t * b, double * out_freq, double * error);
 
+#ifndef FABGL_EMULATED
 int calcI2STimingParams(int sampleRate, int * outA, int * outB, int * outN, int * outM);
+#endif
+
+
+inline void taskExit()
+{
+  #ifndef FABGL_EMULATED
+  vTaskDelete(NULL);
+  #endif
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -333,6 +359,54 @@ struct FontInfo {
   uint16_t codepage;
 };
 
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// Print
+
+
+#ifndef ARDUINO
+
+struct Print {
+  virtual size_t write(uint8_t) = 0;
+  virtual size_t write(const uint8_t * buffer, size_t size) = 0;
+  size_t write(const char *str) {
+    if (str == NULL)
+      return 0;
+    return write((const uint8_t *)str, strlen(str));
+  }
+  void printf(const char * format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    int size = vsnprintf(nullptr, 0, format, ap) + 1;
+    if (size > 0) {
+      va_end(ap);
+      va_start(ap, format);
+      char buf[size + 1];
+      auto l = vsnprintf(buf, size, format, ap);
+      write((uint8_t*)buf, l);
+    }
+    va_end(ap);
+  }
+};
+
+#endif  // ifdef ARDUINO
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// Stream
+
+
+#ifndef ARDUINO
+
+struct Stream : public Print {
+  virtual int available() = 0;
+  virtual int read() = 0;
+  virtual int peek() = 0;
+};
+
+#endif  // ifdef ARDUINO
 
 
 
@@ -789,6 +863,8 @@ public:
    */
   static bool format(DriveType driveType, int drive);
 
+  static void setSDCardMaxFreqKHz(int value) { s_SDCardMaxFreqKHz = value; }
+
   /**
    * @brief Mounts filesystem on SD Card
    *
@@ -876,6 +952,10 @@ public:
    */
   static bool getFSInfo(DriveType driveType, int drive, int64_t * total, int64_t * used);
 
+  #ifdef FABGL_EMULATED
+  static char const * BASEPATH;
+  #endif
+
 private:
 
   void clear();
@@ -896,6 +976,7 @@ private:
   static int8_t         s_SDCardCLK;
   static int8_t         s_SDCardCS;
   static sdmmc_card_t * s_SDCard;
+  static int            s_SDCardMaxFreqKHz;
 
   char *    m_dir;
   int       m_count;
@@ -965,6 +1046,9 @@ enum class ChipPackage {
 
 ChipPackage getChipPackage();
 
+
+#ifndef FABGL_EMULATED
+
 inline __attribute__((always_inline)) uint32_t getCycleCount() {
   uint32_t ccount;
   __asm__ __volatile__(
@@ -974,6 +1058,9 @@ inline __attribute__((always_inline)) uint32_t getCycleCount() {
   );
   return ccount;
 }
+
+#endif
+
 
 /**
  * @brief Replaces path separators
@@ -1013,6 +1100,37 @@ uint32_t getCPUFrequencyMHz();
 constexpr int FRC1TimerMax = 8388607;
 
 
+#ifdef FABGL_EMULATED
+
+#define FRC_TIMER_PRESCALER_1           1
+#define FRC_TIMER_PRESCALER_16          16
+#define FRC_TIMER_PRESCALER_256         256
+
+inline int FRC1Timer_prescaler(int prescaler = 0)
+{
+  static int PRESCALER = 0; // 1, 16, 256
+  if (prescaler)
+    PRESCALER = prescaler;
+  return PRESCALER;
+}
+
+
+// prescaler: FRC_TIMER_PRESCALER_1, FRC_TIMER_PRESCALER_16, FRC_TIMER_PRESCALER_256
+// 80Mhz / prescaler = timer frequency
+inline void FRC1Timer_init(int prescaler)
+{
+  FRC1Timer_prescaler(prescaler);
+}
+
+
+inline uint32_t FRC1Timer()
+{
+  //return esp_timer_get_time() & 0x7fffff;
+  return (uint32_t) (esp_timer_get_time() * 1000 / (1000000000 / (80000000 / FRC1Timer_prescaler()))) & 0x7fffff;
+}
+
+#else
+
 // prescaler: FRC_TIMER_PRESCALER_1, FRC_TIMER_PRESCALER_16, FRC_TIMER_PRESCALER_256
 // 80Mhz / prescaler = timer frequency
 inline void FRC1Timer_init(int prescaler)
@@ -1026,6 +1144,8 @@ inline uint32_t FRC1Timer()
 {
   return FRC1TimerMax - REG_READ(FRC_TIMER_COUNT_REG(0)); // make timer count up
 }
+
+#endif
 
 
 
@@ -1493,5 +1613,9 @@ inline bool isGUI(VirtualKey value)
 
 } // end of namespace
 
+
+#ifndef ARDUINO
+using fabgl::Stream;
+#endif
 
 

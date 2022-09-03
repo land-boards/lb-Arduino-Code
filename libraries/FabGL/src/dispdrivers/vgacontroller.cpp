@@ -25,23 +25,15 @@
 
 
 
-#include <alloca.h>
-#include <stdarg.h>
 #include <math.h>
 #include <string.h>
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 
 #include "soc/i2s_struct.h"
-#include "soc/i2s_reg.h"
-#include "driver/periph_ctrl.h"
-#include "soc/rtc.h"
-#include "esp_spi_flash.h"
 
 #include "fabutils.h"
 #include "vgacontroller.h"
-#include "devdrivers/swgenerator.h"
 
 
 
@@ -557,6 +549,24 @@ void IRAM_ATTR VGAController::rawDrawBitmap_RGBA8888(int destX, int destY, Bitma
                                  [&] (uint8_t * row, int x, RGBA8888 const & src) { VGA_PIXELINROW(row, x) = m_HVSync | (src.R >> 6) | (src.G >> 6 << 2) | (src.B >> 6 << 4); }   // rawSetPixelInRow
                                 );
 }
+
+
+#ifdef FABGL_EMULATED
+void VGAController::updateFrameBuffer(uint32_t * frameBuffer)
+{
+  I2S1.int_st.out_eof = 1;
+  VSyncInterrupt(this);
+
+  auto dst = frameBuffer;
+  for (int row = 0; row < m_viewPortHeight; ++row) {
+    auto src = m_viewPortVisible[row];
+    for (int col = 0; col < m_viewPortWidth; ++col, ++dst) {
+      auto srcpx = src[col ^ 2];
+      *dst = ((((srcpx >> 0) & 3) * 85) << 16) | ((((srcpx >> 2) & 3) * 85) << 8) | ((((srcpx >> 4) & 3) * 85) << 0);
+    }
+  }
+}
+#endif
 
 
 

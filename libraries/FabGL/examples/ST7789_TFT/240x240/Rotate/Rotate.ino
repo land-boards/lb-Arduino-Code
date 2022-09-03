@@ -58,7 +58,7 @@ void test(Color bcolor, char const * msg)
   cv.setBrushColor(Color::BrightRed);
   int w = cv.getWidth();
   int h = cv.getHeight();
-  Serial.printf("%d %d\n", w, h);
+  //Serial.printf("%d %d\n", w, h);
   Point pts[3] = { {w/2, 0}, {w-1, h-1}, {0, h-1} };
   cv.fillPath(pts, 3);
   cv.drawPath(pts, 3);
@@ -88,4 +88,3 @@ void loop()
   DisplayController.setOrientation(fabgl::TFTOrientation::Rotate270);
   test(Color::Magenta, "Rotate270");
 }
-

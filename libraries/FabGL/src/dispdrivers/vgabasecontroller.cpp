@@ -64,15 +64,17 @@ void VGABaseController::init()
 {
   CurrentVideoMode::set(VideoMode::VGA);
 
-  m_DMABuffers                   = nullptr;
-  m_DMABuffersCount              = 0;
-  m_DMABuffersHead               = nullptr;
-  m_DMABuffersVisible            = nullptr;
-  m_primitiveProcessingSuspended = 1; // >0 suspended
-  m_isr_handle                   = nullptr;
-  m_doubleBufferOverDMA          = false;
-  m_viewPort                     = nullptr;
-  m_viewPortMemoryPool           = nullptr;
+  m_DMABuffers                    = nullptr;
+  m_DMABuffersCount               = 0;
+  m_DMABuffersHead                = nullptr;
+  m_DMABuffersVisible             = nullptr;
+  m_primitiveProcessingSuspended  = 1;        // >0 suspended
+  m_isr_handle                    = nullptr;
+  m_doubleBufferOverDMA           = false;
+  m_viewPorts[0] = m_viewPorts[1] = nullptr;
+  m_viewPort                      = nullptr;
+  m_viewPortVisible               = nullptr;
+  m_viewPortMemoryPool            = nullptr;
 
   m_GPIOStream.begin();
 }
@@ -163,13 +165,12 @@ void VGABaseController::freeViewPort()
     heap_caps_free(m_viewPortMemoryPool);
     m_viewPortMemoryPool = nullptr;
   }
-  if (m_viewPort) {
-    heap_caps_free(m_viewPort);
-    m_viewPort = nullptr;
-  }
-  if (isDoubleBuffered())
-    heap_caps_free(m_viewPortVisible);
-  m_viewPortVisible = nullptr;
+  for (int i = 0; i < 2; ++i)
+    if (m_viewPorts[i]) {
+      heap_caps_free(m_viewPorts[i]);
+      m_viewPorts[i] = nullptr;
+    }
+  m_viewPort = m_viewPortVisible = nullptr;
 }
 
 
@@ -262,58 +263,70 @@ bool VGABaseController::convertModelineToTimings(char const * modeline, VGATimin
     timings->multiScanBlack = 0;
     timings->HStartingBlock = VGAScanStart::VisibleArea;
 
-    // get [(+HSync | -HSync) (+VSync | -VSync)]
-    char const * pc = modeline + pos;
-    for (; *pc; ++pc) {
-      if (*pc == '+' || *pc == '-') {
-        if (!HSyncPol) {
-          timings->HSyncLogic = HSyncPol = *pc;
-        } else if (!VSyncPol) {
-          timings->VSyncLogic = VSyncPol = *pc;
-          break;
-        }
-      }
-    }
-
-    // get [DoubleScan | QuadScan] [FrontPorchBegins | SyncBegins | BackPorchBegins | VisibleBegins] [MultiScanBlank]
-    // actually this gets only the first character
-    while (*pc) {
+    // actually this checks just the first character
+    auto pc  = modeline + pos;
+    auto end = pc + strlen(modeline);
+    while (*pc && pc < end) {
       switch (*pc) {
+        // parse [(+HSync | -HSync) (+VSync | -VSync)]
+        case '+':
+        case '-':
+          if (!HSyncPol)
+            timings->HSyncLogic = HSyncPol = *pc;
+          else if (!VSyncPol)
+            timings->VSyncLogic = VSyncPol = *pc;
+          pc += 6;
+          break;
+        // parse [DoubleScan | QuadScan]
+        // DoubleScan
         case 'D':
         case 'd':
           timings->scanCount = 2;
+          pc += 10;
           break;
+        // QuadScan
         case 'Q':
         case 'q':
           timings->scanCount = 4;
+          pc += 8;
           break;
+        // parse [FrontPorchBegins | SyncBegins | BackPorchBegins | VisibleBegins] [MultiScanBlank]
+        // FrontPorchBegins
         case 'F':
         case 'f':
           timings->HStartingBlock = VGAScanStart::FrontPorch;
+          pc += 16;
           break;
+        // SyncBegins
         case 'S':
         case 's':
           timings->HStartingBlock = VGAScanStart::Sync;
+          pc += 10;
           break;
+        // BackPorchBegins
         case 'B':
         case 'b':
           timings->HStartingBlock = VGAScanStart::BackPorch;
+          pc += 15;
           break;
+        // VisibleBegins
         case 'V':
         case 'v':
           timings->HStartingBlock = VGAScanStart::VisibleArea;
+          pc += 13;
           break;
+        // MultiScanBlank
         case 'M':
         case 'm':
           timings->multiScanBlack = 1;
+          pc += 14;
           break;
         case ' ':
           ++pc;
-          continue;
+          break;
+        default:
+          return false;
       }
-      ++pc;
-      while (*pc && *pc != ' ')
-        ++pc;
     }
 
     return true;
@@ -444,9 +457,9 @@ void VGABaseController::allocateViewPort(uint32_t allocCaps, int rowlen)
   // fill m_viewPort[] with line pointers
   if (isDoubleBuffered()) {
     m_viewPortHeight /= 2;
-    m_viewPortVisible = (volatile uint8_t * *) heap_caps_malloc(sizeof(uint8_t*) * m_viewPortHeight, MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
+    m_viewPortVisible = m_viewPorts[1] = (volatile uint8_t * *) heap_caps_malloc(sizeof(uint8_t*) * m_viewPortHeight, MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
   }
-  m_viewPort = (volatile uint8_t * *) heap_caps_malloc(sizeof(uint8_t*) * m_viewPortHeight, MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
+  m_viewPort = m_viewPorts[0] = (volatile uint8_t * *) heap_caps_malloc(sizeof(uint8_t*) * m_viewPortHeight, MALLOC_CAP_32BIT | MALLOC_CAP_INTERNAL);
   if (!isDoubleBuffered())
     m_viewPortVisible = m_viewPort;
   for (int p = 0, l = 0; p < poolsCount; ++p) {
@@ -749,6 +762,23 @@ void IRAM_ATTR VGABaseController::swapBuffers()
     tswap(m_DMABuffers, m_DMABuffersVisible);
     m_DMABuffersHead->qe.stqe_next = (lldesc_t*) &m_DMABuffersVisible[0];
   }
+}
+
+
+bool VGABaseController::suspendDoubleBuffering(bool value)
+{
+  auto prevValue = BitmappedDisplayController::suspendDoubleBuffering(value);
+  if (prevValue != value && isDoubleBuffered()) {
+    if (value) {
+      m_viewPorts[0]    = m_viewPort;
+      m_viewPorts[1]    = m_viewPortVisible;
+      m_viewPort        = m_viewPortVisible;
+    } else {
+      m_viewPort        = m_viewPorts[0];
+      m_viewPortVisible = m_viewPorts[1];
+    }
+  }
+  return prevValue;
 }
 
 
