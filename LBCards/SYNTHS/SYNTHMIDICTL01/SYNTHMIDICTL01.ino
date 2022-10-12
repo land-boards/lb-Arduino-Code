@@ -1,16 +1,20 @@
+// HAGIWO MIDI to CV code
+// https://note.com/solder_state/n/n17e028497eba
+// Japanese to English via google translate 
+
 #include <MIDI.h>
-#include  <SPI.h>//DAC通信用
-MIDI_CREATE_DEFAULT_INSTANCE(); //MIDIライブラリを有効
+#include  <SPI.h>//DAC for communication
+MIDI_CREATE_DEFAULT_INSTANCE(); //MIDI Enable Library
 
 const int LDAC = 9;//SPI trans setting
-int note_no = 0;//noteNo=21(A0)～60(A5) total 61,マイナスの値を取るのでint
+int note_no = 0;//noteNo=21(A0)～60(A5) total 61, Because it takes a negative value int
 
 int bend_range = 0;
 int bend_msb = 0;
 int bend_lsb = 0;
 long after_bend_pitch = 0;
 
-byte note_on_count = 0;//複数のノートがONかつ、いずれかのノートがOFFしたときに、最後のノートONが消えないようにする。
+byte note_on_count = 0;//When multiple notes are ON and one of the notes is turned off, the last note ON does not disappear.
 unsigned long trigTimer = 0;//for gate ratch
 
 byte clock_count = 0;
@@ -34,12 +38,12 @@ void setup() {
  pinMode(4, OUTPUT) ;//CLK_OUT
  pinMode(5, OUTPUT) ;//GATE_OUT
 
- MIDI.begin(1);          // MIDI CH1をlisten
+ MIDI.begin(1);          // MIDI CH1 to listen
 
  SPI.begin();
  SPI.setBitOrder(MSBFIRST) ;          // bit order
- SPI.setClockDivider(SPI_CLOCK_DIV4) ;// クロック(CLK)をシステムクロックの1/4で使用(16MHz/4)
- SPI.setDataMode(SPI_MODE0) ;         // クロック極性０(LOW)　クロック位相０
+ SPI.setClockDivider(SPI_CLOCK_DIV4) ;// Clock (CLK) is used for 1/4 of the system clock (16MHz/4)
+ SPI.setDataMode(SPI_MODE0) ;         // Clock polarity 0 (LOW)　Clock Phase 0
  delay(50);
 }
 
@@ -72,11 +76,11 @@ void loop() {
  }
 
  //-----------------------------midi operation----------------------------
- if (MIDI.read()) {               // チャンネル1に信号が入ってきたら
+ if (MIDI.read()) {               // When a signal enters Channel 1
    MIDI.setInputChannel(1);
    switch (MIDI.getType()) {
 
-     case midi::NoteOn://NoteOnしたら
+     case midi::NoteOn://NoteOn After
        note_on_count ++;
        trigTimer = millis();
        note_no = MIDI.getData1() - 21 ;//note number
@@ -88,15 +92,15 @@ void loop() {
          note_no = 60;
        }
 
-       digitalWrite(5, HIGH); //GateをHIGH
-       OUT_CV(cv[note_no]);//V/OCT LSB for DACを参照
+       digitalWrite(5, HIGH); //Gate to HIGH
+       OUT_CV(cv[note_no]);//V/OCT LSB for DAC See also
        break;
 
 
-     case midi::NoteOff://NoteOffしたら
+     case midi::NoteOff://NoteOff After
        note_on_count --;
        if (note_on_count == 0) {
-         digitalWrite(5, LOW); //GateをLOW
+         digitalWrite(5, LOW); //Gate to LOW
        }
        break;
 
@@ -124,7 +128,7 @@ void loop() {
 
      case midi::Stop:
        clock_count = 0;
-       digitalWrite(5, LOW); //GateをLOW
+       digitalWrite(5, LOW); //Gate to LOW
        break;
 
 
