@@ -1,6 +1,10 @@
-// https://note.com/solder_state/n/nca6a1dec3921
-//
-// Seeed XIAO RP2040 equipped with the Rasberry pi RP2040
+// Based on HAGIWO design/software
+//  https://note.com/solder_state/n/nca6a1dec3921
+// 
+// Seeed XIAO RP2040 equipped with the Rasberry Pi (Pico) RP2040
+// 
+// Card:
+//  http://land-boards.com/blwiki/index.php?title=SYNTH-VCO-03
 //
 // Digital VCO with three modes: Wavefold, FM and AM.
 // The cost of audio output is reduced by using PWM.
@@ -9,7 +13,7 @@
 // FREQ POT : Adjust the frequency. Since it is for tuning, the frequency range that can be adjusted is narrow.
 // MOD POT : Adjusted the modulation effect.
 // MODE SW : toggle switch to switch
-// modeOCT SW : Switch octaves. Three ranges of -1,0,+1.
+// OCT SW : Switch octaves. Three ranges of -1,0,+1.
 // PUSH SW : Switch the timbre. 8 tones to choose from in each mode.
 
 // MOD CV : Adjusts the modulation level. The input range is 0-5V.
