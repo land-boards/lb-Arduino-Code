@@ -1,10 +1,14 @@
+// Eurorack VCO Module
+// DOUG GILLILAND
+// LAND-BOARDS.COM
+// 
 // Based on HAGIWO design/software
 //  https://note.com/solder_state/n/nca6a1dec3921
 // 
 // Seeed XIAO RP2040 equipped with the Rasberry Pi (Pico) RP2040
 // 
-// Card:
-//  http://land-boards.com/blwiki/index.php?title=SYNTH-VCO-03
+// Runs on card:
+//  http://land-boards.com/blwiki/index.php?title=ER-VCO-03
 //
 // Digital VCO with three modes: Wavefold, FM and AM.
 // The cost of audio output is reduced by using PWM.
@@ -163,23 +167,23 @@ void loop()
   //  -------------------frequeny calculation-------------------------------
   adc = analogRead(26) * calb;      //Correct resistance errors
   adc = constrain(adc , 0, 1225);   //Covers 6(=1220) octaves. If it is 1230 or more, the operation becomes unstable.
-//  freq_pot = map((1023-analogRead(27)), 0, 1023, 0, 127);
-  freq_pot = map((analogRead(27)), 0, 1023, 0, 127);
+//  freq_pot = map((1023-analogRead(27)), 0, 1023, 0, 127); //  (ER-VCO-03 Rev 1)
+  freq_pot = map((analogRead(27)), 0, 1023, 0, 127);  //  (ER-VCO-03 Rev 2)
   osc_freq = freq_table[adc + freq_pot]; // V/oct apply
   osc_freq = 256 * osc_freq / 122070 * (1 + oct_sw);
 
   //  -------------------mod parameter set-------------------------------
   if (mode == 0) {//fold
-//    mod = constrain((1023-analogRead(29)) + analogRead(28), 0, 1023) * 0.0036 + 0.90; //28 is CV , 29 is pot
-    mod = constrain((analogRead(29)) + analogRead(28), 0, 1023) * 0.0036 + 0.90; //28 is CV , 29 is pot
+//    mod = constrain((1023-analogRead(29)) + analogRead(28), 0, 1023) * 0.0036 + 0.90; //28 is CV , 29 is pot (ER-VCO-03 Rev 1)
+    mod = constrain((analogRead(29)) + analogRead(28), 0, 1023) * 0.0036 + 0.90; //28 is CV , 29 is pot (ER-VCO-03 Rev 2)
   }
   else if (mode == 1) {//FM
-//    mod = constrain((1023-analogRead(29)) + analogRead(28), 0, 1023) / 8;
-    mod = constrain((analogRead(29)) + analogRead(28), 0, 1023) / 8;
+//    mod = constrain((1023-analogRead(29)) + analogRead(28), 0, 1023) / 8; // (ER-VCO-03 Rev 1)
+    mod = constrain((analogRead(29)) + analogRead(28), 0, 1023) / 8;        //  (ER-VCO-03 Rev 2)
   }
   else if (mode == 2) {//AM
-//    mod = 1023 - constrain((1023-analogRead(29)) + analogRead(28), 0, 1023) ;
-    mod = 1023 - constrain((analogRead(29)) + analogRead(28), 0, 1023) ;
+//    mod = 1023 - constrain((1023-analogRead(29)) + analogRead(28), 0, 1023) ; // (ER-VCO-03 Rev 1)
+    mod = 1023 - constrain((analogRead(29)) + analogRead(28), 0, 1023) ;        // (ER-VCO-03 Rev 2)
   }
 
   //  -------------------push sw-------------------------------
