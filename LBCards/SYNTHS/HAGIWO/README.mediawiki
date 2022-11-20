@@ -4,5 +4,7 @@
 
 = Hardware =
 
+<img src="http://land-boards.com/blwiki/images/5/5c/ER-PROTO-01-NANO-MOZZI_P1080687-720PX.jpg"></img>
+
 * [http://land-boards.com/blwiki/index.php?title=Arduino_NANO_MOZZI_on_ER-PROTO-01 Arduino NANO MOZZI on ER-PROTO-01]
 * [http://land-boards.com/blwiki/index.php?title=ER-MOZZI-DB ER-MOZZI-DB]
