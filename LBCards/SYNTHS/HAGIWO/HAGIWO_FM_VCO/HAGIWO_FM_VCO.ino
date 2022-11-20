@@ -1,4 +1,11 @@
 // HAGIWO_FM_VCO
+//  2OP FM VCO module, Arduino mozzi library
+//  FM synth with two operators, a carrier and a modulator
+//  V/oct (10bit, 5V p-p), output is 4V p-p.
+//
+// HAGIWO
+//  https://note.com/solder_state/n/n88317851a4c7
+//
 
 #include <MozziGuts.h>
 #include <Oscil.h>
