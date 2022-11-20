@@ -1,6 +1,8 @@
 = HAGIWO Builds =
 
 * [https://note.com/solder_state/ HAGIWO Notes]
+* Arduino NANO
+* [https://sensorium.github.io/Mozzi/ MOZZI library]
 
 = Hardware =
 
