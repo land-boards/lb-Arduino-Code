@@ -11,7 +11,7 @@
     values to frequency, and xorshift96() for random numbers.
 
     This sketch is pushing the limits of computing power on the
-    8-biit AVR boards. At the time of this writing, you will have
+    8-bit AVR boards. At the time of this writing, you will have
     to manually alter your platform.txt file to use optimization
     for speed rather than size on Arduino Uno and similar.
     (Alternatively, remove one of the oscillators)

@@ -1,6 +1,10 @@
 /*
   Example using a potentiometer to control the amplitude of a sinewave
   with Mozzi sonification library.
+  
+
+  Pot is RV1 on MOZZI on ER-PROTO-01 card
+  http://land-boards.com/blwiki/index.php?title=Arduino_NANO_MOZZI_on_ER-PROTO-01
 
   Demonstrates the use of Oscil to play a wavetable, and analog input for control.
 
