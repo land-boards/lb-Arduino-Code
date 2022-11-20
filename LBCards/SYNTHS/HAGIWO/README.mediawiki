@@ -4,12 +4,16 @@
 
 = Hardware =
 
-== [http://land-boards.com/blwiki/index.php?title=Arduino_NANO_MOZZI_on_ER-PROTO-01 Arduino NANO MOZZI on ER-PROTO-01] ==
+== Arduino NANO MOZZI on ER-PROTO-01 ==
+
+* [http://land-boards.com/blwiki/index.php?title=Arduino_NANO_MOZZI_on_ER-PROTO-01 Arduino NANO MOZZI on ER-PROTO-01]
 
 <img src="http://land-boards.com/blwiki/images/5/5c/ER-PROTO-01-NANO-MOZZI_P1080687-720PX.jpg"></img>
 
 <img src="http://land-boards.com/blwiki/images/3/3e/ER-PROTO-01-NANO-MOZZI_P1080693-720PX.jpg"></img>
 
-== [http://land-boards.com/blwiki/index.php?title=ER-MOZZI-DB ER-MOZZI-DB] ==
+== ER-MOZZI-DB ==
+
+* [http://land-boards.com/blwiki/index.php?title=ER-MOZZI-DB ER-MOZZI-DB]
 
 <img src="http://land-boards.com/blwiki/images/b/b2/ER-MOZZI-DB-SET_FRONT_REAR-3D-720PX.png"></img>
