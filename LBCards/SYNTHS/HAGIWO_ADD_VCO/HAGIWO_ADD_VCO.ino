@@ -45,11 +45,11 @@ const static byte harm_table[8][256]PROGMEM = {
 };
 
 #define RV1 7   // FREQ
-#define RV2 4   // HARMONICS GAIN 1
-#define RV3 6
-#define RV4 3   
-#define RV5 5   // HARMONICS GAIN 2
-#define RV6 2   // HARMONICS 2 
+#define RV2 4   // HARMONICS 2
+#define RV3 6   // HARMONICS GAIN 1
+#define RV4 3   // HARMONICS GAIN 2
+#define RV5 5 
+#define RV6 2
 #define J1 0    // VOCT
 #define J2 1    // HARMONICS 1
 
@@ -60,12 +60,12 @@ void setup()
 void updateControl() {
  //harmonics
 // harm_knob = (mozziAnalogRead(RV4) / 4) + (mozziAnalogRead(RV6) / 4);
- harm_knob = (mozziAnalogRead(J2) / 4) + (mozziAnalogRead(RV6) / 4);
+ harm_knob = (mozziAnalogRead(J2) / 4) + (mozziAnalogRead(RV2) / 4);
  harm_knob = constrain(harm_knob, 0, 255);
 
  //harmonics_gain
 // gain = (mozziAnalogRead(RV2) / 4) + (mozziAnalogRead(RV5) / 4);
- gain = (mozziAnalogRead(RV2) / 4) + (mozziAnalogRead(RV5) / 4);
+ gain = (mozziAnalogRead(RV3) / 4) + (mozziAnalogRead(RV4) / 4);
  gain = constrain(gain, 0, 255);
 
  //OSC frequency knob
