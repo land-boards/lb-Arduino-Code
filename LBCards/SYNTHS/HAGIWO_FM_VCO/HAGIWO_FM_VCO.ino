@@ -7,6 +7,15 @@
 
 #define CONTROL_RATE 256 // Hz, powers of 2 are most reliable
 
+#define RV1 7   // FREQUENCY
+#define RV2 4   // MOD FREQ
+#define RV3 6   // DEV 1
+#define RV4 3   // DEV 2
+#define RV5 5   // 
+#define RV6 2   // 
+#define J1 0    // V PER OCT
+#define J2 1    // MOD FREQ
+
 Oscil<COS2048_NUM_CELLS, AUDIO_RATE> aCarrier(COS2048_DATA);
 Oscil<COS2048_NUM_CELLS, AUDIO_RATE> aModulator(COS2048_DATA);
 Oscil<COS2048_NUM_CELLS, CONTROL_RATE> kModIndex(COS2048_DATA);
@@ -24,20 +33,11 @@ void setup() {
  startMozzi(CONTROL_RATE);
 }
 
-#define RV1 7   // FREQUENCY
-#define RV2 4   // MOD FREQ
-#define RV3 6   // DEV 1
-#define RV4 3   // DEV 2
-#define RV5 5   // 
-#define RV6 2   // 
-#define J1 0    // V PER OCT
-#define J2 1    // MOD FREQ
-
 void setFreqs(Q16n16 freq)
 {
  carrier_freq = freq ; // V/oct apply
- mod_freq = ((carrier_freq >> 8)  * (mozziAnalogRead(RV3) / 2 +mozziAnalogRead(RV4) / 2));
- deviation = ((mod_freq >> 16) * (1 + mozziAnalogRead(J2)+mozziAnalogRead(RV2))); // (Q16n16>>16)   Q8n8 = Q24n8, beware of overflow
+ mod_freq = ((carrier_freq >> 8)  * ((mozziAnalogRead(J2)/2) + (mozziAnalogRead(RV2)/2)));
+ deviation = ((mod_freq >> 16) * (1 + mozziAnalogRead(RV3)+mozziAnalogRead(RV4))); // (Q16n16>>16)   Q8n8 = Q24n8, beware of overflow
  aCarrier.setFreq_Q16n16(carrier_freq);
  aModulator.setFreq_Q16n16(mod_freq);
 }
