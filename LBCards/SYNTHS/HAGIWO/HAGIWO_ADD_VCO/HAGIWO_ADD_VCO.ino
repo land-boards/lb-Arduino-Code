@@ -1,6 +1,6 @@
 // HAGIWO_ADD_VCO
-// Additive VCO
-// https://note.com/solder_state/n/n30b3a8737b1e
+//  Additive VCO
+//  https://note.com/solder_state/n/n30b3a8737b1e
 
 #include <MozziGuts.h>
 #include <Oscil.h> // oscillator template
