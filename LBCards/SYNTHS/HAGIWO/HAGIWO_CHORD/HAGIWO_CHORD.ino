@@ -63,14 +63,14 @@ Oscil <PHASOR256_NUM_CELLS, AUDIO_RATE> aPha3(PHASOR256_DATA);
 Oscil <PHASOR256_NUM_CELLS, AUDIO_RATE> aPha4(PHASOR256_DATA);
 Oscil <PHASOR256_NUM_CELLS, AUDIO_RATE> aPha5(PHASOR256_DATA);
 
-#define RV1 7   // FREQ
-#define RV2 4   // INV KNOB
-#define RV3 6   // VOCT
-#define RV4 3   // CHORD 1
-#define RV5 5   // INV FINE
-#define RV6 2   // CHORD 2 
-#define J1 0
-#define J2 1
+#define RV1 7   // FREQ ADJ
+#define RV2 4   // CHORD 2
+#define RV3 6   // INV KNOB
+#define RV4 3   // INV
+#define RV5 5   // NOT USED
+#define RV6 2   // NOT USED
+#define J1 0    // VOCT
+#define J2 1    // CHORD 1
 
 #define CONTROL_RATE 128 // Hz, powers of 2 are most reliable
 
@@ -121,12 +121,12 @@ void setup()
 void updateControl() {
  //chord setting
 // chord = (mozziAnalogRead(RV4) / 128) + (mozziAnalogRead(RV6) / 128);
- chord = (mozziAnalogRead(J2) / 128) + (mozziAnalogRead(RV6) / 128);
+ chord = (mozziAnalogRead(J2) / 128) + (mozziAnalogRead(RV2) / 128);
  chord = constrain(chord, 0, 7);
 
  //inversion setting
- inv_knob = mozziAnalogRead(RV2);
- inv = (inv_knob  / 64)+ (mozziAnalogRead(RV5) / 64);
+ inv_knob = mozziAnalogRead(RV3);
+ inv = (inv_knob  / 64)+ (mozziAnalogRead(RV4) / 64);
  inv = constrain(inv, 0, 15);
 
  if (inv_knob < 1020) { //when selecting wave , not apply
@@ -278,7 +278,7 @@ void updateControl() {
  }
 
  //frequency setting
- voct = mozziAnalogRead(RV3) ;
+ voct = mozziAnalogRead(J1) ;
  freqv1 = freq1 * pow(2, (pgm_read_float(&(voctpow[voct + 205 * inv_aply1 + note1])))); //ROOT
  freqv2 = freq1 * pow(2, (pgm_read_float(&(voctpow[voct + 205 * inv_aply2 + note2])))); //2nd
  freqv3 = freq1 * pow(2, (pgm_read_float(&(voctpow[voct + 205 * inv_aply3 + note3])))); //3rd

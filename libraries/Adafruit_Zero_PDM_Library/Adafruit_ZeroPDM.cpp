@@ -253,6 +253,8 @@ bool Adafruit_ZeroPDM::configure(uint32_t sampleRateHz, boolean stereo) {
     GCLK->GENCTRL.reg |= GCLK_GENCTRL_GENEN; /* Enable generator */
 
     interrupts(); // cpu_irq_leave_critical();
+#else
+    (void)sampleRateHz; // Prevent compiler warning
 #endif
   }
 
@@ -337,6 +339,8 @@ bool Adafruit_ZeroPDM::configure(uint32_t sampleRateHz, boolean stereo) {
 
     /* Initialize pins */
     pinPeripheral(_clk, (EPioType)_clk_mux);
+#else
+    (void)stereo;       // Prevent compiler warning
 #endif
   }
 
@@ -457,6 +461,8 @@ uint32_t Adafruit_ZeroPDM::read(void) {
     data = _hw->DATA[_i2sserializer].reg;
     _hw->INTFLAG.reg = ready_bit;
     return data;
+#else
+    return 0;
 #endif
   }
 }
