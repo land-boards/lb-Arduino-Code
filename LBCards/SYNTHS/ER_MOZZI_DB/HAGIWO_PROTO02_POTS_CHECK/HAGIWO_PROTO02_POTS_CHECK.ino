@@ -1,4 +1,5 @@
 /*
+  HAGIWO_PROTO02_POTS_CHECK
   Read the Pots and CV.
   Prints the values that were read to the monitor.
 */

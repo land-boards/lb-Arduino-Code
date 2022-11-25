@@ -1,4 +1,4 @@
-// HAGIWO_FM_VCO
+// HAGIWO_FM_VCO_ER_MOZZI_DB
 //  2OP FM VCO module, Arduino mozzi library
 //  FM synth with two operators, a carrier and a modulator
 //  V/oct (10bit, 5V p-p), output is 4V p-p.
@@ -16,10 +16,10 @@
 #define CONTROL_RATE 256 // Hz, powers of 2 are most reliable
 
 #define RV1 0   // FREQUENCY
-#define RV2 1   // MOD FREQ
+#define RV2 1   // MOD FREQ 1
 #define RV3 2   // DEV 1
 #define J3 5    // V PER OCT
-#define J4 6    // MOD FREQ
+#define J4 6    // MOD FREQ 2
 #define J5 7    // DEV 2
 
 Oscil<COS2048_NUM_CELLS, AUDIO_RATE> aCarrier(COS2048_DATA);

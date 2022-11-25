@@ -1,4 +1,4 @@
-// HAGIWO_CHORD
+// HAGIWO_CHORD_ER_MOZZI_DB
 //
 // https://note.com/solder_state/n/n681d2e07e324
 //
@@ -65,6 +65,13 @@ Oscil <PHASOR256_NUM_CELLS, AUDIO_RATE> aPha5(PHASOR256_DATA);
 
 #define CONTROL_RATE 128 // Hz, powers of 2 are most reliable
 
+#define RV1 0   // FREQ ADJ
+#define RV2 1   // CHORD 2
+#define RV3 2   // INV KNOB
+#define J3 5    // V/OCT (FREQ)
+#define J4 6    // CHORD 1
+#define J5 7    // INV 2
+
 int freq1 = 110;//base freq
 int voct = 1000;//external V/OCT LSB
 
@@ -110,16 +117,8 @@ void setup()
  startMozzi(CONTROL_RATE); // :)
 }
 
-#define RV1 7   // FREQ ADJ
-#define RV2 4   // CHORD 2
-#define RV3 6   // INV KNOB
-#define J3 5    // VOCT
-#define J4 6    // CHORD 1
-#define J5 7    // INV 2
-
 void updateControl() {
  //chord setting
-// chord = (mozziAnalogRead(RV4) / 128) + (mozziAnalogRead(RV6) / 128);
  chord = (mozziAnalogRead(J4) / 128) + (mozziAnalogRead(RV2) / 128);
  chord = constrain(chord, 0, 7);
 
@@ -268,13 +267,13 @@ void updateControl() {
    note5 = (pgm_read_byte(&(chord_table[chord][0])));
  }
 
- //OSC frequency knob
- freq1 = mozziAnalogRead(RV1) / 4 ;
-
  //set wave
  if (inv_knob >= 1020) { //inv knob max
-   wave = (mozziAnalogRead(RV3) / 128);
+   wave = (mozziAnalogRead(RV2) / 128);
  }
+
+ //OSC frequency knob
+ freq1 = mozziAnalogRead(RV1) / 4 ;
 
  //frequency setting
  voct = mozziAnalogRead(J3) ;

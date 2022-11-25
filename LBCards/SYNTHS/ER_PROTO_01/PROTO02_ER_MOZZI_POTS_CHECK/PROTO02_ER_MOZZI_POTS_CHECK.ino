@@ -1,4 +1,5 @@
 /*
+  PROTO02_ER_MOZZI_POTS_CHECK
   Read the Pots and CV.
   Prints the values that were read to the monitor.
 */
