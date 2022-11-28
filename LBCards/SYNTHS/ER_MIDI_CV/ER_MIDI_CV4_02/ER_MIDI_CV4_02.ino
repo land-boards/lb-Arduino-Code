@@ -39,12 +39,20 @@ byte clock_on_time = 0;
 int clock_rate = 0;//knob CVin
 
 // V/OCT LSB for DAC
-const long cv[61] = {
-  0,  68, 137,  205,  273,  341,  410,  478,  546,  614,  683,  751,
-  819,  887,  956,  1024, 1092, 1161, 1229, 1297, 1365, 1434, 1502, 1570,
-  1638, 1707, 1775, 1843, 1911, 1980, 2048, 2116, 2185, 2253, 2321, 2389,
-  2458, 2526, 2594, 2662, 2731, 2799, 2867, 2935, 3004, 3072, 3140, 3209,
-  3277, 3345, 3413, 3482, 3550, 3618, 3686, 3755, 3823, 3891, 3959, 4028, 4095
+//const long cv[61] = {
+//  0,  68, 137,  205,  273,  341,  410,  478,  546,  614,  683,  751,
+//  819,  887,  956,  1024, 1092, 1161, 1229, 1297, 1365, 1434, 1502, 1570,
+//  1638, 1707, 1775, 1843, 1911, 1980, 2048, 2116, 2185, 2253, 2321, 2389,
+//  2458, 2526, 2594, 2662, 2731, 2799, 2867, 2935, 3004, 3072, 3140, 3209,
+//  3277, 3345, 3413, 3482, 3550, 3618, 3686, 3755, 3823, 3891, 3959, 4028, 4095
+//};
+// 
+const long cv[60] = {
+  0,    83,   152,  220,  288,  356,  425,  493,  561,  629,  698,  766,
+  834,  903,  971,  1039, 1107, 1176, 1244, 1312, 1380, 1449, 1517, 1585,
+  1653, 1722, 1790, 1858, 1927, 1995, 2063, 2131, 2200, 2268, 2336, 2404,
+  2473, 2541, 2609, 2677, 2746, 2814, 2882, 2951, 3019, 3087, 3155, 3224,
+  3292, 3360, 3428, 3497, 3565, 3633, 3701, 3770, 3838, 3906, 3975, 4043
 };
 
 // setup()
@@ -68,10 +76,11 @@ void setup() {
   SPI.setBitOrder(MSBFIRST);          // bit order
   SPI.setClockDivider(SPI_CLOCK_DIV4);// Clock (CLK) is used for 1/4 of the system clock (16MHz/4)
   SPI.setDataMode(SPI_MODE0);         // Clock polarity 0 (LOW)　Clock Phase 0
-  OUT_CV1(0);
-  OUT_MOD1(0);
-  OUT_CV2(0);
-  OUT_MOD2(0);
+  CV1Val = 0;
+  CV2Val = 0;
+  CV3Val = 0;
+  CV4Val = 0;
+  outCVs();
   delay(50);
 }
 
@@ -80,24 +89,6 @@ void loop() {
   //-----------------------------clock_rate setting----------------------------
   clock_rate = analogRead(1);//read knob voltage
 
-  // TEST CV OUTPUTS USING POT VALUE TO SET OUTPUT VOLTAGE
-  while (1)
-  {
-    clock_rate = analogRead(1);//read knob voltage
-    CV1Val = 0x0000 + clock_rate;
-    CV2Val = 0x0400 + clock_rate;
-    CV3Val = 0x0800 + clock_rate;
-    CV4Val = 0x0C00 + clock_rate;
-    outCVs();
-//    OUT_CV1(0x000 + clock_rate);   // 0-1.25V
-//    delay(1);
-//    OUT_MOD1(0x400 + clock_rate);  // 1.25-2.5V
-//    delay(1);
-//    OUT_CV2(0x800 + clock_rate);   // 2.5V-3.75V
-//    delay(1);
-//    OUT_MOD2(0xC00 + clock_rate);  // 3.75V-5.0V
-    delay(10);
-  }
   if (clock_rate < 256) {
     clock_max = 24;//slow
   }
@@ -129,19 +120,20 @@ void loop() {
       case midi::NoteOn://NoteOn After
         note_on_count ++;
         trigTimer = millis();
-        note_no = MIDI.getData1() - 21;//note number
+//        note_no = MIDI.getData1() - 21; //note number
+        note_no = MIDI.getData1() - 43;   //note number lowest on ER-VCO-03
 
         if (note_no < 0) {
           note_no = 0;
         }
-        else if (note_no >= 61) {
+        else if (note_no >= 60) {
           note_no = 60;
         }
 
+        CV1Val = cv[note_no];
+        outCVs();
         digitalWrite(GATE_PIN, HIGH); //Gate to HIGH
-        OUT_CV1(cv[note_no]);//V/OCT LSB for DAC See also
         break;
-
 
       case midi::NoteOff://NoteOff After
         note_on_count --;
@@ -150,11 +142,10 @@ void loop() {
         }
         break;
 
-
       case midi::ControlChange:
-        OUT_MOD1( MIDI.getData2() << 5); //0-4095
+        CV2Val = MIDI.getData2() << 5;
+        outCVs();
         break;
-
 
       case midi::Clock:
         clock_count ++;
@@ -171,95 +162,32 @@ void loop() {
         }
         break;
 
-
       case midi::Stop:
         clock_count = 0;
         digitalWrite(GATE_PIN, LOW); //Gate to LOW
         break;
-
 
       case midi::PitchBend:
         bend_lsb = MIDI.getData1();//LSB
         bend_msb = MIDI.getData2();//MSB
         bend_range = bend_msb; //0 to 127
 
-        if (bend_range > 64) {
+        if (bend_range > 64)
+        {
           after_bend_pitch = cv[note_no] + cv[note_no] * (bend_range - 64) * 4 / 10000;
-          OUT_CV1(after_bend_pitch);
+          CV1Val = after_bend_pitch;
+          outCVs();
         }
 
-        else if (bend_range < 64) {
+        else if (bend_range < 64)
+        {
           after_bend_pitch = cv[note_no] - cv[note_no] * (64 - bend_range) * 4 / 10000;
-          OUT_CV1(after_bend_pitch);
+          CV1Val = after_bend_pitch;
+          outCVs();
         }
         break;
     }
   }
-}
-
-// DAC_CV output 1
-void OUT_CV1(int cv)
-{
-  uint8_t hiVal = (cv >> 8) | 0x10;
-  uint8_t loVal = cv & 0xff;
-  cv &= 0x0FFF;
-  digitalWrite(SS_PIN, LOW);
-  SPI.transfer(hiVal);   // H0x30=OUTA/1x
-  SPI.transfer(loVal);
-  digitalWrite(SS_PIN, HIGH);
-//  SPI.endTransaction();
-//  delay(2);
-  delayMicroseconds(20);
-  digitalWrite(LDAC1_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(LDAC1_PIN, HIGH);
-}
-
-// DAC_MOD output 1
-void OUT_MOD1(int mod)
-{
-  mod &= 0x0FFF;
-  digitalWrite(SS_PIN, LOW);
-  SPI.transfer((mod >> 8) | 0x90);   // H0xB0=OUTB/1x
-  SPI.transfer(mod & 0xff);
-  digitalWrite(SS_PIN, HIGH);
-//  SPI.endTransaction();
-//  delay(2);
-  delayMicroseconds(20);
-  digitalWrite(LDAC1_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(LDAC1_PIN, HIGH);
-}
-
-// DAC_CV output 2
-void OUT_CV2(int cv)
-{
-  cv &= 0x0FFF;
-  digitalWrite(SS_PIN, LOW);
-  SPI.transfer((cv >> 8) | 0x10);   // H0x30=OUTA/1x
-  SPI.transfer(cv & 0xff);
-  digitalWrite(SS_PIN, HIGH);
-//  SPI.endTransaction();
-//  delay(2);
-  delayMicroseconds(20);
-  digitalWrite(LDAC2_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(LDAC2_PIN, HIGH);
-}
-
-// DAC_MOD output 2
-void OUT_MOD2(int mod)
-{
-  mod &= 0x0FFF;
-  digitalWrite(SS_PIN, LOW);
-  SPI.transfer((mod >> 8) | 0x90);   // H0xB0=OUTB/1x
-  SPI.transfer(mod & 0xff);
-  digitalWrite(SS_PIN, HIGH);
-//  SPI.endTransaction();
-//  delay(2);
-  digitalWrite(LDAC2_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(LDAC2_PIN, HIGH);
 }
 
 // All 4 DACs need to be written, since the two DAC parts share one single SPI SS line
