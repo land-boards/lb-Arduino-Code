@@ -262,6 +262,7 @@ void OUT_MOD2(int mod)
   digitalWrite(LDAC2_PIN, HIGH);
 }
 
+// All 4 DACs need to be written, since the two DAC parts share one single SPI SS line
 void outCVs()
 {
   uint8_t CV1High, CV1Low;
