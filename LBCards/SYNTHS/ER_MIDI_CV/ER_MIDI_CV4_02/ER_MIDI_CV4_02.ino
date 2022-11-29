@@ -61,9 +61,10 @@ byte clock_max = 24;//clock_max change by knob setting
 byte clock_on_time = 0;
 int clock_rate = 0;//knob CVin
 
-bool noteOnFlag;
-uint8_t noteOnVal;
-uint8_t noteOffVal;
+// Flags/values for note tracking
+bool noteOnFlag;    // True if note is being played
+uint8_t noteOnVal;  // MIDI note being played value 
+uint8_t noteOffVal; // Used to check the note being turned off is the right one
 
 // V/OCT LSB for DAC
 // ER-VCO-03 characteristics
@@ -210,6 +211,7 @@ void loop() {
           CV3Val = 0;
           CV4Val = 0;
           outCVs();
+          noteOnFlag = false;
         }
         break;
 
