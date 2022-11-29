@@ -10,6 +10,8 @@
 //  BASED ON HAGIWO MIDI to CV code
 //    https://note.com/solder_state/n/n17e028497eba
 //    Japanese to English via google translate
+//    Changed to play single note only
+//      First note to arrive plays until note is done
 //
 // Download steps
 //  Unplug MIDI in cable from front panel
@@ -51,13 +53,17 @@ uint16_t CV4Val = 0;
 // When multiple notes are ON and one of the notes is turned off,
 //   the last note ON does not disappear.
 // This needs improvement
-byte note_on_count = 0;
+//byte note_on_count = 0;
 unsigned long trigTimer = 0;  // Timer for gate output
 
 byte clock_count = 0;
 byte clock_max = 24;//clock_max change by knob setting
 byte clock_on_time = 0;
 int clock_rate = 0;//knob CVin
+
+bool noteOnFlag;
+uint8_t noteOnVal;
+uint8_t noteOffVal;
 
 // V/OCT LSB for DAC
 // ER-VCO-03 characteristics
@@ -75,57 +81,12 @@ int clock_rate = 0;//knob CVin
 // Steps are in 83.333 mV
 // Table counts up by integer steps - rounded 83.333 mV
 // Generated table in spreadsheet
-const long cv[60] = {
-  0,
-  83,
-  167,
-  250,
-  333,
-  417,
-  500,
-  583,
-  667,
-  750,
-  833,
-  917,
-  1000,
-  1083,
-  1167,
-  1250,
-  1333,
-  1417,
-  1500,
-  1583,
-  1667,
-  1750,
-  1833,
-  1917,
-  2000,
-  2083,
-  2167,
-  2250,
-  2333,
-  2417,
-  2500,
-  2583,
-  2667,
-  2750,
-  2833,
-  2917,
-  3000,
-  3083,
-  3167,
-  3250,
-  3333,
-  3417,
-  3500,
-  3583,
-  3667,
-  3750,
-  3833,
-  3917,
-  4000,
-  4083
+const long cv[50] = {
+   0,   83,  167,  250,  333,  417,  500,  583,  667,  750,  833,  917,
+1000, 1083, 1167, 1250, 1333, 1417, 1500, 1583, 1667, 1750, 1833, 1917,
+2000, 2083, 2167, 2250, 2333, 2417, 2500, 2583, 2667, 2750, 2833, 2917,
+3000, 3083, 3167, 3250, 3333, 3417, 3500, 3583, 3667, 3750, 3833, 3917,
+4000, 4083
 };
 
 // setup()
@@ -157,6 +118,8 @@ void setup() {
   CV4Val = 0;
   // Write out the initial CV values
   outCVs();
+  noteOnFlag = false;
+  noteOnVal = 0;
   delay(50);  // For grins
 }
 
@@ -184,14 +147,14 @@ void loop() {
   }
 
   //----------------------------- GATE signal ----------------------------
-  if (note_on_count != 0) {
-    if ((millis() - trigTimer <= 20) && (millis() - trigTimer > 10)) {
-      digitalWrite(GATE_PIN, LOW);
-    }
-    if ((trigTimer > 0) && (millis() - trigTimer > 20)) {
-      digitalWrite(GATE_PIN, HIGH);
-    }
-  }
+//  if (note_on_count != 0) {
+//    if ((millis() - trigTimer <= 20) && (millis() - trigTimer > 10)) {
+//      digitalWrite(GATE_PIN, LOW);
+//    }
+//    if ((trigTimer > 0) && (millis() - trigTimer > 20)) {
+//      digitalWrite(GATE_PIN, HIGH);
+//    }
+//  }
 
   //-----------------------------midi operation----------------------------
   if (MIDI.read()) {               // When a signal enters Channel 1
@@ -200,32 +163,41 @@ void loop() {
 
       // https://www.inspiredacoustics.com/en/MIDI_note_numbers_and_center_frequencies
       case midi::NoteOn://NoteOn After
-        note_on_count ++;
-        trigTimer = millis();
-        //        note_no = MIDI.getData1() - 21; //note number
-        // lowest note number on ER-VCO-03 w/ pot centered
-        note_no = MIDI.getData1() - 43;   // G2 is MIDI note 43
-
-        if (note_no < 0)
+        //note_on_count ++;
+        if (noteOnFlag == false)
         {
-          note_no = 0;
-        }
-        else if (note_no >= 50) // Just a bit more than 4 octaves A#6/Bb6 = Highest note
-        {
-          note_no = 50;
-        }
+          noteOnVal = MIDI.getData1();
 
-        CV1Val = cv[note_no];
-        outCVs();
-        digitalWrite(GATE_PIN, HIGH); //Gate to HIGH
+          trigTimer = millis();
+          //        note_no = MIDI.getData1() - 21; //note number
+          // lowest note number on ER-VCO-03 w/ pot centered
+          note_no = noteOnVal - 43;   // G2 is MIDI note 43
+
+          if (note_no < 0)
+          {
+            note_no = 0;
+          }
+          else if (note_no >= 49) // Just a bit more than 4 octaves A#6/Bb6 = Highest note
+          {
+            note_no = 49;
+          }
+
+          CV1Val = cv[note_no];
+          outCVs();
+          digitalWrite(GATE_PIN, HIGH); //Gate to HIGH
+          noteOnFlag = true;
+        }
         break;
 
       case midi::NoteOff://NoteOff After
-        note_on_count --;
-        if (note_on_count == 0)
+//        note_on_count --;
+        noteOffVal = MIDI.getData1();
+        if (noteOffVal == noteOnVal)
         {
           digitalWrite(GATE_PIN, LOW); //Gate to LOW
+          noteOnFlag = false;
         }
+
         break;
 
       case midi::ControlChange:
