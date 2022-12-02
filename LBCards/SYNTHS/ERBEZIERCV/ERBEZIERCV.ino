@@ -8,6 +8,10 @@
 #include  <avr/io.h>//for fast PWM
 
 // Pots and jacks analog pins
+// Freq pot and Freq CV get added together
+//    If using CV to control freq set pot to fully CCW
+// Curve pot and Curve CV get added together
+//    If using CV to control curve set pot to fully CCW
 #define RV1 0   // Freq Pot
 #define RV2 1   // Curve Pot
 #define RV3 2   // Deviation Pot
@@ -17,27 +21,27 @@
 #define J6 10   // Output
 
 // Global variables
-int   i = 0;
-int   start_val = 0;//Bezier Curve Starting Point
-int   end_val = 255;//Bezier Curve end Point
-int   dev, level, curve, freq;
-int   freq_rnd = 501;
-int   freq_dev = 40;
-long  timer = 0;//
-long  timer1 = 0;//analog read interval
-float x[256];//Bezier Curve Calculation Tables
-float old_wait = 0;
-float wait = 0;//Bezier curve x-axis (time)
-float bz_val = 0;//Bezier curve y-axis (voltage)
+uint16_t  i = 0;
+uint16_t  start_val = 0;            // Bezier Curve Starting Point
+uint16_t  end_val = 255;            // Bezier Curve end Point
+uint16_t  dev, level, curve, freq;
+uint16_t  freq_rnd = 501;
+uint16_t  freq_dev = 40;
+uint32_t  timer = 0;                //
+uint32_t  timer1 = 0;               // Analog read interval
+float     x[256];                   // Bezier Curve Calculation Tables
+float     old_wait = 0;
+float     wait = 0;                 // Bezier curve x-axis (time)
+float     bz_val = 0;               // Bezier curve y-axis (voltage)
 
 // Tables
-int   chance[32] = {5, 12, 21, 33, 48, 67, 90, 118, 151, 189, 232, 279, 331, 386, 443, 501, 559, 616, 671, 723, 770, 813, 851, 884, 912, 935, 954, 969, 981, 990, 997, 1000};//normal distribution table
-int   freq_err[32] = {8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 33, 36, 40, 46, 52, 58, 64, 70, 76, 82, 90, 98, 110, 122, 136, 148};//Frequency Variation
+uint16_t   chance[32] = {5, 12, 21, 33, 48, 67, 90, 118, 151, 189, 232, 279, 331, 386, 443, 501, 559, 616, 671, 723, 770, 813, 851, 884, 912, 935, 954, 969, 981, 990, 997, 1000};//normal distribution table
+uint16_t   freq_err[32] = {8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 33, 36, 40, 46, 52, 58, 64, 70, 76, 82, 90, 98, 110, 122, 136, 148};//Frequency Variation
 
 void setup()
 {
   // Preparation of Bezier Curve Calculation Tables
-  for (int j = 0; j < 255; j++)
+  for (uint16_t j = 0; j < 256; j++)
   {
     x[j] = j * 0.003921; // j/255
   }
@@ -52,6 +56,7 @@ void setup()
   delay(50);
 }
 
+// Loop forever
 void loop()
 {
   // Poll the controls @ 200 Hz sample rate
