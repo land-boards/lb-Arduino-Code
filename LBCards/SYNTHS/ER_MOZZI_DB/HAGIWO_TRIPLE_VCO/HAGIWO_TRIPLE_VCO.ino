@@ -1,6 +1,12 @@
-// hagiwo_triple
+// HAGIWO_TRIPLE_VCO
 // Modified from 
 //  https://github.com/Testbild-synth/HAGIWO_arduino_oscillator
+//  Eliminated Mode switch
+//  Eliminated gain pot
+//  Mode pot has 3 positions
+// Resources
+//  Sketch uses 26734 bytes (87%) of program storage space. Maximum is 30720 bytes.
+//  Global variables use 888 bytes (43%) of dynamic memory, leaving 1160 bytes for local variables. Maximum is 2048 bytes.
 
 #include <MozziGuts.h>
 #include <Oscil.h>
