@@ -1,4 +1,4 @@
-// Bezier curve random CV generator
+// ERBEZIERCV_R1 - Bezier curve random CV generator
 // https://note.com/solder_state/n/n39aacefd73a3
 //
 // Card Build
