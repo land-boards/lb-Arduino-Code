@@ -16,6 +16,8 @@
 // Download steps
 //  Unplug MIDI in cable from front panel
 //  Connect FTDI card with 1:1 cable
+//    Cable does not have +5V connected
+//    FTDI card is jumpered for 5V signal levels
 //  Download code in Arduino IDE
 //  Disconnect FTDI
 //  Connect MIDI in cable to front panel
@@ -206,11 +208,6 @@ void loop() {
         if ((changeVal == MIDI_CTRL_ALL_NOTES_OFF) || (changeVal == MIDI_CTRL_ALL_SOUND_OFF))
         {
           digitalWrite(GATE_PIN, LOW); //Gate to LOW
-          CV1Val = 0;
-          CV2Val = 0;
-          CV3Val = 0;
-          CV4Val = 0;
-          outCVs();
           noteOnFlag = false;
         }
         break;
