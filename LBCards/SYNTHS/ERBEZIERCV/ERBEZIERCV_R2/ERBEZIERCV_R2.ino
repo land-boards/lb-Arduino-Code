@@ -17,6 +17,7 @@
 #define RV2 1   // Curve Pot
 #define RV3 2   // Deviation Pot
 #define RV4 3   // Level Pot
+#define J3  A5  // GATE
 #define J4 6    // Freq CV
 #define J5 7    // Curve CV
 #define J6 10   // Output
@@ -28,8 +29,8 @@ uint16_t  end_val = 255;            // Bezier Curve end Point
 uint16_t  dev, level, curve, freq;
 uint16_t  freq_rnd = 501;
 uint16_t  freq_dev = 40;
-uint32_t  timer = 0;                //
-uint32_t  timer1 = 0;               // Analog read interval
+uint32_t  timer = 0;                // Overflows at 70 mins
+uint32_t  timer1 = 0;               // Analog read interval- overflows after approximately 50 days
 float     x[256];                   // Bezier Curve Calculation Tables
 float     old_wait = 0;
 float     wait = 0;                 // Bezier curve x-axis (time)
@@ -46,6 +47,8 @@ void setup()
   {
     x[j] = j * 0.003921; // j/255
   }
+  pinMode(J3, OUTPUT);
+  digitalWrite(J3, LOW);
   pinMode(J6, OUTPUT);  // CV PWM output
   timer = micros();
   timer1 = millis();
@@ -60,7 +63,13 @@ void setup()
 // Loop forever
 void loop()
 {
+  if (timer1 >  millis())
+    timer1 = millis();
+    
   // Poll the controls @ 200 Hz sample rate
+  if (micros() < timer) // Handle overflow
+    timer = micros();
+
   if (timer1 + 50 < millis())
   {
     freq = min(511, (analogRead(RV1) / 2 + analogRead(J4) / 2)) * freq_dev;
@@ -69,7 +78,19 @@ void loop()
     timer1 = millis();
   }
 
-  if (timer + (wait - old_wait)  <= micros())
+  if (micros() < timer) // Handle overflow
+    timer = micros();
+
+  if (timer + ((wait - old_wait)/2)  <= micros())
+  {
+    digitalWrite(J3, HIGH);
+  }
+  else
+  {
+    digitalWrite(J3, LOW);
+  }
+
+  if (timer + (wait - old_wait)  < micros())
   {
     old_wait = wait;
     i++;

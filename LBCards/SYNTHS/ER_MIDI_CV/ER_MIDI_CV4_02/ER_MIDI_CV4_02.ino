@@ -5,6 +5,7 @@
 //    http://land-boards.com/blwiki/index.php?title=ER-MIDI-CV4-02
 //    Arduino Pro Mini CPU, 5V, 16 MHz
 //    (2) MCP4822 Dual DACs
+//      0-4.096V swing is ~4 octaves
 //    Optisolated MIDI input on TRS connector
 //
 //  BASED ON HAGIWO MIDI to CV code
@@ -39,7 +40,7 @@ MIDI_CREATE_DEFAULT_INSTANCE(); // Enable USB-MIDI Library
 #define MIDI_CTRL_ALL_SOUND_OFF 120
 #define MIDI_CTRL_ALL_NOTES_OFF 123
 
-int note_no = 0;  //noteNo=21(A0)～60(A5) total 61, Because it takes a negative value int
+int note_no = 0;
 
 int bend_range = 0;
 int bend_msb = 0;
@@ -54,9 +55,8 @@ uint16_t CV4Val = 0;
 
 // When multiple notes are ON and one of the notes is turned off,
 //   the last note ON does not disappear.
-// This needs improvement
 //byte note_on_count = 0;
-unsigned long trigTimer = 0;  // Timer for gate output
+unsigned long gateTimer = 0;  // Timer for gate output
 
 byte clock_count = 0;
 byte clock_max = 24;//clock_max change by knob setting
@@ -151,10 +151,10 @@ void loop() {
 
   //----------------------------- GATE signal ----------------------------
 //  if (note_on_count != 0) {
-//    if ((millis() - trigTimer <= 20) && (millis() - trigTimer > 10)) {
+//    if ((millis() - gateTimer <= 20) && (millis() - gateTimer > 10)) {
 //      digitalWrite(GATE_PIN, LOW);
 //    }
-//    if ((trigTimer > 0) && (millis() - trigTimer > 20)) {
+//    if ((gateTimer > 0) && (millis() - gateTimer > 20)) {
 //      digitalWrite(GATE_PIN, HIGH);
 //    }
 //  }
@@ -171,7 +171,7 @@ void loop() {
         {
           noteOnVal = MIDI.getData1();
 
-          trigTimer = millis();
+          gateTimer = millis();
           //        note_no = MIDI.getData1() - 21; //note number
           // lowest note number on ER-VCO-03 w/ pot centered
           note_no = noteOnVal - 43;   // G2 is MIDI note 43
