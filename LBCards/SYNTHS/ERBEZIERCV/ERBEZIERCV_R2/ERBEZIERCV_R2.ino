@@ -1,4 +1,4 @@
-// ERBEZIERCV_R1 - Bezier curve random CV generator
+// ERBEZIERCV_R2 - Bezier curve random CV generator
 //  HAGIWO webpage
 //    https://note.com/solder_state/n/n39aacefd73a3
 //
