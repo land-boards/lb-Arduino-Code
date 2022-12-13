@@ -5,6 +5,7 @@
 //
 
 #include  <avr/io.h>    // Direct access to registers for clocking fast PWM
+#include  <math.h>
 
 // Pots
 //  RV1 = Notes rate (50 mS to 4 secs)
@@ -16,10 +17,10 @@
 //  J3 = Gate digital output
 //  J6 = Analog output
 
-#define RV1 0   // On time
-#define RV2 1   // Off time
-#define RV3 2   // Min output voltage
-#define RV4 3   // Max output voltage
+#define RV1 0   // Clock Rate
+#define RV2 1   // Clock Duty Cycle
+#define RV3 2   // Min CV output voltage
+#define RV4 3   // Max CV output voltage
 #define J3  A5  // GATE Digital output
 //#define J4 6    // 
 //#define J5 7    // 
@@ -43,11 +44,13 @@ void loop()
 {
 //  uint16_t pot;
   uint16_t gateFreq;
+  uint16_t gateFreq1;
   uint16_t gateOnTime;
   uint16_t gateOffTime;
   uint32_t outVal;
   uint16_t bottomVal;
   uint16_t topVal;
+  double   logPot;
 
   // Output voltage range
   bottomVal = analogRead(RV3)>>2;
@@ -61,7 +64,9 @@ void loop()
   // Handle GATE pulse
   delayMicroseconds(10);    // Time for VCO to settle
   digitalWrite(J3, HIGH);   // Drive GATE on
-  gateFreq = map(analogRead(RV1),0,1023,50,4000);  // 20mS to 4 secs
+  // Turn the linear pot used for speed into a log pot
+  logPot = int(1023.0 * log10(analogRead(RV1)) / log10(1023));
+  gateFreq = map(logPot,0,1023,4000,50);  // 20mS to 4 secs
   gateOnTime = map(analogRead(RV2),0,1023,0,gateFreq);
   gateOffTime = gateFreq - gateOnTime;
   delay(gateOnTime);
