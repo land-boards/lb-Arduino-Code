@@ -1,26 +1,30 @@
-// A basic everyday NeoPixel strip test program.
-
-// NEOPIXEL BEST PRACTICES for most reliable operation:
-// - Add 1000 uF CAPACITOR between NeoPixel strip's + and - connections.
-// - MINIMIZE WIRING LENGTH between microcontroller board and first pixel.
-// - NeoPixel strip's DATA-IN should pass through a 300-500 OHM RESISTOR.
-// - AVOID connecting NeoPixels on a LIVE CIRCUIT. If you must, ALWAYS
-//   connect GROUND (-) first, then +, then data.
-// - When using a 3.3V microcontroller with a 5V-powered NeoPixel strip,
-//   a LOGIC-LEVEL CONVERTER on the data line is STRONGLY RECOMMENDED.
-// (Skipping these may work OK on your workbench but can fail in the field)
+// ER_LEDS_V2 NeoPixel driving Eurorack LED strip
+// Pots
+//  RV1 - controls mode of operation
+//  RV2 - controls intensity of LEDs (most modes)
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
 #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
-// Which pin on the Arduino is connected to the NeoPixels?
-// On a Trinket or Gemma we suggest changing this to 1:
+// NeoPixel string pin
 #define LED_PIN    9
 
-// How many NeoPixels are attached to the Arduino?
+// 104 HP fits 17 LEDs
 #define LED_COUNT 17
+
+// Keep track of the current mode as a global
+uint8_t mode;
+
+// Add more modes here if desired
+enum modesList
+{
+  RGBSTRIP,
+  THEATRESTRIP,
+  THEATRERAINBOW,
+  ALLWHITE
+};
 
 // Declare our NeoPixel strip object:
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -28,31 +32,35 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 // Argument 2 = Arduino pin number (most are valid)
 // Argument 3 = Pixel type flags, add together as needed:
 //   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 
 
 // setup() function -- runs once at startup --------------------------------
 
-void setup() {
-  // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
-  // Any other board, you can remove this part (but no harm leaving it):
-#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
-  clock_prescale_set(clock_div_1);
-#endif
-  // END of Trinket-specific code.
-
+void setup() 
+{
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all pixels ASAP
   strip.setBrightness(50); // Set BRIGHTNESS to about 1/5 (max = 255)
+  mode = (analogRead(A0) >> 8) & 0x3;
 }
 
-uint8_t getMode()
+// setMode() - RV2 controls the mode with deadband
+// deadband eliminates pot noise
+// Range is in quarters of rotation, if different number of modes change constants
+#define DEADBAND 6
+void setMode()
 {
-  uint16_t mode = (analogRead(A0) >> 8) & 0x3;
-  return (mode);
+  uint16_t modeI = analogRead(A0);
+  if ((0 <= modeI) && (modeI < (256 - DEADBAND)))
+    mode = RGBSTRIP;
+  else if ((256 <= modeI) && (modeI < (512 - DEADBAND)))
+    mode = THEATRESTRIP;
+  else if ((512 <= modeI) && (modeI < (768 - DEADBAND)))
+    mode = THEATRERAINBOW;
+  else if ((768 <= modeI) && (modeI  < 1023))
+    mode = ALLWHITE;
+  return;
 }
 
 // loop() function -- runs repeatedly as long as board is on ---------------
@@ -62,33 +70,55 @@ void loop()
   uint16_t brt = analogRead(A1);
   brt >>= 2;
 
-  uint8_t mode = getMode();
   // Fill along the length of the strip in various colors...
-  if (mode == 0)
+  setMode();
+  if (mode == RGBSTRIP)
   {
+    brt = analogRead(A1);
+    brt >>= 2;
     colorWipe(strip.Color(brt,   0,   0), 50); // Red
-    if (mode == 0)
-      colorWipe(strip.Color(  0, brt,   0), 50); // Green
-    if (mode == 0)
-      colorWipe(strip.Color(  0,   0, brt), 50); // Blue
+    if (mode != RGBSTRIP)
+      return;
+    brt = analogRead(A1);
+    brt >>= 2;
+    colorWipe(strip.Color(  0, brt,   0), 50); // Green
+    if (mode != RGBSTRIP)
+      return;
+    brt = analogRead(A1);
+    brt >>= 2;
+    colorWipe(strip.Color(  0,   0, brt), 50); // Blue
   }
-  else if (mode == 1)
+  else if (mode == THEATRESTRIP)
   {
     // Do a theater marquee effect in various colors...
+    brt = analogRead(A1);
+    brt >>= 2;
     theaterChase(strip.Color(brt, brt, brt), 50); // White, half brightness
-    if (mode == 1)
-      theaterChase(strip.Color(brt,   0,   0), 50); // Red, half brightness
-    if (mode == 1)
-      theaterChase(strip.Color(  0, brt,   0), 50); // Green, half brightness
-    if (mode == 1)
-      theaterChase(strip.Color(  0,   0, brt), 50); // Blue, half brightness
+    setMode();
+    if (mode != THEATRESTRIP)
+      return;
+    brt = analogRead(A1);
+    brt >>= 2;
+    theaterChase(strip.Color(brt,   0,   0), 50); // Red, half brightness
+    setMode();
+    if (mode != THEATRESTRIP)
+      return;
+    brt = analogRead(A1);
+    brt >>= 2;
+    theaterChase(strip.Color(  0, brt,   0), 50); // Green, half brightness
+    setMode();
+    if (mode != THEATRESTRIP)
+      return;
+    brt = analogRead(A1);
+    brt >>= 2;
+    theaterChase(strip.Color(  0,   0, brt), 50); // Blue, half brightness
   }
-  else if (mode == 2)
+  else if (mode == THEATRERAINBOW)
   {
     rainbow(10);             // Flowing rainbow cycle along the whole strip
     theaterChaseRainbow(50); // Rainbow-enhanced theaterChase variant
   }
-  else if (mode == 3)
+  else if (mode == ALLWHITE)
   {
     allWhite(10, brt);
   }
@@ -96,6 +126,14 @@ void loop()
 
 
 // Some functions of our own for creating animated effects -----------------
+
+//enum modesList
+//{
+//  RGBSTRIP,
+//  THEATRESTRIP,
+//  THEATRERAINBOW,
+//  ALLWHITE
+//};
 
 // Fill strip pixels one after another with a color. Strip is NOT cleared
 // first; anything there will be covered pixel by pixel. Pass in color
@@ -107,7 +145,8 @@ void colorWipe(uint32_t color, int wait) {
     strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
     strip.show();                          //  Update strip to match
     delay(wait);                           //  Pause for a moment
-    if (getMode() != 0)
+    setMode();
+    if (mode != RGBSTRIP)
       return;
   }
 }
@@ -132,12 +171,14 @@ void theaterChase(uint32_t color, int wait)
     // 'c' counts up from 'b' to end of strip in steps of 3...
     for (int c = b; c < strip.numPixels(); c += 3) {
       strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      if (getMode() != 1)
+      setMode();
+      if (mode != THEATRESTRIP)
         return;
     }
     strip.show(); // Update strip with new contents
     delay(wait);  // Pause for a moment
-    if (getMode() != 1)
+    setMode();
+    if (mode != THEATRESTRIP)
       return;
   }
 }
@@ -159,7 +200,8 @@ void rainbow(int wait) {
     // strip.rainbow(firstPixelHue, 1, 255, 255, true);
     strip.show(); // Update strip with new contents
     delay(wait);  // Pause for a moment
-    if (getMode() != 2)
+    setMode();
+    if (mode != 2)
       return;
   }
 }
@@ -177,13 +219,15 @@ void theaterChaseRainbow(int wait) {
       int      hue   = firstPixelHue + c * 65536L / strip.numPixels();
       uint32_t color = strip.gamma32(strip.ColorHSV(hue)); // hue -> RGB
       strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      if (getMode() != 2)
+      setMode();
+      if (mode != THEATRERAINBOW)
         return;
     }
     strip.show();                // Update strip with new contents
     delay(wait);                 // Pause for a moment
     firstPixelHue += 65536 / 90; // One cycle of color wheel over 90 frames
-    if (getMode() != 2)
+    setMode();
+    if (mode != THEATRERAINBOW)
       return;
   }
 }
