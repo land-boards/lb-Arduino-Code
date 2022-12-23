@@ -34,7 +34,6 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 //   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 
-
 // setup() function -- runs once at startup --------------------------------
 
 void setup() 
@@ -45,11 +44,18 @@ void setup()
   mode = (analogRead(A0) >> 8) & 0x3;
 }
 
-// setMode() - RV2 controls the mode with deadband
+uint8_t getBrt()
+{
+  uint16_t brt = analogRead(A1);
+  brt >>= 2;
+  return (brt);
+}
+
+// getSetMode() - RV2 controls the mode with deadband
 // deadband eliminates pot noise
 // Range is in quarters of rotation, if different number of modes change constants
 #define DEADBAND 6
-void setMode()
+void getSetMode()
 {
   uint16_t modeI = analogRead(A0);
   if ((0 <= modeI) && (modeI < (256 - DEADBAND)))
@@ -67,50 +73,42 @@ void setMode()
 
 void loop()
 {
-  uint16_t brt = analogRead(A1);
-  brt >>= 2;
+  uint16_t brt = getBrt();
 
   // Fill along the length of the strip in various colors...
-  setMode();
+  getSetMode();
   if (mode == RGBSTRIP)
   {
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     colorWipe(strip.Color(brt,   0,   0), 50); // Red
     if (mode != RGBSTRIP)
       return;
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     colorWipe(strip.Color(  0, brt,   0), 50); // Green
     if (mode != RGBSTRIP)
       return;
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     colorWipe(strip.Color(  0,   0, brt), 50); // Blue
   }
   else if (mode == THEATRESTRIP)
   {
     // Do a theater marquee effect in various colors...
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     theaterChase(strip.Color(brt, brt, brt), 50); // White, half brightness
-    setMode();
+    getSetMode();
     if (mode != THEATRESTRIP)
       return;
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     theaterChase(strip.Color(brt,   0,   0), 50); // Red, half brightness
-    setMode();
+    getSetMode();
     if (mode != THEATRESTRIP)
       return;
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     theaterChase(strip.Color(  0, brt,   0), 50); // Green, half brightness
-    setMode();
+    getSetMode();
     if (mode != THEATRESTRIP)
       return;
-    brt = analogRead(A1);
-    brt >>= 2;
+    brt = getBrt();
     theaterChase(strip.Color(  0,   0, brt), 50); // Blue, half brightness
   }
   else if (mode == THEATRERAINBOW)
@@ -127,25 +125,18 @@ void loop()
 
 // Some functions of our own for creating animated effects -----------------
 
-//enum modesList
-//{
-//  RGBSTRIP,
-//  THEATRESTRIP,
-//  THEATRERAINBOW,
-//  ALLWHITE
-//};
-
 // Fill strip pixels one after another with a color. Strip is NOT cleared
 // first; anything there will be covered pixel by pixel. Pass in color
 // (as a single 'packed' 32-bit value, which you can get by calling
 // strip.Color(red, green, blue) as shown in the loop() function above),
 // and a delay time (in milliseconds) between pixels.
-void colorWipe(uint32_t color, int wait) {
+void colorWipe(uint32_t color, int wait)
+{
   for (int i = 0; i < strip.numPixels(); i++) { // For each pixel in strip...
     strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
     strip.show();                          //  Update strip to match
     delay(wait);                           //  Pause for a moment
-    setMode();
+    getSetMode();
     if (mode != RGBSTRIP)
       return;
   }
@@ -171,13 +162,13 @@ void theaterChase(uint32_t color, int wait)
     // 'c' counts up from 'b' to end of strip in steps of 3...
     for (int c = b; c < strip.numPixels(); c += 3) {
       strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      setMode();
+      getSetMode();
       if (mode != THEATRESTRIP)
         return;
     }
     strip.show(); // Update strip with new contents
     delay(wait);  // Pause for a moment
-    setMode();
+    getSetMode();
     if (mode != THEATRESTRIP)
       return;
   }
@@ -200,7 +191,7 @@ void rainbow(int wait) {
     // strip.rainbow(firstPixelHue, 1, 255, 255, true);
     strip.show(); // Update strip with new contents
     delay(wait);  // Pause for a moment
-    setMode();
+    getSetMode();
     if (mode != 2)
       return;
   }
@@ -219,14 +210,14 @@ void theaterChaseRainbow(int wait) {
       int      hue   = firstPixelHue + c * 65536L / strip.numPixels();
       uint32_t color = strip.gamma32(strip.ColorHSV(hue)); // hue -> RGB
       strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      setMode();
+      getSetMode();
       if (mode != THEATRERAINBOW)
         return;
     }
     strip.show();                // Update strip with new contents
     delay(wait);                 // Pause for a moment
     firstPixelHue += 65536 / 90; // One cycle of color wheel over 90 frames
-    setMode();
+    getSetMode();
     if (mode != THEATRERAINBOW)
       return;
   }
