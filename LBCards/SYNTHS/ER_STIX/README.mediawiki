@@ -1,5 +1,7 @@
 [http://land-boards.com/blwiki/index.php?title=ER-STIX ER-STIX Wiki page]
 
+<IMG SRC="http://land-boards.com/blwiki/images/9/9c/ER-STIX_P1080921_720PX.jpg"></IMG>
+
 == Features ==
 
 * Similar to [https://mutable-instruments.net/modules/branches/manual/ Mutable Instruments Branches]
