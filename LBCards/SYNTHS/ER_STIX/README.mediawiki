@@ -1,2 +1,22 @@
 [http://land-boards.com/blwiki/index.php?title=ER-STIX ER-STIX Wiki page]
 
+== Features ==
+
+* Similar to [https://mutable-instruments.net/modules/branches/manual/ Mutable Instruments Branches]
+** Dual Bernoulli Gate
+* Differences vs Braids
+** Only has 1 GATE input
+** No push buttons
+** 0-5V input/outputs
+* Built on [[ER-PROTO-02]]
+* [[Arduino Pro Mini]]
+* 10-pin Eurorack power
+** Uses +12V only
+
+=== Operation ===
+
+* Receives single Gate on J1
+* RV1 controls OUT 1
+* RV2 controls OUT 2
+* RV3 is mode for OUT 1
+* RV4 is mode for OUT 2
