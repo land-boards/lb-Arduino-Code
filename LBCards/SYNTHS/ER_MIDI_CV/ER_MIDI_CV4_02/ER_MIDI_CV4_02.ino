@@ -160,9 +160,13 @@ void loop() {
 //  }
 
   //-----------------------------midi operation----------------------------
-  if (MIDI.read()) {               // When a signal enters Channel 1
+  if (MIDI.read())      // When a signal enters Channel 1
+  {
+    // http://fortyseveneffects.github.io/arduino_midi_library/a00033.html#gad58d4850a613045caeb9499dd05615ef
     MIDI.setInputChannel(1);
-    switch (MIDI.getType()) {
+    // http://fortyseveneffects.github.io/arduino_midi_library/a00033.html#ga751630ff3b0829f0de19ea724999df25
+    switch (MIDI.getType())
+    {
 
       // https://www.inspiredacoustics.com/en/MIDI_note_numbers_and_center_frequencies
       case midi::NoteOn://NoteOn After
