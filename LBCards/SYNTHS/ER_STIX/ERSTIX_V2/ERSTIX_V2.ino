@@ -11,10 +11,10 @@
     CW = Always on OUT1B.
     Middle = 50% odds.
   RV3 = Mode OUT1
-    7-12 o'clock = Normal Mode
-    12-5 o'clock = Drive both OUT1A and OUT1B
+    7-12 o'clock = Normal Mode drives only OUT1A or OUT1B
+    12-5 o'clock = Drives both OUT1A and OUT1B
   RV4 = Mode OUT2
-    7-12 o'clock = Normal Mode
+    7-12 o'clock = Normal Mode drives only OUT2A or OUT2B
     12-5 o'clock = Drive both OUT2A and OUT2B
 */
 
@@ -91,6 +91,10 @@ uint8_t getMode(uint8_t port)
   uint16_t mode = analogRead(port);
   mode >>= 9;
   mode &= 0x1;
+#ifdef DEBUG_SERIAL
+  Serial.print("getMode() - Mode = ");
+  Serial.println(mode);
+#endif
   return (mode);
 }
 
@@ -127,9 +131,9 @@ void loop()
   p2 = calculateProbability(RANDOM_POT_2);
   // print out the value you read:
 #ifdef DEBUG_SERIAL
-  Serial.print(RV1val);
+  Serial.print(p1);
   Serial.print(", ");
-  Serial.println(RV2val);
+  Serial.println(p2);
 #endif
   waitForGATEEdge();
   if (mode1 == 0)
