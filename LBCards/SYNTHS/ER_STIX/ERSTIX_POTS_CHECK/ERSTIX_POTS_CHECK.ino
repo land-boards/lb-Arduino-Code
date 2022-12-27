@@ -11,6 +11,8 @@ uint8_t state = INTLB;
 
 #define RANDOM_POT_1 A1
 #define RANDOM_POT_2 A2
+#define MODE1 A0
+#define MODE2 A3
 #define GATE_IN 3
 #define LED2A 4
 #define LED2B 5
@@ -61,7 +63,13 @@ void loop()
   // read the inputs on analog pins 1,2
   int RV1val = analogRead(RANDOM_POT_1);
   int RV2val = analogRead(RANDOM_POT_2);
+  int mode1 = analogRead(MODE1);
+  int mode2 = analogRead(MODE2);
   // print out the value you read:
+  Serial.print(mode1);
+  Serial.print(", ");
+  Serial.print(mode2);
+  Serial.print(", ");
   Serial.print(RV1val);
   Serial.print(", ");
   Serial.println(RV2val);
