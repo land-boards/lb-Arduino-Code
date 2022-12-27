@@ -4,7 +4,9 @@
 
 * Similar to [https://mutable-instruments.net/modules/branches/manual/ Mutable Instruments Branches]
 ** Dual Bernoulli Gate
-* Differences vs Braids
+* 4 output jacks
+** OUT1A/OUT1B and OUT2A/OUT2B
+* Differences vs Branches
 ** Only has 1 GATE input
 ** No push buttons
 ** 0-5V input/outputs
