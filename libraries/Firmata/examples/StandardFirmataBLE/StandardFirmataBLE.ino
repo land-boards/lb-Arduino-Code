@@ -219,6 +219,7 @@ void readAndReportData(byte address, int theRegister, byte numBytes, byte stopTX
     Firmata.sendString("I2C: Too many bytes received");
   } else if (numBytes > Wire.available()) {
     Firmata.sendString("I2C: Too few bytes received");
+    numBytes = Wire.available();
   }
 
   i2cRxData[0] = address;
@@ -770,6 +771,10 @@ void setup()
 
   stream.setLocalName(FIRMATA_BLE_LOCAL_NAME);
 
+#ifdef FIRMATA_BLE_ADVERTISING_INTERVAL
+  // set the BLE advertising interval
+  stream.setAdvertisingInterval(FIRMATA_BLE_ADVERTISING_INTERVAL);
+#endif
   // set the BLE connection interval - this is the fastest interval you can read inputs
   stream.setConnectionInterval(FIRMATA_BLE_MIN_INTERVAL, FIRMATA_BLE_MAX_INTERVAL);
   // set how often the BLE TX buffer is flushed (if not full)

@@ -1,7 +1,8 @@
 /*
-  ERSTIX_V2
-  Euclidian Gate Generator.
+  ERSTIX_VD & 0x08) == 0x08);Generator.
+  Similar in concept to Mutable Instrumentd Branches.
   J1 is GATE in.
+  J2 is p() OUT1A/N outputs 
   RV1 controls (OUT 1).
     CCW = Always on OUT1A.
     CW = Always on OUT1B.
@@ -64,28 +65,28 @@ void setup() {
 
 }
 
-//#define LED1A 10
-//#define LED1B 9
-//#define LED2A 4
-//#define LED2B 5
-//#define NORM 7
-//#define OUT1A 11
-//#define OUT1B 8
-//#define OUT2A 12
-//#define OUT2B 6
-
+// Wait for GATE active edge
 // GATE is active low
+// GATE is on Pin 3 in D register 
 void waitForGATEEdge()
 {
 #ifdef DEBUG_SERIAL
   Serial.println("Wait for GATE rising edge");
 #endif
-  while (digitalRead(GATE_IN) == LOW);
-  while (digitalRead(GATE_IN) == HIGH);
+//  while (digitalRead(GATE_IN) == LOW);
+//  while (digitalRead(GATE_IN) == HIGH);
+  while ((PIND & 0x08) == 0x00);
+  while ((PIND & 0x08) == 0x08);
+#ifdef DEBUG_SERIAL
+  Serial.println("Got GATE rising edge");
+#endif
 }
 
-#define DEADBAND 10
+#define DEADBAND 10     // POT deadband to eliminate noise at end of pots
 
+// Read the Mode pot(s)
+// Allows a pot to be used as a mode select
+// Returns mode
 uint8_t getMode(uint8_t port)
 {
   uint16_t mode = analogRead(port);
@@ -99,16 +100,19 @@ uint8_t getMode(uint8_t port)
 }
 
 // Calculate the probability based in RV1, RV2 Pots (or J2 input for OUT 1)
+// Returns true or false
 bool calculateProbability(uint8_t port)
 {
   uint16_t val;
   uint16_t randomNum;
   bool prob;
   int RVval = analogRead(port);
-  if (RVval < DEADBAND)
-    RVval = DEADBAND;
-  else if (RVval > 1023 - DEADBAND)
-    RVval = 1023 - DEADBAND;
+  // adjust for end bands
+  RVval = constrain(RVval,DEADBAND,1023-DEADBAND);
+//  if (RVval < DEADBAND)
+//    RVval = DEADBAND;
+//  else if (RVval > 1023 - DEADBAND)
+//    RVval = 1023 - DEADBAND;
   val = map(RVval, DEADBAND, 1023 - DEADBAND, 0, 99);
   randomNum = random(100);
   if (val <= randomNum)
@@ -129,7 +133,7 @@ void loop()
   // Calculate p1, p2
   p1 = calculateProbability(RANDOM_POT_1);
   p2 = calculateProbability(RANDOM_POT_2);
-  // print out the value you read:
+  // optionally print out the value you read
 #ifdef DEBUG_SERIAL
   Serial.print(p1);
   Serial.print(", ");
@@ -141,11 +145,9 @@ void loop()
     if (p1)
     {
       digitalWrite(OUT1A, HIGH);
-      digitalWrite(OUT1B, LOW);
     }
     else
     {
-      digitalWrite(OUT1A, LOW);
       digitalWrite(OUT1B, HIGH);
     }
   }
@@ -162,11 +164,9 @@ void loop()
     if (p2)
     {
       digitalWrite(OUT2A, HIGH);
-      digitalWrite(OUT2B, LOW);
     }
     else
     {
-      digitalWrite(OUT2A, LOW);
       digitalWrite(OUT2B, HIGH);
     }
   }

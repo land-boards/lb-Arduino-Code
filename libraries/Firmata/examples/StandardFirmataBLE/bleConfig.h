@@ -1,15 +1,15 @@
 /*==================================================================================================
  * BLE CONFIGURATION
  *
- * If you are using an Arduino 101, you do not need to make any changes to this file (unless you
- * need a unique ble local name (see below). If you are using another supported BLE board or shield,
- * follow the instructions for the specific board or shield below.
- *
- * Make sure you have the Intel Curie Boards package v2.0.2 or higher installed via the Arduino
- * Boards Manager.
+ * If you are using a device supported by the ArduinoBLE library or an Arduino 101, you do not need
+ * to make any changes to this file (unless you need a unique ble local name (see below)). If you
+ * are using another supported BLE board or shield, follow the instructions for the specific board
+ * or shield below.
  *
  * Supported boards and shields:
- * - Arduino 101 (recommended)
+ * - Devices supported by the ArduinoBLE library, including the Arduino MKR WiFi 1010,
+ *   Arduino UNO WiFi Rev.2, Arduino Nano 33 IoT, and Arduino Nano 33 BLE
+ * - Arduino 101
  * - RedBearLab BLE Shield (v2)  ** to be verified **
  * - RedBearLab BLE Nano ** works with modifications **
  * - Adafruit Feather M0 Bluefruit LE
@@ -19,6 +19,25 @@
 // change this to a unique name per board if running StandardFirmataBLE on multiple boards
 // within the same physical space
 #define FIRMATA_BLE_LOCAL_NAME "FIRMATA"
+
+/*
+ * ArduinoBLE devices
+ *
+ * Be sure to install the ArduinoBLE library via the Arduino Library Manager.
+ *
+ */
+#if defined(ARDUINO_SAMD_MKRWIFI1010) || defined(ARDUINO_AVR_UNO_WIFI_REV2) || defined(ARDUINO_SAMD_NANO_33_IOT) || defined(ARDUINO_ARDUINO_NANO33BLE)
+#define ARDUINO_BLE
+
+// Value is specified in units of 0.625 ms
+#define FIRMATA_BLE_ADVERTISING_INTERVAL 32 // 20ms (20 / 0.625)
+
+// These values are specified in units of 1.25 ms and must be between
+// 0x0006 (7.5ms) and 0x0c80 (4s).
+#define FIRMATA_BLE_MIN_INTERVAL 0x000c // 15ms (15 / 1.25)
+#define FIRMATA_BLE_MAX_INTERVAL 0x0018 // 30ms (30 / 1.25)
+#endif
+
 
 /*
  * Arduino 101
@@ -67,16 +86,19 @@
  * with the nRF51822 via SPI (e.g. Bluefruit LE SPI Friend, Bluefruit LE Shield), although
  * you may need to change the values of BLE_SPI_CS, BLE_SPI_IRQ, and/or BLE_SPI_RST below.
  *
- * You will need to install a lightly-modified version of the Adafruit BluefruitLE nRF51
- * package, available at:
- * https://github.com/cstawarz/Adafruit_BluefruitLE_nRF51/archive/firmata_fixes.zip
+ * You will need to install the latest version of the Adafruit BluefruitLE nRF51 package,
+ * available at:
+ * https://github.com/adafruit/Adafruit_BluefruitLE_nRF51/archive/master.zip
  */
 //#define BLUEFRUIT_LE_SPI
 
 #ifdef BLUEFRUIT_LE_SPI
+// Value must be between 20ms and 10.24s
+#define FIRMATA_BLE_ADVERTISING_INTERVAL 20 // 20ms
+
 // Both values must be between 10ms and 4s
-#define FIRMATA_BLE_MIN_INTERVAL 10 // 10ms
-#define FIRMATA_BLE_MAX_INTERVAL 20 // 20ms
+#define FIRMATA_BLE_MIN_INTERVAL 15 // 15ms
+#define FIRMATA_BLE_MAX_INTERVAL 30 // 30ms
 
 #define BLE_SPI_CS   8
 #define BLE_SPI_IRQ  7
@@ -103,6 +125,12 @@
 /*==================================================================================================
  * END BLE CONFIGURATION - you should not need to change anything below this line
  *================================================================================================*/
+
+#ifdef ARDUINO_BLE
+#include "utility/ArduinoBLE_UART_Stream.h"
+ArduinoBLE_UART_Stream stream;
+#endif
+
 
 #ifdef _VARIANT_ARDUINO_101_X_
 #include "utility/BLEStream.h"

@@ -19,7 +19,7 @@ Firmata is a protocol for communicating with microcontrollers from software on a
 
 ## Usage
 
-There are two main models of usage of Firmata. In one model, the author of the Arduino sketch uses the various methods provided by the Firmata library to selectively send and receive data between the Arduino device and the software running on the host computer. For example, a user can send analog data to the host using ``` Firmata.sendAnalog(analogPin, analogRead(analogPin)) ``` or send data packed in a string using ``` Firmata.sendString(stringToSend) ```. See File -> Examples -> Firmata -> AnalogFirmata & EchoString respectively for examples.
+There are two main models of usage of Firmata. In one model, the author of the Arduino sketch uses the various methods provided by the Firmata library to selectively send and receive data between the Arduino device and the software running on the host computer. For example, a user can send analog data to the host using ``` Firmata.sendAnalog(analogPin, analogRead(analogPin)) ``` or send data packed in a string using ``` Firmata.sendString(stringToSend) ```. See File -> Examples -> Firmata -> AnalogFirmata & EchoString respectively for examples. Browse the API documentation [here](https://firmata.github.io/arduino/html/index.html).
 
 The second and more common model is to load a general purpose sketch called StandardFirmata (or one of the variants such as StandardFirmataPlus or StandardFirmataEthernet depending on your needs) on the Arduino board and then use the host computer exclusively to interact with the Arduino board. StandardFirmata is located in the Arduino IDE in File -> Examples -> Firmata.
 
@@ -28,10 +28,9 @@ Most of the time you will be interacting with Arduino with a client library on t
 
 * processing
   * [https://github.com/firmata/processing](https://github.com/firmata/processing)
-  * [http://funnel.cc](http://funnel.cc)
 * python
-  * [https://github.com/MrYsLab/pymata-aio](https://github.com/MrYsLab/pymata-aio)
-  * [https://github.com/MrYsLab/PyMata]([https://github.com/MrYsLab/PyMata)
+  * [https://github.com/MrYsLab/pymata4](https://github.com/MrYsLab/pymata4)
+  * [https://github.com/MrYsLab/pymata-express](https://github.com/MrYsLab/pymata-express)
   * [https://github.com/tino/pyFirmata](https://github.com/tino/pyFirmata)
   * [https://github.com/lupeke/python-firmata](https://github.com/lupeke/python-firmata)
   * [https://github.com/firmata/pyduino](https://github.com/firmata/pyduino)
@@ -49,6 +48,7 @@ Most of the time you will be interacting with Arduino with a client library on t
   * [https://github.com/firmata/firmata.js](https://github.com/firmata/firmata.js)
   * [https://github.com/rwldrn/johnny-five](https://github.com/rwldrn/johnny-five)
   * [http://breakoutjs.com](http://breakoutjs.com)
+  * [https://nodered.org/docs/faq/interacting-with-arduino#firmata](https://nodered.org/docs/faq/interacting-with-arduino#firmata)
 * java
   * [https://github.com/kurbatov/firmata4j](https://github.com/kurbatov/firmata4j)
   * [https://github.com/4ntoine/Firmata](https://github.com/4ntoine/Firmata)
@@ -59,8 +59,10 @@ Most of the time you will be interacting with Arduino with a client library on t
 * Flash/AS3
   * [http://funnel.cc](http://funnel.cc)
   * [http://code.google.com/p/as3glue/](http://code.google.com/p/as3glue/)
+* Pharo
+  * [https://github.com/pharo-iot/Firmata](https://github.com/pharo-iot/Firmata)
 * PHP
-  * [https://github.com/ThomasWeinert/carica-firmata]()
+  * [https://github.com/ThomasWeinert/carica-firmata](https://github.com/ThomasWeinert/carica-firmata)
   * [https://github.com/oasynnoum/phpmake_firmata](https://github.com/oasynnoum/phpmake_firmata)
 * Haskell
   * [http://hackage.haskell.org/package/hArduino](http://hackage.haskell.org/package/hArduino)
@@ -70,6 +72,7 @@ Most of the time you will be interacting with Arduino with a client library on t
   * [https://github.com/nfrancois/firmata](https://github.com/nfrancois/firmata)
 * Max/MSP
   * [http://www.maxuino.org/](http://www.maxuino.org/)
+  * [https://github.com/NullMember/MaxFirmata](https://github.com/NullMember/MaxFirmata)
 * Elixir
   * [https://github.com/kfatehi/firmata](https://github.com/kfatehi/firmata)
 * Modelica
@@ -82,6 +85,10 @@ Most of the time you will be interacting with Arduino with a client library on t
   * [http://openframeworks.cc/documentation/communication/ofArduino/](http://openframeworks.cc/documentation/communication/ofArduino/)
 * Rust
   * [https://github.com/zankich/rust-firmata](https://github.com/zankich/rust-firmata)
+* Pure Data
+  * [https://github.com/NullMember/PDFirmata](https://github.com/NullMember/PDFirmata)
+* Common Lisp
+  * [https://github.com/cjfuller/cl-firmata](https://github.com/cjfuller/cl-firmata)
 
 Note: The above libraries may support various versions of the Firmata protocol and therefore may not support all features of the latest Firmata spec nor all Arduino and Arduino-compatible boards. Refer to the respective projects for details.
 

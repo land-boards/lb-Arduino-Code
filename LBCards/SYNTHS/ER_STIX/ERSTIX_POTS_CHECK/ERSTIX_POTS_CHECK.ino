@@ -1,9 +1,13 @@
 /*
   ERSTIX_POTS_CHECK
-  Read the Pots and digital outputs on the ER-TWIGS card.
-  Prints the values that were read to the monitor.
+  Read the (4) Pots and write the (4) digital outputs on the ER-TWIGS card.
+  Prints the Analog values that were read to the monitor.
 */
 
+// State of the RV1/J2 source
+// Can test the internal path RV1 to J2 with not cable installed
+// Test the J2 path by installing external cable OUT1A to J2
+// Detects change and prints message
 #define INTLB 1
 #define EXTLB 2
 
