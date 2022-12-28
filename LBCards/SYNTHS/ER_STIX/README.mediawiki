@@ -39,3 +39,24 @@
 * RV4 - OUT 2 Mode
 ** 7-12 o'clock = Normal Mode drives only OU21A or OUT2B
 ** 12-5 o'clock = Drives both OUT2A and OUT2B
+
+== Software ==
+
+* Several softwares
+
+=== ERSTIX_POTS_CHECK ===
+
+* Used for testing the hardware works
+* Reads (4) pots and prints values to monitor, write values to serial
+* Toggles GATE outs - one at a time
+* Tests RV1/J2 loopback
+
+=== ERSTIX_V1 ===
+
+* 2 pots, one for OUT1A/B, other for OUT2A/2B
+
+=== ERSTIX_V2 ===
+
+* Adds (2) mode control knobs
+* 7 o-clock = 12 o'clock = Normal mode
+* 12 o-clock - 5 o=clock = Send Outputs on both OUTxA and OUTxB
