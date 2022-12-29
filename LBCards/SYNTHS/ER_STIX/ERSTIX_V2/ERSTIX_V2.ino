@@ -2,7 +2,7 @@
   ERSTIX_VD & 0x08) == 0x08);Generator.
   Similar in concept to Mutable Instrumentd Branches.
   J1 is GATE in.
-  J2 is p() OUT1A/N outputs 
+  J2 is p() OUT1A/N outputs
   RV1 controls (OUT 1).
     CCW = Always on OUT1A.
     CW = Always on OUT1B.
@@ -22,7 +22,7 @@
 #define INTLB 1
 #define EXTLB 2
 
-uint8_t state = INTLB;
+//uint8_t state = INTLB;
 
 #define RANDOM_POT_1 A1
 #define RANDOM_POT_2 A2
@@ -31,13 +31,13 @@ uint8_t state = INTLB;
 #define GATE_IN 3
 #define LED2A 4
 #define LED2B 5
-#define OUT2B 6
 #define NORM 7
-#define OUT1B 8
 #define LED1B 9
 #define LED1A 10
 #define OUT1A 11
+#define OUT1B 8
 #define OUT2A 12
+#define OUT2B 6
 
 // Comment out one of the two next lines for Serial debug messages
 //#define DEBUG_SERIAL
@@ -65,18 +65,18 @@ void setup() {
 
 }
 
+#define GATE_PIN_BIT 0x08
+
 // Wait for GATE active edge
 // GATE is active low
-// GATE is on Pin 3 in D register 
+// GATE is on Pin 3 in D register
 void waitForGATEEdge()
 {
 #ifdef DEBUG_SERIAL
   Serial.println("Wait for GATE rising edge");
 #endif
-//  while (digitalRead(GATE_IN) == LOW);
-//  while (digitalRead(GATE_IN) == HIGH);
-  while ((PIND & 0x08) == 0x00);
-  while ((PIND & 0x08) == 0x08);
+  while ((PIND & GATE_PIN_BIT) == 0x00);    // Directly read port pin for low latency
+  while ((PIND & GATE_PIN_BIT) == 0x08);
 #ifdef DEBUG_SERIAL
   Serial.println("Got GATE rising edge");
 #endif
@@ -108,18 +108,18 @@ bool calculateProbability(uint8_t port)
   bool prob;
   int RVval = analogRead(port);
   // adjust for end bands
-  RVval = constrain(RVval,DEADBAND,1023-DEADBAND);
-//  if (RVval < DEADBAND)
-//    RVval = DEADBAND;
-//  else if (RVval > 1023 - DEADBAND)
-//    RVval = 1023 - DEADBAND;
+  RVval = constrain(RVval, DEADBAND, 1023 - DEADBAND);
+  //  if (RVval < DEADBAND)
+  //    RVval = DEADBAND;
+  //  else if (RVval > 1023 - DEADBAND)
+  //    RVval = 1023 - DEADBAND;
   val = map(RVval, DEADBAND, 1023 - DEADBAND, 0, 99);
   randomNum = random(100);
   if (val <= randomNum)
     prob = true;
   else
     prob = false;
-  return(prob);
+  return (prob);
 }
 
 // the loop routine runs over and over again forever:
@@ -139,77 +139,76 @@ void loop()
   Serial.print(", ");
   Serial.println(p2);
 #endif
-  waitForGATEEdge();
+  //  waitForGATEEdge();
+  // Wait for GATE edge
+  while ((PIND & GATE_PIN_BIT) == 0x00);    // Directly read port pin for low latency
+  while ((PIND & GATE_PIN_BIT) == 0x08);
+  //#define OUT1A 11    // PORTB 0x08
+  //#define OUT1B 8     // PORTB 0x01
   if (mode1 == 0)
   {
     if (p1)
     {
-      digitalWrite(OUT1A, HIGH);
+      PORTB = PORTB | 0x08;
     }
     else
     {
-      digitalWrite(OUT1B, HIGH);
+      PORTB = PORTB | 0X01;
     }
   }
   else if (mode1 == 1)
   {
     if (p1)
     {
-      digitalWrite(OUT1A, HIGH);
-      digitalWrite(OUT1B, HIGH);
+      PORTB = PORTB | 0X09;
     }
   }
+  //#define OUT2A 12    // PORTB 0x10
+  //#define OUT2B 6     // PORTD 0x40
   if (mode2 == 0)
   {
     if (p2)
     {
-      digitalWrite(OUT2A, HIGH);
+      PORTB = PORTB | 0X10;
     }
     else
     {
-      digitalWrite(OUT2B, HIGH);
+      PORTD = PORTD | 0X40;
     }
   }
   else if (mode2 == 1)
   {
     if (p2)
     {
-      digitalWrite(OUT2A, HIGH);
-      digitalWrite(OUT2B, HIGH);
+      PORTB = PORTB | 0X10;
+      PORTD = PORTD | 0X40;
     }
   }
   // Handle LEDs after setting GATEs for lowest latency
   if (p1)
   {
     digitalWrite(LED1A, HIGH);
-    digitalWrite(LED1B, LOW);
   }
   else
   {
-    digitalWrite(LED1A, LOW);
     digitalWrite(LED1B, HIGH);
   }
   if (p2)
   {
     digitalWrite(LED2A, HIGH);
-    digitalWrite(LED2B, LOW);
   }
   else
   {
-    digitalWrite(LED2A, LOW);
     digitalWrite(LED2B, HIGH);
   }
   // Leave GATES on until input gate is removed
-  while (digitalRead(GATE_IN) == LOW);
-  // Turn off GATEs
-  digitalWrite(OUT1A, LOW);
-  digitalWrite(OUT1B, LOW);
-  digitalWrite(OUT2A, LOW);
-  digitalWrite(OUT2B, LOW);
+  while ((PIND & GATE_PIN_BIT) == 0x00);
+  // Turn off OUT1, OUT2 GATEs
+  PORTB = PORTB & 0xe6;
+  PORTD = PORTD & 0xbf;
   // Turn off LEDs
   digitalWrite(LED1A, LOW);
   digitalWrite(LED1B, LOW);
   digitalWrite(LED2A, LOW);
   digitalWrite(LED2B, LOW);
-
 }
