@@ -1,3 +1,72 @@
 = Eurorack MIDI to CV Controller = 
 
 <img src="http://land-boards.com/blwiki/images/a/a5/ER-MIDI-CV4-02_P1080867-720px.jpg"></img>
+
+== Features ==
+
+* Eurorack 6HP, 3U module
+* Three card stack-up
+** Front Panel card
+** Controls card
+*** 9 Jacks, 1 pot
+** Processor card
+* [http://land-boards.com/blwiki/index.php?title=Arduino_Pro_Mini Arduino Pro Mini]
+** 16 MHz
+** 5V
+** Programmed via Serial
+* MIDI In
+** TRS Type A jack MIDI In
+** USB MIDI In if external FTDI card/cable
+* (4) 0-4.096V Analog CV outs
+** 4 octaves
+** [https://www.mouser.com/ProductDetail/Microchip-Technology-Atmel/MCP4822-E-P?qs=sGAEpiMZZMtgJDuTUz7Xu5a0A%252BlHhkxt3QSpqvc4zyk%3D MCP4822 12-bit D/A] - SPI Interface
+*** [https://www.mouser.com/datasheet/2/268/21953a-8929.pdf MCP4822 Datasheet]
+** D/A has built in output opamps, set gain to 2X
+*** Outputs may only swing 2x 2.048V or 4.096V (4 octaves)
+* GATE output (0-5V)
+* CLK output (0-5V)
+* TRIG output (0-5V)
+* Standard Eurorack 16 pin power header
+
+=== Credits ===
+
+* Adapted from [https://note.com/solder_state/n/n17e028497eba HAGIWO's MIDI to CV module]
+** Translate from Japanese to English using browser
+** Has 4 Analog Outputs instead of 2
+** Arduino Pro Mini instead of Arduino NANO
+
+=== Arduino Pins ===
+
+* Arduino Pro Mini
+
+* Analog 1 - Speed Adjust POT
+* A4 = SDA
+* A5 = SCL
+* D8 = LDAC1* to CV_1, CV2
+* D9 = LDAC2* to CV_3, CV_4
+* D13 = SPI CSK to both ADCs
+* D11 = SPI MOSI to both ADCs
+* D10 = SLAVE SELECT to both ADCs
+
+==== Connection to FTDI ====
+
+* Use [http://land-boards.com/blwiki/index.php?title=FTDI-49MM FTDI-49MM] card
+* Right angle 1x6 pins
+* Pinout
+
+# GND
+# CTSn (IN)
+# VCC
+# TX (OUT)
+# RX (IN)
+# RTSn (OUT)
+
+* Arduino Pro Mini Serial Connector
+* Marking matches FTDI cable pinouts/color codes
+
+# BLK
+# GND
+# VCC
+# RX
+# TX
+# GRN
