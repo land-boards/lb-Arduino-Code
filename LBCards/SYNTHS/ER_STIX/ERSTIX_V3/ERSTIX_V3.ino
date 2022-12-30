@@ -19,6 +19,8 @@
     9-12 o'clock = Coin toss OUTxA, OUTxB individually
     12-3 o'clock = Ping pong or Sequential
     3-5 o'clock = Always drive OUTxA and OUTxB
+  Mode details are on the Wiki page at:
+    http://land-boards.com/blwiki/index.php?title=ER-STIX#More_modes_-_Version_3
 */
 
 #define INTLB 1
