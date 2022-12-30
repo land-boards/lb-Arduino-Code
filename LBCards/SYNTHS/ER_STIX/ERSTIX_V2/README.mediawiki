@@ -1,6 +1,5 @@
 = ER-STIX - Software Version 2 =
 
-* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ER_STIX/ERSTIX_V2/ERSTIX_V2.ino Still pretty simple - Version 2 code GitHub]
 * Adds (2) mode control knobs
 * RV3
 ** 7 o-clock = 12 o'clock = Normal mode
