@@ -61,7 +61,8 @@
 # RX (IN)
 # RTSn (OUT)
 
-* Arduino Pro Mini Serial Connector
+=== Arduino Pro Mini Serial Connector ===
+
 * Marking matches FTDI cable pinouts/color codes
 
 # BLK
