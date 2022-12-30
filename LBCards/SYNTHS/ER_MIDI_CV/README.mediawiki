@@ -34,7 +34,7 @@
 ** Has 4 Analog Outputs instead of 2
 ** Arduino Pro Mini instead of Arduino NANO
 
-== Arduino Pins ==
+= Arduino Pins =
 
 * Arduino Pro Mini
 
@@ -47,7 +47,7 @@
 * D11 = SPI MOSI to both ADCs
 * D10 = SLAVE SELECT to both ADCs
 
-=== Connection to FTDI ===
+== Connection to FTDI ==
 
 * Use [http://land-boards.com/blwiki/index.php?title=FTDI-49MM FTDI-49MM] card
 * Right angle 1x6 pins
