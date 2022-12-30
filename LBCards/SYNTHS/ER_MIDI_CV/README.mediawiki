@@ -1,10 +1,9 @@
-= Eurorack MIDI to CV Controller = 
-
 <img src="http://land-boards.com/blwiki/images/a/a5/ER-MIDI-CV4-02_P1080867-720px.jpg"></img>
 
 = Features =
 
-* Eurorack 6HP, 3U module
+* Eurorack MIDI to CV Controller
+** Eurorack 6HP, 3U module
 * Three card stack-up
 ** Front Panel card
 ** Controls card
