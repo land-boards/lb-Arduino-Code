@@ -1,7 +1,5 @@
 = ER-STIX - Software Version 3 =
 
-=== More modes - Version 3 ===
-
 * [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ER_STIX/ERSTIX_V3/ERSTIX_V3.ino 8 modes - Version 3 code GitHub]
 * Modes set by RV3, RV4
 
