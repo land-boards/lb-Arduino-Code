@@ -1,6 +1,14 @@
 = ER-STIX - Software Version 3 =
 
-* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ER_STIX/ERSTIX_V3/ERSTIX_V3.ino 8 modes - Version 3 code GitHub]
+== Resources ==
+
+<pre>
+Sketch uses 2148 bytes (14%) of program storage space. Maximum is 14336 bytes.
+Global variables use 16 bytes (1%) of dynamic memory, leaving 1008 bytes for local variables. Maximum is 1024 bytes.
+</pre>
+
+== Modes ==
+
 * Modes set by RV3, RV4
 
 {| class="wikitable"
