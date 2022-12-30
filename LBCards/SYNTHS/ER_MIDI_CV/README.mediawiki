@@ -22,9 +22,10 @@
 *** [https://www.mouser.com/datasheet/2/268/21953a-8929.pdf MCP4822 Datasheet]
 ** D/A has built in output opamps, set gain to 2X
 *** Outputs may only swing 2x 2.048V or 4.096V (4 octaves)
-* GATE output (0-5V)
-* CLK output (0-5V)
-* TRIG output (0-5V)
+* Digital Outputs
+** GATE output (0-5V)
+** CLK output (0-5V)
+** TRIG output (0-5V)
 * Standard Eurorack 16 pin power header
 
 == Credits ==
