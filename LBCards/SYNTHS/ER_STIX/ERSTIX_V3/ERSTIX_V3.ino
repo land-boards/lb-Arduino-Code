@@ -165,6 +165,11 @@ void loop()
     p1 = calculateProbability(RANDOM_POT_1);
     p3 = calculateProbability(RANDOM_POT_2);
   }
+  else if (mode == 7)
+  {
+    p1 = calculateProbability(RANDOM_POT_1);
+    p3 = calculateProbability(RANDOM_POT_2);
+  }
   // optionally print out the value you read
 #ifdef DEBUG_SERIAL
   Serial.print("mode=");
@@ -313,10 +318,16 @@ void loop()
   }
   else if (mode == 7)
   {
-    SET_OUT1A;
-    SET_OUT1B;
-    SET_OUT2A;
-    SET_OUT2B;
+    if (p1)
+    {
+      SET_OUT1A;
+      SET_OUT1B;
+    }
+    if (p3)
+    {
+      SET_OUT2A;
+      SET_OUT2B;
+    }
   }
   // Handle LEDs after setting GATEs for lowest latency
   if (p1)
