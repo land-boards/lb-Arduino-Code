@@ -86,7 +86,7 @@ void setup() {
 uint8_t getMode()
 {
   uint16_t mode1, mode2, mode;
-  mode1= analogRead(MODE1);
+  mode1 = analogRead(MODE1);
   mode2 = analogRead(MODE2);
   mode1 >>= 7;
   mode1 &= 0x04;
@@ -106,8 +106,8 @@ bool calculateProbability(uint8_t port)
   int RVval = analogRead(port);
   // adjust for end bands
   RVval = constrain(RVval, DEADBAND, 1023 - DEADBAND);
-  val = map(RVval, DEADBAND, 1023 - DEADBAND, 0, 99);
-  randomNum = random(100);
+  val = map(RVval, DEADBAND, 1023 - DEADBAND, 0, 999);
+  randomNum = random(1000);
   if (val <= randomNum)
     prob = true;
   else
@@ -122,8 +122,9 @@ void loop()
   bool p1 = false;
   bool p2 = false;
   bool p3 = false;
-  bool p4 = false;;
-  
+  bool p4 = false;
+  uint8_t randomChannel;
+
   // Determine the mode of operation
   mode = getMode();
   // Calculate p1, p2
@@ -152,9 +153,7 @@ void loop()
   else if (mode == 4)
   {
     p1 = calculateProbability(RANDOM_POT_1);
-    p2 = calculateProbability(RANDOM_POT_1);
-    p3 = calculateProbability(RANDOM_POT_2);
-    p4 = calculateProbability(RANDOM_POT_2);
+    randomChannel = random(4);
   }
   else if (mode == 5)
   {
@@ -249,24 +248,15 @@ void loop()
   }
   else if (mode == 4)
   {
-    if (p1==false && p3==false)
+    if (p1)
     {
-      if (p2)
+      if (randomChannel == 0)
         SET_OUT1A;
-    }
-    else if (p1==true && p3==false)
-    {
-      if (p2)
+      else if (randomChannel == 1)
         SET_OUT1B;
-    }
-    else if (p1==false && p3==true)
-    {
-      if (p4)
+      else if (randomChannel == 2)
         SET_OUT2A;
-    }
-    else if (p1==true && p3==true)
-    {
-      if (p4)
+      else if (randomChannel == 3)
         SET_OUT2B;
     }
   }
@@ -328,7 +318,7 @@ void loop()
     SET_OUT2A;
     SET_OUT2B;
   }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              // Handle LEDs after setting GATEs for lowest latency
+  // Handle LEDs after setting GATEs for lowest latency
   if (p1)
   {
     digitalWrite(LED1A, HIGH);
