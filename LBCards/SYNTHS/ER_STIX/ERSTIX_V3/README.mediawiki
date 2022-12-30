@@ -1,0 +1,82 @@
+= ER-STIX - Software Version 3 =
+
+=== More modes - Version 3 ===
+
+* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ER_STIX/ERSTIX_V3/ERSTIX_V3.ino 8 modes - Version 3 code GitHub]
+* Modes set by RV3, RV4
+
+{| class="wikitable"
+! Mode
+! RV3
+! Dependency
+! RV4
+! Operation
+|-
+| 0
+| 7-12
+| OUT1/OUT2 independent
+| 7-9
+| Normal, coin toss output one of OUTxA, OUTxB
+ RV1 controls p() getting OUT1A vs OUT1B
+ RV2 controls p() getting OUT2A vs OUT2B
+|-
+| 1
+| 7-12
+| OUT1/OUT2 independent
+| 9-12
+| Coin toss determines OUTxA, OUTxB independently
+ Toss the coin for each output independetly
+ RV1 controls p() OUT1A and p() OUT1B independently
+ RV2 controls p() OUT2A and p() OUT2B independently
+|-
+| 2
+| 7-12
+| OUT1/OUT2 independent
+| 12-3
+| Ping pong A/B
+ RV! controls p() of switching to OUT1A > OUT1B, etc
+ RV2 controls p() of switching to OUT2A > OUT2B, etc
+|-
+| 3
+| 7-12
+| OUT1/OUT2 independent
+| 3-5
+| Coin toss both on
+ RV1 controls p() of driving OUT1A and OUT1B
+ RV2 controls p() of driving OUT2A and OUT2B
+|-
+| 4
+| 12-5
+| OUT1/OUT2 dependent
+| 7-9
+| Normal, coin toss one of OUT1A, OUT1B, OUT2A, OUT2B
+ OUT is randomly selected
+ RV1 controls p() sending OUTxY
+ RV2 is not used
+|-
+| 5
+| 12-5
+| OUT1/OUT2 dependent
+| 9-12
+| Coin toss determines OUTxA, OUTxB dependently, drives both OUTxA/OUTxB
+ RV1 is p() of whether any gate goes out
+ RV2 us p() or selecting OUT1 vs OUT2
+|-
+| 6
+| 12-5
+| OUT1/OUT2 dependent
+| 12-3
+| Sequential OUT1A, OUT1B, OUT2A, OUT2B
+ RV!, RV2 control whether to step or not
+ CW on both stops stepping
+ CCW always step
+|-
+| 7
+| 12-5
+| OUT1/OUT2 dependent
+| 3-5
+| All on
+ RV1 controls p() of driving OUT1A/OUT1B
+ RV2 controls p() of driving OUT2A/OUT2B
+|-
+|}
