@@ -22,27 +22,14 @@
 * Receives single Gate on J1
 * RV1 controls OUT 1
 * RV2 controls OUT 2
-* RV3 is mode for OUT 1
-* RV4 is mode for OUT 2
-
-== Controls ==
-
-* RV1 - Probabilistic ratio for Output 1
-** Center = 50-50, CCW = Out1A on 100%, CW = 0% on OUT1B
-** Inserting J3 jack disables RV1
-* RV2 - Probabilistic ratio for Output 2
-** Center = 50-50, CCW = Out1A on 100%, CW = 0% on OUT1B
-** Inserting J3 jack disables RV1
-* RV3 - OUT 1 Mode
-** 7-12 o'clock = Normal Mode drives only OUT1A or OUT1B
-** 12-5 o'clock = Drives both OUT1A and OUT1B
-* RV4 - OUT 2 Mode
-** 7-12 o'clock = Normal Mode drives only OU21A or OUT2B
-** 12-5 o'clock = Drives both OUT2A and OUT2B
+* RV3, RV4 are mode select
 
 == Software ==
 
-* Several softwares
+* Several software version
+** V1 - "Normal Branches
+** V2 - Some modes
+** V3 - 8 modes
 
 === ERSTIX_POTS_CHECK ===
 
@@ -60,3 +47,7 @@
 * Adds (2) mode control knobs
 * 7 o-clock = 12 o'clock = Normal mode
 * 12 o-clock - 5 o=clock = Send Outputs on both OUTxA and OUTxB
+
+=== ERSTIX_V3 ===
+
+* 8 modes

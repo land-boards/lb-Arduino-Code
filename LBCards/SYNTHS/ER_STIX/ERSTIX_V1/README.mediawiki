@@ -1,0 +1,5 @@
+= ER-STIX - Software Version 1 =
+
+* Operates in "normal" mode
+* RV1 controls p() of OUT1A vs OUT1B
+* RV2 controls p() of OUT2A vs OUT2B

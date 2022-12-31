@@ -1,0 +1,21 @@
+= ER-STIX - Software Version 2 =
+
+* Adds (2) mode control knobs
+* RV3
+** 7 o-clock = 12 o'clock = Normal mode
+** 12 o-clock - 5 o=clock = Send Outputs on both OUTxA and OUTxB
+
+== Latency ==
+
+* Measured GATE in to OUT latency < 20uS using digitalRead and digitalWrite
+* Improved by [https://docs.arduino.cc/hacking/software/PortManipulation accessing the ports directly]
+** Measured at 2 uS
+
+== Resources ==
+
+* Arduino Pro Mini w/ ATMega168
+
+<pre>
+Sketch uses 1990 bytes (13%) of program storage space. Maximum is 14336 bytes.
+Global variables use 13 bytes (1%) of dynamic memory, leaving 1011 bytes for local variables. Maximum is 1024 bytes.
+</pre>
