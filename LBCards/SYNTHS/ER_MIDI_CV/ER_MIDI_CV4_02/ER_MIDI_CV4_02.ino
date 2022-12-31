@@ -66,6 +66,7 @@ int clock_rate = 0;//knob CVin
 // Flags/values for note tracking
 bool noteOnFlag;    // True if note is being played
 uint8_t noteOnVal;  // MIDI note being played value 
+uint8_t pianoNoteOnVal;  // MIDI note being played value 
 uint8_t noteOffVal; // Used to check the note being turned off is the right one
 
 // V/OCT LSB for DAC
@@ -171,16 +172,34 @@ void loop() {
       // https://www.inspiredacoustics.com/en/MIDI_note_numbers_and_center_frequencies
       case midi::NoteOn://NoteOn After
         //note_on_count ++;
+        noteOnVal = MIDI.getData1();
+        // Drum triggers on GATE/CLK outputs
+        // Bottom 6 keys of keyboard
+//        if ((noteOnVal < 43) && (noteOnVal > 39))
+//        {
+//          digitalWrite(TRIG_PIN,HIGH);
+//          delay(10);
+//          digitalWrite(TRIG_PIN,LOW);
+//        }
+//        else if (noteOnVal <= 39)
+//        {
+//          digitalWrite(CLK_PIN,HIGH);
+//          delay(10);
+//          digitalWrite(CLK_PIN,LOW);
+//        }
+//        else
+          pianoNoteOnVal = noteOnVal;
         if (noteOnFlag == false)
         {
-          noteOnVal = MIDI.getData1();
-
           gateTimer = millis();
           //        note_no = MIDI.getData1() - 21; //note number
           // lowest note number on ER-VCO-03 w/ pot centered
-          note_no = noteOnVal - 43;   // G2 is MIDI note 43
+          note_no = pianoNoteOnVal - 43;   // G2 is MIDI note 43
 
-          if (note_no < 0)
+          if (noteOnVal < 43)
+          {
+          }
+          else if (note_no < 0)
           {
             note_no = 0;
           }
@@ -188,22 +207,26 @@ void loop() {
           {
             note_no = 49;
           }
-
-          CV1Val = cv[note_no];
-          outCVs();
-          digitalWrite(GATE_PIN, HIGH); //Gate to HIGH
-          noteOnFlag = true;
+          else
+          {
+            CV1Val = cv[note_no];
+            outCVs();
+            digitalWrite(GATE_PIN, HIGH); //Gate to HIGH
+            noteOnFlag = true;
+          }
         }
         break;
 
       case midi::NoteOff://NoteOff After
 //        note_on_count --;
         noteOffVal = MIDI.getData1();
-        if (noteOffVal == noteOnVal)
+        if (noteOffVal == pianoNoteOnVal)
         {
           digitalWrite(GATE_PIN, LOW); //Gate to LOW
           noteOnFlag = false;
         }
+//        digitalWrite(TRIG_PIN,LOW);
+//        digitalWrite(CLK_PIN,LOW);
 
         break;
 
