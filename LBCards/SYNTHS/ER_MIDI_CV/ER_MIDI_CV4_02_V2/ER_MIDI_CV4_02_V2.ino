@@ -31,7 +31,7 @@
 
 #include <MIDI.h>
 #include <SPI.h>    // Communicate with DAC using SPI
-MIDI_CREATE_DEFAULT_INSTANCE(); // Enable USB-MIDI Library
+MIDI_CREATE_DEFAULT_INSTANCE(); // Enable MIDI Library
 
 // Arduino pin defines
 #define LDAC1_PIN 9  // DAC TRANSFER STROBE 1
