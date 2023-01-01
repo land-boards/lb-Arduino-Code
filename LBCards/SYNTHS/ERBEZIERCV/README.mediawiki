@@ -10,31 +10,9 @@
 
 == Features ==
 
-* Eurorack Prototyping 3 card set
-** Front panel card
-** Controls
-** Prototyping daughtercard
-* 6 HP wide (30mm) front panel
-* Controls and prototyping cards are 28mm wide
-* 3U tall
-* Pots on top, jacks on bottom
-** Easier to adjust pots without bumping into pots
-** Pots are more often accessed than jacks
-* 0-6 POTS
-** Series resistors on pot wiper on controls card
-** All 3 pot pins brought to top header
-** Jumpers on control card allow GND/VCC to be set on pot ends
-* 0-6 "Thinkicon style" Jacks
-** Can use stereo or mono jacks
-** Tip/ring brought to header near bottom
-* Large prototyping area
-* Power/GND down center of card
-* Bussed connections horizontally
-* Front Panel has generic labels
-** Cover with White on Black P-Touch labels
-* Eurorack power connector - can use either 2x5 or 2x8 IDC box connector
-** Series resistors/protection diodes on +12/-12V connections
-
-=== Daughtercard Prototyping Area ===
-
-<img src="http://land-boards.com/blwiki/images/e/ec/ER-PROTO-02-DB_REAR_PWR.png"></img>
+* From [https://note.com/solder_state/n/n39aacefd73a3 HAGIWO Bezier Random CV Generator]
+* Built from existing Land Boards cards
+** [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02] Front panel
+** [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02] Controls cards
+** Partly populated [http://land-boards.com/blwiki/index.php?title=ER-MOZZI-DB ER-MOZZI-DB] card
+* [http://land-boards.com/blwiki/index.php?title=Arduino_Nano Arduino Nano]
