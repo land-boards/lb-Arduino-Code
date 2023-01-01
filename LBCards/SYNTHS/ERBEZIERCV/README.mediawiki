@@ -2,5 +2,6 @@
 
 = ER-BEZIER-CV =
 
+* [http://land-boards.com/blwiki/index.php?title=ER-BEZIER-CV ER-BEZIER-CV Wiki page]
 * Random Control Voltages (CV)
 
