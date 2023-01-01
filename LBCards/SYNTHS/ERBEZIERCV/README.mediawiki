@@ -1,4 +1,4 @@
-<img arc="http://land-boards.com/blwiki/images/2/26/ER-BEZIER-CV_P1080840-720px.jpg"></img>
+<img src="http://land-boards.com/blwiki/images/2/26/ER-BEZIER-CV_P1080840-720px.jpg"></img>
 
 = ER-BEZIER-CV =
 
