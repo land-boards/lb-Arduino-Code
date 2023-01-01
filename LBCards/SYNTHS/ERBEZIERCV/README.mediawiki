@@ -8,7 +8,7 @@
 * Generates Random Control Voltages (CV)
 * Built on [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02 card]
 
-== Features ==
+= Features =
 
 * From [https://note.com/solder_state/n/n39aacefd73a3 HAGIWO Bezier Random CV Generator]
 * Built from existing Land Boards cards
@@ -16,3 +16,19 @@
 ** [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02] Controls cards
 ** Partly populated [http://land-boards.com/blwiki/index.php?title=ER-MOZZI-DB ER-MOZZI-DB] card
 * [http://land-boards.com/blwiki/index.php?title=Arduino_Nano Arduino Nano]
+
+= Software =
+
+* [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/SYNTHS/ERBEZIERCV/ERBEZIER_POTS_CHECK Pot/CV Check] - Read Analog inputs, write to monitor
+* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ERBEZIERCV/ERBEZIERCV_R1/ERBEZIERCV_R1.ino ERBEZIERCV_R1] - Original has timer overflows causing hangs
+* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ERBEZIERCV/ERBEZIERCV_R2/ERBEZIERCV_R2.ino ERBEZIERCV_R2] - Fixed timer overflows which were causing hangs, adds GATE output on J3
+* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ERBEZIERCV/RANDOM_CV_R1/RANDOM_CV_R1.ino RANDOM_CV_R1] - Random CV generator
+** RV1 = Gate on time
+** RV2 = Gate off time
+** RV3 = Minimum output voltage
+** RV4 = Maximum output voltage
+* [https://github.com/land-boards/lb-Arduino-Code/blob/master/LBCards/SYNTHS/ERBEZIERCV/RANDOM_CV_R2/RANDOM_CV_R2.ino RANDOM_CV_R2] - Random CV generator
+** RV1 = Gate on time (20 notes/sec to 4 sec/note)
+** RV2 = Gate on percentage (-100%)
+** RV3 = Minimum output voltage
+** RV4 = Maximum output voltage
