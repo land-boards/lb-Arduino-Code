@@ -3,5 +3,5 @@
 = ER-BEZIER-CV =
 
 * [http://land-boards.com/blwiki/index.php?title=ER-BEZIER-CV ER-BEZIER-CV Wiki page]
-* Random Control Voltages (CV)
-
+* Generates Random Control Voltages (CV)
+* Built on [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02 card]
