@@ -3,6 +3,13 @@
 // Card Build
 //    http://land-boards.com/blwiki/index.php?title=HAGIWO_Bezier_Random_CV_Generator
 //
+// Arduino NANO
+//
+// Resources
+//  Sketch uses 3530 bytes (11%) of program storage space. Maximum is 30720 bytes.
+//  Global variables use 13 bytes (0%) of dynamic memory, leaving 2035 bytes for local variables. 
+//    Maximum is 2048 bytes.
+
 
 #include  <avr/io.h>    // Direct access to registers for clocking fast PWM
 #include  <math.h>
@@ -22,8 +29,8 @@
 #define RV3 2   // Min CV output voltage
 #define RV4 3   // Max CV output voltage
 #define J3  A5  // GATE Digital output
-//#define J4 6    // 
-//#define J5 7    // 
+//#define J4 6    // Unused
+//#define J5 7    // Unused
 #define J6 10   // Output
 
 void setup()
@@ -47,25 +54,32 @@ void loop()
   uint16_t gateFreq1;
   uint16_t gateOnTime;
   uint16_t gateOffTime;
-  uint32_t outVal;
-  uint16_t bottomVal;
-  uint16_t topVal;
-  double   logPot;
+  uint16_t outVal;
+  uint16_t bottom_CV_Val;
+  uint16_t top_CV_Val;
+  uint16_t potVal;
+  uint16_t logPot;
 
   // Output voltage range
-  bottomVal = analogRead(RV3)>>2;
-  topVal = analogRead(RV4)>>2;
-  if (bottomVal > topVal)
-    topVal = bottomVal;
-    
-  outVal = map(random(512),0,511,bottomVal,topVal);
+  bottom_CV_Val = analogRead(RV3)>>2;
+  top_CV_Val = analogRead(RV4)>>2;
+  if (bottom_CV_Val > top_CV_Val)
+    top_CV_Val = bottom_CV_Val;
+  else if (top_CV_Val < bottom_CV_Val)
+    top_CV_Val = bottom_CV_Val;
+  
+  outVal = map(random(512),0,511,bottom_CV_Val,top_CV_Val);
   PWM_OUT(outVal);
 
   // Handle GATE pulse
   delayMicroseconds(10);    // Time for VCO to settle
   digitalWrite(J3, HIGH);   // Drive GATE on
   // Turn the linear pot used for speed into a log pot
-  logPot = int(1023.0 * log10(analogRead(RV1)) / log10(1023));
+  potVal = analogRead(RV1);
+  if (potVal == 0)
+    logPot = 0;
+  else
+    logPot = int(1023.0 * float(log10(potVal)) / log10(1023.0));
   gateFreq = map(logPot,0,1023,4000,50);  // 20mS to 4 secs
   gateOnTime = map(analogRead(RV2),0,1023,0,gateFreq);
   gateOffTime = gateFreq - gateOnTime;
@@ -75,7 +89,7 @@ void loop()
 }
 
 // PWM output
-void PWM_OUT(uint32_t val)
+void PWM_OUT(uint16_t val)
 {
   analogWrite(J6,val);
 }
