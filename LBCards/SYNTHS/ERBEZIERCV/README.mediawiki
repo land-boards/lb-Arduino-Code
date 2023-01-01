@@ -32,3 +32,5 @@
 ** RV2 = Gate on percentage (-100%)
 ** RV3 = Minimum output voltage
 ** RV4 = Maximum output voltage
+** J3 = GATE output
+** J6 = CV out
