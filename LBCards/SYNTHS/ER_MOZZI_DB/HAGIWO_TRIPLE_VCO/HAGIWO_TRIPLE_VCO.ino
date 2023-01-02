@@ -6,7 +6,8 @@
 //  Mode pot has 3 positions
 // Resources
 //  Sketch uses 26734 bytes (87%) of program storage space. Maximum is 30720 bytes.
-//  Global variables use 888 bytes (43%) of dynamic memory, leaving 1160 bytes for local variables. Maximum is 2048 bytes.
+//  Global variables use 888 bytes (43%) of dynamic memory, leaving 1160 bytes for local variables.
+//    Maximum is 2048 bytes.
 
 #include <MozziGuts.h>
 #include <Oscil.h>
@@ -153,7 +154,7 @@ void read_inputs(){
   p1_cv_val = mozziAnalogRead(P1_CV_PIN);
   p2_pot_val = mozziAnalogRead(P2_POT_PIN);
   p2_cv_val = mozziAnalogRead(P2_CV_PIN);
-  mode_val = mozziAnalogRead(MODE_POT_PIN)/340;
+  mode_val = mozziAnalogRead(MODE_POT_PIN)/341;   // 1023/3 = 341
 }
 
 void FM_setFreqs(Q16n16 freq){
