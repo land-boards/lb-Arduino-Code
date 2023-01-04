@@ -27,12 +27,12 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define GATE_OUT_5 9
 #define GATE_OUT_6 10
 #define ENC_PIN1 3
-#define ENC_PIN1 2
+#define ENC_PIN2 2
 #define PUSH_BUTTON 12
 #define CLK_IN 13
 
 //rotary encoder
-Encoder myEnc(ENC_PIN1, ENC_PIN1);//use 3pin 2pin
+Encoder myEnc(ENC_PIN1, ENC_PIN2);    //use 3pin 2pin
 int oldPosition  = -999;
 int newPosition = -999;
 int i = 0;
@@ -128,7 +128,7 @@ void loop() {
   old_trg_in = trg_in;
   oldPosition = newPosition;
   //-----------------Rotery encoder read----------------------
-  newPosition = myEnc.read();
+  newPosition = myEnc.read()/4;   // HAGIWO did not have /4
 
   if ( newPosition   < oldPosition ) {//turn left
     oldPosition = newPosition;
@@ -161,7 +161,7 @@ void loop() {
 
   if (sw == 0) { //push button on
     switch (select_menu) {
-      case 0: //select chanel
+      case 0: //select channel
         select_ch ++;
         if (select_ch >= 7) {
           select_ch = 0;
