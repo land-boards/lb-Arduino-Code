@@ -1,5 +1,7 @@
 // ER_GATE_SEQ_TEST_V1
-// GATE sequencer test code
+//  GATE sequencer test code
+//  Test all 6 GATE outputs
+//  Use CLK_IN as an OUT for this test only
 
 // Pins
 #define GATE_OUT_1 5
