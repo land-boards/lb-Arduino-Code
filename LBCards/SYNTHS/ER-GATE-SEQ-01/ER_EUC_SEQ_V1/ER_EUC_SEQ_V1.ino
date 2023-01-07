@@ -2,6 +2,8 @@
 // Euclidean rhythm sequencer
 // Original code from
 //  https://note.com/solder_state/n/n433b32ea6dbc
+// Card
+//  http://land-boards.com/blwiki/index.php?title=ER-GATE-SEQ-01
 
 //Encoder setting
 
@@ -20,16 +22,26 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Pins
-#define GATE_OUT_1 5
-#define GATE_OUT_2 6
-#define GATE_OUT_3 7
-#define GATE_OUT_4 8
-#define GATE_OUT_5 9
-#define GATE_OUT_6 10
-#define ENC_PIN1 3
-#define ENC_PIN2 2
+#define GATE_OUT_1 5    // PORT D, BIT 5
+#define GATE_OUT_2 6    // PORT D, BIT 6
+#define GATE_OUT_3 7    // PORT D, BIT 7
+#define GATE_OUT_4 8    // PORT B, BIT 0
+#define GATE_OUT_5 9    // PORT B, BIT 1
+#define GATE_OUT_6 10   // PORT B, BIT 2
+#define ENC_PIN1 2
+#define ENC_PIN2 3
 #define PUSH_BUTTON 12
 #define CLK_IN 13
+
+// https://docs.arduino.cc/hacking/software/PortManipulation
+#define SET_OUT_HIGH_1 PORTD = PORTD | 0x20
+#define SET_OUT_HIGH_2 PORTD = PORTD | 0x40
+#define SET_OUT_HIGH_3 PORTD = PORTD | 0x80
+#define SET_OUT_HIGH_4 PORTB = PORTB | 0x01
+#define SET_OUT_HIGH_5 PORTB = PORTB | 0x02
+#define SET_OUT_HIGH_6 PORTB = PORTB | 0x04
+#define CLR_OUT_1_3 PORTD = PORTD & 0X1F
+#define CLR_OUT_4_6 PORTB = PORTB & 0XF8
 
 //rotary encoder
 Encoder myEnc(ENC_PIN1, ENC_PIN2);    //use 3pin 2pin
@@ -116,18 +128,21 @@ void setup() {
 
   //pin mode setting
   pinMode(PUSH_BUTTON, INPUT_PULLUP); //BUTTON
+  pinMode(CLK_IN, INPUT);
   pinMode(GATE_OUT_1, OUTPUT); //CH1
   pinMode(GATE_OUT_2, OUTPUT); //CH2
   pinMode(GATE_OUT_3, OUTPUT); //CH3
   pinMode(GATE_OUT_4, OUTPUT); //CH4
   pinMode(GATE_OUT_5, OUTPUT); //CH5
   pinMode(GATE_OUT_6, OUTPUT); //CH6
+  CLR_OUT_1_3;
+  CLR_OUT_4_6;
 }
 
 void loop() {
   old_trg_in = trg_in;
   oldPosition = newPosition;
-  //-----------------Rotery encoder read----------------------
+  //-----------------Rotary encoder read----------------------
   newPosition = myEnc.read()/4;   // HAGIWO did not have /4
 
   if ( newPosition   < oldPosition ) {//turn left
@@ -223,7 +238,8 @@ void loop() {
 
   //-----------------trigger detect & output----------------------
   trg_in = digitalRead(CLK_IN);//external trigger in
-  if (old_trg_in == 0 && trg_in == 1) {
+  if (old_trg_in == 0 && trg_in == 1) 
+  {
     gate_timer = millis();
     for (i = 0; i <= 5; i++) {
       playing_step[i]++;      //When the trigger in, increment the step by 1.
@@ -235,32 +251,33 @@ void loop() {
       if (offset_buf[k][playing_step[k]] == 1 && mute[k] == 0) {
         switch (k) {
           case 0://CH1
-            digitalWrite(GATE_OUT_1, HIGH);
+            SET_OUT_HIGH_1;
             break;
 
           case 1://CH2
-            digitalWrite(GATE_OUT_2, HIGH);
+            SET_OUT_HIGH_2;
             break;
 
           case 2://CH3
-            digitalWrite(GATE_OUT_3, HIGH);
+            SET_OUT_HIGH_3;
             break;
 
           case 3://CH4
-            digitalWrite(GATE_OUT_4, HIGH);
+            SET_OUT_HIGH_4;
             break;
 
           case 4://CH5
-            digitalWrite(GATE_OUT_5, HIGH);
+            SET_OUT_HIGH_5;
             break;
 
           case 5://CH6
-            digitalWrite(GATE_OUT_6, HIGH);
+            SET_OUT_HIGH_6;
             break;
         }
       }
     }
-    disp_reflesh = 1;//Updates the display where the trigger was entered.If it update it all the time, the response of gate on will be worse.
+    disp_reflesh = 1; //Updates the display where the trigger was entered.
+                      // If it update it all the time, the response of gate on will be worse.
 
     if (select_ch == 6) {// random mode setting
       step_cnt ++;
@@ -276,15 +293,12 @@ void loop() {
   }
 
   if  (gate_timer + 10 <= millis()) { //off all gate , gate time is 10msec
-    digitalWrite(GATE_OUT_1, LOW);
-    digitalWrite(GATE_OUT_2, LOW);
-    digitalWrite(GATE_OUT_3, LOW);
-    digitalWrite(GATE_OUT_4, LOW);
-    digitalWrite(GATE_OUT_5, LOW);
-    digitalWrite(GATE_OUT_6, LOW);
+    CLR_OUT_1_3;
+    CLR_OUT_4_6;
   }
 
 
+//  disp_reflesh = 1;   // uncomment to debug OLED, switch, rotary encoder
   if (disp_reflesh == 1) {
     OLED_display();//reflesh display
     disp_reflesh = 0;
