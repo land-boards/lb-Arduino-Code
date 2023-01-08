@@ -23,7 +23,7 @@
 //   Best Performance: both pins have interrupt capability
 //   Good Performance: only the first pin has interrupt capability
 //   Low Performance:  neither pin has interrupt capability
-Encoder myEnc(4, 2);
+Encoder myEnc(2, 4);
 //   avoid using pins with LEDs attached
 
 #define INPUT_SW 5

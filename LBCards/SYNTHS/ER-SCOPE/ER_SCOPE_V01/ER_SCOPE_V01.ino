@@ -1,11 +1,12 @@
 // HAGIWO's Arduino OLED Oscilloscope & Spectrum Analyzer
 // https://note.com/solder_state/n/n6b4cc8d1c6b9
+// Card
+//  http://land-boards.com/blwiki/index.php?title=ER-SCOPE-01
 //
 // Resources (ATMega328)
-//  Sketch uses 19788 bytes (64%) of program storage space. Maximum is 30720 bytes.
-//  Global variables use 777 bytes (37%) of dynamic memory, leaving 1271 bytes for local variables. 
-//  Maximum is 2048 bytes.
-
+//  Sketch uses 19866 bytes (64%) of program storage space. Maximum is 30720 bytes.
+//  Global variables use 807 bytes (39%) of dynamic memory, leaving 1241 bytes for local variables.
+//    Maximum is 2048 bytes.
 
 #include <avr/io.h>//for fast PWM
 #include "fix_fft.h"//spectrum analyze
@@ -23,18 +24,20 @@
 //#define OLED_CS    12
 //#define OLED_RESET 13
 
+// I2C or SPI display
+// I2C constructor
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
+// SPI constructor
 //Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
 //                        OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
 
-//rotery encoder setting
-#define  ENCODER_OPTIMIZE_INTERRUPTS //contermeasure of rotery encoder noise
+//  Rotary encoder setting
+//   Good Performance: only the first pin has interrupt capability
+#define  ENCODER_OPTIMIZE_INTERRUPTS //contermeasure of rotary encoder noise
 #include <Encoder.h>
-Encoder myEnc(4, 2);//rotery encoder digitalRead pin
-float oldPosition  = -999;//rotery encoder counter
+Encoder myEnc(2, 4);//rotary encoder digitalRead pin
+float oldPosition  = -999;//rotary encoder counter
 float newPosition = -999;
-
 
 byte mode = 1;//1=low freq oscilo , 2=high freq oscilo , 3 = mid freq oscilo with external trig , 4 = spectrum analyze
 byte old_mode = 1;//for initial setting when mode change.
@@ -58,8 +61,9 @@ bool hide = 0; //1=hide,0=not hide
 char data[128], im[128] , cv[128]; //data and im are used for spectrum , cv is used for oscilo.
 
 void setup() {
- //display setting
- display.begin(SSD1306_SWITCHCAPVCC);
+ // Display setting for I2C or SPI display
+ display.begin(SSD1306_SWITCHCAPVCC, 0x3C);   // OLED I2C
+// display.begin(SSD1306_SWITCHCAPVCC);   // OLED SPI
  display.clearDisplay();
  display.setTextSize(0);
  display.setTextColor(WHITE);
@@ -110,7 +114,7 @@ void loop() {
  mode = constrain(mode, 1, 4);
  param = constrain(param, 1, 3);
 
- //rotery encoder input
+ // Rotary encoder input
  newPosition = myEnc.read();
  if ( (newPosition - 3) / 4  > oldPosition / 4) {
    oldPosition = newPosition;
