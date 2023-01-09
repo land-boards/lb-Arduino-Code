@@ -81,3 +81,4 @@
 
 * [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/SYNTHS/ER_MIDI_CV/ER_MIDI_CV4_02 ER_MIDI_CV4_02] - Basic code
 * [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/SYNTHS/ER_MIDI_CV/ER_MIDI_CV4_02_V2 ER_MIDI_CV4_02_V2] - Map some low notes to CLK and TRIG outputs
+* [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/SYNTHS/ER_MIDI_CV/SYNTHMIDICTL01 HAGIWO's original code]
