@@ -26,7 +26,7 @@
 ** GATE output (0-5V)
 ** CLK output (0-5V)
 ** TRIG output (0-5V)
-* Standard Eurorack 16 pin power header
+* Standard Eurorack 10 pin power header
 
 == Credits ==
 
