@@ -1,2 +1,4 @@
+<mg src="http://land-boards.com/blwiki/images/a/a5/ER-MIDI-CV4-02_P1080867-720px.jpg"></img>
+
 = ER_MIDI_CV4_02 Software =
 
