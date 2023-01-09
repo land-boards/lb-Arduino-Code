@@ -71,3 +71,9 @@
 # RX
 # TX
 # GRN
+
+= Card Test Code =
+
+* [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/SYNTHS/ER_MIDI_CV/TestPotDigIOs TestPotDigIOs] - Test the pot and Digital Outputs
+* [https://github.com/land-boards/lb-Arduino-Code/tree/master/LBCards/SYNTHS/ER_MIDI_CV/ER_MIDI_CV4_04_TEST_DACs ER_MIDI_CV4_04_TEST_DACs] - Test the DACs
+
