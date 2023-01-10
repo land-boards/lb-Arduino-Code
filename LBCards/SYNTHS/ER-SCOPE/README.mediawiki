@@ -4,3 +4,20 @@
 
 * [http://land-boards.com/blwiki/index.php?title=ER-SCOPE-01 ER-SCOPE-01 Wiki page]
 * [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02 Wiki Page]
+
+== Features ==
+
+* [https://note.com/solder_state/n/n6b4cc8d1c6b9 HAGIWO design]
+* Differences from HAGIWO
+** Using Arduino Pro Mini - smaller package than NANO
+*** No USB but USB is not used after download anyway
+** Using I2C OLED
+*** Probably affects screen refresh rates
+* OLED : 128*64 pixel 0.96inch
+* Knob1: Rotary encoder for selection (including push switch)
+* Knob2: GAIN
+* Toggle SW : AC/DC switching
+* TRIG IN : External trigger IN
+* Input : Signal to be observed IN
+** Observable voltage is 5 V p-p
+* Output : Observable signal OUT (short circuit with INPUT)
