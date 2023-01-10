@@ -1,0 +1,14 @@
+<a href="https://www.tindie.com/products/land_boards/eurorack-prototyping-card-set-er-proto-02/" ><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
+
+<img src="http://land-boards.com/blwiki/images/3/33/ER-LEDS_P1080999-720px.jpg"></img>
+
+= Features =
+
+* [http://land-boards.com/blwiki/index.php?title=Arduino_Pro_Mini Arduino Pro Mini]
+* Daughtercard to [[ER-PROTO-02]] card
+** Uses Front Panel and Controls card
+* 3U, 6 HP Eurorack card
+* RV1 = Mode knob
+** 4 modes: 3 rainbow, 1 white
+* RV2 = brightness
+* GATE input could be used to step between rainbow pattern
