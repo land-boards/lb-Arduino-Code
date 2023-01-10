@@ -8,3 +8,7 @@
 * Daughtercard to [[ER-PROTO-02]] card
 ** Uses Front Panel and Controls card
 * 3U, 6 HP Eurorack card
+* RV1 = Mode knob
+** 4 modes: 3 rainbow, 1 white
+* RV2 = brightness
+* GATE input could be used to step between rainbow pattern
