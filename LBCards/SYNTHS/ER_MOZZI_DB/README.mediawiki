@@ -1,1 +1,16 @@
 <img src="http://land-boards.com/blwiki/images/d/dd/ER-PROTO-02-MOZZI-DB_P1080850-720PX.jpg"></img>
+
+== Features ==
+
+* Daughtercard to [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02] card
+** Uses Front Panel and Controls card
+*** Controls card populated as required
+**** 0-6 Jacks, 0-6 Pots
+* Arduino NANO
+* High Def Sound output
+* Up to 6 Pots connected to A/D inputs
+* Up to 4 input jacks connected to A/D inputs
+* Options
+** 0-4 Pots, 0-4 Input Jacks
+** 5 Pots, 0-3 Input Jacks
+** 6 Pots, 0-2 Input Jacks
