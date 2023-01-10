@@ -29,6 +29,7 @@ Eurorack MIDI to CV Controller
 ** CLK output (0-5V)
 ** TRIG output (0-5V)
 * Standard Eurorack 10 pin power header
+** Uses +12V only
 
 == Credits ==
 
