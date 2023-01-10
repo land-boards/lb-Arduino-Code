@@ -2,8 +2,9 @@
 
 = Features =
 
-* Eurorack MIDI to CV Controller
-** Eurorack 6HP, 3U module
+Eurorack MIDI to CV Controller
+
+* Eurorack 6HP, 3U module
 * Three card stack-up
 ** Front Panel card
 ** Controls card
