@@ -4,7 +4,7 @@
 
 = Features =
 
-* [[Arduino_Pro_Mini]]
+* [http://land-boards.com/blwiki/index.php?title=Arduino_Pro_Mini Arduino Pro Mini]
 * Daughtercard to [[ER-PROTO-02]] card
 ** Uses Front Panel and Controls card
 * 3U, 6 HP Eurorack card
