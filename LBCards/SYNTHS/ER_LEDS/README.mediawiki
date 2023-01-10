@@ -1,6 +1,6 @@
 <a href="https://www.tindie.com/products/land_boards/eurorack-prototyping-card-set-er-proto-02/" ><img src="http://land-boards.com/blwiki/images/5/51/Tindie-mediums.png" alt="Tindie Logo"></img></a>
 
-<img src="http://land-boards.com/blwiki/images/3/33/ER-LEDS_P1080999-720px.jpg"</img>
+<img src="http://land-boards.com/blwiki/images/3/33/ER-LEDS_P1080999-720px.jpg"></img>
 
 = Features =
 
