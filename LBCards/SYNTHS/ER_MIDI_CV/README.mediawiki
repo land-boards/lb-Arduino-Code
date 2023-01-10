@@ -13,7 +13,7 @@
 ** 16 MHz
 ** 5V
 ** ATMega168 or ATMega328 CPU
-** Programmed via Serial
+** Programmed via FTDI Serial
 * MIDI In
 ** TRS Type A jack MIDI In
 ** USB MIDI In if external FTDI card/cable
