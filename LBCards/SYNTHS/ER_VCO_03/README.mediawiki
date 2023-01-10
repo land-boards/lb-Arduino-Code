@@ -1,0 +1,31 @@
+<img src="http://land-boards.com/blwiki/images/8/8b/ER-VCO-03_SET_P1080788-720px.jpg"></img>
+
+
+[http://land-boards.com/blwiki/index.php?title=ER-VCO-03 Wiki page]
+
+== Features ==
+
+* Build of [https://note.com/solder_state/n/nca6a1dec3921 Pico VCO by HAGIWO]
+* Digital Voltage Controlled Oscillator (VCO)
+* Eurorack 3U tall, 6HP wide (30 mm)
+* (3) Card set
+* [http://land-boards.com/blwiki/index.php?title=QT_Py_(RP2040_based) XIAO RP2040] CPU
+* Three modes: Wavefold, FM and AM
+* PWM output with 2 pole low pass filter
+* Each mode has eight built-in waveforms
+* AC coupled output
+* (3) Switches
+** 3-position Octave Up/Down toggle
+** 3-position Mode Up/Down toggle (Wavefold, FM and AM)
+** Timbre Pushbutton switches between 8 waveforms
+* (2) Knobs
+** Freq fine adjust (sub octave range)
+** Mod adjust
+* Standard EuroRack 16 pin power header
+** Uses 5V from Eurorack power
+* Views (left to right)
+** Front Panel
+** Control Panel controls side
+** Control Panel rear side
+** Logic card rear side
+** Logic card component side (faces rear of card set)
