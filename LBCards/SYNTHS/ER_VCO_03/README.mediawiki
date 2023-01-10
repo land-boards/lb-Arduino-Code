@@ -23,9 +23,3 @@
 ** Mod adjust
 * Standard EuroRack 16 pin power header
 ** Uses 5V from Eurorack power
-* Views (left to right)
-** Front Panel
-** Control Panel controls side
-** Control Panel rear side
-** Logic card rear side
-** Logic card component side (faces rear of card set)
