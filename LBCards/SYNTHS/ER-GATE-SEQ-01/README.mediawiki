@@ -13,3 +13,23 @@
 * Rotary Encoder: Parameter Selection
 * PUSH Button: Parameter Change/Determination
 * Trigger Output: 6CH (0-5V) Trigger Input: 1CH (0-5V)
+
+=== HAGIWO Menu System ===
+
+<img src="http://land-boards.com/blwiki/images/a/a5/ER-GATE-SEQ-01_P1080949_screen_ANN.jpg"></img>
+
+* Rotary Encoder: Parameter Selection
+* PUSH Button: Parameter Change/Determination
+* 6 Parameters - Arrow points to current channel/option
+** 1-6, R: Select channel 1-6 (upper right, top row), Random
+** H: Hits (Upper right, middle row) - Number of points
+*** Number of outputs out of 16 steps
+** O: Offset (Upper right, bottom row)
+*** Shift the start of the rhythm by offsetting LIMIT
+*** Return to the first step when there is a trigger input for the number of times the set value is set
+**** For example, if you set it to 5, it will return to the first step after outputting 1~5 steps. It can be used in a polyrhythmic way
+** L: Limit (lower left, top row) - number of steps
+** M: Mute channel (lower left, middle row)
+*** Eliminates the trigger output of the selected CH.
+** R: Reset (lower left, bottom row)
+*** Press the button to return the playback step of all channels to the first step
