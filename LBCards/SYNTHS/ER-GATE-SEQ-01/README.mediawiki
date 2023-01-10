@@ -2,4 +2,14 @@
 
 <img src="http://land-boards.com/blwiki/images/c/c5/ER-GATE-SEQ-01_P1080960-720px.jpg"></img>
 
-[http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02 Wiki Page]
+* [http://land-boards.com/blwiki/index.php?title=ER-GATE-SEQ-01 ER-GATE-SEQ-01 Wiki page]
+* [http://land-boards.com/blwiki/index.php?title=ER-PROTO-02 ER-PROTO-02 Wiki Page]
+
+== Features ==
+
+* GATE Sequencer
+* Based on [https://note.com/solder_state/n/n433b32ea6dbc HAGIWO Euclidean rhythm sequencer]
+* OLED Display: 128*64 size
+* Rotary Encoder: Parameter Selection
+* PUSH Button: Parameter Change/Determination
+* Trigger Output: 6CH (0-5V) Trigger Input: 1CH (0-5V)
