@@ -12,6 +12,7 @@
 * [http://land-boards.com/blwiki/index.php?title=Arduino_Pro_Mini Arduino Pro Mini]
 ** 16 MHz
 ** 5V
+** ATMega168 or ATMega328 CPU
 ** Programmed via Serial
 * MIDI In
 ** TRS Type A jack MIDI In
